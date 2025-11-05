@@ -3,7 +3,11 @@ import { Plus, MoreVertical, Image as ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPatch, apiDelete } from "../utils/ApiUtils";
-import { GET_ALL_BANNERS, UPDATE_BANNER_STATUS, DELETE_BANNER } from "../contants/apiRoutes";
+import {
+  GET_ALL_BANNERS,
+  UPDATE_BANNER_STATUS,
+  DELETE_BANNER,
+} from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
 import { ITEMS_PER_PAGE, STATUS } from "../contants/constants";
@@ -51,11 +55,12 @@ const Banners = () => {
           BannerID: banner.BannerId,
           BannerName: banner.BannerName,
           Status: banner.IsActive ? "Active" : "Inactive",
-          BannerImages: banner.BannerImage?.map((img) => ({
-            BannerImage: img.documentUrl,
-            sortOrder: img.sortOrder,
-            documentId: img.documentId,
-          })) || [],
+          BannerImages:
+            banner.BannerImage?.map((img) => ({
+              BannerImage: img.documentUrl,
+              sortOrder: img.sortOrder,
+              documentId: img.documentId,
+            })) || [],
           CategoryIDs: banner.CategoryIDs,
           Discount: banner.Discount,
           Price: banner.Price,
@@ -98,7 +103,9 @@ const Banners = () => {
       // API call
       const response = await apiDelete(`${DELETE_BANNER}/${id}`, token);
 
-      const success = response?.data?.status === STATUS.SUCCESS.toUpperCase() || response?.status === STATUS.SUCCESS.toUpperCase();
+      const success =
+        response?.data?.status === STATUS.SUCCESS.toUpperCase() ||
+        response?.status === STATUS.SUCCESS.toUpperCase();
 
       if (success) {
         // Update UI
@@ -137,10 +144,16 @@ const Banners = () => {
         oResponse.data &&
         oResponse.data.status === STATUS.SUCCESS.toUpperCase()
       ) {
-        showEmsg(oResponse.data.message || t("BANNER_FORM.STATUS_UPDATED"), STATUS.SUCCESS);
+        showEmsg(
+          oResponse.data.message || t("BANNER_FORM.STATUS_UPDATED"),
+          STATUS.SUCCESS
+        );
         fetchBanners();
       } else {
-        showEmsg(oResponse.data?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
+        showEmsg(
+          oResponse.data?.message || t("COMMON.API_ERROR"),
+          STATUS.ERROR
+        );
       }
     } catch (err) {
       const errorMessage =
@@ -216,10 +229,10 @@ const Banners = () => {
                   )}
                   <div className="absolute top-3 right-3 z-20">
                     <button
-                      className="text-custom-bg hover:text-custom-bg p-1 rounded-full focus:outline-none"
+                      className="bg-white/80 backdrop-blur-sm p-1 rounded-full shadow-sm hover:bg-white transition"
                       onClick={() => toggleMenu(project.BannerID)}
                     >
-                      <MoreVertical className="h-5 w-5" />
+                      <MoreVertical className="h-5 w-5 text-gray-800" />
                     </button>
                     {nActiveMenu === project.BannerID && (
                       <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl z-[2000] min-w-[120px] border border-gray-100">
@@ -256,21 +269,21 @@ const Banners = () => {
                     </p>
                   )}
                   <div className="flex items-center justify-between mt-2">
-                      <Switch
+                    <Switch
                       checked={project.Status === "Active"}
                       onChange={() =>
                         handleToggleStatus(project.BannerID, project.Status)
                       }
-                      />
+                    />
                     <span
-    className={`text-sm font-medium ml-3 px-2 py-1 rounded-full text-xs font-semibold shadow ${
-      project.Status === "Active"
-        ? "status-active bg-green-100 text-green-800"
-        : "status-inactive bg-red-100 text-red-800"
-    }`}
-  >
-    {project.Status}
-  </span>
+                      className={`text-sm font-medium ml-3 px-2 py-1 rounded-full text-xs font-semibold shadow ${
+                        project.Status === "Active"
+                          ? "status-active bg-green-100 text-green-800"
+                          : "status-inactive bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {project.Status}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -302,7 +315,10 @@ const Banners = () => {
         <FullscreenErrorPopup
           title={t("FULLSCREEN_ERROR_POPUP.TITLE")}
           message={t("BANNERS.STATUS_CONFIRM_MESSAGE", {
-            status: statusPopup.currentStatus === "Active" ? t("COMMON.INACTIVE") : t("COMMON.ACTIVE"),
+            status:
+              statusPopup.currentStatus === "Active"
+                ? t("COMMON.INACTIVE")
+                : t("COMMON.ACTIVE"),
           })}
           onClose={handleStatusPopupClose}
           onConfirm={handleStatusConfirm}

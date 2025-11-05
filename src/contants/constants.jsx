@@ -17,10 +17,11 @@ export const STATUS_VALUES = {
   BOOLEAN_ACTIVE: true,
   BOOLEAN_INACTIVE: false,
 };
+// Make sure it matches what your API expects
 export const STATUS_OPTIONS = [
-  { value: STATUS_VALUES.ALL, labelKey: "COMMON.ALL" },
-  { value: STATUS_VALUES.BOOLEAN_ACTIVE, labelKey: "COMMON.ACTIVE" },
-  { value: STATUS_VALUES.BOOLEAN_INACTIVE, labelKey: "COMMON.INACTIVE" },
+  { value: "all", labelKey: "COMMON.ALL" },
+  { value: "true", labelKey: "COMMON.ACTIVE" },    // or true for boolean
+  { value: "false", labelKey: "COMMON.INACTIVE" }, // or false for boolean
 ];
 export const ITEMS_PER_PAGE = 10;
 export const LOCALE = "en-US";

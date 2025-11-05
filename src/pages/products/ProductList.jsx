@@ -241,8 +241,8 @@ const ProductList = () => {
 
   const statusOptions = [
     { value: "all", label: t("COMMON.ALL") },
-    { value: true, label: t("COMMON.ACTIVE") },
-    { value: false, label: t("COMMON.INACTIVE") },
+    { value: "true", label: t("COMMON.ACTIVE") },
+    { value: "false", label: t("COMMON.INACTIVE") },
   ];
 
   const handleDropdownInputChange = (inputValue, filterName) => {
