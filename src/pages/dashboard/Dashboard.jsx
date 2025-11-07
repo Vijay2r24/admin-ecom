@@ -31,6 +31,7 @@ import {
   CURRENCY,
   STATUS,
 } from "../../contants/constants";
+import dayjs from "dayjs";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -82,15 +83,14 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Calculate default date range (last 7 days)
+  // Calculate default date range (last 7 days) using dayjs
   const getDefaultDateRange = () => {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 6); // 7 days including today
+    const endDate = dayjs();
+    const startDate = dayjs().subtract(6, 'day'); // 7 days including today
 
     return {
-      startDate,
-      endDate,
+      start: startDate,
+      end: endDate,
     };
   };
 
@@ -103,11 +103,26 @@ const Dashboard = () => {
 
   const paginatedTopProducts = topProducts;
 
-  // Format date to YYYY-MM-DD
+  // Format date to ISO string for API
   const formatDateToAPI = (date) => {
     if (!date) return null;
-    const dateObj = new Date(date);
-    return dateObj.toISOString(); // This includes time
+    
+    // If it's already a dayjs object
+    if (date?.$isDayjsObject) {
+      return date.toISOString();
+    }
+    
+    // If it's a JavaScript Date object
+    if (date instanceof Date) {
+      return date.toISOString();
+    }
+    
+    // Handle string dates
+    if (typeof date === 'string') {
+      return new Date(date).toISOString();
+    }
+    
+    return null;
   };
 
   // Format currency
@@ -125,79 +140,77 @@ const Dashboard = () => {
     return new Intl.NumberFormat(LOCALE).format(num);
   };
 
-  // Improved comparison text calculation
   // Improved comparison text calculation that handles both date and time ranges
- // Improved comparison text calculation that handles both date and time ranges
-const getComparisonText = (startDate, endDate) => {
-  if (!startDate || !endDate) return t("DASHBOARD.COMPARISONTEXT");
+  const getComparisonText = (startDate, endDate) => {
+    if (!startDate || !endDate) return t("DASHBOARD.COMPARISONTEXT");
 
-  try {
-    // Convert to Date objects if they're strings
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    try {
+      // Convert to dayjs objects for consistent handling
+      const start = dayjs(startDate);
+      const end = dayjs(endDate);
 
-    // Calculate the difference in milliseconds
-    const diffTime = Math.abs(end - start);
-    
-    // Calculate differences in various units
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      // Calculate the difference in milliseconds
+      const diffTime = Math.abs(end - start);
+      
+      // Calculate differences in various units
+      const diffMinutes = Math.floor(diffTime / (1000 * 60));
+      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    // Check if it's a single day selection with time range
-    const isSameDay = start.toDateString() === end.toDateString();
+      // Check if it's a single day selection with time range
+      const isSameDay = start.isSame(end, 'day');
 
-    if (isSameDay || diffDays === 0) {
-      // Time-based comparisons for same day or less than 24 hours
-      switch (diffHours) {
-        case 0:
-          // Less than 1 hour - show minutes
-          if (diffMinutes === 0) {
-            return t("DASHBOARD.VSLASTMINUTES", { count: 0 });
-          }
-          return t("DASHBOARD.VSLASTMINUTES", { count: diffMinutes });
-        case 1:
-          return t("DASHBOARD.VSLASTHOUR");
-        case 2:
-          return t("DASHBOARD.VSLAST2HOURS");
-        case 3:
-          return t("DASHBOARD.VSLAST3HOURS");
-        case 6:
-          return t("DASHBOARD.VSLAST6HOURS");
-        case 12:
-          return t("DASHBOARD.VSLAST12HOURS");
-        case 24:
-          return t("DASHBOARD.VSLAST24HOURS");
-        default:
-          if (diffHours < 24) {
-            return t("DASHBOARD.VSLASTHOURS", { count: diffHours });
-          }
+      if (isSameDay || diffDays === 0) {
+        // Time-based comparisons for same day or less than 24 hours
+        switch (diffHours) {
+          case 0:
+            // Less than 1 hour - show minutes
+            if (diffMinutes === 0) {
+              return t("DASHBOARD.VSLASTMINUTES", { count: 0 });
+            }
+            return t("DASHBOARD.VSLASTMINUTES", { count: diffMinutes });
+          case 1:
+            return t("DASHBOARD.VSLASTHOUR");
+          case 2:
+            return t("DASHBOARD.VSLAST2HOURS");
+          case 3:
+            return t("DASHBOARD.VSLAST3HOURS");
+          case 6:
+            return t("DASHBOARD.VSLAST6HOURS");
+          case 12:
+            return t("DASHBOARD.VSLAST12HOURS");
+          case 24:
+            return t("DASHBOARD.VSLAST24HOURS");
+          default:
+            if (diffHours < 24) {
+              return t("DASHBOARD.VSLASTHOURS", { count: diffHours });
+            }
+        }
       }
-    }
 
-    // Date-based comparisons for multiple days
-    switch (diffDays) {
-      case 1:
-        return t("DASHBOARD.VSPREVIOUSDAY");
-      case 6:
-        return t("DASHBOARD.VSLASTWEEK");
-      case 7:
-        return t("DASHBOARD.VSLASTWEEK");
-      case 30:
-      case 31:
-        return t("DASHBOARD.VSLASTMONTH");
-      case 90:
-        return t("DASHBOARD.VSLAST3MONTHS");
-      case 365:
-      case 366:
-        return t("DASHBOARD.VSLASTYEAR");
-      default:
-        return t("DASHBOARD.VSLASTXDAYS", { count: diffDays });
+      // Date-based comparisons for multiple days
+      switch (diffDays) {
+        case 1:
+          return t("DASHBOARD.VSPREVIOUSDAY");
+        case 6:
+          return t("DASHBOARD.VSLASTWEEK");
+        case 7:
+          return t("DASHBOARD.VSLASTWEEK");
+        case 30:
+        case 31:
+          return t("DASHBOARD.VSLASTMONTH");
+        case 90:
+          return t("DASHBOARD.VSLAST3MONTHS");
+        case 365:
+        case 366:
+          return t("DASHBOARD.VSLASTYEAR");
+        default:
+          return t("DASHBOARD.VSLASTXDAYS", { count: diffDays });
+      }
+    } catch (error) {
+      return t("DASHBOARD.COMPARISONTEXT");
     }
-  } catch (error) {
-    return t("DASHBOARD.COMPARISONTEXT");
-  }
-};
+  };
 
   // Calculate percentage change and trend
   const calculateMetrics = (current, previous, title, comparisonText) => {
@@ -263,15 +276,15 @@ const getComparisonText = (startDate, endDate) => {
       setIsLoading(true);
       setError(null);
 
-      const { startDate, endDate } = value;
+      const { start, end } = value;
 
       // Calculate comparison text based on date range
-      const comparisonText = getComparisonText(startDate, endDate);
+      const comparisonText = getComparisonText(start, end);
 
       // Prepare query parameters for date range with formatted dates
       const dateParams = {
-        startDate: formatDateToAPI(startDate),
-        endDate: formatDateToAPI(endDate),
+        startDate: formatDateToAPI(start),
+        endDate: formatDateToAPI(end),
       };
 
       // Get token from localStorage
@@ -396,6 +409,7 @@ const getComparisonText = (startDate, endDate) => {
             break;
         }
       });
+
 
       // Calculate metrics using actual API data
       const revenueMetrics = calculateMetrics(
@@ -539,7 +553,7 @@ const getComparisonText = (startDate, endDate) => {
     }
   };
 
-  // Handle date change - ensure proper date objects
+  // Handle date change - now receives dayjs objects directly
   const handleDateChange = (newValue) => {
     setValue(newValue);
   };
@@ -554,7 +568,7 @@ const getComparisonText = (startDate, endDate) => {
 
   // Fetch data when date range changes
   useEffect(() => {
-    if (value.startDate && value.endDate) {
+    if (value.start && value.end) {
       fetchDashboardData();
     }
   }, [value]);
@@ -870,7 +884,7 @@ const getComparisonText = (startDate, endDate) => {
             <div className="flex-1 w-full overflow-x-auto">
               {recentOrders.length > 0 ? (
                 <table className="w-full min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 sticky top-0 z-10">
+                  <thead className="bg-gray-50  top-0 z-10">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider align-middle">
                         {t("DASHBOARD.RECENT_ORDERS.CUSTOMER")}

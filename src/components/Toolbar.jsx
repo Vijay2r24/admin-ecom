@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Combobox } from "@headlessui/react";
 import { useTranslation } from "react-i18next";
-import CustomDatePicker from "./CustomDatePicker";
+import DateTimeRangePickerComponent from "./CustomDatePicker";
 import { VIEW_MODES } from "../contants/constants";
 
 const OrderToolbar = ({
@@ -44,7 +44,36 @@ const OrderToolbar = ({
 
   // Toggle between table and grid view
   const toggleViewMode = () => {
-    setViewMode(viewMode === VIEW_MODES.TABLE ? VIEW_MODES.GRID : VIEW_MODES.TABLE);
+    setViewMode(
+      viewMode === VIEW_MODES.TABLE ? VIEW_MODES.GRID : VIEW_MODES.TABLE
+    );
+  };
+
+  // Proper handler for Combobox changes
+  const handleComboboxChange = (option, filterName) => {
+    if (!option) return;
+
+    // Create a synthetic event object that matches what handleFilterChange expects
+    const syntheticEvent = {
+      target: {
+        value: option.value,
+        name: filterName,
+      },
+    };
+
+    handleFilterChange(syntheticEvent, filterName);
+  };
+
+  // Handler for date range changes
+  const handleDateRangeChange = (dateRange, filterName) => {
+    const syntheticEvent = {
+      target: {
+        value: dateRange,
+        name: filterName,
+      },
+    };
+
+    handleFilterChange(syntheticEvent, filterName);
   };
 
   return (
@@ -76,15 +105,15 @@ const OrderToolbar = ({
           <button
             onClick={toggleViewMode}
             className={`btn-toggle-view flex items-center ${
-              viewMode === "table" ? "btn-highlighted" : "btn-default"
+              viewMode === VIEW_MODES.TABLE ? "btn-highlighted" : "btn-default"
             }`}
             title={
-              viewMode === "table"
-                ? t("TOOLBAR.SWITCH_TO_GRID")
-                : t("TOOLBAR.SWITCH_TO_TABLE")
+              viewMode === VIEW_MODES.TABLE
+                ? t("TOOLBAR.GRID") // Tooltip should indicate what you’ll switch to
+                : t("TOOLBAR.TABLE")
             }
           >
-            {viewMode === "table" ? (
+            {viewMode === VIEW_MODES.TABLE ? (
               <>
                 <LayoutGrid className="w-4 h-4 mr-1" />
                 {t("TOOLBAR.GRID")}
@@ -114,20 +143,18 @@ const OrderToolbar = ({
           </div>
         )}
 
-        {/* Date Range Filters - Now placed between Filter and Export buttons */}
+        {/* Date Range Filters */}
         {dateFilters.map((filter, index) => (
-          <div key={`date-${index}`} className="w-64 relative z-40">
-            <CustomDatePicker
+          <div key={`date-${index}`} className="w-64 relative">
+            <DateTimeRangePickerComponent
               value={filter.value}
-              onChange={(val) =>
-                handleFilterChange({ target: { value: val } }, filter.name)
+              onChange={(dateRange) =>
+                handleDateRangeChange(dateRange, filter.name)
               }
               name={filter.name}
-              error={filter.error}
               disableFuture={filter.disableFuture}
-              className="w-full h-full"
               showLabel={false}
-              placeholder={filter.placeholder || "Select date range"}
+              placeholder={filter.placeholder}
             />
           </div>
         ))}
@@ -155,7 +182,7 @@ const OrderToolbar = ({
         )}
       </div>
 
-      {/* Filter Dropdown (now only contains combobox filters) */}
+      {/* Filter Dropdown */}
       {showFilterDropdown && otherFilters.length > 0 && (
         <div className="mt-2 p-3 bg-white rounded-lg border border-gray-200 shadow-sm relative overflow-visible z-0">
           {/* Clear button top-right */}
@@ -170,12 +197,10 @@ const OrderToolbar = ({
             )}
           </div>
 
-          {/* Filter Fields (Only Combobox filters) */}
+          {/* Filter Fields */}
           <div className="flex flex-wrap gap-4">
             {otherFilters.map((filter, index) => (
               <div key={index} className="w-44">
-                {" "}
-                {/* Changed from w-40 to w-44 */}
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   {filter.label || filter.name}
                 </label>
@@ -185,10 +210,7 @@ const OrderToolbar = ({
                     null
                   }
                   onChange={(option) =>
-                    handleFilterChange(
-                      { target: { value: option.value } },
-                      filter.name
-                    )
+                    handleComboboxChange(option, filter.name)
                   }
                 >
                   <div className="relative">
@@ -212,11 +234,16 @@ const OrderToolbar = ({
                           <Combobox.Option
                             key={option.value}
                             value={option}
+                            disabled={option.disabled}
                             className={({ active }) =>
                               `cursor-pointer select-none relative py-1.5 pl-3 pr-9 ${
                                 active
                                   ? "bg-custom-bg text-white"
                                   : "text-gray-900"
+                              } ${
+                                option.disabled
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
                               }`
                             }
                           >
@@ -225,7 +252,7 @@ const OrderToolbar = ({
                         ))
                       ) : (
                         <div className="py-1.5 px-3 text-gray-500 text-sm">
-                          No options found
+                          {t("COMMON.NO_OPTIONS_FOUND")}
                         </div>
                       )}
                     </Combobox.Options>

@@ -39,6 +39,7 @@ import {
   clearStates,
   clearCities,
 } from "../store/slices/allDataSlice";
+import FloatingFooter from "../components/FloatingFooter"; // Import FloatingFooter
 
 // Import password utilities
 import {
@@ -128,6 +129,18 @@ const AddUser = () => {
   const navigate = useNavigate();
   const [bSubmitting, setSubmitting] = useState(false);
 
+  // Get permissions from localStorage
+  const userPermissions = JSON.parse(localStorage.getItem("PermissionIDs") || "[]");
+
+  // Check if user has Edit Role permission
+  const hasEditRolePermission = userPermissions.includes("00000103-0000-0000-0000-000000000103");
+  
+  // Check if user has Edit Store permission  
+  const hasEditStorePermission = userPermissions.includes("00000104-0000-0000-0000-000000000104");
+
+  // Determine if we should show the entire Account Security section
+  const shouldShowAccountSecuritySection = !id || (id && (hasEditRolePermission || hasEditStorePermission));
+
   // Gender options
   const genderOptions = useMemo(
     () =>
@@ -197,12 +210,15 @@ const AddUser = () => {
       errors.gender = t("ADD_USER.VALIDATION.GENDER_REQUIRED");
     }
 
-    if (!oFormData.role) {
-      errors.role = t("ADD_USER.VALIDATION.ROLE_REQUIRED");
-    }
+    // Only validate role and stores if they are visible
+    if (shouldShowAccountSecuritySection) {
+      if (!oFormData.role) {
+        errors.role = t("ADD_USER.VALIDATION.ROLE_REQUIRED");
+      }
 
-    if (!oFormData.stores || oFormData.stores.length === 0) {
-      errors.stores = t("ADD_USER.VALIDATION.STORES_REQUIRED");
+      if (!oFormData.stores || oFormData.stores.length === 0) {
+        errors.stores = t("ADD_USER.VALIDATION.STORES_REQUIRED");
+      }
     }
 
     // Password validation only for new users
@@ -237,7 +253,7 @@ const AddUser = () => {
     }
 
     return errors;
-  }, [oFormData, t, id]);
+  }, [oFormData, t, id, shouldShowAccountSecuritySection]);
 
   useEffect(() => {
     if (!hasFetchedInitialData.current) {
@@ -246,7 +262,7 @@ const AddUser = () => {
         hasFetchedCountries.current = true;
         dispatch(fetchResource({ key: "countries" }));
       }
-      if (!roles.length && !rolesLoading && !hasFetchedRoles.current) {
+      if (!roles.length && !rolesLoading && !hasFetchedRoles.current && shouldShowAccountSecuritySection) {
         hasFetchedRoles.current = true;
         dispatch(
           fetchResource({
@@ -255,7 +271,7 @@ const AddUser = () => {
           })
         );
       }
-      if (!stores.length && !storesLoading && !hasFetchedStores.current) {
+      if (!stores.length && !storesLoading && !hasFetchedStores.current && shouldShowAccountSecuritySection) {
         hasFetchedStores.current = true;
         dispatch(
           fetchResource({
@@ -273,6 +289,7 @@ const AddUser = () => {
     rolesLoading,
     stores,
     storesLoading,
+    shouldShowAccountSecuritySection,
   ]);
 
   useEffect(() => {
@@ -514,9 +531,13 @@ const AddUser = () => {
     }
   }, []);
 
+  const handleClose = useCallback(() => {
+    navigate("/users");
+  }, [navigate]);
+
   const handleSubmit = useCallback(
     async (e) => {
-      e.preventDefault();
+      e?.preventDefault(); // Make it optional for the footer button
       const validationErrors = validate();
       setErrors(validationErrors);
       if (Object.keys(validationErrors).length > 0) return;
@@ -647,7 +668,7 @@ const AddUser = () => {
   );
 
   return (
-    <div className="max-w-8xl mx-auto">
+    <div className="max-w-8xl mx-auto pb-20"> {/* Added padding-bottom */}
       <ToastContainer />
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -710,360 +731,372 @@ const AddUser = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {t("ADD_USER.PERSONAL_INFO")}
-            </h2>
-          </div>
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <TextInputWithIcon
-                label={t("ADD_USER.FIRST_NAME")}
-                id="firstName"
-                name="firstName"
-                value={oFormData.firstName}
-                onChange={handleChange}
-                placeholder={t("ADD_USER.ENTER_FIRST_NAME")}
-                Icon={User}
-                error={oErrors.firstName}
-              />
-              <TextInputWithIcon
-                label={t("ADD_USER.LAST_NAME")}
-                id="lastName"
-                name="lastName"
-                value={oFormData.lastName}
-                onChange={handleChange}
-                placeholder={t("ADD_USER.ENTER_LAST_NAME")}
-                Icon={User}
-                error={oErrors.lastName}
-              />
-              <SelectWithIcon
-                label={t("ADD_USER.GENDER")}
-                id="gender"
-                name="gender"
-                value={oFormData.gender}
-                onChange={handleChange}
-                options={genderOptions}
-                Icon={Users}
-                error={oErrors.gender}
-                placeholder={t("ADD_USER.SELECT_GENDER")}
-              />
-              <TextInputWithIcon
-                label={t("COMMON.EMAIL_ADDRESS")}
-                id="email"
-                name="email"
-                value={oFormData.email}
-                onChange={handleChange}
-                placeholder={t("COMMON.ENTER_EMAIL_ADDRESS")}
-                Icon={Mail}
-                type="email"
-                error={oErrors.email}
-              />
-              <TextInputWithIcon
-                label={t("COMMON.PHONE_NUMBER")}
-                id="phone"
-                name="phone"
-                value={oFormData.phone}
-                onChange={handleChange}
-                placeholder={t("COMMON.ENTER_PHONE_NUMBER")}
-                Icon={Phone}
-                type="tel"
-                error={oErrors.phone}
-              />
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {t("ADD_USER.PERSONAL_INFO")}
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <TextInputWithIcon
+                  label={t("ADD_USER.FIRST_NAME")}
+                  id="firstName"
+                  name="firstName"
+                  value={oFormData.firstName}
+                  onChange={handleChange}
+                  placeholder={t("ADD_USER.ENTER_FIRST_NAME")}
+                  Icon={User}
+                  error={oErrors.firstName}
+                />
+                <TextInputWithIcon
+                  label={t("ADD_USER.LAST_NAME")}
+                  id="lastName"
+                  name="lastName"
+                  value={oFormData.lastName}
+                  onChange={handleChange}
+                  placeholder={t("ADD_USER.ENTER_LAST_NAME")}
+                  Icon={User}
+                  error={oErrors.lastName}
+                />
+                <SelectWithIcon
+                  label={t("ADD_USER.GENDER")}
+                  id="gender"
+                  name="gender"
+                  value={oFormData.gender}
+                  onChange={handleChange}
+                  options={genderOptions}
+                  Icon={Users}
+                  error={oErrors.gender}
+                  placeholder={t("ADD_USER.SELECT_GENDER")}
+                />
+                <TextInputWithIcon
+                  label={t("COMMON.EMAIL_ADDRESS")}
+                  id="email"
+                  name="email"
+                  value={oFormData.email}
+                  onChange={handleChange}
+                  placeholder={t("COMMON.ENTER_EMAIL_ADDRESS")}
+                  Icon={Mail}
+                  type="email"
+                  error={oErrors.email}
+                />
+                <TextInputWithIcon
+                  label={t("COMMON.PHONE_NUMBER")}
+                  id="phone"
+                  name="phone"
+                  value={oFormData.phone}
+                  onChange={handleChange}
+                  placeholder={t("COMMON.ENTER_PHONE_NUMBER")}
+                  Icon={Phone}
+                  type="tel"
+                  error={oErrors.phone}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {t("ADD_USER.ACCOUNT_SECURITY")}
-            </h2>
-          </div>
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <SelectWithIcon
-                label={t("ADD_USER.USER_ROLE")}
-                id="role"
-                name="role"
-                value={oFormData.role}
-                onChange={handleChange}
-                options={roles.map((r) => ({
-                  value: r.RoleID,
-                  label: r.RoleName,
-                }))}
-                Icon={Building}
-                disabled={rolesLoading}
-                error={oErrors.role || rolesError}
-                placeholder={
-                  rolesLoading ? t("COMMON.LOADING") : t("ADD_USER.SELECT_ROLE")
-                }
-                searchable
-                searchPlaceholder={t("COMMON.SEARCH_ROLE") || "Search role"}
-                onInputChange={(inputValue) => {
-                  dispatch(
-                    fetchResource({
-                      key: "roles",
-                      params: {
-                        searchText: inputValue,
-                      },
-                    })
-                  );
-                }}
-              />
-
-              <SelectWithIcon
-                label={t("ADD_USER.ASSIGNED_STORES")}
-                id="stores"
-                name="stores"
-                value={oFormData.stores}
-                onChange={handleChange}
-                options={stores.map((s) => ({
-                  value: s.StoreID,
-                  label: s.StoreName,
-                }))}
-                Icon={Store}
-                disabled={storesLoading}
-                error={oErrors.stores || storesError}
-                placeholder={
-                  storesLoading
-                    ? t("COMMON.LOADING")
-                    : t("ADD_USER.SELECT_STORES")
-                }
-                multiple={true}
-                searchable
-                searchPlaceholder={t("COMMON.SEARCH_STORES") || "Search stores"}
-                onInputChange={(inputValue) => {
-                  dispatch(
-                    fetchResource({
-                      key: "stores",
-                      params: {
-                        searchText: inputValue,
-                      },
-                    })
-                  );
-                }}
-              />
-
-              {/* Password Section - Only show for new users */}
-              {!id && (
-                <div className="col-span-1 md:col-span-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <TextInputWithIcon
-                      label={t("COMMON.PASSWORD")}
-                      id="password"
-                      name="password"
-                      value={oFormData.password}
+          {/* Account Security Section - Conditionally rendered */}
+          {shouldShowAccountSecuritySection && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {t("ADD_USER.ACCOUNT_SECURITY")}
+                </h2>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Role Field - Conditionally rendered */}
+                  {(!id || hasEditRolePermission) && (
+                    <SelectWithIcon
+                      label={t("ADD_USER.USER_ROLE")}
+                      id="role"
+                      name="role"
+                      value={oFormData.role}
                       onChange={handleChange}
-                      placeholder={t("COMMON.ENTER_PASSWORD")}
-                      Icon={Lock}
-                      type="password"
-                      error={oErrors.password}
+                      options={roles.map((r) => ({
+                        value: r.RoleID,
+                        label: r.RoleName,
+                      }))}
+                      Icon={Building}
+                      disabled={rolesLoading || (id && !hasEditRolePermission)}
+                      error={oErrors.role || rolesError}
+                      placeholder={
+                        rolesLoading
+                          ? t("COMMON.LOADING")
+                          : (id && !hasEditRolePermission)
+                          ? t("COMMON.NO_PERMISSION")
+                          : t("ADD_USER.SELECT_ROLE")
+                      }
+                      searchable
+                      searchPlaceholder={t("COMMON.SEARCH_ROLE") || "Search role"}
+                      onInputChange={(inputValue) => {
+                        if (!id || hasEditRolePermission) {
+                          dispatch(
+                            fetchResource({
+                              key: "roles",
+                              params: {
+                                searchText: inputValue,
+                              },
+                            })
+                          );
+                        }
+                      }}
                     />
-                    <TextInputWithIcon
-                      label={t("COMMON.CONFIRM_PASSWORD")}
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={oFormData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder={t("COMMON.CONFIRM_PASSWORD")}
-                      Icon={Lock}
-                      type="password"
-                      error={oErrors.confirmPassword}
-                    />
-                  </div>
+                  )}
 
-                  {typeof oFormData.password === "string" &&
-                    oFormData.password.length > 0 && (
-                      <div
-                        className="col-span-1 md:col-span-2"
-                        style={{ marginTop: 4 }}
-                      >
-                        <span
-                          style={{
-                            color:
-                              passwordStrength === "strong"
-                                ? "#16a34a"
-                                : passwordStrength === "medium"
-                                ? "#f59e42"
-                                : "#dc2626",
-                            fontWeight: 600,
-                            fontSize: 13,
-                          }}
-                        >
-                          {passwordStrengthText}
-                        </span>
-                        <ul
-                          style={{
-                            margin: "8px 0 0 0",
-                            padding: 0,
-                            listStyle: "none",
-                          }}
-                        >
-                          {passwordRequirements(t).map((req, idx) => {
-                            const passed = req.test(oFormData.password);
-                            return (
-                              <li
-                                key={idx}
+                  {/* Stores Field - Conditionally rendered */}
+                  {(!id || hasEditStorePermission) && (
+                    <SelectWithIcon
+                      label={t("ADD_USER.ASSIGNED_STORES")}
+                      id="stores"
+                      name="stores"
+                      value={oFormData.stores}
+                      onChange={handleChange}
+                      options={stores.map((s) => ({
+                        value: s.StoreID,
+                        label: s.StoreName,
+                      }))}
+                      Icon={Store}
+                      disabled={storesLoading || (id && !hasEditStorePermission)}
+                      error={oErrors.stores || storesError}
+                      placeholder={
+                        storesLoading
+                          ? t("COMMON.LOADING")
+                          : (id && !hasEditStorePermission)
+                          ? t("COMMON.NO_PERMISSION")
+                          : t("ADD_USER.SELECT_STORES")
+                      }
+                      multiple={true}
+                      searchable
+                      searchPlaceholder={t("COMMON.SEARCH_STORES") || "Search stores"}
+                      onInputChange={(inputValue) => {
+                        if (!id || hasEditStorePermission) {
+                          dispatch(
+                            fetchResource({
+                              key: "stores",
+                              params: {
+                                searchText: inputValue,
+                              },
+                            })
+                          );
+                        }
+                      }}
+                    />
+                  )}
+
+                  {/* Password Section - Only show for new users */}
+                  {!id && (
+                    <div className="col-span-1 md:col-span-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <TextInputWithIcon
+                          label={t("COMMON.PASSWORD")}
+                          id="password"
+                          name="password"
+                          value={oFormData.password}
+                          onChange={handleChange}
+                          placeholder={t("COMMON.ENTER_PASSWORD")}
+                          Icon={Lock}
+                          type="password"
+                          error={oErrors.password}
+                        />
+                        <TextInputWithIcon
+                          label={t("COMMON.CONFIRM_PASSWORD")}
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          value={oFormData.confirmPassword}
+                          onChange={handleChange}
+                          placeholder={t("COMMON.CONFIRM_PASSWORD")}
+                          Icon={Lock}
+                          type="password"
+                          error={oErrors.confirmPassword}
+                        />
+                      </div>
+
+                      {typeof oFormData.password === "string" &&
+                        oFormData.password.length > 0 && (
+                          <div
+                            className="col-span-1 md:col-span-2"
+                            style={{ marginTop: 4 }}
+                          >
+                            <span
+                              style={{
+                                color:
+                                  passwordStrength === "strong"
+                                    ? "#16a34a"
+                                    : passwordStrength === "medium"
+                                    ? "#f59e42"
+                                    : "#dc2626",
+                                fontWeight: 600,
+                                fontSize: 13,
+                              }}
+                            >
+                              {passwordStrengthText}
+                            </span>
+                            <ul
+                              style={{
+                                margin: "8px 0 0 0",
+                                padding: 0,
+                                listStyle: "none",
+                              }}
+                            >
+                              {passwordRequirements(t).map((req, idx) => {
+                                const passed = req.test(oFormData.password);
+                                return (
+                                  <li
+                                    key={idx}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      color: passed ? "#16a34a" : "#dc2626",
+                                      fontSize: 13,
+                                      marginBottom: 2,
+                                    }}
+                                  >
+                                    {passed ? (
+                                      <CheckCircle
+                                        size={16}
+                                        color="#16a34a"
+                                        style={{ marginRight: 6 }}
+                                      />
+                                    ) : (
+                                      <XCircle
+                                        size={16}
+                                        color="#dc2626"
+                                        style={{ marginRight: 6 }}
+                                      />
+                                    )}
+                                    {req.label}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                            {passwordStrength !== "strong" && (
+                              <div
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  color: passed ? "#16a34a" : "#dc2626",
-                                  fontSize: 13,
-                                  marginBottom: 2,
+                                  color: "#dc2626",
+                                  fontSize: 12,
+                                  marginTop: 2,
                                 }}
                               >
-                                {passed ? (
-                                  <CheckCircle
-                                    size={16}
-                                    color="#16a34a"
-                                    style={{ marginRight: 6 }}
-                                  />
-                                ) : (
-                                  <XCircle
-                                    size={16}
-                                    color="#dc2626"
-                                    style={{ marginRight: 6 }}
-                                  />
-                                )}
-                                {req.label}
-                              </li>
-                            );
-                          })}
-                        </ul>
-                        {passwordStrength !== "strong" && (
-                          <div
-                            style={{
-                              color: "#dc2626",
-                              fontSize: 12,
-                              marginTop: 2,
-                            }}
-                          >
-                            {t("COMMON.PASSWORD_SUGGESTION")}
+                                {t("COMMON.PASSWORD_SUGGESTION")}
+                              </div>
+                            )}
                           </div>
                         )}
-                      </div>
-                    )}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
+          )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {t("ADD_USER.ADDRESS_INFO")}
-            </h2>
-          </div>
-          <div className="p-6 space-y-6">
-            <TextInputWithIcon
-              label={t("COMMON.STREET_ADDRESS")}
-              id="streetAddress"
-              name="streetAddress"
-              value={oFormData.streetAddress}
-              onChange={handleChange}
-              placeholder={t("COMMON.ENTER_STREET_ADDRESS")}
-              Icon={MapPin}
-              error={oErrors.streetAddress}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <SelectWithIcon
-                  label={t("COMMON.COUNTRY")}
-                  id="country"
-                  name="country"
-                  value={oFormData.country}
-                  onChange={handleChange}
-                  options={countries.map((c) => ({
-                    value: c.CountryID,
-                    label: c.CountryName,
-                  }))}
-                  Icon={Building}
-                  error={oErrors.country || countriesError}
-                  placeholder={
-                    countriesLoading
-                      ? t("COMMON.LOADING")
-                      : t("COMMON.SELECT_COUNTRY")
-                  }
-                  disabled={countriesLoading}
-                />
-              </div>
-              <div>
-                <SelectWithIcon
-                  label={t("COMMON.STATE")}
-                  id="state"
-                  name="state"
-                  value={oFormData.state}
-                  onChange={handleChange}
-                  options={states.map((s) => ({
-                    value: s.StateID,
-                    label: s.StateName,
-                  }))}
-                  Icon={Building}
-                  error={oErrors.state || statesError}
-                  placeholder={
-                    statesLoading
-                      ? t("COMMON.LOADING")
-                      : t("COMMON.SELECT_STATE")
-                  }
-                  disabled={statesLoading || !oFormData.country}
-                />
-              </div>
-              <div>
-                <SelectWithIcon
-                  label={t("COMMON.CITY")}
-                  id="city"
-                  name="city"
-                  value={oFormData.city}
-                  onChange={handleChange}
-                  options={cities.map((c) => ({
-                    value: c.CityID,
-                    label: c.CityName,
-                  }))}
-                  Icon={Building}
-                  error={oErrors.city || citiesError}
-                  placeholder={
-                    citiesLoading
-                      ? t("COMMON.LOADING")
-                      : t("COMMON.SELECT_CITY")
-                  }
-                  disabled={citiesLoading || !oFormData.state}
-                />
-              </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {t("ADD_USER.ADDRESS_INFO")}
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
               <TextInputWithIcon
-                label={t("COMMON.PINCODE")}
-                id="pincode"
-                name="pincode"
-                value={oFormData.pincode}
+                label={t("COMMON.STREET_ADDRESS")}
+                id="streetAddress"
+                name="streetAddress"
+                value={oFormData.streetAddress}
                 onChange={handleChange}
-                placeholder={t("ADD_USER.ENTER_PINCODE")}
+                placeholder={t("COMMON.ENTER_STREET_ADDRESS")}
                 Icon={MapPin}
-                error={oErrors.pincode}
+                error={oErrors.streetAddress}
               />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <SelectWithIcon
+                    label={t("COMMON.COUNTRY")}
+                    id="country"
+                    name="country"
+                    value={oFormData.country}
+                    onChange={handleChange}
+                    options={countries.map((c) => ({
+                      value: c.CountryID,
+                      label: c.CountryName,
+                    }))}
+                    Icon={Building}
+                    error={oErrors.country || countriesError}
+                    placeholder={
+                      countriesLoading
+                        ? t("COMMON.LOADING")
+                        : t("COMMON.SELECT_COUNTRY")
+                    }
+                    disabled={countriesLoading}
+                  />
+                </div>
+                <div>
+                  <SelectWithIcon
+                    label={t("COMMON.STATE")}
+                    id="state"
+                    name="state"
+                    value={oFormData.state}
+                    onChange={handleChange}
+                    options={states.map((s) => ({
+                      value: s.StateID,
+                      label: s.StateName,
+                    }))}
+                    Icon={Building}
+                    error={oErrors.state || statesError}
+                    placeholder={
+                      statesLoading
+                        ? t("COMMON.LOADING")
+                        : t("COMMON.SELECT_STATE")
+                    }
+                    disabled={statesLoading || !oFormData.country}
+                  />
+                </div>
+                <div>
+                  <SelectWithIcon
+                    label={t("COMMON.CITY")}
+                    id="city"
+                    name="city"
+                    value={oFormData.city}
+                    onChange={handleChange}
+                    options={cities.map((c) => ({
+                      value: c.CityID,
+                      label: c.CityName,
+                    }))}
+                    Icon={Building}
+                    error={oErrors.city || citiesError}
+                    placeholder={
+                      citiesLoading
+                        ? t("COMMON.LOADING")
+                        : t("COMMON.SELECT_CITY")
+                    }
+                    disabled={citiesLoading || !oFormData.state}
+                  />
+                </div>
+                <TextInputWithIcon
+                  label={t("COMMON.PINCODE")}
+                  id="pincode"
+                  name="pincode"
+                  value={oFormData.pincode}
+                  onChange={handleChange}
+                  placeholder={t("ADD_USER.ENTER_PINCODE")}
+                  Icon={MapPin}
+                  error={oErrors.pincode}
+                />
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="flex justify-end space-x-4">
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="btn-cancel"
-          >
-            {t("COMMON.CANCEL")}
-          </button>
-          <button type="submit" className="btn-primary" disabled={bSubmitting}>
-            {bSubmitting
-              ? t("COMMON.SAVING")
-              : id
-              ? t("COMMON.SAVE_BUTTON")
-              : t("ADD_USER.CREATE_USER")}
-          </button>
         </div>
       </form>
+
+      {/* Floating Footer */}
+      <FloatingFooter
+        onCancel={handleClose}
+        onSubmit={handleSubmit}
+        isSubmitting={bSubmitting}
+        isEditMode={!!id}
+      />
     </div>
   );
 };

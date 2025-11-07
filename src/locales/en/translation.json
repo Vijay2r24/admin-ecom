@@ -514,6 +514,7 @@
     "NO_PRODUCTS": "No products found.",
     "SEARCH_PLACEHOLDER": "Enter Products",
     "EXPORT_BUTTON": "Export Products",
+    "BRAND":"Brand",
     "EXPORT_SUCCESS": "Products exported successfully!",
     "EXPORT_ERROR": "Failed to export products. Please try again.",
     "EXPORT_ERROR_NO_DATE_RANGE": "Please select a date range to export products.",
@@ -1098,5 +1099,10 @@
       "FRI": "Fri",
       "SAT": "Sat"
     }
+  },
+   "NOT_FOUND": {
+    "TITLE": "404",
+    "HEADING": "Page Not Found",
+    "MESSAGE": "The page you're looking for doesn't exist."
   }
 }

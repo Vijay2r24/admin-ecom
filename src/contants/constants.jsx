@@ -1,4 +1,5 @@
 
+import dayjs from "dayjs";
 export const STATUS = {
   PENDING: "pending",
   SUCCESS: "success",
@@ -189,4 +190,149 @@ export const FILE_CONSTANTS = {
   BRAND_LOGO_PREFIX: "brand-logo",
   CATEGORY_IMAGE_PREFIX: "category-image",
   FILE_TYPE: "image/jpeg",
+};
+export const MODULES = {
+  DASHBOARD: 'Dashboard Management',
+  ORDER: 'Order Management',
+  STORE: 'Store Management',
+  USER: 'User Management',
+  ROLE: 'Role Management',
+  CONTENT: 'Content Management',
+  PRODUCT: 'Product Management',
+};
+
+export const PERMISSIONS = {
+  VIEW_DASHBOARD: 'View Dashboard',
+
+  VIEW_ORDERS: 'View Orders',
+
+  VIEW_STORE: 'View Store',
+  ADD_STORE: 'Add Store',
+  UPDATE_STORE: 'Update Store',
+
+  VIEW_USER: 'View User',
+  ADD_USER: 'Add User',
+  UPDATE_USER: 'Update user',
+
+  VIEW_ROLE: 'View Role',
+  ADD_ROLE: 'Add Role',
+  UPDATE_ROLE: 'Update Role',
+
+  VIEW_BANNERS: 'View Banners',
+  CREATE_BANNER: 'Create Banner',
+  UPDATE_BANNER: 'Update Banner',
+  SEND_NOTIFICATION: 'Send Push Notification',
+
+  VIEW_PRODUCTS: 'View Products',
+  CREATE_PRODUCT: 'Create Product',
+  UPDATE_PRODUCT: 'Update Product',
+
+  VIEW_BRANDS: 'View Brands',
+  UPDATE_BRAND: 'Update Brand',
+
+  VIEW_CATEGORIES: 'View Categories',
+  UPDATE_CATEGORY: 'Update Category',
+
+  VIEW_ATTRIBUTE_TYPES: 'View Attribute Types',
+  UPDATE_ATTRIBUTE_TYPE: 'Update Attribute Type',
+
+  VIEW_COLOURS: 'View Colours',
+  UPDATE_COLOUR: 'Update Colour',
+  
+  EDIT_ROLE: "00000103-0000-0000-0000-000000000103",
+  EDIT_STORE: "00000104-0000-0000-0000-000000000104",
+
+  VIEW_ATTRIBUTES: 'View Attributes',
+  UPDATE_ATTRIBUTE: 'Update Attribute',
+
+  VIEW_PRODUCT_GROUPS: 'View Product Groups',
+  UPDATE_PRODUCT_GROUP: 'Update Product Group',
+};
+export const QUICK_FILTERS = [
+  { label: "Today", value: "today" },
+  { label: "Yesterday", value: "yesterday" },
+  { label: "Last 7 days", value: "last7days" },
+  { label: "Last 30 days", value: "last30days" },
+  { label: "Last 1 hour", value: "last1hour" },
+  { label: "Last 12 hours", value: "last12hours" },
+];
+
+export const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+export const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+export const YEARS = Array.from({ length: 20 }, (_, i) => dayjs().year() - 10 + i);
+
+export const DATE_FORMATS = {
+  display: "MMM DD, HH:mm",
+  time: "HH:mm",
+  monthYear: "MMM",
+};
+
+export const DEFAULT_PROPS = {
+  showLabel: true,
+  placeholder: "Select date range",
+};
+
+// Date range calculation functions
+export const getDateRangeForFilter = (filter) => {
+  const now = dayjs();
+
+  switch (filter) {
+    case "today":
+      return { start: now.startOf("day"), end: now.endOf("day") };
+    case "yesterday":
+      return {
+        start: now.subtract(1, "day").startOf("day"),
+        end: now.subtract(1, "day").endOf("day"),
+      };
+    case "last7days":
+      return { start: now.subtract(7, "days").startOf("day"), end: now.endOf("day") };
+    case "last30days":
+      return { start: now.subtract(30, "days").startOf("day"), end: now.endOf("day") };
+    case "last1hour":
+      return { start: now.subtract(1, "hour"), end: now };
+    case "last12hours":
+      return { start: now.subtract(12, "hours"), end: now };
+    default:
+      return { start: now.startOf("day"), end: now.endOf("day") };
+  }
+};
+
+// Calendar configuration
+export const CALENDAR_CONFIG = {
+  totalDays: 42, // 6 weeks of calendar
+  gridColumns: 7, // 7 days in a week
+};
+
+// Style constants
+export const STYLES = {
+  primaryColor: "#FF5A5F",
+  textColor: {
+    primary: "text-gray-900",
+    secondary: "text-gray-600",
+    muted: "text-gray-400",
+    white: "text-white",
+  },
+  backgroundColor: {
+    primary: "bg-[#FF5A5F]",
+    primaryHover: "bg-[#FF5A5F]/20",
+    primaryLight: "bg-[#FF5A5F]/10",
+    hover: "hover:bg-gray-100",
+  },
+  border: {
+    focus: "focus:ring-1 focus:ring-[#FF5A5F]",
+  },
+  dimensions: {
+    dayCell: "w-6 h-6",
+    dropdown: {
+      minWidth: {
+        month: "min-w-[120px]",
+        year: "min-w-[100px]",
+      },
+    },
+  },
 };
