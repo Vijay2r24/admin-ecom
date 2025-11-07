@@ -15,8 +15,8 @@ export const COLORS = {
 };
 export const STATUS_VALUES = {
   ALL: "",
-  BOOLEAN_ACTIVE: true,
-  BOOLEAN_INACTIVE: false,
+  BOOLEAN_ACTIVE: "true",
+  BOOLEAN_INACTIVE: "false",
 };
 export const STATUS_OPTIONS = [
   { value: STATUS_VALUES.ALL, labelKey: "COMMON.ALL" },
@@ -73,7 +73,8 @@ export const DOWNLOAD_ICON = (
 export const TOAST_DURATION = {
   SHORT: 1500,
   MEDIUM: 3000,
-  LONG: 5000
+  LONG: 5000,
+ TO_LONG:10000,
 };
 export const DATE_FORMAT_OPTIONS = {
   year: "numeric",
@@ -307,7 +308,10 @@ export const CALENDAR_CONFIG = {
   totalDays: 42, // 6 weeks of calendar
   gridColumns: 7, // 7 days in a week
 };
-
+export const MESSAGES = {
+  INACTIVE_USER_MESSAGE: "Your access permissions have been updated. Kindly <br/> log in again to proceed.",
+  DEFAULT_ERROR_MESSAGE: "An unexpected error occurred. Please try again."
+};
 // Style constants
 export const STYLES = {
   primaryColor: "#FF5A5F",

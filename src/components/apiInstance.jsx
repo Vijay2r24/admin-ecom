@@ -2,15 +2,15 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { BASE_URL } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
-import { STATUS } from "../contants/constants";
- 
+import { MESSAGES, STATUS, TOAST_DURATION } from "../contants/constants";
+
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
- 
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token"); // or your token logic
   if (token) {
@@ -18,11 +18,16 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
- 
-const INACTIVE_USER_MESSAGE =
-  "Your access permissions have been updated. Kindly <br/> log in again to proceed.";
-const DEFAULT_ERROR_MESSAGE = "An unexpected error occurred. Please try again.";
- 
+
+const INACTIVE_USER_MESSAGE = MESSAGES.INACTIVE_USER_MESSAGE;
+const DEFAULT_ERROR_MESSAGE = MESSAGES.DEFAULT_ERROR_MESSAGE;
+
+// Function to handle logout
+const handleLogout = () => {
+  localStorage.clear();
+  window.location.href = "/"; // Always navigate to home page
+};
+
 // Function to show logout notification
 const showLogoutNotification = (
   message,
@@ -39,18 +44,18 @@ const showLogoutNotification = (
 <p style="margin:0;font-size:14px;color:#1f2937;">Auto logout in <span data-swal-timer-countdown>10</span> seconds.</p>
 </div>
   `;
- 
+
   let timerInterval;
- 
+
   Swal.fire({
     html: html,
-    icon: "warning",
+    icon: STATUS.WARNING,
     showConfirmButton: true,
-    confirmButtonText: "Logout",
+    confirmButtonText: "Logout Now",
     showCancelButton: false,
     allowOutsideClick: false,
     allowEscapeKey: false,
-    timer: 10000,
+    timer: TOAST_DURATION.TO_LONG, // 10 seconds
     timerProgressBar: true,
     width: "32rem",
     customClass: {
@@ -60,14 +65,15 @@ const showLogoutNotification = (
     didOpen: () => {
       const container = Swal.getHtmlContainer();
       const countdownEl = container?.querySelector("[data-swal-timer-countdown]");
- 
+
       timerInterval = setInterval(() => {
         const timerLeft = Swal.getTimerLeft();
         if (!timerLeft || !countdownEl) {
           return;
         }
+        // Fix: Properly calculate seconds remaining
         countdownEl.textContent = Math.ceil(timerLeft / 1000).toString();
-      }, 200);
+      }, 100);
     },
     willClose: () => {
       if (timerInterval) {
@@ -75,13 +81,20 @@ const showLogoutNotification = (
       }
     },
   }).then((result) => {
-    if (result.isConfirmed) {
-      localStorage.clear();
-      window.location.href = "/"; // Always navigate to home page
+    // This will be called when:
+    // 1. Timer completes (result.dismiss === Swal.DismissReason.timer)
+    // 2. User clicks "Logout Now" button (result.isConfirmed)
+    
+    if (result.dismiss === Swal.DismissReason.timer) {
+      // Auto logout when timer completes
+      handleLogout();
+    } else if (result.isConfirmed) {
+      // Manual logout when user clicks button
+      handleLogout();
     }
   });
 };
- 
+
 api.interceptors.response.use(
   (response) => {
     // If server returns a "FAILURE" status inside success response
@@ -89,14 +102,14 @@ api.interceptors.response.use(
       showLogoutNotification(response.data?.message);
       return Promise.reject(response); // stop further processing
     }
- 
+
     return response;
   },
   (error) => {
     // Also catch error responses (like 403)
     const apiMessage =
       error.response?.data?.message || error.message || DEFAULT_ERROR_MESSAGE;
- 
+
     if (error.response?.data?.message === "User is Inactive") {
       showLogoutNotification(apiMessage);
     } else {
@@ -105,5 +118,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
- 
-export default api
+
+export default api;
