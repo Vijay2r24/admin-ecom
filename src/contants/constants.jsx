@@ -208,6 +208,9 @@ export const FILE_CONSTANTS = {
   CATEGORY_IMAGE_PREFIX: "category-image",
   FILE_TYPE: "image/jpeg",
 };
+
+export const TOOLTIPSTATUS = {ACTIVE: 'active',INACTIVE: 'inactive'};
+ 
 export const MODULES = {
   DASHBOARD: "Dashboard Management",
   ORDER: "Order Management",
