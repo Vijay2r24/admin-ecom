@@ -47,7 +47,6 @@ import {
   getPasswordStrengthText,
   validateFormPassword,
 } from "../utils/passwordUtils";
-import FloatingFooter from "../components/FloatingFooter";
 
 const getArray = (data) =>
   Array.isArray(data)
@@ -106,26 +105,6 @@ const AddUser = () => {
     (state) => state.allData.resources.cities || {}
   );
 
-  // Get user permissions from Redux store
-  const userPermissions = useSelector(
-    (state) => state.auth?.user?.permissions || []
-  );
-
-  // Permission checks
-  const hasEditRolePermission = useMemo(() => {
-    return userPermissions.some(
-      (permission) =>
-        permission.PermissionID === "00000103-0000-0000-0000-000000000103"
-    );
-  }, [userPermissions]);
-
-  const hasEditStorePermission = useMemo(() => {
-    return userPermissions.some(
-      (permission) =>
-        permission.PermissionID === "00000104-0000-0000-0000-000000000104"
-    );
-  }, [userPermissions]);
-
   const roles = rolesData.data || [];
   const stores = storesData.data || [];
   const countries = countriesData.data || [];
@@ -177,9 +156,6 @@ const AddUser = () => {
     () => getPasswordStrengthText(passwordStrength, t),
     [passwordStrength, t]
   );
-  const handleClose = useCallback(() => {
-    navigate("/users");
-  }, [navigate]);
 
   useEffect(() => {
     setTitle(id ? t("USERS.EDIT_USER") : t("USERS.ADD_NEW_USER"));
@@ -270,13 +246,7 @@ const AddUser = () => {
         hasFetchedCountries.current = true;
         dispatch(fetchResource({ key: "countries" }));
       }
-      // Only fetch roles if user has permission
-      if (
-        !roles.length &&
-        !rolesLoading &&
-        !hasFetchedRoles.current &&
-        hasEditRolePermission
-      ) {
+      if (!roles.length && !rolesLoading && !hasFetchedRoles.current) {
         hasFetchedRoles.current = true;
         dispatch(
           fetchResource({
@@ -285,13 +255,7 @@ const AddUser = () => {
           })
         );
       }
-      // Only fetch stores if user has permission
-      if (
-        !stores.length &&
-        !storesLoading &&
-        !hasFetchedStores.current &&
-        hasEditStorePermission
-      ) {
+      if (!stores.length && !storesLoading && !hasFetchedStores.current) {
         hasFetchedStores.current = true;
         dispatch(
           fetchResource({
@@ -309,8 +273,6 @@ const AddUser = () => {
     rolesLoading,
     stores,
     storesLoading,
-    hasEditRolePermission,
-    hasEditStorePermission,
   ]);
 
   useEffect(() => {
@@ -833,28 +795,22 @@ const AddUser = () => {
                   label: r.RoleName,
                 }))}
                 Icon={Building}
-                disabled={rolesLoading || !hasEditRolePermission}
+                disabled={rolesLoading}
                 error={oErrors.role || rolesError}
                 placeholder={
-                  rolesLoading
-                    ? t("COMMON.LOADING")
-                    : !hasEditRolePermission
-                    ? t("COMMON.NO_PERMISSION")
-                    : t("ADD_USER.SELECT_ROLE")
+                  rolesLoading ? t("COMMON.LOADING") : t("ADD_USER.SELECT_ROLE")
                 }
                 searchable
                 searchPlaceholder={t("COMMON.SEARCH_ROLE") || "Search role"}
                 onInputChange={(inputValue) => {
-                  if (hasEditRolePermission) {
-                    dispatch(
-                      fetchResource({
-                        key: "roles",
-                        params: {
-                          searchText: inputValue,
-                        },
-                      })
-                    );
-                  }
+                  dispatch(
+                    fetchResource({
+                      key: "roles",
+                      params: {
+                        searchText: inputValue,
+                      },
+                    })
+                  );
                 }}
               />
 
@@ -869,29 +825,25 @@ const AddUser = () => {
                   label: s.StoreName,
                 }))}
                 Icon={Store}
-                disabled={storesLoading || !hasEditStorePermission}
+                disabled={storesLoading}
                 error={oErrors.stores || storesError}
                 placeholder={
                   storesLoading
                     ? t("COMMON.LOADING")
-                    : !hasEditStorePermission
-                    ? t("COMMON.NO_PERMISSION")
                     : t("ADD_USER.SELECT_STORES")
                 }
                 multiple={true}
                 searchable
                 searchPlaceholder={t("COMMON.SEARCH_STORES") || "Search stores"}
                 onInputChange={(inputValue) => {
-                  if (hasEditStorePermission) {
-                    dispatch(
-                      fetchResource({
-                        key: "stores",
-                        params: {
-                          searchText: inputValue,
-                        },
-                      })
-                    );
-                  }
+                  dispatch(
+                    fetchResource({
+                      key: "stores",
+                      params: {
+                        searchText: inputValue,
+                      },
+                    })
+                  );
                 }}
               />
 
@@ -1094,12 +1046,23 @@ const AddUser = () => {
             </div>
           </div>
         </div>
-        <FloatingFooter
-          onCancel={handleClose}
-          onSubmit={handleSubmit}
-          isSubmitting={bSubmitting}
-          isEditMode={!!id}
-        />
+
+        <div className="flex justify-end space-x-4">
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="btn-cancel"
+          >
+            {t("COMMON.CANCEL")}
+          </button>
+          <button type="submit" className="btn-primary" disabled={bSubmitting}>
+            {bSubmitting
+              ? t("COMMON.SAVING")
+              : id
+              ? t("COMMON.SAVE_BUTTON")
+              : t("ADD_USER.CREATE_USER")}
+          </button>
+        </div>
       </form>
     </div>
   );

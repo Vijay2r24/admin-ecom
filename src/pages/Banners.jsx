@@ -10,7 +10,7 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { ITEMS_PER_PAGE, STATUS } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_VALUE_NAMES } from "../contants/constants";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
 import noImage from "../../assets/images/missing-pictur.jpg";
@@ -54,7 +54,7 @@ const Banners = () => {
         const bannerData = oResponse.data.data.map((banner) => ({
           BannerID: banner.BannerId,
           BannerName: banner.BannerName,
-          Status: banner.IsActive ? "Active" : "Inactive",
+          Status: banner.IsActive ? STATUS_VALUE_NAMES.ACTIVE :STATUS_VALUE_NAMES.INACTIVE,
           BannerImages:
             banner.BannerImage?.map((img) => ({
               BannerImage: img.documentUrl,
@@ -270,14 +270,14 @@ const Banners = () => {
                   )}
                   <div className="flex items-center justify-between mt-2">
                     <Switch
-                      checked={project.Status === "Active"}
+                      checked={project.Status === STATUS_VALUE_NAMES.ACTIVE}
                       onChange={() =>
                         handleToggleStatus(project.BannerID, project.Status)
                       }
                     />
                     <span
                       className={`text-sm font-medium ml-3 px-2 py-1 rounded-full text-xs font-semibold shadow ${
-                        project.Status === "Active"
+                        project.Status === STATUS_VALUE_NAMES.ACTIVE
                           ? "status-active bg-green-100 text-green-800"
                           : "status-inactive bg-red-100 text-red-800"
                       }`}
@@ -316,7 +316,7 @@ const Banners = () => {
           title={t("FULLSCREEN_ERROR_POPUP.TITLE")}
           message={t("BANNERS.STATUS_CONFIRM_MESSAGE", {
             status:
-              statusPopup.currentStatus === "Active"
+              statusPopup.currentStatus === STATUS_VALUE_NAMES.ACTIVE
                 ? t("COMMON.INACTIVE")
                 : t("COMMON.ACTIVE"),
           })}

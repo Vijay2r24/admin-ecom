@@ -8,6 +8,7 @@ export const STATUS = {
 };
 export const DEFAULT_COLOR = "#000000";
 export const COLORS = {
+  GRAY_PRIMARY:"#e5efff",
   PRIMARY: "#3498db",
   SECONDARY: "#2ecc71",
   ERROR: "#e74c3c",
@@ -190,4 +191,8 @@ export const FILE_CONSTANTS = {
   BRAND_LOGO_PREFIX: "brand-logo",
   CATEGORY_IMAGE_PREFIX: "category-image",
   FILE_TYPE: "image/jpeg",
+};
+export const STATUS_VALUE_NAMES = {
+ACTIVE:"Active",
+INACTIVE:"Inactive",
 };

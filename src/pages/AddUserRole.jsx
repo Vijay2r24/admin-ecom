@@ -13,7 +13,7 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { STATUS, STATUS_DROPDOWN_OPTIONS } from "../contants/constants";
+import { COLORS, STATUS, STATUS_DROPDOWN_OPTIONS } from "../contants/constants";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
 import SelectWithIcon from "../components/SelectWithIcon";
@@ -394,7 +394,7 @@ const AddUserRole = () => {
                     <div
                       key={moduleName}
                       className={`border p-4 rounded-lg shadow ${
-                        isEditingAdmin ? "bg-gray-100" : "bg-[#e5efff]"
+                        isEditingAdmin ? "bg-gray-100" : COLORS.GRAY_PRIMARY
                       }`}
                     >
                       <div className="flex justify-between items-center">

@@ -93,7 +93,6 @@ const UserRolesList = () => {
       filterParams.IsActive = selectedStatus === "true" || selectedStatus === true;
     }
 
-    console.log("Filter Params:", filterParams); // Debug log
 
     const fetchData = async () => {
       try {
