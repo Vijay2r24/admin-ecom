@@ -1,147 +1,419 @@
+import { useState, useEffect, useRef } from "react";
+import dayjs from "dayjs";
+import { ChevronLeft, ChevronRight, X, Calendar, ChevronDown } from "lucide-react";
+import {
+  QUICK_FILTERS,
+  MONTHS,
+  WEEK_DAYS,
+  YEARS,
+  DATE_FORMATS,
+  DEFAULT_PROPS,
+  getDateRangeForFilter,
+  CALENDAR_CONFIG,
+  STYLES,
+} from "./../contants/constants";
+import { useTranslation } from "react-i18next";
 
-import Datepicker from "react-tailwindcss-datepicker";
-import { Calendar, X } from "lucide-react";
-import { DATE_PICKER_CONFIG, SHORTCUT_LABELS, TIME_PERIODS } from '../contants/constants';
+function CalendarMonth({ month, year, selectedStart, selectedEnd, onDateClick }) {
+  const firstDay = dayjs(`${year}-${month + 1}-01`);
+  const daysInMonth = firstDay.daysInMonth();
+  const startingDayOfWeek = firstDay.day();
+  const days = [];
 
-const CustomDatePicker = ({ value = { startDate: null, endDate: null }, onChange, label = "", ...rest }) => {
-  const handleClear = () => {
-    const clearedValue = { startDate: null, endDate: null };
-    onChange?.(clearedValue);
-  };
-
-  const handleDateChange = (newValue) => {
-    // Ensure we pass the dates in the correct format
-    const formattedValue = {
-      startDate: newValue?.startDate || null,
-      endDate: newValue?.endDate || null
-    };
-    onChange?.(formattedValue);
-  };
-
-  const hasValue = value?.startDate || value?.endDate;
-
-  // Ensure the value passed to Datepicker is always in the correct format
-  const datePickerValue = {
-    startDate: value?.startDate || null,
-    endDate: value?.endDate || null
-  };
-
-  // Custom shortcuts including time-based ones
-  const customShortcuts = {
-  today: {
-    text: SHORTCUT_LABELS.TODAY,
-    period: {
-      start: new Date(),
-      end: new Date()
-    }
-  },
-  yesterday: {
-    text: SHORTCUT_LABELS.YESTERDAY,
-    period: {
-      start: new Date(new Date().setDate(new Date().getDate() + TIME_PERIODS.DAYS.YESTERDAY)),
-      end: new Date(new Date().setDate(new Date().getDate() + TIME_PERIODS.DAYS.YESTERDAY))
-    }
-  },
-  last7Days: {
-    text: SHORTCUT_LABELS.LAST_7_DAYS,
-    period: {
-      start: new Date(new Date().setDate(new Date().getDate() + TIME_PERIODS.DAYS.LAST_7_DAYS)),
-      end: new Date()
-    }
-  },
-  last30Days: {
-    text: SHORTCUT_LABELS.LAST_30_DAYS,
-    period: {
-      start: new Date(new Date().setDate(new Date().getDate() + TIME_PERIODS.DAYS.LAST_30_DAYS)),
-      end: new Date()
-    }
-  },
-  lastHour: {
-    text: SHORTCUT_LABELS.LAST_HOUR,
-    period: {
-      start: new Date(new Date().setHours(new Date().getHours() + TIME_PERIODS.HOURS.LAST_HOUR)),
-      end: new Date()
-    }
-  },
-  last2Hours: {
-    text: SHORTCUT_LABELS.LAST_2_HOURS,
-    period: {
-      start: new Date(new Date().setHours(new Date().getHours() + TIME_PERIODS.HOURS.LAST_2_HOURS)),
-      end: new Date()
-    }
-  },
-  last3Hours: {
-    text: SHORTCUT_LABELS.LAST_3_HOURS,
-    period: {
-      start: new Date(new Date().setHours(new Date().getHours() + TIME_PERIODS.HOURS.LAST_3_HOURS)),
-      end: new Date()
-    }
-  },
-  last6Hours: {
-    text: SHORTCUT_LABELS.LAST_6_HOURS,
-    period: {
-      start: new Date(new Date().setHours(new Date().getHours() + TIME_PERIODS.HOURS.LAST_6_HOURS)),
-      end: new Date()
-    }
-  },
-  last12Hours: {
-    text: SHORTCUT_LABELS.LAST_12_HOURS,
-    period: {
-      start: new Date(new Date().setHours(new Date().getHours() + TIME_PERIODS.HOURS.LAST_12_HOURS)),
-      end: new Date()
-    }
-  },
-  last24Hours: {
-    text: SHORTCUT_LABELS.LAST_24_HOURS,
-    period: {
-      start: new Date(new Date().setHours(new Date().getHours() + TIME_PERIODS.HOURS.LAST_24_HOURS)),
-      end: new Date()
-    }
+  // Previous month days
+  for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+    days.push(firstDay.subtract(i + 1, "day"));
   }
-};
+
+  // Current month days
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push(firstDay.add(i - 1, "day"));
+  }
+
+  // Next month days to fill the grid
+  const remainingDays = CALENDAR_CONFIG.totalDays - days.length;
+  for (let i = 1; i <= remainingDays; i++) {
+    days.push(firstDay.add(daysInMonth + i - 1, "day"));
+  }
+
+  const isInRange = (date) => {
+    if (!selectedStart || !selectedEnd) return false;
+    return date.isAfter(selectedStart) && date.isBefore(selectedEnd);
+  };
+
+  const isStart = (date) => selectedStart && selectedStart.isSame(date, "day");
+  const isEnd = (date) => selectedEnd && selectedEnd.isSame(date, "day");
+  const isCurrentMonth = (date) => date.month() === month && date.year() === year;
 
   return (
-    <div className="relative overflow-visible z-0">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          {label}
-        </label>
-      )}
-      <div className="relative w-full z-40">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-20">
-          <Calendar className="h-4 w-4 text-gray-400" />
+    <div className="w-full z-0">
+      <div className="mb-2 text-center">
+        <div className="text-sm font-semibold">
+          {firstDay.format(DATE_FORMATS.monthYear).toUpperCase()} <span className="ml-2">{year}</span>
         </div>
-        {hasValue && (
-          <button
-            onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center z-20 hover:bg-gray-100 rounded-r-lg transition-colors"
-            type="button"
-          >
-            <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
-          </button>
-        )}
-        <div className="[&_svg]:hidden">
-          <Datepicker
-            value={datePickerValue}
-            onChange={handleDateChange}
-            useRange={true}
-            asSingle={false}
-            showShortcuts={true}
-            primaryColor={DATE_PICKER_CONFIG.PRIMARY_COLOR}
-            popoverDirection={DATE_PICKER_CONFIG.POPOVER_DIRECTION}
-            displayFormat={DATE_PICKER_CONFIG.DISPLAY_FORMAT}
-            containerClassName="relative w-full z-0"
-            popoverClassName="z-0"
-            inputClassName={`block w-full ${hasValue ? 'pr-10' : 'pr-3'} pl-10 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5B45E0] focus:border-[#5B45E0] sm:text-sm bg-white text-gray-900 placeholder-gray-400`}
-            configs={{
-              shortcuts: customShortcuts
-            }}
-            {...rest}
-          />
-        </div>
+      </div>
+      <div className={`grid grid-cols-${CALENDAR_CONFIG.gridColumns} gap-1 mb-1`}>
+        {WEEK_DAYS.map((day) => (
+          <div key={day} className={`text-center text-xs ${STYLES.textColor.secondary} py-1`}>
+            {day}
+          </div>
+        ))}
+      </div>
+      <div className={`grid grid-cols-${CALENDAR_CONFIG.gridColumns} gap-0.5`}>
+        {days.map((date, idx) => {
+          const inRange = isInRange(date);
+          const isStartDate = isStart(date);
+          const isEndDate = isEnd(date);
+          const isCurrent = isCurrentMonth(date);
+
+          return (
+            <button
+              key={idx}
+              onClick={() => onDateClick(date)}
+              className={`${STYLES.dimensions.dayCell} rounded text-xs font-medium transition-colors flex items-center justify-center
+                ${!isCurrent ? STYLES.textColor.muted : STYLES.textColor.primary}
+                ${isStartDate || isEndDate ? `${STYLES.backgroundColor.primary} text-white` : ""}
+                ${inRange && !isStartDate && !isEndDate ? STYLES.backgroundColor.primaryLight : ""}
+                ${!isStartDate && !isEndDate && !inRange && isCurrent ? STYLES.backgroundColor.hover : ""}
+              `}
+            >
+              {date.date()}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
-};
+}
 
-export default CustomDatePicker;
+function MonthYearSelector({ currentMonth, currentYear, onMonthChange, onYearChange }) {
+  const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+  const [showYearDropdown, setShowYearDropdown] = useState(false);
+  const monthRef = useRef(null);
+  const yearRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (monthRef.current && !monthRef.current.contains(event.target)) {
+        setShowMonthDropdown(false);
+      }
+      if (yearRef.current && !yearRef.current.contains(event.target)) {
+        setShowYearDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div className="flex gap-2 mb-3">
+      <div className="relative" ref={monthRef}>
+        <button
+          onClick={() => setShowMonthDropdown(!showMonthDropdown)}
+          className={`flex items-center justify-between w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white ${STYLES.backgroundColor.hover} transition-colors focus:outline-none ${STYLES.border.focus} ${STYLES.dimensions.dropdown.minWidth.month}`}
+        >
+          <span>{MONTHS[currentMonth]}</span>
+          <ChevronDown size={16} className={STYLES.textColor.secondary} />
+        </button>
+        {showMonthDropdown && (
+          <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+            {MONTHS.map((month, index) => (
+              <button
+                key={month}
+                onClick={() => {
+                  onMonthChange(index);
+                  setShowMonthDropdown(false);
+                }}
+                className={`w-full px-3 py-2 text-sm text-left ${STYLES.backgroundColor.hover} transition-colors ${
+                  index === currentMonth ? `${STYLES.backgroundColor.primaryLight} ${STYLES.textColor.primary}` : ""
+                }`}
+              >
+                {month}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="relative" ref={yearRef}>
+        <button
+          onClick={() => setShowYearDropdown(!showYearDropdown)}
+          className={`flex items-center justify-between w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white ${STYLES.backgroundColor.hover} transition-colors focus:outline-none ${STYLES.border.focus} ${STYLES.dimensions.dropdown.minWidth.year}`}
+        >
+          <span>{currentYear}</span>
+          <ChevronDown size={16} className={STYLES.textColor.secondary} />
+        </button>
+        {showYearDropdown && (
+          <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+            {YEARS.map((year) => (
+              <button
+                key={year}
+                onClick={() => {
+                  onYearChange(year);
+                  setShowYearDropdown(false);
+                }}
+                className={`w-full px-3 py-2 text-sm text-left ${STYLES.backgroundColor.hover} transition-colors ${
+                  year === currentYear ? `${STYLES.backgroundColor.primaryLight} ${STYLES.textColor.primary}` : ""
+                }`}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function DateTimeRangePickerComponent({
+  value,
+  onChange,
+  name,
+  disableFuture,
+  showLabel = DEFAULT_PROPS.showLabel,
+  placeholder = DEFAULT_PROPS.placeholder,
+}) {
+  const [dateRange, setDateRange] = useState({
+    start: value?.start || null,
+    end: value?.end || null,
+  });
+  const [currentMonth, setCurrentMonth] = useState(dayjs().month());
+  const [currentYear, setCurrentYear] = useState(dayjs().year());
+  const [showCalendar, setShowCalendar] = useState(false);
+  const calendarRef = useRef(null);
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    if (value) {
+      setDateRange({
+        start: value.start ? dayjs(value.start) : null,
+        end: value.end ? dayjs(value.end) : null,
+      });
+    }
+  }, [value]);
+
+  const handleDateClick = (date) => {
+    let newDateRange;
+
+    if (!dateRange.start) {
+      newDateRange = { start: date, end: null };
+    } else if (!dateRange.end) {
+      if (date.isBefore(dateRange.start)) {
+        newDateRange = { start: date, end: dateRange.start };
+      } else {
+        newDateRange = { start: dateRange.start, end: date };
+      }
+    } else {
+      newDateRange = { start: date, end: null };
+    }
+
+    setDateRange(newDateRange);
+
+    if (newDateRange.start && newDateRange.end) {
+      onChange(newDateRange);
+    }
+  };
+
+  const handleQuickFilter = (filter) => {
+    const range = getDateRangeForFilter(filter);
+    setDateRange(range);
+    setCurrentMonth(range.end ? range.end.month() : dayjs().month());
+    setCurrentYear(range.end ? range.end.year() : dayjs().year());
+    onChange(range);
+    setShowCalendar(false);
+  };
+
+  const handleClearDates = () => {
+    const emptyRange = { start: null, end: null };
+    setDateRange(emptyRange);
+    onChange(emptyRange);
+  };
+
+  const goToPreviousMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
+
+  const handleMonthChange = (month) => {
+    setCurrentMonth(month);
+  };
+
+  const handleYearChange = (year) => {
+    setCurrentYear(year);
+  };
+
+  const handleTimeChange = (type, timeValue) => {
+    const [hours, minutes] = timeValue.split(":").map(Number);
+    const newDateRange = {
+      ...dateRange,
+      [type]: dateRange[type].hour(hours).minute(minutes),
+    };
+    setDateRange(newDateRange);
+    onChange(newDateRange);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        setShowCalendar(false);
+      }
+    };
+
+    if (showCalendar) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showCalendar]);
+
+  const displayText =
+    dateRange.start && dateRange.end
+      ? `${dateRange.start.format(DATE_FORMATS.display)} → ${dateRange.end.format(DATE_FORMATS.display)}`
+      : placeholder;
+
+  return (
+    <div className="relative w-full z-0">
+      {showLabel && (
+        <label className="block text-xs font-medium text-gray-700 mb-1">
+          {t("COMMON.DATE_RANGE")}
+        </label>
+      )}
+
+      <div className="relative">
+        <button
+          onClick={() => setShowCalendar(!showCalendar)}
+          className={`flex items-center justify-between gap-2 w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white ${STYLES.backgroundColor.hover} transition-colors focus:outline-none ${STYLES.border.focus}`}
+        >
+          <div className="flex items-center gap-2 truncate">
+            <Calendar size={18} className={STYLES.textColor.secondary} />
+            <span className="text-gray-700 truncate text-sm">
+              {displayText}
+            </span>
+          </div>
+        </button>
+
+        {dateRange.start && dateRange.end && (
+          <button
+            onClick={handleClearDates}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+            title={t("CLEAR_DATE_RANGE")}
+          >
+            <X size={16} className="text-gray-500 hover:text-gray-700" />
+          </button>
+        )}
+      </div>
+
+      {showCalendar && (
+        <div
+          ref={calendarRef}
+          className="absolute top-full right-0 mt-2 z-50 bg-white rounded-lg shadow-xl p-6 border border-gray-200 w-[550px]"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Select Range</h3>
+            <button
+              onClick={() => setShowCalendar(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            {QUICK_FILTERS.map((filter) => (
+              <button
+                key={filter.value}
+                onClick={() => handleQuickFilter(filter.value)}
+                className={`px-2 py-1.5 ${STYLES.backgroundColor.primaryLight} ${STYLES.textColor.primary} rounded-lg text-xs font-medium ${STYLES.backgroundColor.primaryHover} transition-colors text-center`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+
+          {dateRange.start && dateRange.end && (
+            <div className="grid grid-cols-2 gap-2 mb-3 pb-3 border-b">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  {t("COMMON.START_TIME")}
+                </label>
+                <input
+                  type="time"
+                  value={dateRange.start.format(DATE_FORMATS.time)}
+                  onChange={(e) => handleTimeChange("start", e.target.value)}
+                  className="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF5A5F] w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  {t("COMMON.END_TIME")}
+                </label>
+                <input
+                  type="time"
+                  value={dateRange.end.format(DATE_FORMATS.time)}
+                  onChange={(e) => handleTimeChange("end", e.target.value)}
+                  className="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF5A5F] w-full"
+                />
+              </div>
+            </div>
+          )}
+
+          <MonthYearSelector
+            currentMonth={currentMonth}
+            currentYear={currentYear}
+            onMonthChange={handleMonthChange}
+            onYearChange={handleYearChange}
+          />
+
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={goToPreviousMonth}
+              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="flex gap-6">
+              <CalendarMonth
+                month={currentMonth}
+                year={currentYear}
+                selectedStart={dateRange.start}
+                selectedEnd={dateRange.end}
+                onDateClick={handleDateClick}
+              />
+              <CalendarMonth
+                month={currentMonth + 1 > 11 ? 0 : currentMonth + 1}
+                year={currentMonth + 1 > 11 ? currentYear + 1 : currentYear}
+                selectedStart={dateRange.start}
+                selectedEnd={dateRange.end}
+                onDateClick={handleDateClick}
+              />
+            </div>
+            <button
+              onClick={goToNextMonth}
+              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
