@@ -25,7 +25,7 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { GENDER_OPTIONS, STATUS } from "../contants/constants";
+import { GENDER_OPTIONS, PERMISSIONS, STATUS } from "../contants/constants";
 import md5 from "md5";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
@@ -133,10 +133,10 @@ const AddUser = () => {
   const userPermissions = JSON.parse(localStorage.getItem("PermissionIDs") || "[]");
 
   // Check if user has Edit Role permission
-  const hasEditRolePermission = userPermissions.includes("00000103-0000-0000-0000-000000000103");
+  const hasEditRolePermission = userPermissions.includes(PERMISSIONS.EDIT_ROLE);
   
   // Check if user has Edit Store permission  
-  const hasEditStorePermission = userPermissions.includes("00000104-0000-0000-0000-000000000104");
+  const hasEditStorePermission = userPermissions.includes(PERMISSIONS.EDIT_STORE);
 
   // Determine if we should show the entire Account Security section
   const shouldShowAccountSecuritySection = !id || (id && (hasEditRolePermission || hasEditStorePermission));
@@ -976,7 +976,7 @@ const AddUser = () => {
                             {passwordStrength !== "strong" && (
                               <div
                                 style={{
-                                  color: "#dc2626",
+                                  color: custom-bg,
                                   fontSize: 12,
                                   marginTop: 2,
                                 }}

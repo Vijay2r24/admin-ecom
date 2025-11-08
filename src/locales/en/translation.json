@@ -109,7 +109,7 @@
     "AVERAGEORDERS": "Average Order",
     "COMPARISONTEXT": "vs last period",
     "VSLASTHOUR": "vs last hour",
-    "VSLAST2HOURS": "vs last 2 hours", 
+    "VSLAST2HOURS": "vs last 2 hours",
     "VSLAST3HOURS": "vs last 3 hours",
     "VSLAST6HOURS": "vs last 6 hours",
     "VSLAST12HOURS": "vs last 12 hours",
@@ -514,7 +514,7 @@
     "NO_PRODUCTS": "No products found.",
     "SEARCH_PLACEHOLDER": "Enter Products",
     "EXPORT_BUTTON": "Export Products",
-    "BRAND":"Brand",
+    "BRAND": "Brand",
     "EXPORT_SUCCESS": "Products exported successfully!",
     "EXPORT_ERROR": "Failed to export products. Please try again.",
     "EXPORT_ERROR_NO_DATE_RANGE": "Please select a date range to export products.",
@@ -689,8 +689,8 @@
     "GENDER_MALE": "Male",
     "GENDER_FEMALE": "Female",
     "GENDER_OTHER": "Others",
-    "GENDER":"Gender",
-    "SELECT_GENDER":"Select Gender",
+    "GENDER": "Gender",
+    "SELECT_GENDER": "Select Gender",
     "ADD_NEW_USER": "Add New User",
     "CREATE_NEW_USER_DESCRIPTION": "Create a new user account with their details and permissions.",
     "PROFILE_PREVIEW": "Profile Preview",
@@ -807,6 +807,7 @@
     "TIME_AGO": "1m ago",
     "IMAGE_PREVIEW_ALT": "Uploaded notification image"
   },
+
   "SILENT_NOTIFICATION": {
     "ADD_TITLE": "Add Silent Notification",
     "COMPONENT_NAME_LABEL": "Component Name",
@@ -936,6 +937,8 @@
     "PREVIOUS": "Previous",
     "DOWNLOAD": "Download",
     "DATE_RANGE": "Date Range",
+    "START_TIME":"Start Time",
+    "END_TIME":"End time",
     "NEXT": "Next",
     "ALL": "All",
     "EDIT": "Edit",
@@ -949,7 +952,7 @@
     "OF": "of",
     "OK": "OK",
     "EXPORT": "Export",
-    "UNKNOWN_CUSTOMER":"Unknown Customer",
+    "UNKNOWN_CUSTOMER": "Unknown Customer",
     "MORE": "more",
     "ERROR_MESSAGE": "An error occurred. Please try again.",
     "FAILED_OPERATION": "Failed to perform operation.",
@@ -1029,7 +1032,10 @@
     "ENTER_PHONE_NUMBER": "Enter phone number",
     "ENTER_EMAIL_ADDRESS": "Enter email address",
     "ENTER_PASSWORD": "Enter password",
-    "REQUIRED": "is required"
+    "REQUIRED": "is required",
+    "CLEAR_DATE_RANGE":"Clear date range",
+    "ACCESS_DENIED_TITLE": "Access to this page is restricted",
+    "ACCESS_DENIED_MESSAGE": "Please check with the site admin if you believe this is a mistake."
   },
   "USER_ROLES_LIST": {
     "TITLE": "User Roles",
@@ -1100,7 +1106,7 @@
       "SAT": "Sat"
     }
   },
-   "NOT_FOUND": {
+  "NOT_FOUND": {
     "TITLE": "404",
     "HEADING": "Page Not Found",
     "MESSAGE": "The page you're looking for doesn't exist."

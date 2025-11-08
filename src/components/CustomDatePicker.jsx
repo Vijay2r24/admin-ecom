@@ -12,12 +12,12 @@ import {
   CALENDAR_CONFIG,
   STYLES,
 } from "./../contants/constants";
+import { useTranslation } from "react-i18next";
 
 function CalendarMonth({ month, year, selectedStart, selectedEnd, onDateClick }) {
   const firstDay = dayjs(`${year}-${month + 1}-01`);
   const daysInMonth = firstDay.daysInMonth();
   const startingDayOfWeek = firstDay.day();
-
   const days = [];
 
   // Previous month days
@@ -185,7 +185,7 @@ export default function DateTimeRangePickerComponent({
   const [currentYear, setCurrentYear] = useState(dayjs().year());
   const [showCalendar, setShowCalendar] = useState(false);
   const calendarRef = useRef(null);
-
+   const { t } = useTranslation();
   useEffect(() => {
     if (value) {
       setDateRange({
@@ -292,7 +292,7 @@ export default function DateTimeRangePickerComponent({
     <div className="relative w-full z-0">
       {showLabel && (
         <label className="block text-xs font-medium text-gray-700 mb-1">
-          Date Range
+         {t("COMMON.DATE_RANGE")}
         </label>
       )}
 
@@ -313,7 +313,7 @@ export default function DateTimeRangePickerComponent({
           <button
             onClick={handleClearDates}
             className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
-            title="Clear date range"
+            title={t("CLEAR_DATE_RANGE")}
           >
             <X size={16} className="text-gray-500 hover:text-gray-700" />
           </button>
@@ -351,7 +351,7 @@ export default function DateTimeRangePickerComponent({
             <div className="grid grid-cols-2 gap-2 mb-3 pb-3 border-b">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Start Time
+                {t("COMMON.START_TIME")}
                 </label>
                 <input
                   type="time"
@@ -362,7 +362,7 @@ export default function DateTimeRangePickerComponent({
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  End Time
+                   {t("COMMON.END_TIME")}
                 </label>
                 <input
                   type="time"

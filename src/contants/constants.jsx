@@ -1,11 +1,10 @@
-
 import dayjs from "dayjs";
 export const STATUS = {
   PENDING: "pending",
   SUCCESS: "success",
   ERROR: "error",
-  WARNING:"warning",
-  FAILURE:"failure"
+  WARNING: "warning",
+  FAILURE: "failure",
 };
 export const DEFAULT_COLOR = "#000000";
 export const COLORS = {
@@ -25,20 +24,20 @@ export const STATUS_OPTIONS = [
 ];
 export const ITEMS_PER_PAGE = 10;
 export const LOCALE = "en-US";
-export const CURRENCY = "INR";  
+export const CURRENCY = "INR";
 export const ORDER_STATUS = {
   DELIVERED: "Delivered",
   PENDING: "Pending",
   CANCELLED: "Cancelled",
   SHIPPED: "Shipped",
   RETURNED: "Returned",
-  PROCESSING:"Processing",
+  PROCESSING: "Processing",
 };
 export const STATUS_DROPDOWN_OPTIONS = [
   { value: "true", labelKey: "COMMON.ACTIVE" },
   { value: "false", labelKey: "COMMON.INACTIVE" },
 ];
-export const DEFAULT_PAGE =1;
+export const DEFAULT_PAGE = 1;
 export const DASHBOARD_DEFAULT_LIMIT = 7;
 export const BANNER_WIDTH = 1200;
 export const BANNER_HEIGHT = 600;
@@ -66,15 +65,26 @@ export const EXPORT_TYPES = {
   PAYMENT: "payment",
 };
 export const DOWNLOAD_ICON = (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+    />
   </svg>
 );
 export const TOAST_DURATION = {
   SHORT: 1500,
   MEDIUM: 3000,
   LONG: 5000,
- TO_LONG:10000,
+  TO_LONG: 10000,
 };
 export const DATE_FORMAT_OPTIONS = {
   year: "numeric",
@@ -93,27 +103,27 @@ export const REPORT_FILE_NAMES = {
 };
 export const PASSWORD_VISIBILITY = {
   SHOW: "text",
-  HIDE: "password"
+  HIDE: "password",
 };
 
 export const PASSWORD_LABELS = {
   SHOW: "Hide",
-  HIDE: "Show"
+  HIDE: "Show",
 };
 export const LOCALES = {
-  ENGLISH_US: 'en-US',
-  ENGLISH_INDIA: 'en-IN'
+  ENGLISH_US: "en-US",
+  ENGLISH_INDIA: "en-IN",
 };
 export const customShortcuts = [
   {
-    label: 'Today',
+    label: "Today",
     getValue: () => {
       const today = new Date();
       return [today, today];
     },
   },
   {
-    label: 'Yesterday',
+    label: "Yesterday",
     getValue: () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
@@ -121,7 +131,7 @@ export const customShortcuts = [
     },
   },
   {
-    label: 'Last 7 Days',
+    label: "Last 7 Days",
     getValue: () => {
       const end = new Date();
       const start = new Date();
@@ -130,15 +140,19 @@ export const customShortcuts = [
     },
   },
   {
-    label: 'This Month',
+    label: "This Month",
     getValue: () => {
-      const start = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const start = new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        1
+      );
       const end = new Date();
       return [start, end];
     },
   },
   {
-    label: 'Last Month',
+    label: "Last Month",
     getValue: () => {
       const now = new Date();
       const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -159,7 +173,7 @@ export const SHORTCUT_LABELS = {
   LAST_3_HOURS: "Last 3 hours",
   LAST_6_HOURS: "Last 6 hours",
   LAST_12_HOURS: "Last 12 hours",
-  LAST_24_HOURS: "Last 24 hours"
+  LAST_24_HOURS: "Last 24 hours",
 };
 
 export const TIME_PERIODS = {
@@ -167,7 +181,7 @@ export const TIME_PERIODS = {
     TODAY: 0,
     YESTERDAY: -1,
     LAST_7_DAYS: -6,
-    LAST_30_DAYS: -29
+    LAST_30_DAYS: -29,
   },
   HOURS: {
     LAST_HOUR: -1,
@@ -175,8 +189,8 @@ export const TIME_PERIODS = {
     LAST_3_HOURS: -3,
     LAST_6_HOURS: -6,
     LAST_12_HOURS: -12,
-    LAST_24_HOURS: -24
-  }
+    LAST_24_HOURS: -24,
+  },
 };
 export const GENDER_OPTIONS = [
   { value: "Male", labelKey: "ADD_USER.GENDER_MALE" },
@@ -193,61 +207,63 @@ export const FILE_CONSTANTS = {
   FILE_TYPE: "image/jpeg",
 };
 export const MODULES = {
-  DASHBOARD: 'Dashboard Management',
-  ORDER: 'Order Management',
-  STORE: 'Store Management',
-  USER: 'User Management',
-  ROLE: 'Role Management',
-  CONTENT: 'Content Management',
-  PRODUCT: 'Product Management',
+  DASHBOARD: "Dashboard Management",
+  ORDER: "Order Management",
+  STORE: "Store Management",
+  USER: "User Management",
+  ROLE: "Role Management",
+  CONTENT: "Content Management",
+  PRODUCT: "Product Management",
 };
 
 export const PERMISSIONS = {
-  VIEW_DASHBOARD: 'View Dashboard',
+  EDIT_ROLE: "00000103-0000-0000-0000-000000000103",
+  EDIT_STORE: "00000104-0000-0000-0000-000000000104",
+  VIEW_DASHBOARD: "View Dashboard",
 
-  VIEW_ORDERS: 'View Orders',
+  VIEW_ORDERS: "View Orders",
 
-  VIEW_STORE: 'View Store',
-  ADD_STORE: 'Add Store',
-  UPDATE_STORE: 'Update Store',
+  VIEW_STORE: "View Store",
+  ADD_STORE: "Add Store",
+  UPDATE_STORE: "Update Store",
 
-  VIEW_USER: 'View User',
-  ADD_USER: 'Add User',
-  UPDATE_USER: 'Update user',
+  VIEW_USER: "View User",
+  ADD_USER: "Add User",
+  UPDATE_USER: "Update user",
 
-  VIEW_ROLE: 'View Role',
-  ADD_ROLE: 'Add Role',
-  UPDATE_ROLE: 'Update Role',
+  VIEW_ROLE: "View Role",
+  ADD_ROLE: "Add Role",
+  UPDATE_ROLE: "Update Role",
 
-  VIEW_BANNERS: 'View Banners',
-  CREATE_BANNER: 'Create Banner',
-  UPDATE_BANNER: 'Update Banner',
-  SEND_NOTIFICATION: 'Send Push Notification',
+  VIEW_BANNERS: "View Banners",
+  CREATE_BANNER: "Create Banner",
+  UPDATE_BANNER: "Update Banner",
+  SEND_NOTIFICATION: "Send Push Notification",
 
-  VIEW_PRODUCTS: 'View Products',
-  CREATE_PRODUCT: 'Create Product',
-  UPDATE_PRODUCT: 'Update Product',
+  VIEW_PRODUCTS: "View Products",
+  CREATE_PRODUCT: "Create Product",
+  UPDATE_PRODUCT: "Update Product",
 
-  VIEW_BRANDS: 'View Brands',
-  UPDATE_BRAND: 'Update Brand',
+  VIEW_BRANDS: "View Brands",
+  UPDATE_BRAND: "Update Brand",
 
-  VIEW_CATEGORIES: 'View Categories',
-  UPDATE_CATEGORY: 'Update Category',
+  VIEW_CATEGORIES: "View Categories",
+  UPDATE_CATEGORY: "Update Category",
 
-  VIEW_ATTRIBUTE_TYPES: 'View Attribute Types',
-  UPDATE_ATTRIBUTE_TYPE: 'Update Attribute Type',
+  VIEW_ATTRIBUTE_TYPES: "View Attribute Types",
+  UPDATE_ATTRIBUTE_TYPE: "Update Attribute Type",
 
-  VIEW_COLOURS: 'View Colours',
-  UPDATE_COLOUR: 'Update Colour',
-  
+  VIEW_COLOURS: "View Colours",
+  UPDATE_COLOUR: "Update Colour",
+
   EDIT_ROLE: "00000103-0000-0000-0000-000000000103",
   EDIT_STORE: "00000104-0000-0000-0000-000000000104",
 
-  VIEW_ATTRIBUTES: 'View Attributes',
-  UPDATE_ATTRIBUTE: 'Update Attribute',
+  VIEW_ATTRIBUTES: "View Attributes",
+  UPDATE_ATTRIBUTE: "Update Attribute",
 
-  VIEW_PRODUCT_GROUPS: 'View Product Groups',
-  UPDATE_PRODUCT_GROUP: 'Update Product Group',
+  VIEW_PRODUCT_GROUPS: "View Product Groups",
+  UPDATE_PRODUCT_GROUP: "Update Product Group",
 };
 export const QUICK_FILTERS = [
   { label: "Today", value: "today" },
@@ -259,13 +275,26 @@ export const QUICK_FILTERS = [
 ];
 
 export const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export const YEARS = Array.from({ length: 20 }, (_, i) => dayjs().year() - 10 + i);
+export const YEARS = Array.from(
+  { length: 20 },
+  (_, i) => dayjs().year() - 10 + i
+);
 
 export const DATE_FORMATS = {
   display: "MMM DD, HH:mm",
@@ -291,9 +320,15 @@ export const getDateRangeForFilter = (filter) => {
         end: now.subtract(1, "day").endOf("day"),
       };
     case "last7days":
-      return { start: now.subtract(7, "days").startOf("day"), end: now.endOf("day") };
+      return {
+        start: now.subtract(7, "days").startOf("day"),
+        end: now.endOf("day"),
+      };
     case "last30days":
-      return { start: now.subtract(30, "days").startOf("day"), end: now.endOf("day") };
+      return {
+        start: now.subtract(30, "days").startOf("day"),
+        end: now.endOf("day"),
+      };
     case "last1hour":
       return { start: now.subtract(1, "hour"), end: now };
     case "last12hours":
@@ -309,8 +344,9 @@ export const CALENDAR_CONFIG = {
   gridColumns: 7, // 7 days in a week
 };
 export const MESSAGES = {
-  INACTIVE_USER_MESSAGE: "Your access permissions have been updated. Kindly <br/> log in again to proceed.",
-  DEFAULT_ERROR_MESSAGE: "An unexpected error occurred. Please try again."
+  INACTIVE_USER_MESSAGE:
+    "Your access permissions have been updated. Kindly <br/> log in again to proceed.",
+  DEFAULT_ERROR_MESSAGE: "An unexpected error occurred. Please try again.",
 };
 // Style constants
 export const STYLES = {
