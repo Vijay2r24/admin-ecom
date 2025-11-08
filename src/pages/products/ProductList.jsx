@@ -51,14 +51,8 @@ const getFirstImage = (productVariantImages) => {
   return noImage;
 };
 
-const getStoreName = (inventory) => {
-  if (Array.isArray(inventory) && inventory.length > 0) {
-    const storeNames = [
-      ...new Set(inventory.map((item) => item.StoreName).filter(Boolean)),
-    ];
-    return storeNames.join(", ") || "N/A";
-  }
-  return "N/A";
+const getBrandName = (product) => {
+  return product.BrandName || "N/A";
 };
 
 const ProductList = () => {
@@ -167,7 +161,7 @@ const ProductList = () => {
             subCategory: product.CategoryName,
             MRP: firstVariant.MRP || "0.00",
             quantity: getTotalStock(firstVariant.Inventory || []),
-            storeName: getStoreName(firstVariant.Inventory || []),
+            brandName: getBrandName(product),
             firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
             status:
               product.IsActive &&
@@ -241,8 +235,8 @@ const ProductList = () => {
 
   const statusOptions = [
     { value: "all", label: t("COMMON.ALL") },
-    { value: true, label: t("COMMON.ACTIVE") },
-    { value: false, label: t("COMMON.INACTIVE") },
+    { value: "true", label: t("COMMON.ACTIVE") },
+    { value: "false", label: t("COMMON.INACTIVE") },
   ];
 
   const handleDropdownInputChange = (inputValue, filterName) => {
@@ -452,19 +446,16 @@ const ProductList = () => {
                 <tr>
                   <th className="table-head-cell">{t("PRODUCTS.TITLE")}</th>
                   <th className="table-head-cell">{t("COMMON.CATEGORY")}</th>
-                  <th className="table-head-cell">{t("COMMON.PRICE")}</th>
+                  <th className="table-head-cell">{t("PRODUCTS.BRAND")}</th>
                   <th className="table-head-cell">{t("PRODUCTS.STOCK")}</th>
                   <th className="table-head-cell">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell">
-                    {t("PRODUCTS.STORE_NAME")}
-                  </th>
                   <th className="table-head-cell">{t("COMMON.ACTIONS")}</th>
                 </tr>
               </thead>
               <tbody className="table-body">
                 {bFilterLoading ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center">
+                    <td colSpan={6} className="py-8 text-center">
                       <div className="flex justify-center">
                         <Loader size="small" />
                       </div>
@@ -472,7 +463,7 @@ const ProductList = () => {
                   </tr>
                 ) : aProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-gray-500">
+                    <td colSpan={6} className="py-8 text-center text-gray-500">
                       {t("PRODUCTS.NO_PRODUCTS")}
                     </td>
                   </tr>
@@ -511,7 +502,12 @@ const ProductList = () => {
                         </div>
                       </td>
                       <td className="table-cell text-left table-cell-text">
-                        ₹{parseFloat(product.MRP).toFixed(2)}
+                        <div
+                          className="ellipsis-text"
+                          title={product.brandName}
+                        >
+                          {product.brandName}
+                        </div>
                       </td>
                       <td className="table-cell text-center table-cell-text">
                         {product.quantity || 0}
@@ -526,14 +522,6 @@ const ProductList = () => {
                             )
                           }
                         />
-                      </td>
-                      <td className="table-cell text-left table-cell-text">
-                        <div
-                          className="ellipsis-text"
-                          title={product.storeName}
-                        >
-                          {product.storeName}
-                        </div>
                       </td>
                       <td className="table-cell text-left font-medium align-middle">
                         <div className="flex justify-left items-left">
@@ -614,12 +602,16 @@ const ProductList = () => {
                   <span className="font-medium">{t("COMMON.CATEGORY")}</span>{" "}
                   {product.subCategory}
                 </div>
+                <div
+                  className="text-sm text-gray-900 ellipsis-text"
+                  title={product.brandName}
+                >
+                  <span className="font-medium">{t("PRODUCTS.BRAND")}</span>{" "}
+                  {product.brandName}
+                </div>
                 <div className="flex items-center justify-between border-t pt-2 mt-2">
                   <div>
                     {t("PRODUCTS.STOCK")}: {product.quantity || 0}
-                  </div>
-                  <div>
-                    {t("COMMON.PRICE")} ₹{parseFloat(product.MRP).toFixed(2)}
                   </div>
                 </div>
                 <ActionButtons 

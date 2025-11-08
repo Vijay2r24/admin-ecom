@@ -5,7 +5,11 @@ import SelectWithIcon from "../components/SelectWithIcon";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import { apiGet, apiPost, apiPut } from "../utils/ApiUtils";
-import { GET_STORE_BY_ID, UPDATE_STORE, CREATE_STORE } from "../contants/apiRoutes";
+import {
+  GET_STORE_BY_ID,
+  UPDATE_STORE,
+  CREATE_STORE,
+} from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
 import { STATUS } from "../contants/constants";
@@ -16,13 +20,14 @@ import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import TextAreaWithIcon from "../components/TextAreaWithIcon";
 import { useDispatch, useSelector } from "react-redux";
-import { 
-  fetchResource, 
-  fetchStatesByCountryId, 
+import {
+  fetchResource,
+  fetchStatesByCountryId,
   fetchCitiesByStateId,
   clearStates,
-  clearCities 
+  clearCities,
 } from "../store/slices/allDataSlice";
+import FloatingFooter from "../components/FloatingFooter";
 
 const getArray = (data) =>
   Array.isArray(data)
@@ -34,12 +39,12 @@ const getArray = (data) =>
 const AddStore = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const { 
-    countries: countriesData, 
-    states: statesData, 
-    cities: citiesData 
+  const {
+    countries: countriesData,
+    states: statesData,
+    cities: citiesData,
   } = useSelector((state) => state.allData.resources);
-  
+
   const { id } = useParams();
   const navigate = useNavigate();
   const { setTitle, setBackButton } = useTitle();
@@ -63,7 +68,7 @@ const AddStore = () => {
   const [oErrors, setErrors] = useState({});
   const [bSubmitting, setbSubmitting] = useState(false);
   const [isFetchingStore, setIsFetchingStore] = useState(false);
-  
+
   // Refs to track what has been loaded
   const hasFetchedStore = useRef(false);
   const hasFetchedCountries = useRef(false);
@@ -97,19 +102,19 @@ const AddStore = () => {
   // Optimized fetchStore function without circular dependencies
   const fetchStore = useCallback(async () => {
     if (!id || isFetchingStore || hasFetchedStore.current) return;
-    
+
     setIsFetchingStore(true);
     hasFetchedStore.current = true;
 
     try {
       const token = localStorage.getItem("token");
       const oResponse = await apiGet(`${GET_STORE_BY_ID}/${id}`, {}, token);
-      
+
       if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
         const store = oResponse.data.data;
 
         // Set basic form data immediately
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           name: store.StoreName || "",
           address: store.AddressLine1 || "",
@@ -130,13 +135,12 @@ const AddStore = () => {
             (c) => c.CountryName === store.CountryName
           );
           if (foundCountry) {
-            setFormData(prev => ({
+            setFormData((prev) => ({
               ...prev,
-              country: foundCountry.CountryID
+              country: foundCountry.CountryID,
             }));
           }
         }
-
       } else {
         showEmsg(
           oResponse.data?.MESSAGE || t("COMMON.ERROR_MESSAGE"),
@@ -155,41 +159,55 @@ const AddStore = () => {
 
   // Effect to populate state when states are loaded and we have state name
   useEffect(() => {
-    if (!id || !oFormData.country || !oFormData.stateName || oFormData.state) return;
+    if (!id || !oFormData.country || !oFormData.stateName || oFormData.state)
+      return;
 
     const statesArray = getArray(statesData.data);
     if (statesArray.length > 0) {
       const foundState = statesArray.find(
         (s) => s.StateName === oFormData.stateName
       );
-      
+
       if (foundState) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          state: foundState.StateID
+          state: foundState.StateID,
         }));
       }
     }
-  }, [id, oFormData.country, oFormData.stateName, oFormData.state, statesData.data]);
+  }, [
+    id,
+    oFormData.country,
+    oFormData.stateName,
+    oFormData.state,
+    statesData.data,
+  ]);
 
   // Effect to populate city when cities are loaded and we have city name
   useEffect(() => {
-    if (!id || !oFormData.state || !oFormData.cityName || oFormData.city) return;
+    if (!id || !oFormData.state || !oFormData.cityName || oFormData.city)
+      return;
 
     const citiesArray = getArray(citiesData.data);
     if (citiesArray.length > 0) {
       const foundCity = citiesArray.find(
         (c) => c.CityName === oFormData.cityName
       );
-      
+
       if (foundCity) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          city: foundCity.CityID
+          city: foundCity.CityID,
         }));
       }
     }
-  }, [id, oFormData.state, oFormData.cityName, oFormData.city, citiesData.data]);
+  }, [
+    id,
+    oFormData.state,
+    oFormData.cityName,
+    oFormData.city,
+    citiesData.data,
+  ]);
 
   // Fetch store only once when component mounts with ID and countries are loaded
   useEffect(() => {
@@ -298,88 +316,94 @@ const AddStore = () => {
     return isValid;
   }, [oFormData, t]);
 
-const handleSubmit = useCallback(
-  async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  const handleClose = useCallback(() => {
+    navigate("/stores");
+  }, [navigate]);
 
-    setbSubmitting(true);
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
+  const handleSubmit = useCallback(
+    async (e) => {
+      e?.preventDefault(); // Make it optional for the footer button
+      if (!validateForm()) return;
 
-    // Get selected country, state, and city names
-    const selectedCountry = getArray(countriesData.data).find(
-      (c) => String(c.CountryID) === String(oFormData.country)
-    );
-    const selectedState = getArray(statesData.data).find(
-      (s) => String(s.StateID) === String(oFormData.state)
-    );
-    const selectedCity = getArray(citiesData.data).find(
-      (c) => String(c.CityID) === String(oFormData.city)
-    );
+      setbSubmitting(true);
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
 
-    const payload = {
-      TenantID: localStorage.getItem("tenantID"),
-      StoreName: oFormData.name,
-      Email: oFormData.email,
-      PhoneNumber: oFormData.phone,
-      AddressLine1: oFormData.address,
-      AddressLine2: oFormData.addressLine2 || "", // Include AddressLine2
-      CityID: parseInt(oFormData.city, 10),
-      StateID: parseInt(oFormData.state, 10),
-      CountryID: parseInt(oFormData.country, 10),
-      Zipcode: oFormData.zipCode,
-      IsActive: status,
-      CountryName: selectedCountry ? selectedCountry.CountryName : "",
-      StateName: selectedState ? selectedState.StateName : "",
-      CityName: selectedCity ? selectedCity.CityName : "",
-      ...(id ? { 
-        StoreID: oFormData.StoreID || 0,
-        UpdatedBy: userId 
-      } : { 
-        CreatedBy: userId 
-      }),
-    };
-
-    try {
-      let oResponse;
-
-      if (id) {
-        // Use PUT for update with updateStore endpoint
-        oResponse = await apiPut(UPDATE_STORE, payload, token);
-      } else {
-        // Use POST for create with createStore endpoint
-        oResponse = await apiPost(CREATE_STORE, payload, token);
-      }
-
-      if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
-        showEmsg(oResponse.data?.message, STATUS.SUCCESS, 3000, async () => {
-          navigate("/stores");
-        });
-      } else {
-        showEmsg(oResponse.data?.message, STATUS.WARNING);
-      }
-    } catch (err) {
-      showEmsg(
-        err?.response?.data?.message || t("COMMON.API_ERROR"),
-        STATUS.ERROR
+      // Get selected country, state, and city names
+      const selectedCountry = getArray(countriesData.data).find(
+        (c) => String(c.CountryID) === String(oFormData.country)
       );
-    } finally {
-      hideLoaderWithDelay(setbSubmitting);
-    }
-  },
-  [
-    validateForm,
-    oFormData,
-    id,
-    navigate,
-    t,
-    status,
-    countriesData.data,
-    statesData.data,
-    citiesData.data,
-  ]
-);
+      const selectedState = getArray(statesData.data).find(
+        (s) => String(s.StateID) === String(oFormData.state)
+      );
+      const selectedCity = getArray(citiesData.data).find(
+        (c) => String(c.CityID) === String(oFormData.city)
+      );
+
+      const payload = {
+        TenantID: localStorage.getItem("tenantID"),
+        StoreName: oFormData.name,
+        Email: oFormData.email,
+        PhoneNumber: oFormData.phone,
+        AddressLine1: oFormData.address,
+        AddressLine2: oFormData.addressLine2 || "", // Include AddressLine2
+        CityID: parseInt(oFormData.city, 10),
+        StateID: parseInt(oFormData.state, 10),
+        CountryID: parseInt(oFormData.country, 10),
+        Zipcode: oFormData.zipCode,
+        IsActive: status,
+        CountryName: selectedCountry ? selectedCountry.CountryName : "",
+        StateName: selectedState ? selectedState.StateName : "",
+        CityName: selectedCity ? selectedCity.CityName : "",
+        ...(id
+          ? {
+              StoreID: oFormData.StoreID || 0,
+              UpdatedBy: userId,
+            }
+          : {
+              CreatedBy: userId,
+            }),
+      };
+
+      try {
+        let oResponse;
+
+        if (id) {
+          // Use PUT for update with updateStore endpoint
+          oResponse = await apiPut(UPDATE_STORE, payload, token);
+        } else {
+          // Use POST for create with createStore endpoint
+          oResponse = await apiPost(CREATE_STORE, payload, token);
+        }
+
+        if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
+          showEmsg(oResponse.data?.message, STATUS.SUCCESS, 3000, async () => {
+            navigate("/stores");
+          });
+        } else {
+          showEmsg(oResponse.data?.message, STATUS.WARNING);
+        }
+      } catch (err) {
+        showEmsg(
+          err?.response?.data?.message || t("COMMON.API_ERROR"),
+          STATUS.ERROR
+        );
+      } finally {
+        hideLoaderWithDelay(setbSubmitting);
+      }
+    },
+    [
+      validateForm,
+      oFormData,
+      id,
+      navigate,
+      t,
+      status,
+      countriesData.data,
+      statesData.data,
+      citiesData.data,
+    ]
+  );
 
   const loaderOverlay = bSubmitting ? (
     <div className="global-loader-overlay">
@@ -388,10 +412,11 @@ const handleSubmit = useCallback(
   ) : null;
 
   return (
-    <div className="max-w-8xl mx-auto">
+    <div className="max-w-8xl mx-auto pb-20">
+      {" "}
+      {/* Added padding-bottom */}
       <ToastContainer />
       {loaderOverlay}
-
       <form onSubmit={handleSubmit}>
         <div className="space-y-8">
           {/* Store Info */}
@@ -451,9 +476,9 @@ const handleSubmit = useCallback(
                     name="state"
                     value={oFormData.state}
                     onChange={handleChange}
-                    options={getArray(statesData.data).map((s) => ({ 
-                      value: s.StateID, 
-                      label: s.StateName 
+                    options={getArray(statesData.data).map((s) => ({
+                      value: s.StateID,
+                      label: s.StateName,
                     }))}
                     Icon={Building}
                     error={oErrors.state}
@@ -468,9 +493,9 @@ const handleSubmit = useCallback(
                     name="city"
                     value={oFormData.city}
                     onChange={handleChange}
-                    options={getArray(citiesData.data).map((c) => ({ 
-                      value: c.CityID, 
-                      label: c.CityName 
+                    options={getArray(citiesData.data).map((c) => ({
+                      value: c.CityID,
+                      label: c.CityName,
                     }))}
                     Icon={Building}
                     error={oErrors.city}
@@ -532,24 +557,15 @@ const handleSubmit = useCallback(
               </div>
             </div>
           </div>
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="btn-cancel"
-            >
-              {t("COMMON.CANCEL")}
-            </button>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={bSubmitting}
-            >
-              {id ? t("COMMON.UPDATE") : t("COMMON.CREATE")}
-            </button>
-          </div>
         </div>
       </form>
+      {/* Floating Footer */}
+      <FloatingFooter
+        onCancel={handleClose}
+        onSubmit={handleSubmit}
+        isSubmitting={bSubmitting}
+        isEditMode={!!id}
+      />
     </div>
   );
 };

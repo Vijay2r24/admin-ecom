@@ -38,8 +38,8 @@ const Payments = () => {
     paymentStatus: "",
     paymentType: "",
     paymentMethod: "",
-    startDate: "",
-    endDate: "",
+    startDate: null,
+    endDate: null,
   };
 
   const [oFilters, setFilters] = useState(defaultFilters);
@@ -121,7 +121,7 @@ const Payments = () => {
     {
       label: t("COMMON.DATE_RANGE"),
       name: "dateRange",
-      value: { startDate: oFilters.startDate, endDate: oFilters.endDate },
+      value: { start: oFilters.startDate, end: oFilters.endDate },
       type: "date",
     },
   ];
@@ -188,18 +188,20 @@ const Payments = () => {
     }
   };
 
-  const handleFilterChange = (e, filterName) => {
+  const handleFilterChange = useCallback((e, filterName) => {
     if (initialLoadComplete) {
       setFilterLoading(true);
     }
 
     // Handle date range filter specifically
     if (filterName === "dateRange") {
-      const { startDate, endDate } = e.target.value || {};
+      // Store dayjs objects directly
+      const dateValue = e.target.value;
+      
       setFilters((prev) => ({
         ...prev,
-        startDate: startDate || "",
-        endDate: endDate || "",
+        startDate: dateValue?.start || null,
+        endDate: dateValue?.end || null,
       }));
     } else {
       // Handle other filters
@@ -211,7 +213,7 @@ const Payments = () => {
     }
 
     setCurrentPage(1);
-  };
+  }, [initialLoadComplete]);
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
@@ -233,10 +235,36 @@ const Payments = () => {
     }
   };
 
+  // Helper function to format dates for API
+  const formatDateForAPI = (date) => {
+    if (!date) return undefined;
+    
+    // If it's a dayjs object
+    if (date.isValid && date.isValid()) {
+      return date.toISOString();
+    }
+    
+    // If it's already a string
+    if (typeof date === 'string') {
+      return date;
+    }
+    
+    // If it's a Date object
+    if (date instanceof Date) {
+      return date.toISOString();
+    }
+    
+    return undefined;
+  };
+
   const fetchPaymentsData = async () => {
     try {
       setPaymentsLoading(true);
       const token = localStorage.getItem("token");
+
+      // Format dates for API
+      const startDate = formatDateForAPI(oFilters.startDate);
+      const endDate = formatDateForAPI(oFilters.endDate);
 
       const params = {
         pageNumber: currentPage,
@@ -249,8 +277,8 @@ const Payments = () => {
         ...(oFilters.paymentMethod && {
           paymentMethod: oFilters.paymentMethod,
         }),
-        ...(oFilters.startDate && { startDate: oFilters.startDate }),
-        ...(oFilters.endDate && { endDate: oFilters.endDate }),
+        ...(startDate && { startDate: startDate }),
+        ...(endDate && { endDate: endDate }),
       };
 
       // remove empty keys
@@ -573,9 +601,9 @@ const Payments = () => {
           totalPages={totalPages}
           totalItems={totalItems}
           itemsPerPage={itemsPerPage}
-          handlePrevPage={handlePrevPage} // Changed from onPrevPage
-          handleNextPage={handleNextPage} // Changed from onNextPage
-          handlePageClick={handlePageClick} // Changed from onPageClick
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
         />
       )}
     </div>
