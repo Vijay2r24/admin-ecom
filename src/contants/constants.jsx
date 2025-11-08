@@ -8,6 +8,7 @@ export const STATUS = {
 };
 export const DEFAULT_COLOR = "#000000";
 export const COLORS = {
+  GRAY_PRIMARY:"#e5efff",
   PRIMARY: "#3498db",
   SECONDARY: "#2ecc71",
   ERROR: "#e74c3c",
@@ -17,10 +18,11 @@ export const STATUS_VALUES = {
   BOOLEAN_ACTIVE: "true",
   BOOLEAN_INACTIVE: "false",
 };
+// Make sure it matches what your API expects
 export const STATUS_OPTIONS = [
-  { value: STATUS_VALUES.ALL, labelKey: "COMMON.ALL" },
-  { value: STATUS_VALUES.BOOLEAN_ACTIVE, labelKey: "COMMON.ACTIVE" },
-  { value: STATUS_VALUES.BOOLEAN_INACTIVE, labelKey: "COMMON.INACTIVE" },
+  { value: "all", labelKey: "COMMON.ALL" },
+  { value: "true", labelKey: "COMMON.ACTIVE" },    // or true for boolean
+  { value: "false", labelKey: "COMMON.INACTIVE" }, // or false for boolean
 ];
 export const ITEMS_PER_PAGE = 10;
 export const LOCALE = "en-US";
@@ -372,4 +374,8 @@ export const STYLES = {
       },
     },
   },
+};
+export const STATUS_VALUE_NAMES = {
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
 };

@@ -40,7 +40,7 @@ const FloatingFooter = ({
         <div className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 ${alignmentClasses[align]}`}>
           {/* Custom buttons if provided */}
           {customButtons}
-
+          
           {/* Cancel button */}
           {showCancel && (
             <button
@@ -52,7 +52,7 @@ const FloatingFooter = ({
               {defaultCancelLabel}
             </button>
           )}
-
+          
           {/* Submit button */}
           {showSubmit && (
             <button
@@ -70,4 +70,4 @@ const FloatingFooter = ({
   );
 };
 
-export default FloatingFooter
+export default FloatingFooter;

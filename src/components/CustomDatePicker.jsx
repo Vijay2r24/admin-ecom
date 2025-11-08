@@ -185,7 +185,8 @@ export default function DateTimeRangePickerComponent({
   const [currentYear, setCurrentYear] = useState(dayjs().year());
   const [showCalendar, setShowCalendar] = useState(false);
   const calendarRef = useRef(null);
-   const { t } = useTranslation();
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (value) {
       setDateRange({
@@ -292,7 +293,7 @@ export default function DateTimeRangePickerComponent({
     <div className="relative w-full z-0">
       {showLabel && (
         <label className="block text-xs font-medium text-gray-700 mb-1">
-         {t("COMMON.DATE_RANGE")}
+          {t("COMMON.DATE_RANGE")}
         </label>
       )}
 
@@ -351,7 +352,7 @@ export default function DateTimeRangePickerComponent({
             <div className="grid grid-cols-2 gap-2 mb-3 pb-3 border-b">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                {t("COMMON.START_TIME")}
+                  {t("COMMON.START_TIME")}
                 </label>
                 <input
                   type="time"
@@ -362,7 +363,7 @@ export default function DateTimeRangePickerComponent({
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                   {t("COMMON.END_TIME")}
+                  {t("COMMON.END_TIME")}
                 </label>
                 <input
                   type="time"

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Loader from "../components/Loader";
-import { useNavigate, useParams,useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import TextwithIcone from "../components/TextInputWithIcon";
 import { Shield } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -13,11 +13,12 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { STATUS,STATUS_DROPDOWN_OPTIONS } from "../contants/constants";
+import { COLORS, STATUS, STATUS_DROPDOWN_OPTIONS } from "../contants/constants";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
 import SelectWithIcon from "../components/SelectWithIcon";
 import { Tag } from "lucide-react";
+import FloatingFooter from "../components/FloatingFooter";
 
 const AddUserRole = () => {
   const [sRoleName, setRoleName] = useState("");
@@ -36,7 +37,7 @@ const AddUserRole = () => {
 
   // Check if the current role is an admin role (case-insensitive)
   const isAdminRole = useCallback(() => {
-    const adminRoleNames = ['admin'];
+    const adminRoleNames = ["admin"];
     return adminRoleNames.includes(sRoleName?.toLowerCase().trim());
   }, [sRoleName]);
 
@@ -52,16 +53,15 @@ const AddUserRole = () => {
       setTitle("");
     };
   }, [setTitle, setBackButton, t, roleId]);
-  
+
   useEffect(() => {
     if (roleName) {
       setRoleName(roleName);
     }
     if (status !== undefined) {
-      setIsActive(status === true); 
+      setIsActive(status === true);
     }
   }, [roleName, status]);
-  
 
   const fetchPermissions = useCallback(async () => {
     setLoadingPermissions(true);
@@ -88,17 +88,20 @@ const AddUserRole = () => {
             permissionsArr = roleData.data.rows;
           } else if (Array.isArray(roleData.data)) {
             permissionsArr = roleData.data;
-          }
-          else if (Array.isArray(roleData.data?.permissions)) {
+          } else if (Array.isArray(roleData.data?.permissions)) {
             permissionsArr = roleData.data.permissions;
             setRoleName(roleData.data.roleName || "");
-            setIsActive(roleData.data.isActive !== undefined ? roleData.data.isActive : true);
+            setIsActive(
+              roleData.data.isActive !== undefined
+                ? roleData.data.isActive
+                : true
+            );
           }
         }
       } else {
         const res = await apiGet(GET_ALL_PERMISSIONS, {}, token);
         const resData = res?.data;
-        
+
         if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
           if (Array.isArray(resData.data)) {
             permissionsArr = resData.data;
@@ -120,11 +123,18 @@ const AddUserRole = () => {
       if (permissionsArr.length > 0) {
         const categorizedPermissions = {};
         permissionsArr.forEach((permission) => {
-          const module = permission.Module || permission.PermissionModule||permission.module;
-          const id = permission.PermissionID|| permission.ID||permission.permissionId;
-          const name = permission.PermissionName || permission.Name||permission.permissionName;
+          const module =
+            permission.Module ||
+            permission.PermissionModule ||
+            permission.module;
+          const id =
+            permission.PermissionID || permission.ID || permission.permissionId;
+          const name =
+            permission.PermissionName ||
+            permission.Name ||
+            permission.permissionName;
           const isChecked = permission.IsChecked || false;
-          
+
           if (!categorizedPermissions[module]) {
             categorizedPermissions[module] = [];
           }
@@ -152,46 +162,52 @@ const AddUserRole = () => {
     fetchPermissions();
   }, [fetchPermissions]);
 
-  const handleCheckboxChange = useCallback((moduleName, permissionId) => {
-    // Don't allow permission changes for admin roles
-    if (isAdminRole()) {
-      return;
-    }
-    
-    setPermissionsByModule((prevState) => {
-      const updatedPermissions = { ...prevState };
-      updatedPermissions[moduleName] = updatedPermissions[moduleName].map(
-        (permission) =>
-          permission.ID === permissionId
-            ? { ...permission, IsChecked: !permission.IsChecked }
-            : permission
-      );
-      return updatedPermissions;
-    });
-  }, [isAdminRole]);
+  const handleCheckboxChange = useCallback(
+    (moduleName, permissionId) => {
+      // Don't allow permission changes for admin roles
+      if (isAdminRole()) {
+        return;
+      }
 
-  const handleSelectAllChange = useCallback((moduleName, isChecked) => {
-    // Don't allow permission changes for admin roles
-    if (isAdminRole()) {
-      return;
-    }
-    
-    setPermissionsByModule((prevState) => {
-      const updatedPermissions = { ...prevState };
-      updatedPermissions[moduleName] = updatedPermissions[moduleName].map(
-        (permission) => ({
-          ...permission,
-          IsChecked: isChecked,
-        })
-      );
-      return updatedPermissions;
-    });
-  }, [isAdminRole]);
+      setPermissionsByModule((prevState) => {
+        const updatedPermissions = { ...prevState };
+        updatedPermissions[moduleName] = updatedPermissions[moduleName].map(
+          (permission) =>
+            permission.ID === permissionId
+              ? { ...permission, IsChecked: !permission.IsChecked }
+              : permission
+        );
+        return updatedPermissions;
+      });
+    },
+    [isAdminRole]
+  );
+
+  const handleSelectAllChange = useCallback(
+    (moduleName, isChecked) => {
+      // Don't allow permission changes for admin roles
+      if (isAdminRole()) {
+        return;
+      }
+
+      setPermissionsByModule((prevState) => {
+        const updatedPermissions = { ...prevState };
+        updatedPermissions[moduleName] = updatedPermissions[moduleName].map(
+          (permission) => ({
+            ...permission,
+            IsChecked: isChecked,
+          })
+        );
+        return updatedPermissions;
+      });
+    },
+    [isAdminRole]
+  );
 
   const handleClose = useCallback(() => {
     navigate("/userRoles");
   }, [navigate]);
-  
+
   const validateRoleDataSubmit = useCallback(() => {
     const newErrors = {};
     if (!sRoleName) {
@@ -221,87 +237,87 @@ const AddUserRole = () => {
     }));
   };
 
- const handleSave = useCallback(
-  async (event) => {
-    event.preventDefault();
-    if (!validateRoleDataSubmit()) {
-      setSubmitting(true);
-      
-      // Extract permissions in the required format
-      const permissions = Object.values(oPermissionsByModule)
-        .flat()
-        .map(permission => ({
-          permissionId: permission.ID,
-          isChecked: permission.IsChecked
-        }));
+  const handleSave = useCallback(
+    async (event) => {
+      event.preventDefault();
+      if (!validateRoleDataSubmit()) {
+        setSubmitting(true);
 
-      const userId = localStorage.getItem("userId");
-      const tenantID = localStorage.getItem("tenantID");
-    
-      // Base role data
-      const roleData = {
-        RoleName: sRoleName,
-        IsActive: bIsActive,
-        Permissions: permissions // Send array of permission objects with permissionId and isChecked
-      };
+        // Extract permissions in the required format
+        const permissions = Object.values(oPermissionsByModule)
+          .flat()
+          .map((permission) => ({
+            permissionId: permission.ID,
+            isChecked: permission.IsChecked,
+          }));
 
-      // Add additional fields based on create vs update
-      if (roleId) {
-        // For update - include RoleID and UpdatedBy
-        roleData.RoleID = roleId;
-        roleData.UpdatedBy = userId;
-      } else {
-        // For create - include CreatedBy and TenantID
-        roleData.CreatedBy = userId;
-        roleData.TenantID = tenantID;
-      }
+        const userId = localStorage.getItem("userId");
+        const tenantID = localStorage.getItem("tenantID");
 
-      try {
-        const token = localStorage.getItem("token");
-        let res;
+        // Base role data
+        const roleData = {
+          RoleName: sRoleName,
+          IsActive: bIsActive,
+          Permissions: permissions, // Send array of permission objects with permissionId and isChecked
+        };
 
+        // Add additional fields based on create vs update
         if (roleId) {
-          // Use PUT for update with updateRolePermission endpoint
-          res = await apiPut(UPDATE_ROLE_PERMISSION, roleData, token);
+          // For update - include RoleID and UpdatedBy
+          roleData.RoleID = roleId;
+          roleData.UpdatedBy = userId;
         } else {
-          // Use POST for create with createRolePermission endpoint
-          res = await apiPost(CREATE_ROLE_PERMISSION, roleData, token);
+          // For create - include CreatedBy and TenantID
+          roleData.CreatedBy = userId;
+          roleData.TenantID = tenantID;
         }
 
-        const resData = res?.data;
-        if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+        try {
+          const token = localStorage.getItem("token");
+          let res;
+
+          if (roleId) {
+            // Use PUT for update with updateRolePermission endpoint
+            res = await apiPut(UPDATE_ROLE_PERMISSION, roleData, token);
+          } else {
+            // Use POST for create with createRolePermission endpoint
+            res = await apiPost(CREATE_ROLE_PERMISSION, roleData, token);
+          }
+
+          const resData = res?.data;
+          if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+            showEmsg(
+              resData.message || t("CREATE_USER_ROLE.SAVE_SUCCESS"),
+              STATUS.SUCCESS,
+              3000,
+              () => {
+                navigate("/userRoles");
+              }
+            );
+          } else {
+            showEmsg(resData?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
+          }
+        } catch (err) {
           showEmsg(
-            resData.message|| t("CREATE_USER_ROLE.SAVE_SUCCESS"),
-            STATUS.SUCCESS,
-            3000,
-            () => {
-              navigate("/userRoles");
-            }
+            err.response?.data?.message || t("COMMON.API_ERROR"),
+            STATUS.ERROR
           );
-        } else {
-          showEmsg(resData?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
+        } finally {
+          setSubmitting(false);
         }
-      } catch (err) {
-        showEmsg(
-          err.response?.data?.message || t("COMMON.API_ERROR"), 
-          STATUS.ERROR
-        );
-      } finally {
-        setSubmitting(false);
       }
-    }
-  },
-  [
-    validateRoleDataSubmit,
-    oPermissionsByModule,
-    roleId,
-    sRoleName,
-    bIsActive,
-    t,
-    navigate,
-    isAdminRole
-  ]
-);
+    },
+    [
+      validateRoleDataSubmit,
+      oPermissionsByModule,
+      roleId,
+      sRoleName,
+      bIsActive,
+      t,
+      navigate,
+      isAdminRole,
+    ]
+  );
 
   if (nError) {
     return <div>{t("CREATE_USER_ROLE.FAILED_TO_FETCH_PERMISSIONS")}</div>;
@@ -316,138 +332,134 @@ const AddUserRole = () => {
   const isEditingAdmin = roleId && isAdminRole();
 
   return (
-    <div className={`max-w-8xl mx-auto`}>
+    <div className="flex flex-col min-h-screen">
       <ToastContainer />
       {loaderOverlay}
-      <div>
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <p className="text-gray-500 truncate">
-              {t("CREATE_USER_ROLE.ADD_USER_ROLE_DESCRIPTION")}
-            </p>
-          </div>
-        </div>
-        <form onSubmit={handleSave}>
-          <div className="flex flex-col md:flex-row md:space-x-4 mb-6">
-            <div className="w-full md:w-1/2">
-              <TextwithIcone
-                label={t("COMMON.ROLE")}
-                type="text"
-                value={sRoleName}
-                onChange={handleRoleNameChange}
-                placeholder={t("CREATE_USER_ROLE.ENTER_ROLE_NAME")}
-                error={oErrors.RoleNameError}
-                Icon={Shield}
-                disabled={isEditingAdmin}
-              />
-            </div>
-            
-            <div className="w-full md:w-1/2">
-              <SelectWithIcon
-                label={t("PRODUCT_SETUP.CREATE_BRAND.STATUS_LABEL")}
-                id="IsActive"
-                name="IsActive"
-                value={bIsActive.toString()}
-                onChange={handleStatusChange}
-                options={STATUS_DROPDOWN_OPTIONS.map(opt => ({
-                  value: opt.value,
-                  label: t(opt.labelKey),
-                }))}
-                Icon={Tag}
-                error={oErrors.IsActive}
-                disabled={isEditingAdmin}
-              />
-            </div>
-          </div>
-          <hr className="border-gray-300 my-4 mb-6" />
-          {loadingPermissions ? (
-            <div className="text-center py-8 truncate">
-              {t("COMMON.LOADING")}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Object.keys(oPermissionsByModule).map((moduleName) => {
-                const isAllSelected = oPermissionsByModule[moduleName].every(
-                  (permission) => permission.IsChecked
-                );
 
-                return (
-                  <div
-                    key={moduleName}
-                    className={`border p-4 rounded-lg shadow ${
-                      isEditingAdmin ? 'bg-gray-100' : 'bg-[#e5efff]'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-lg font-bold truncate">
-                        {moduleName}
-                      </h2>
-                      <label className="text-sm truncate">
-                        <input
-                          type="checkbox"
-                          checked={isAllSelected}
-                          onChange={(e) =>
-                            handleSelectAllChange(moduleName, e.target.checked)
-                          }
-                          className={`mr-2 form-checkbox h-[12px] w-[12px] ${
-                            isEditingAdmin 
-                              ? 'text-gray-400 cursor-not-allowed' 
-                              : 'text-blue-600'
-                          }`}
-                          disabled={isEditingAdmin}
-                        />
-                        {t("CREATE_USER_ROLE.SELECT_ALL")}
-                      </label>
-                    </div>
-                    <hr className="border-gray-300 my-4 mt-2 mb-4" />
-                    {oPermissionsByModule[moduleName].map((permission) => (
-                      <div
-                        key={permission.ID}
-                        className="flex items-center mb-2"
-                      >
-                        <label className="truncate">
+      {/* Main Content Area */}
+      <div className={`max-w-8xl mx-auto w-full flex-grow pb-24 px-4 lg:px-8`}>
+        <div>
+          <div className="mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <p className="text-gray-500 truncate">
+                {t("CREATE_USER_ROLE.ADD_USER_ROLE_DESCRIPTION")}
+              </p>
+            </div>
+          </div>
+          <form onSubmit={handleSave}>
+            <div className="flex flex-col md:flex-row md:space-x-4 mb-6">
+              <div className="w-full md:w-1/2">
+                <TextwithIcone
+                  label={t("COMMON.ROLE")}
+                  type="text"
+                  value={sRoleName}
+                  onChange={handleRoleNameChange}
+                  placeholder={t("CREATE_USER_ROLE.ENTER_ROLE_NAME")}
+                  error={oErrors.RoleNameError}
+                  Icon={Shield}
+                  disabled={isEditingAdmin}
+                />
+              </div>
+
+              <div className="w-full md:w-1/2">
+                <SelectWithIcon
+                  label={t("PRODUCT_SETUP.CREATE_BRAND.STATUS_LABEL")}
+                  id="IsActive"
+                  name="IsActive"
+                  value={bIsActive.toString()}
+                  onChange={handleStatusChange}
+                  options={STATUS_DROPDOWN_OPTIONS.map((opt) => ({
+                    value: opt.value,
+                    label: t(opt.labelKey),
+                  }))}
+                  Icon={Tag}
+                  error={oErrors.IsActive}
+                  disabled={isEditingAdmin}
+                />
+              </div>
+            </div>
+            <hr className="border-gray-300 my-4 mb-6" />
+            {loadingPermissions ? (
+              <div className="text-center py-8 truncate">
+                {t("COMMON.LOADING")}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Object.keys(oPermissionsByModule).map((moduleName) => {
+                  const isAllSelected = oPermissionsByModule[moduleName].every(
+                    (permission) => permission.IsChecked
+                  );
+
+                  return (
+                    <div
+                      key={moduleName}
+                      className={`border p-4 rounded-lg shadow ${
+                        isEditingAdmin ? "bg-gray-100" : COLORS.GRAY_PRIMARY
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <h2 className="text-lg font-bold truncate">
+                          {moduleName}
+                        </h2>
+                        <label className="text-sm truncate">
                           <input
                             type="checkbox"
-                            checked={permission.IsChecked}
-                            onChange={() =>
-                              handleCheckboxChange(moduleName, permission.ID)
+                            checked={isAllSelected}
+                            onChange={(e) =>
+                              handleSelectAllChange(
+                                moduleName,
+                                e.target.checked
+                              )
                             }
                             className={`mr-2 form-checkbox h-[12px] w-[12px] ${
-                              isEditingAdmin 
-                                ? 'text-gray-400 cursor-not-allowed' 
-                                : 'text-blue-600'
+                              isEditingAdmin
+                                ? "text-gray-400 cursor-not-allowed"
+                                : "text-blue-600"
                             }`}
                             disabled={isEditingAdmin}
                           />
-                          {permission.Name}
+                          {t("CREATE_USER_ROLE.SELECT_ALL")}
                         </label>
                       </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          <div className="mt-10 flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4">
-            <button
-              className="bg-gray-200 px-4 py-2 rounded shadow w-full sm:w-auto truncate"
-              onClick={handleClose}
-              type="button"
-            >
-              {t("COMMON.CANCEL")}
-            </button>
-            <button 
-              className={`btn-primary truncate ${
-                isEditingAdmin ? 'opacity-50 cursor-not-allowed' : ''
-              }`} 
-              type="submit"
-              disabled={isEditingAdmin}
-            >
-              {roleId ? t("COMMON.UPDATE") : t("CREATE_USER_ROLE.SAVE_ROLE")}
-            </button>
-          </div>
-        </form>
+                      <hr className="border-gray-300 my-4 mt-2 mb-4" />
+                      {oPermissionsByModule[moduleName].map((permission) => (
+                        <div
+                          key={permission.ID}
+                          className="flex items-center mb-2"
+                        >
+                          <label className="truncate">
+                            <input
+                              type="checkbox"
+                              checked={permission.IsChecked}
+                              onChange={() =>
+                                handleCheckboxChange(moduleName, permission.ID)
+                              }
+                              className={`mr-2 form-checkbox h-[12px] w-[12px] ${
+                                isEditingAdmin
+                                  ? "text-gray-400 cursor-not-allowed"
+                                  : "text-blue-600"
+                              }`}
+                              disabled={isEditingAdmin}
+                            />
+                            {permission.Name}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </form>
+        </div>
       </div>
+
+      <FloatingFooter
+        onCancel={handleClose}
+        onSubmit={handleSave}
+        isSubmitting={bSubmitting}
+        isEditMode={!!roleId}
+      />
     </div>
   );
 };

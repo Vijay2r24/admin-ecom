@@ -12,7 +12,7 @@ import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { UPDATE_ROLE_STATUS } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS,FILTERS } from "../contants/constants.jsx";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, FILTERS } from "../contants/constants.jsx";
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
@@ -62,7 +62,6 @@ const UserRolesList = () => {
     return roleName === "admin";
   };
 
-
   const handleFilterChange = (e, filterName) => {
     setFilterLoading(true);
     if (filterName === FILTERS.STATUS) {
@@ -86,10 +85,14 @@ const UserRolesList = () => {
       pageSize: itemsPerPage,
       searchText: sSearchTerm,
     };
-  
-     if (selectedStatus && selectedStatus !== "all") {
-         filterParams.IsActive = selectedStatus;
-      }
+
+    // Fixed: Proper status filtering with correct parameter name and value mapping
+    if (selectedStatus && selectedStatus !== "all") {
+      // Convert string to boolean - assuming API expects boolean for IsActive
+      // If your API expects string "true"/"false", use: filterParams.IsActive = selectedStatus;
+      filterParams.IsActive = selectedStatus === "true" || selectedStatus === true;
+    }
+
 
     const fetchData = async () => {
       try {
@@ -100,7 +103,7 @@ const UserRolesList = () => {
     };
 
     fetchData();
-  }, [nCurrentPage, sSearchTerm, selectedStatus, dispatch]);
+  }, [nCurrentPage, sSearchTerm, selectedStatus, dispatch, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -176,7 +179,9 @@ const UserRolesList = () => {
         pageSize: itemsPerPage,
         searchText: sSearchTerm,
       };
-      if (selectedStatus !== "all") filterParams.status = selectedStatus;
+      if (selectedStatus !== "all") {
+        filterParams.IsActive = selectedStatus === "true" || selectedStatus === true;
+      }
 
       await dispatch(fetchResource({ key: "roles", params: filterParams }));
 
@@ -304,7 +309,6 @@ const UserRolesList = () => {
                               onEdit={() => handleEdit(role.RoleID, roleName, role.IsActive)}
                               disableEdit={isAdminRole({ RoleName: roleName })} 
                             />
-
                           </div>
                         </td>
                       </tr>
