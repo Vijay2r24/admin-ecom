@@ -1,4 +1,4 @@
-import React from 'react';
+
 import Datepicker from "react-tailwindcss-datepicker";
 import { Calendar, X } from "lucide-react";
 import { DATE_PICKER_CONFIG, SHORTCUT_LABELS, TIME_PERIODS } from '../contants/constants';
