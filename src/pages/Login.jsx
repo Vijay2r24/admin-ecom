@@ -40,12 +40,12 @@ import {
 } from "../utils/passwordUtils";
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
-
+import { loginSuccess } from "../store/slices/authSlice";
 const Login = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [bShowPassword, setShowPassword] = useState(false);
-
+  const dispatch = useDispatch();
   const [oFormData, setFormData] = useState({
     email: "",
     password: "",
@@ -177,7 +177,16 @@ const Login = () => {
             "PermissionIDs",
             JSON.stringify(data.PermissionIDs || [])
           );
-
+          dispatch(
+             loginSuccess({
+             token: data.token,
+             user: {
+             id: data.UserID,
+             email: oFormData.email,
+             tenantID: data.TenantID,
+             permissionIDs: data.PermissionIDs || [],},
+             })
+            );
           try {
             const token = data.token;
             const permResponse = await apiGet(GET_ALL_PERMISSIONS, {}, token);
