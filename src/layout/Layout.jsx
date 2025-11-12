@@ -1,18 +1,27 @@
 import { useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import { logout } from "../store/slices/authSlice";
+import IdleLogout from "../components/IdleLogout";
+import { useSelector, useDispatch } from "react-redux";
 
 const Layout = ({ children }) => {
   const [bIsSidebarOpen, setIsSidebarOpen] = useState(true);
   const [bIsCollapsed, setIsCollapsed] = useState(false);
   const [bIsMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const dispatch = useDispatch();
+  const { isLoggedIn } = useSelector((state) => state.auth);
 
+  const handleLogout = () => {
+    dispatch(logout());
+  };
   const toggleSidebar = () => {
     setIsCollapsed(!bIsCollapsed);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
+        <IdleLogout isLoggedIn={isLoggedIn} onLogout={handleLogout}/> 
       <div
         className={`  
           fixed top-0 left-0 z-50 h-screen transition-all duration-300 ease-in-out
