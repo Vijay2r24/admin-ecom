@@ -303,8 +303,16 @@ export const DATE_FORMATS = {
   display: "MMM DD, HH:mm",
   time: "HH:mm",
   monthYear: "MMM",
+  FULL_DATETIME_12_HOUR: "MMM D, YYYY h:mm A",
+  DATE_DISPLAY: "MMM D, YYYY",
 };
-
+export const DATE_UNITS = {
+  DAY: "day",
+  DAYS: "days",
+  HOUR: "hour",
+  HOURS: "hours",
+};
+export const DEFAULT_COUNTRY = "IN";
 export const DEFAULT_PROPS = {
   showLabel: true,
   placeholder: "Select date range",

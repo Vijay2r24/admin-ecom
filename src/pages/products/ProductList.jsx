@@ -13,7 +13,11 @@ import {
 } from "../../contants/apiRoutes";
 import Switch from "../../components/Switch.jsx";
 import { useTitle } from "../../context/TitleContext";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS } from "../../contants/constants.jsx";
+import {
+  ITEMS_PER_PAGE,
+  STATUS,
+  STATUS_OPTIONS,
+} from "../../contants/constants.jsx";
 import {
   fetchResource,
   updateStatusById,
@@ -127,85 +131,104 @@ const ProductList = () => {
   };
 
   const fetchProducts = useCallback(async () => {
-    try {
-      if (initialLoadComplete) {
-        setFilterLoading(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-      const token = localStorage.getItem("token");
-      const params = {
-        pageNumber: nCurrentPage,
-        pageSize: itemsPerPage,
-        searchText: sSearchTerm,
-      };
-      if (oFilters.status && oFilters.status !== "all") {
-        params.IsActive = oFilters.status.toLowerCase();
-      }
-      if (oFilters.category && oFilters.category !== "all") {
-        params.categoryName = oFilters.category;
-      }
-      if (oFilters.brand && oFilters.brand !== "all") {
-        params.brandName = oFilters.brand;
-      }
-      if (oFilters.store && oFilters.store !== "all") {
-        params.storeName = oFilters.store;
-      }
+  try {
+    if (initialLoadComplete) {
+      setFilterLoading(true);
+    } else {
+      setLoading(true);
+    }
+    setError(null);
+    const token = localStorage.getItem("token");
 
-      const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
-      const resData = oResponse?.data;
-      if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
-        const rawProducts = Array.isArray(resData.data) ? resData.data : [];
-        const transformedProducts = rawProducts.map((product) => {
-          const firstVariant =
-            product.Variants.find((v) => v.IsActive) ||
-            product.Variants[0] ||
-            {};
-          return {
-            ...product,
-            subCategory: product.CategoryName,
-            MRP: firstVariant.MRP || "0.00",
-            quantity: getTotalStock(firstVariant.Inventory || []),
-            brandName: getBrandName(product),
-            firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
-            status:
-              product.IsActive &&
-              getTotalStock(firstVariant.Inventory || []) > 0
-                ? "active"
-                : "out-of-stock",
-          };
-        });
-        setProducts(transformedProducts);
-        setTotalItems(resData.pagination?.totalRecords || 0);
-        setTotalPages(resData.pagination?.totalPages || 0);
-      } else {
-        setError(resData?.message || t("COMMON.API_ERROR"));
-        setProducts([]);
-        setTotalItems(0);
-        setTotalPages(0);
+    // Prepare params
+    const params = {
+      pageNumber: nCurrentPage,
+      pageSize: itemsPerPage,
+      searchText: sSearchTerm,
+    };
+
+    // Status filter
+    if (oFilters.status && oFilters.status !== "all") {
+      params.IsActive = oFilters.status === "true";
+    }
+
+    // Brand filter using IDs
+    if (oFilters.brand && oFilters.brand !== "all") {
+      const selectedBrands = brands
+        .filter((b) => b.BrandName === oFilters.brand)
+        .map((b) => b.BrandID);
+      if (selectedBrands.length > 0) {
+        params.brandId = selectedBrands;
       }
-    } catch (err) {
-      const backendMessage = err?.response?.data?.message;
-      setError(backendMessage || t("COMMON.API_ERROR"));
+    }
+
+    // Category filter using IDs
+    if (oFilters.category && oFilters.category !== "all") {
+      const selectedCategories = categories
+        .filter((c) => c.CategoryName === oFilters.category)
+        .map((c) => c.CategoryID);
+      if (selectedCategories.length > 0) {
+        params.categoryId = selectedCategories;
+      }
+    }
+
+    // Store filter (optional)
+    if (oFilters.store && oFilters.store !== "all") {
+      params.storeName = oFilters.store; // Keep store by name if needed
+    }
+
+    // Optional: startDate and endDate filters
+    // params.startDate = "2025-10-13T12:27:11.902Z";
+    // params.endDate = "2025-09-06T07:45:10.509Z";
+
+    const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
+    const resData = oResponse?.data;
+
+    if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+      const rawProducts = Array.isArray(resData.data) ? resData.data : [];
+      const transformedProducts = rawProducts.map((product) => {
+        const firstVariant =
+          product.Variants.find((v) => v.IsActive) ||
+          product.Variants[0] ||
+          {};
+        return {
+          ...product,
+          subCategory: product.CategoryName,
+          MRP: firstVariant.MRP || "0.00",
+          quantity: getTotalStock(firstVariant.Inventory || []),
+          brandName: getBrandName(product),
+          firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
+          status:
+            product.IsActive &&
+            getTotalStock(firstVariant.Inventory || []) > 0
+              ? "active"
+              : "out-of-stock",
+        };
+      });
+      setProducts(transformedProducts);
+      setTotalItems(resData.pagination?.totalRecords || 0);
+      setTotalPages(resData.pagination?.totalPages || 0);
+    } else {
+      setError(resData?.message || t("COMMON.API_ERROR"));
       setProducts([]);
       setTotalItems(0);
       setTotalPages(0);
-    } finally {
-      setLoading(false);
-      setFilterLoading(false);
-      if (!initialLoadComplete) {
-        setInitialLoadComplete(true);
-      }
     }
-  }, [
-    nCurrentPage,
-    itemsPerPage,
-    sSearchTerm,
-    oFilters,
-    t,
-    initialLoadComplete,
-  ]);
+  } catch (err) {
+    const backendMessage = err?.response?.data?.message;
+    setError(backendMessage || t("COMMON.API_ERROR"));
+    setProducts([]);
+    setTotalItems(0);
+    setTotalPages(0);
+  } finally {
+    setLoading(false);
+    setFilterLoading(false);
+    if (!initialLoadComplete) {
+      setInitialLoadComplete(true);
+    }
+  }
+}, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t, initialLoadComplete, brands, categories]);
+
 
   useEffect(() => {
     fetchProducts();
@@ -302,17 +325,6 @@ const ProductList = () => {
         handleDropdownInputChange(inputValue, "brand"),
     },
     {
-      label: t("SIDEBAR.STORES"),
-      name: "store",
-      value: oFilters.store,
-      options: storeOptions,
-      placeholder: t("PRODUCT_SETUP.TABS.STORES"),
-      searchable: true,
-      searchPlaceholder: t("COMMON.SEARCH_STORE"),
-      onInputChange: (inputValue) =>
-        handleDropdownInputChange(inputValue, "store"),
-    },
-    {
       label: t("COMMON.STATUS"),
       name: "status",
       value: oFilters.status,
@@ -358,17 +370,22 @@ const ProductList = () => {
     setExportLoading(true);
     try {
       // Find the brand and category IDs from the Redux state
-      const brand = brands.find(b => b.BrandName === oFilters.brand);
-      const category = categories.find(c => c.CategoryName === oFilters.category);
+      const brand = brands.find((b) => b.BrandName === oFilters.brand);
+      const category = categories.find(
+        (c) => c.CategoryName === oFilters.category
+      );
 
-      const isActiveFilter = oFilters.status === 'all' ? undefined : oFilters.status === 'true';
+      const isActiveFilter =
+        oFilters.status === "all" ? undefined : oFilters.status === "true";
 
-      await dispatch(exportProductReport({
-        searchText: sSearchTerm,
-        isActive: isActiveFilter,
-        brandId: brand ? [brand.BrandID] : undefined,
-        categoryId: category ? [category.CategoryID] : undefined,
-      })).unwrap();
+      await dispatch(
+        exportProductReport({
+          searchText: sSearchTerm,
+          isActive: isActiveFilter,
+          brandId: brand ? [brand.BrandID] : undefined,
+          categoryId: category ? [category.CategoryID] : undefined,
+        })
+      ).unwrap();
 
       // Optional: show success message
       // toast.success(t('PRODUCTS.EXPORT_SUCCESS'));
@@ -468,22 +485,33 @@ const ProductList = () => {
         <div className="text-center py-8 text-red-500">{sError}</div>
       ) : sViewMode === "table" ? (
         <div className="table-container-floating">
-          <div 
-            className="table-wrapper-floating scrollbar-hide" 
+          <div
+            className="table-wrapper-floating scrollbar-hide"
             onScroll={handleTableScroll}
           >
             <table className="table-base">
               {/* Floating Header */}
-              <thead className={`table-head-floating ${
-                tableScrollTop > 10 ? 'table-head-floating-shadow' : ''
-              }`}>
+              <thead
+                className={`table-head-floating ${
+                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                }`}
+              >
                 <tr>
-                  <th className="table-head-cell-floating">{t("PRODUCTS.TITLE")}</th>
-                  <th className="table-head-cell-floating">{t("COMMON.CATEGORY")}</th>
-                  <th className="table-head-cell-floating">{t("PRODUCTS.BRAND")}</th>
-                  <th className="table-head-cell-floating">{t("PRODUCTS.STOCK")}</th>
-                  <th className="table-head-cell-floating">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell-floating">{t("COMMON.ACTIONS")}</th>
+                  <th className="table-head-cell-floating">
+                    {t("PRODUCTS.TITLE")}
+                  </th>
+                  <th className="table-head-cell-floating mr-2">
+                    {t("COMMON.CATEGORY")}
+                  </th>
+                  <th className="table-head-cell-floating mr-2">
+                    {t("PRODUCTS.BRAND")}
+                  </th>
+                  <th className="table-head-cell-floating">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell-floating">
+                    {t("COMMON.ACTIONS")}
+                  </th>
                 </tr>
               </thead>
               <tbody className="table-body">
@@ -503,9 +531,10 @@ const ProductList = () => {
                   </tr>
                 ) : (
                   aProducts.map((product) => (
-                    <tr key={product.ProductID} className="table-row text-left">
+                    <tr key={product.ProductID} className="table-row">
+                      {/* Product Name */}
                       <td className="table-cell">
-                        <div className="flex items-center justify-left p-2">
+                        <div className="flex items-center p-2">
                           <div className="h-10 w-10 flex-shrink-0">
                             <img
                               className="h-10 w-10 rounded object-cover"
@@ -527,7 +556,9 @@ const ProductList = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="table-cell table-cell-text">
+
+                      {/* Category */}
+                      <td className="table-cell text-left">
                         <div
                           className="ellipsis-text"
                           title={product.subCategory}
@@ -535,7 +566,9 @@ const ProductList = () => {
                           {product.subCategory}
                         </div>
                       </td>
-                      <td className="table-cell text-left table-cell-text">
+
+                      {/* Brand */}
+                      <td className="table-cell text-left">
                         <div
                           className="ellipsis-text"
                           title={product.brandName}
@@ -543,10 +576,9 @@ const ProductList = () => {
                           {product.brandName}
                         </div>
                       </td>
-                      <td className="table-cell text-center table-cell-text">
-                        {product.quantity || 0}
-                      </td>
-                      <td className="table-cell">
+
+                      {/* Status */}
+                      <td className="table-cell flex justify-center items-center">
                         <Switch
                           checked={product.IsActive}
                           onChange={() =>
@@ -557,8 +589,10 @@ const ProductList = () => {
                           }
                         />
                       </td>
-                      <td className="table-cell text-left font-medium align-middle">
-                        <div className="flex justify-left items-left">
+
+                      {/* Actions */}
+                      <td className="table-cell text-left font-medium">
+                        <div className="flex items-center">
                           <ActionButtons
                             id={product.ProductID}
                             onEdit={handleEdit}
@@ -648,8 +682,8 @@ const ProductList = () => {
                     {t("PRODUCTS.STOCK")}: {product.quantity || 0}
                   </div>
                 </div>
-                <ActionButtons 
-                  id={product.ProductID} 
+                <ActionButtons
+                  id={product.ProductID}
                   onEdit={handleEdit}
                   viewLink={`/productdetails/${product.ProductID}`}
                 />

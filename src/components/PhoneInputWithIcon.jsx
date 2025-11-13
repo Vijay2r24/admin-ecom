@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { DEFAULT_COUNTRY } from "../contants/constants";
 
 const PhoneInputWithIcon = forwardRef(
   (
@@ -15,7 +16,7 @@ const PhoneInputWithIcon = forwardRef(
       error,
       Icon,
       inputSlot,
-      defaultCountry = "IN",
+      defaultCountry = DEFAULT_COUNTRY,
       ...rest
     },
     ref

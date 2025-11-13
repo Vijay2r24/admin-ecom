@@ -2,7 +2,7 @@ import React from "react";
 import { STATUS, TOOLTIPSTATUS } from "../contants/constants";
 
 const Switch = ({ checked, onChange, label = "", ...props }) => (
-  <label className="relative inline-flex items-center cursor-pointer group">
+  <label className="relative inline-flex items-center ml-2 cursor-pointer group">
     <input
       type="checkbox"
       className="sr-only peer"

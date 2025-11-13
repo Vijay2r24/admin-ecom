@@ -121,9 +121,6 @@ code {
   @apply overflow-x-auto;
 }
 
-.table-base {
-  @apply min-w-full divide-y divide-gray-200;
-}
 
 .table-head {
   @apply sticky top-0 z-0 transition-all duration-200 bg-gray-100 shadow-sm;
@@ -280,42 +277,12 @@ code {
   @apply bg-gray-50;
 }
 
-.table-head-cell {
-  @apply px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+/* Floating Table Header Cells */
+/* Floating Table Header Cells */
+.table-head-cell-floating {
+  @apply px-6 py-4 text-left text-sm font-medium text-gray-500 capitalize tracking-wider bg-gray-50 border-b border-gray-200;
 }
 
-.table-body {
-  @apply bg-white divide-y divide-gray-200;
-}
-
-.table-row {
-  @apply hover:bg-gray-50 transition-colors duration-150;
-}
-
-.table-cell {
-  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
-}
-
-.table-cell-text {
-  @apply text-sm font-medium text-gray-900;
-}
-
-.table-cell-subtext {
-  @apply text-sm text-gray-500 mt-1;
-}
-
-/* Status Badges */
-.status-badge {
-  @apply px-2.5 py-0.5 rounded-full text-xs font-medium;
-}
-
-.status-active {
-  @apply bg-green-100 text-green-800;
-}
-
-.status-inactive {
-  @apply bg-red-100 text-red-800;
-}
 
 /* Text Utilities */
 .ellipsis-text {

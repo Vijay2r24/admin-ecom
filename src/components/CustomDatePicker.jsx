@@ -13,6 +13,8 @@ import {
   MONTHS,
   WEEK_DAYS,
   STYLES,
+  DATE_FORMATS,
+  DATE_UNITS,
 } from "../contants/constants";
 
 function DateTimeRangePickerComponent({
@@ -31,11 +33,11 @@ function DateTimeRangePickerComponent({
   const [tempRange, setTempRange] = useState({ start: null, end: null });
   
   const [timeRange, setTimeRange] = useState({
-    startTime: dayjs().format("HH:mm"),
-    endTime: dayjs().add(1, "hour").format("HH:mm"),
+    startTime: dayjs().format(DATE_FORMATS.time),
+    endTime: dayjs().add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
   });
   
-  const [view, setView] = useState("days");
+  const [view, setView] = useState(DATE_UNITS.DAYS);
   const [validationError, setValidationError] = useState(null);
   const calendarRef = useRef(null);
 
@@ -43,7 +45,7 @@ function DateTimeRangePickerComponent({
     const handleClickOutside = (event) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
         setShowCalendar(false);
-        setView("days");
+        setView(DATE_UNITS.DAYS);
         setValidationError(null);
       }
     };
@@ -54,8 +56,8 @@ function DateTimeRangePickerComponent({
   useEffect(() => {
     if (!dateRange.start && !dateRange.end) {
       setTimeRange({
-        startTime: dayjs().format("HH:mm"),
-        endTime: dayjs().add(1, "hour").format("HH:mm"),
+        startTime: dayjs().format(DATE_FORMATS.time),
+        endTime: dayjs().add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
       });
       setTempRange({ start: null, end: null });
     }
@@ -79,29 +81,29 @@ function DateTimeRangePickerComponent({
       return { type: "range", message: t("VALIDATION.END_BEFORE_START") };
     }
 
-    if (!allowFutureDates && start.isAfter(dayjs(), "day")) {
+    if (!allowFutureDates && start.isAfter(dayjs(), DATE_UNITS.DAY)) {
       return { type: "date", message: t("VALIDATION.NO_FUTURE_DATES") };
     }
 
-    if (minDate && start.isBefore(minDate, "day")) {
+    if (minDate && start.isBefore(minDate, DATE_UNITS.DAY)) {
       return {
         type: "date",
         message: t("VALIDATION.MIN_DATE", {
-          date: minDate.format("MMM D, YYYY"),
+          date: minDate.format(DATE_FORMATS.DATE_DISPLAY),
         }),
       };
     }
 
-    if (maxDate && end.isAfter(maxDate, "day")) {
+    if (maxDate && end.isAfter(maxDate, DATE_UNITS.DAY)) {
       return {
         type: "date",
         message: t("VALIDATION.MAX_DATE", {
-          date: maxDate.format("MMM D, YYYY"),
+          date: maxDate.format(DATE_FORMATS.DATE_DISPLAY),
         }),
       };
     }
 
-    const daysDiff = end.diff(start, "day");
+    const daysDiff = end.diff(start, DATE_UNITS.DAY);
     if (daysDiff > 365) {
       return { type: "range", message: t("VALIDATION.MAX_RANGE_365") };
     }
@@ -114,7 +116,7 @@ function DateTimeRangePickerComponent({
       return { type: "time", message: t("VALIDATION.INVALID_TIME_FORMAT") };
     }
 
-    if (startDate.isSame(endDate, "day")) {
+    if (startDate.isSame(endDate, DATE_UNITS.DAY)) {
       const [startHour, startMin] = startTime.split(":").map(Number);
       const [endHour, endMin] = endTime.split(":").map(Number);
       const startMinutes = startHour * 60 + startMin;
@@ -137,50 +139,50 @@ function DateTimeRangePickerComponent({
 
     switch (filterValue) {
       case "today":
-        start = now.startOf("day");
-        end = now.endOf("day");
-        startTime = now.format("HH:mm");
-        endTime = now.add(1, "hour").format("HH:mm");
+        start = now.startOf(DATE_UNITS.DAY);
+        end = now.endOf(DATE_UNITS.DAY);
+        startTime = now.format(DATE_FORMATS.time);
+        endTime = now.add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time);
         break;
       case "yesterday":
-        start = now.subtract(1, "day").startOf("day");
-        end = now.subtract(1, "day").endOf("day");
+        start = now.subtract(1, DATE_UNITS.DAY).startOf(DATE_UNITS.DAY);
+        end = now.subtract(1, DATE_UNITS.DAY).endOf(DATE_UNITS.DAY);
         break;
       case "last7days":
-        start = now.subtract(6, "day").startOf("day");
-        end = now.endOf("day");
+        start = now.subtract(6, DATE_UNITS.DAY).startOf(DATE_UNITS.DAY);
+        end = now.endOf(DATE_UNITS.DAY);
         startTime = "00:00";
-        endTime = now.format("HH:mm");
+        endTime = now.format(DATE_FORMATS.time);
         break;
       case "last30days":
-        start = now.subtract(29, "day").startOf("day");
-        end = now.endOf("day");
+        start = now.subtract(29, DATE_UNITS.DAY).startOf(DATE_UNITS.DAY);
+        end = now.endOf(DATE_UNITS.DAY);
         startTime = "00:00";
-        endTime = now.format("HH:mm");
+        endTime = now.format(DATE_FORMATS.time);
         break;
       case "last3hours":
-        start = now.subtract(3, "hour");
+        start = now.subtract(3, DATE_UNITS.HOUR);
         end = now;
-        startTime = start.format("HH:mm");
-        endTime = end.format("HH:mm");
+        startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
         break;
       case "last6hours":
-        start = now.subtract(6, "hour");
+        start = now.subtract(6, DATE_UNITS.HOUR);
         end = now;
-        startTime = start.format("HH:mm");
-        endTime = end.format("HH:mm");
+        startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
         break;
       case "last12hours":
-        start = now.subtract(12, "hour");
+        start = now.subtract(12, DATE_UNITS.HOUR);
         end = now;
-        startTime = start.format("HH:mm");
-        endTime = end.format("HH:mm");
+        startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
         break;
       default:
-        start = now.startOf("day");
-        end = now.endOf("day");
-        startTime = now.format("HH:mm");
-        endTime = now.add(1, "hour").format("HH:mm");
+        start = now.startOf(DATE_UNITS.DAY);
+        end = now.endOf(DATE_UNITS.DAY);
+        startTime = now.format(DATE_FORMATS.time);
+        endTime = now.add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time);
     }
 
     const error = validateDateRange(start, end);
@@ -192,8 +194,8 @@ function DateTimeRangePickerComponent({
     setDateRange({ start, end });
     setTimeRange({ startTime, endTime });
     setTempRange({
-      start: start.startOf("day"),
-      end: end.startOf("day"),
+      start: start.startOf(DATE_UNITS.DAY),
+      end: end.startOf(DATE_UNITS.DAY),
     });
     setSelectedMonth(start);
     setShowDropdown(false);
@@ -219,13 +221,13 @@ function DateTimeRangePickerComponent({
   const years = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
 
   const isDateDisabled = (date) => {
-    if (!allowFutureDates && date.isAfter(dayjs(), "day")) {
+    if (!allowFutureDates && date.isAfter(dayjs(), DATE_UNITS.DAY)) {
       return true;
     }
-    if (minDate && date.isBefore(minDate, "day")) {
+    if (minDate && date.isBefore(minDate, DATE_UNITS.DAY)) {
       return true;
     }
-    if (maxDate && date.isAfter(maxDate, "day")) {
+    if (maxDate && date.isAfter(maxDate, DATE_UNITS.DAY)) {
       return true;
     }
     return false;
@@ -248,7 +250,7 @@ function DateTimeRangePickerComponent({
 
     if (!tempRange.start || (tempRange.start && tempRange.end)) {
       setTempRange({ start: clickedDate, end: null });
-    } else if (clickedDate.isBefore(tempRange.start, "day")) {
+    } else if (clickedDate.isBefore(tempRange.start, DATE_UNITS.DAY)) {
       setTempRange({ start: clickedDate, end: tempRange.start });
     } else {
       const error = validateDateRange(tempRange.start, clickedDate);
@@ -262,7 +264,7 @@ function DateTimeRangePickerComponent({
 
   const handleMonthSelect = (monthIndex) => {
     setSelectedMonth(selectedMonth.month(monthIndex));
-    setView("days");
+    setView(DATE_UNITS.DAYS);
   };
 
   const handleYearSelect = (year) => {
@@ -328,15 +330,15 @@ function DateTimeRangePickerComponent({
 
     setDateRange({ start: finalStart, end: finalEnd });
     setShowCalendar(false);
-    setView("days");
+    setView(DATE_UNITS.DAYS);
     setValidationError(null);
   };
 
   const handleClearAll = () => {
     handleClearDates();
     setTimeRange({
-      startTime: dayjs().format("HH:mm"),
-      endTime: dayjs().add(1, "hour").format("HH:mm"),
+      startTime: dayjs().format(DATE_FORMATS.time),
+      endTime: dayjs().add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
     });
     setTempRange({ start: null, end: null });
     setValidationError(null);
@@ -386,10 +388,10 @@ function DateTimeRangePickerComponent({
           const isSelected =
             tempRange.start &&
             tempRange.end &&
-            current.isAfter(tempRange.start, "day") &&
-            current.isBefore(tempRange.end, "day");
-          const isStart = tempRange.start?.isSame(current, "day");
-          const isEnd = tempRange.end?.isSame(current, "day");
+            current.isAfter(tempRange.start, DATE_UNITS.DAY) &&
+            current.isBefore(tempRange.end, DATE_UNITS.DAY);
+          const isStart = tempRange.start?.isSame(current, DATE_UNITS.DAY);
+          const isEnd = tempRange.end?.isSame(current, DATE_UNITS.DAY);
 
           return (
             <div
@@ -561,7 +563,7 @@ function DateTimeRangePickerComponent({
             </div>
           )}
 
-          {view === "days" && renderDaysView()}
+          {view === DATE_UNITS.DAYS && renderDaysView()}
           {view === "months" && renderMonthsView()}
           {view === "years" && renderYearsView()}
 
@@ -590,7 +592,7 @@ function DateTimeRangePickerComponent({
             <button
               onClick={() => {
                 setShowCalendar(false);
-                setView("days");
+                setView(DATE_UNITS.DAYS);
                 setValidationError(null);
               }}
               className="text-xs px-3 py-1 rounded-md hover:bg-gray-100 text-gray-600"
