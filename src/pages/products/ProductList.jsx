@@ -132,65 +132,38 @@ const ProductList = () => {
 
   const fetchProducts = useCallback(async () => {
   try {
-    if (initialLoadComplete) {
-      setFilterLoading(true);
-    } else {
-      setLoading(true);
-    }
+    setLoading(true);
     setError(null);
     const token = localStorage.getItem("token");
 
-    // Prepare params
     const params = {
       pageNumber: nCurrentPage,
       pageSize: itemsPerPage,
       searchText: sSearchTerm,
     };
 
-    // Status filter
     if (oFilters.status && oFilters.status !== "all") {
       params.IsActive = oFilters.status === "true";
     }
 
-    // Brand filter using IDs
+    // Map selected brand name to ID only when needed
     if (oFilters.brand && oFilters.brand !== "all") {
-      const selectedBrands = brands
-        .filter((b) => b.BrandName === oFilters.brand)
-        .map((b) => b.BrandID);
-      if (selectedBrands.length > 0) {
-        params.brandId = selectedBrands;
-      }
+      const selectedBrand = brands.find(b => b.BrandName === oFilters.brand);
+      if (selectedBrand) params.brandId = [selectedBrand.BrandID];
     }
 
-    // Category filter using IDs
     if (oFilters.category && oFilters.category !== "all") {
-      const selectedCategories = categories
-        .filter((c) => c.CategoryName === oFilters.category)
-        .map((c) => c.CategoryID);
-      if (selectedCategories.length > 0) {
-        params.categoryId = selectedCategories;
-      }
+      const selectedCategory = categories.find(c => c.CategoryName === oFilters.category);
+      if (selectedCategory) params.categoryId = [selectedCategory.CategoryID];
     }
-
-    // Store filter (optional)
-    if (oFilters.store && oFilters.store !== "all") {
-      params.storeName = oFilters.store; // Keep store by name if needed
-    }
-
-    // Optional: startDate and endDate filters
-    // params.startDate = "2025-10-13T12:27:11.902Z";
-    // params.endDate = "2025-09-06T07:45:10.509Z";
 
     const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
     const resData = oResponse?.data;
 
     if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
       const rawProducts = Array.isArray(resData.data) ? resData.data : [];
-      const transformedProducts = rawProducts.map((product) => {
-        const firstVariant =
-          product.Variants.find((v) => v.IsActive) ||
-          product.Variants[0] ||
-          {};
+      const transformedProducts = rawProducts.map(product => {
+        const firstVariant = product.Variants.find(v => v.IsActive) || product.Variants[0] || {};
         return {
           ...product,
           subCategory: product.CategoryName,
@@ -198,11 +171,7 @@ const ProductList = () => {
           quantity: getTotalStock(firstVariant.Inventory || []),
           brandName: getBrandName(product),
           firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
-          status:
-            product.IsActive &&
-            getTotalStock(firstVariant.Inventory || []) > 0
-              ? "active"
-              : "out-of-stock",
+          status: product.IsActive && getTotalStock(firstVariant.Inventory || []) > 0 ? "active" : "out-of-stock",
         };
       });
       setProducts(transformedProducts);
@@ -215,19 +184,15 @@ const ProductList = () => {
       setTotalPages(0);
     }
   } catch (err) {
-    const backendMessage = err?.response?.data?.message;
-    setError(backendMessage || t("COMMON.API_ERROR"));
+    setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
     setProducts([]);
     setTotalItems(0);
     setTotalPages(0);
   } finally {
     setLoading(false);
     setFilterLoading(false);
-    if (!initialLoadComplete) {
-      setInitialLoadComplete(true);
-    }
   }
-}, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t, initialLoadComplete, brands, categories]);
+}, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
 
 
   useEffect(() => {
