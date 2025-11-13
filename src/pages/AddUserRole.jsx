@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import Loader from "../components/Loader";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import TextwithIcone from "../components/TextInputWithIcon";
-import { Shield } from "lucide-react";
+import { Shield, Tag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPost, apiPut } from "../utils/ApiUtils";
 import {
@@ -17,7 +17,6 @@ import { COLORS, STATUS, STATUS_DROPDOWN_OPTIONS } from "../contants/constants";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
 import SelectWithIcon from "../components/SelectWithIcon";
-import { Tag } from "lucide-react";
 import FloatingFooter from "../components/FloatingFooter";
 
 const AddUserRole = () => {
@@ -62,6 +61,112 @@ const AddUserRole = () => {
       setIsActive(status === true);
     }
   }, [roleName, status]);
+
+  const isViewPermissionName = (name) => {
+    if (!name || typeof name !== "string") return false;
+    const lower = name.toLowerCase().trim();
+    return (
+      lower.startsWith("view") ||
+      lower.includes(" view") ||
+      /\bview\b/.test(lower)
+    );
+  };
+  const enforceViewLogicForModule = (permissionsObj, moduleName) => {
+    if (!permissionsObj || !permissionsObj[moduleName]) return permissionsObj;
+
+    if (moduleName === "Menu Management") return permissionsObj;
+
+    const updated = { ...permissionsObj };
+    const perms = [...updated[moduleName]];
+
+    const viewIndex = perms.findIndex((p) =>
+      isViewPermissionName(p.Name || "")
+    );
+
+    const anyNonViewSelected = perms.some(
+      (p) => !isViewPermissionName(p.Name || "") && p.IsChecked
+    );
+
+    if (anyNonViewSelected && viewIndex !== -1 && !perms[viewIndex].IsChecked) {
+      perms[viewIndex] = { ...perms[viewIndex], IsChecked: true };
+    }
+
+    if (viewIndex !== -1 && !perms[viewIndex].IsChecked) {
+      for (let i = 0; i < perms.length; i++) {
+        if (i === viewIndex) continue;
+        if (perms[i].IsChecked) {
+          perms[i] = { ...perms[i], IsChecked: false };
+        }
+      }
+    }
+
+    updated[moduleName] = perms;
+    return updated;
+  };
+
+  const enforceViewLogicAllModules = useCallback((permissionsObj) => {
+    if (!permissionsObj) return permissionsObj;
+    let updated = { ...permissionsObj };
+    Object.keys(updated).forEach((moduleName) => {
+      if (moduleName === "Menu Management") return;
+      updated = enforceViewLogicForModule(updated, moduleName);
+    });
+    return updated;
+  }, []);
+
+  const syncMenuManagement = useCallback(
+    (permissions) => {
+      const menuModule = "Menu Management";
+      if (!permissions[menuModule]) return permissions;
+
+      permissions[menuModule] = permissions[menuModule].map((p) =>
+        p.Name.toLowerCase().includes("dashboard")
+          ? { ...p, IsChecked: true }
+          : p
+      );
+
+      Object.keys(permissions).forEach((moduleName) => {
+        if (moduleName === menuModule) return;
+
+        const keyword = moduleName
+          .toLowerCase()
+          .replace("management", "")
+          .replace("setup", "")
+          .trim();
+
+        const anySelected = permissions[moduleName].some((p) => p.IsChecked);
+
+        permissions[menuModule] = permissions[menuModule].map((menuItem) => {
+          if (menuItem.Name.toLowerCase().includes(keyword)) {
+            return { ...menuItem, IsChecked: anySelected };
+          }
+          return menuItem;
+        });
+      });
+
+      const productManagementSelected = permissions["Product Management"]
+        ? permissions["Product Management"].some((p) => p.IsChecked)
+        : false;
+
+      const productSetupSelected = permissions["Product Setup"]
+        ? permissions["Product Setup"].some((p) => p.IsChecked)
+        : false;
+
+      const shouldCheckProducts =
+        productManagementSelected || productSetupSelected;
+
+      permissions[menuModule] = permissions[menuModule].map((menuItem) => {
+        if (menuItem.Name.toLowerCase() === "products") {
+          return { ...menuItem, IsChecked: shouldCheckProducts };
+        }
+        return menuItem;
+      });
+
+      const final = enforceViewLogicAllModules(permissions);
+      return final;
+    },
+    [enforceViewLogicAllModules]
+  );
 
   const fetchPermissions = useCallback(async () => {
     setLoadingPermissions(true);
@@ -144,7 +249,50 @@ const AddUserRole = () => {
             IsChecked: isChecked,
           });
         });
-        setPermissionsByModule(categorizedPermissions);
+
+        const syncedPermissions = (() => {
+          const updated = { ...categorizedPermissions };
+          const menuModule = "Menu Management";
+          if (!updated[menuModule]) return updated;
+
+          updated[menuModule] = updated[menuModule].map((p) =>
+            p.Name.toLowerCase().includes("dashboard")
+              ? { ...p, IsChecked: true }
+              : p
+          );
+
+          Object.keys(updated).forEach((moduleName) => {
+            if (moduleName === menuModule) return;
+            const keyword = moduleName
+              .toLowerCase()
+              .replace("management", "")
+              .replace("setup", "")
+              .trim();
+
+            const anySelected = updated[moduleName].some((p) => p.IsChecked);
+            updated[menuModule] = updated[menuModule].map((menuItem) =>
+              menuItem.Name.toLowerCase().includes(keyword)
+                ? { ...menuItem, IsChecked: anySelected }
+                : menuItem
+            );
+          });
+
+          return updated;
+        })();
+
+        const enforced = enforceViewLogicAllModules(syncedPermissions);
+
+        const ordered = {};
+        if (enforced["Menu Management"]) {
+          ordered["Menu Management"] = enforced["Menu Management"];
+        }
+        Object.keys(enforced)
+          .filter((key) => key !== "Menu Management")
+          .forEach((key) => {
+            ordered[key] = enforced[key];
+          });
+
+        setPermissionsByModule(ordered);
       } else {
         setPermissionsByModule({});
         setError(t("CREATE_USER_ROLE.NO_PERMISSIONS_FOUND"));
@@ -156,7 +304,7 @@ const AddUserRole = () => {
     } finally {
       setLoadingPermissions(false);
     }
-  }, [roleId]);
+  }, [roleId, enforceViewLogicAllModules, t]);
 
   useEffect(() => {
     fetchPermissions();
@@ -164,44 +312,37 @@ const AddUserRole = () => {
 
   const handleCheckboxChange = useCallback(
     (moduleName, permissionId) => {
-      // Don't allow permission changes for admin roles
-      if (isAdminRole()) {
-        return;
-      }
-
-      setPermissionsByModule((prevState) => {
-        const updatedPermissions = { ...prevState };
-        updatedPermissions[moduleName] = updatedPermissions[moduleName].map(
-          (permission) =>
-            permission.ID === permissionId
-              ? { ...permission, IsChecked: !permission.IsChecked }
-              : permission
+      if (isAdminRole()) return;
+      setPermissionsByModule((prev) => {
+        const updated = { ...prev };
+        updated[moduleName] = updated[moduleName].map((p) =>
+          p.ID === permissionId ? { ...p, IsChecked: !p.IsChecked } : p
         );
-        return updatedPermissions;
+
+        const afterViewEnforce = enforceViewLogicForModule(updated, moduleName);
+
+        return syncMenuManagement(afterViewEnforce);
       });
     },
-    [isAdminRole]
+    [isAdminRole, syncMenuManagement]
   );
 
   const handleSelectAllChange = useCallback(
     (moduleName, isChecked) => {
-      // Don't allow permission changes for admin roles
-      if (isAdminRole()) {
-        return;
-      }
+      if (isAdminRole()) return;
+      setPermissionsByModule((prev) => {
+        const updated = { ...prev };
+        updated[moduleName] = updated[moduleName].map((p) => ({
+          ...p,
+          IsChecked: isChecked,
+        }));
 
-      setPermissionsByModule((prevState) => {
-        const updatedPermissions = { ...prevState };
-        updatedPermissions[moduleName] = updatedPermissions[moduleName].map(
-          (permission) => ({
-            ...permission,
-            IsChecked: isChecked,
-          })
-        );
-        return updatedPermissions;
+        const afterViewEnforce = enforceViewLogicForModule(updated, moduleName);
+
+        return syncMenuManagement(afterViewEnforce);
       });
     },
-    [isAdminRole]
+    [isAdminRole, syncMenuManagement]
   );
 
   const handleClose = useCallback(() => {
@@ -243,13 +384,22 @@ const AddUserRole = () => {
       if (!validateRoleDataSubmit()) {
         setSubmitting(true);
 
-        // Extract permissions in the required format
-        const permissions = Object.values(oPermissionsByModule)
-          .flat()
-          .map((permission) => ({
-            permissionId: permission.ID,
-            isChecked: permission.IsChecked,
-          }));
+        // Extract permissions in required format
+        let permissions;
+
+        if (!roleId) {
+          permissions = Object.values(oPermissionsByModule)
+            .flat()
+            .filter((p) => p.IsChecked)
+            .map((p) => p.ID);
+        } else {
+          permissions = Object.values(oPermissionsByModule)
+            .flat()
+            .map((permission) => ({
+              permissionId: permission.ID,
+              isChecked: permission.IsChecked,
+            }));
+        }
 
         const userId = localStorage.getItem("userId");
         const tenantID = localStorage.getItem("tenantID");
@@ -281,7 +431,7 @@ const AddUserRole = () => {
             res = await apiPut(UPDATE_ROLE_PERMISSION, roleData, token);
           } else {
             // Use POST for create with createRolePermission endpoint
-            res = await apiPost(CREATE_ROLE_PERMISSION, roleData, token);
+            res = await apiPost(CREATE_ROLE_PERMISSION, roleData, false);
           }
 
           const resData = res?.data;
