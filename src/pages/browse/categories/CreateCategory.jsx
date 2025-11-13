@@ -21,9 +21,14 @@ import TextInputWithIcon from "../../../components/TextInputWithIcon";
 import SelectWithIcon from "../../../components/SelectWithIcon";
 import TextAreaWithIcon from "../../../components/TextAreaWithIcon";
 import BackButton from "../../../components/BackButton";
-import ImageCropperModal from "../../../components/ImageCropperModal"; // Import the cropper modal
+import ImageCropperModal from "../../../components/ImageCropperModal";
 import { ToastContainer } from "react-toastify";
 import Loader from "../../../components/Loader";
+
+const FILE_CONSTANTS = {
+  CATEGORY_IMAGE_PREFIX: "category",
+  FILE_TYPE: "image/jpeg"
+};
 
 const defaultFormData = {
   TenantID: localStorage.getItem("tenantID"),
@@ -50,7 +55,6 @@ const CreateCategory = () => {
   const [oErrors, setErrors] = useState({});
   const [sImagePreview, setImagePreview] = useState(null);
   const [bSubmitting, setSubmitting] = useState(false);
-  // Cropper modal state
   const [bShowCropper, setShowCropper] = useState(false);
   const [oImageToCrop, setImageToCrop] = useState(null);
 
@@ -133,7 +137,7 @@ const CreateCategory = () => {
               setFormData((prev) => ({
                 ...prev,
                 existingImage: existingImageData,
-                existingImageDocumentId: existingDocumentId, // Store documentId separately
+                existingImageDocumentId: existingDocumentId,
               }));
               setImagePreview(existingImageData.documentUrl);
             }

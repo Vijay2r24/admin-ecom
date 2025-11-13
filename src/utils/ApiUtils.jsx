@@ -1,37 +1,47 @@
-// src/utils/ApiUtils.js
-import api from "../components/apiInstance";
-
-// GET request
-export const apiGet = async (endpoint, oParams = {}) => {
-  const response = await api.get(endpoint, { params: oParams });
-  return response;
-};
-
-// POST request
-export const apiPost = async (endpoint, data, isFormData = false, responseType = "json") => {
-  const response = await api.post(endpoint, data, {
-    responseType,
+import axios from 'axios';
+import { BASE_URL } from '../contants/apiRoutes';
+// Create axios instance with optional token
+const oCreateApiInstance = (token, isFormData) => {
+  return axios.create({
+    baseURL: BASE_URL,
     headers: {
-      "Content-Type": isFormData ? "multipart/form-data" : "application/json",
+      'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }), // only add token if it exists
     },
   });
-  return response;
 };
 
-// PUT
-export const apiPut = async (endpoint, data) => {
-  const response = await api.put(endpoint, data);
-  return response;
+// GET request
+export const apiGet = async (endpoint, oParams = {}, token = null) => {
+  const api = oCreateApiInstance(token);
+  const oResponse = await api.get(endpoint, {params : oParams });
+  return oResponse;
 };
 
-// PATCH
-export const apiPatch = async (endpoint, data) => {
-  const response = await api.patch(endpoint, data);
-  return response;
+// POST request with response type support
+export const apiPost = async (endpoint, data, token = null, isFormData = false, responseType = 'json') => {
+  const api = oCreateApiInstance(token, isFormData);
+  const oResponse = await api.post(endpoint, data, { responseType });
+  return oResponse;
 };
 
-// DELETE
-export const apiDelete = async (endpoint) => {
-  const response = await api.delete(endpoint);
-  return response;
+// PUT request
+export const apiPut = async (endpoint, data, token = null, isFormData = false) => {
+  const api = oCreateApiInstance(token, isFormData);
+  const oResponse = await api.put(endpoint, data);
+  return oResponse;
+};
+
+// PATCH request
+export const apiPatch = async (endpoint, data, token = null, isFormData = false) => {
+  const api = oCreateApiInstance(token, isFormData);
+  const oResponse = await api.patch(endpoint, data);
+  return oResponse;
+};
+
+// DELETE request
+export const apiDelete = async (endpoint, token = null) => {
+  const api = oCreateApiInstance(token);
+  const oResponse = await api.delete(endpoint);
+  return oResponse;
 };
