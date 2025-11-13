@@ -18,7 +18,6 @@ import {
 import { fetchResource } from "../../store/slices/allDataSlice";
 import { GET_All_PAYMENTS } from "../../contants/apiRoutes";
 import { exportPaymentReport } from "../../store/slices/exportSlice";
-import ExportPanel from "../../components/ExportPanel";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
 
 const Payments = () => {
@@ -30,6 +29,7 @@ const Payments = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
 
   const [sSearchTerm, setSearchTerm] = useState("");
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -46,11 +46,7 @@ const Payments = () => {
   const [bSubmitting, setSubmitting] = useState(false);
   const [bFilterLoading, setFilterLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [bShowExportPanel, setShowExportPanel] = useState(false);
-  const [oExportDate, setExportDate] = useState({
-    startDate: null,
-    endDate: null,
-  });
+  const [exportLoading, setExportLoading] = useState(false);
 
   const permissionIdForDelete = getPermissionCode(
     "Payment Management",
@@ -135,6 +131,11 @@ const Payments = () => {
   const [viewMode, setViewMode] = useState("table");
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
+
   const handleView = (paymentID) => {
     navigate(`/payment-details/${paymentID}`);
   };
@@ -152,19 +153,53 @@ const Payments = () => {
     setCurrentPage(1);
   };
 
-  const handleExportPayments = useCallback(() => {
-    setShowExportPanel(true);
-  }, []);
+  // Helper function to format dates for API
+  const formatDateForAPI = (date) => {
+    if (!date) return undefined;
+    
+    // If it's a dayjs object
+    if (date.isValid && date.isValid()) {
+      return date.toISOString();
+    }
+    
+    // If it's already a string
+    if (typeof date === 'string') {
+      return date;
+    }
+    
+    // If it's a Date object
+    if (date instanceof Date) {
+      return date.toISOString();
+    }
+    
+    return undefined;
+  };
 
-  const handleConfirmExportPayments = useCallback(() => {
-    dispatch(
-      exportPaymentReport({
-        startDate: oExportDate.startDate,
-        endDate: oExportDate.endDate,
-      })
-    );
-    setShowExportPanel(false);
-  }, [dispatch, oExportDate]);
+  const handleExportPayments = async () => {
+    setExportLoading(true);
+    try {
+      // Format dates for API
+      const startDate = formatDateForAPI(oFilters.startDate);
+      const endDate = formatDateForAPI(oFilters.endDate);
+
+      await dispatch(
+        exportPaymentReport({
+          searchText: sSearchTerm,
+          paymentStatus: oFilters.paymentStatus || undefined,
+          paymentType: oFilters.paymentType || undefined,
+          paymentMethod: oFilters.paymentMethod || undefined,
+          startDate: startDate,
+          endDate: endDate,
+        })
+      ).unwrap();
+      
+      // Optional: Show success message
+      // toast.success(t("PAYMENTS.EXPORT_SUCCESS"));
+    } catch (error) {
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   const handleDeletePopupClose = () => {
     setDeletePopup({ open: false, paymentId: null });
@@ -189,31 +224,31 @@ const Payments = () => {
   };
 
   const handleFilterChange = useCallback((e, filterName) => {
-    if (initialLoadComplete) {
-      setFilterLoading(true);
-    }
+  if (initialLoadComplete) {
+    setFilterLoading(true);
+  }
 
-    // Handle date range filter specifically
-    if (filterName === "dateRange") {
-      // Store dayjs objects directly
-      const dateValue = e.target.value;
-      
-      setFilters((prev) => ({
-        ...prev,
-        startDate: dateValue?.start || null,
-        endDate: dateValue?.end || null,
-      }));
-    } else {
-      // Handle other filters
-      const { name, value } = e.target;
-      setFilters((prev) => ({
-        ...prev,
-        [filterName || name]: value,
-      }));
-    }
+  if (filterName === "dateRange") {
+    const dateValue = e.target?.value || e; // handles different structures
+    setFilters((prev) => ({
+      ...prev,
+      startDate: dateValue?.start || null,
+      endDate: dateValue?.end || null,
+    }));
+
+    // 👇 ensure page resets and re-fetch triggers properly
+    setCurrentPage(1);
+  } else {
+    const { name, value } = e.target;
+    setFilters((prev) => ({
+      ...prev,
+      [filterName || name]: value,
+    }));
 
     setCurrentPage(1);
-  }, [initialLoadComplete]);
+  }
+}, [initialLoadComplete]);
+
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
@@ -233,28 +268,6 @@ const Payments = () => {
       // Scroll to top when page changes
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  };
-
-  // Helper function to format dates for API
-  const formatDateForAPI = (date) => {
-    if (!date) return undefined;
-    
-    // If it's a dayjs object
-    if (date.isValid && date.isValid()) {
-      return date.toISOString();
-    }
-    
-    // If it's already a string
-    if (typeof date === 'string') {
-      return date;
-    }
-    
-    // If it's a Date object
-    if (date instanceof Date) {
-      return date.toISOString();
-    }
-    
-    return undefined;
   };
 
   const fetchPaymentsData = async () => {
@@ -377,43 +390,40 @@ const Payments = () => {
         searchPlaceholder={t("PAYMENTS.SEARCH_PLACEHOLDER")}
         onClearFilters={handleClearFilters}
         onExport={handleExportPayments}
+        exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
         showCreateButton={false}
       />
 
-      {bShowExportPanel && (
-        <ExportPanel
-          title={t("PAYMENTS.TITLE") + " – " + t("COMMON.DATE_RANGE")}
-          value={oExportDate}
-          onChange={(val) => setExportDate(val)}
-          onCancel={() => setShowExportPanel(false)}
-          onConfirm={handleConfirmExportPayments}
-        />
-      )}
-
       {viewMode === "table" ? (
-        <div className="table-container overflow-hidden">
-          <div className="table-wrapper">
+        <div className="table-container-floating">
+          <div 
+            className="table-wrapper-floating scrollbar-hide" 
+            onScroll={handleTableScroll}
+          >
             <table className="table-base">
-              <thead className="table-head">
+              {/* Floating Header */}
+              <thead className={`table-head-floating ${
+                tableScrollTop > 10 ? 'table-head-floating-shadow' : ''
+              }`}>
                 <tr>
-                  <th scope="col" className="table-head-cell w-1/4">
+                  <th scope="col" className="table-head-cell-floating w-1/4">
                     {t("PAYMENTS.PAYMENT_DETAILS")}
                   </th>
-                  <th scope="col" className="table-head-cell w-1/5">
+                  <th scope="col" className="table-head-cell-floating w-1/5">
                     {t("PAYMENTS.ORDER_INFO")}
                   </th>
                   <th
                     scope="col"
-                    className="table-head-cell w-1/6 text-right pr-8"
+                    className="table-head-cell-floating w-1/6 text-right pr-8"
                   >
                     <div className="flex justify-end items-center">
                       {t("PAYMENTS.AMOUNT")}
                     </div>
                   </th>
-                  <th scope="col" className="table-head-cell w-1/6 pl-4">
+                  <th scope="col" className="table-head-cell-floating w-1/6 pl-4">
                     {t("COMMON.STATUS")}
                   </th>
-                  <th scope="col" className="table-head-cell w-1/6">
+                  <th scope="col" className="table-head-cell-floating w-1/6">
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>

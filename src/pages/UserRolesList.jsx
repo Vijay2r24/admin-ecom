@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { UserPlus, Shield } from "lucide-react";
 import Toolbar from "../components/Toolbar";
 import { useNavigate } from "react-router-dom";
@@ -35,6 +35,7 @@ const UserRolesList = () => {
   const [nCurrentPage, setCurrentPage] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const itemsPerPage = ITEMS_PER_PAGE;
   const nTotalPages = Math.ceil(total / itemsPerPage);
   const [bSubmitting, setSubmitting] = useState(false);
@@ -51,6 +52,11 @@ const UserRolesList = () => {
     "Delete Role"
   );
   const hasDeletePermission = hasPermissionId(permissionIdForDelete);
+
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
 
   const statusOptions = STATUS_OPTIONS.map((opt) => ({
     value: opt.value,
@@ -219,21 +225,27 @@ const UserRolesList = () => {
         createLabel={t("USER_ROLES_LIST.ADD_ROLE")}
       />
       {sViewMode === "table" ? (
-        <div className="table-container">
-          <div className="table-wrapper">
+        <div className="table-container-floating">
+          <div 
+            className="table-wrapper-floating scrollbar-hide" 
+            onScroll={handleTableScroll}
+          >
             <table className="table-base">
-              <thead className="table-head">
+              {/* Floating Header */}
+              <thead className={`table-head-floating ${
+                tableScrollTop > 10 ? 'table-head-floating-shadow' : ''
+              }`}>
                 <tr>
-                  <th scope="col" className="table-head-cell">
+                  <th scope="col" className="table-head-cell-floating">
                     {t("USER_ROLES_LIST.TABLE.ROLE_NAME")}
                   </th>
                   <th
                     scope="col"
-                    className="table-head-cell hidden sm:table-cell"
+                    className="table-head-cell-floating hidden sm:table-cell"
                   >
                     {t("COMMON.STATUS")}
                   </th>
-                  <th scope="col" className="table-head-cell text-center">
+                  <th scope="col" className="table-head-cell-floating text-center">
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>

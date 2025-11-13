@@ -30,6 +30,7 @@ const Users = () => {
   const [sShowFilterDropdown, setShowFilterDropdown] = useState(false);
   const [bSubmitting, setSubmitting] = useState(false);
   const [debounceTimer, setDebounceTimer] = useState(null);
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const itemsPerPage = ITEMS_PER_PAGE;
 
   const dispatch = useDispatch();
@@ -74,6 +75,12 @@ const Users = () => {
     "User Management",
     "Delete User"
   );
+
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
+
   // Helper function to get profile image URL
   const getProfileImageUrl = (user) => {
     if (!user.ProfileImageUrl) return userProfile;
@@ -330,18 +337,24 @@ const Users = () => {
 
       {/* table view */}
       {sViewMode === "table" ? (
-        <div className="table-container">
-          <div className="table-wrapper">
+        <div className="table-container-floating">
+          <div 
+            className="table-wrapper-floating scrollbar-hide" 
+            onScroll={handleTableScroll}
+          >
             <table className="table-base">
-              <thead className="table-head">
+              {/* Floating Header */}
+              <thead className={`table-head-floating ${
+                tableScrollTop > 10 ? 'table-head-floating-shadow' : ''
+              }`}>
                 <tr>
-                  <th className="table-head-cell">{t("COMMON.USER")}</th>
-                  <th className="table-head-cell hidden sm:table-cell">
+                  <th className="table-head-cell-floating">{t("COMMON.USER")}</th>
+                  <th className="table-head-cell-floating hidden sm:table-cell">
                     {t("USERS.TABLE.CONTACT")}
                   </th>
-                  <th className="table-head-cell">{t("COMMON.ROLE")}</th>
-                  <th className="table-head-cell">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell hidden sm:table-cell">
+                  <th className="table-head-cell-floating">{t("COMMON.ROLE")}</th>
+                  <th className="table-head-cell-floating">{t("COMMON.STATUS")}</th>
+                  <th className="table-head-cell-floating hidden sm:table-cell">
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>
@@ -428,10 +441,8 @@ const Users = () => {
                           }
                         />
                       </td>
-                      <td className="table-cell text-left font-medium align-middle">
-                        <div className="flex justify-left items-left">
-                          <ActionButtons id={user.UserID} onEdit={handleEdit} />
-                        </div>
+                      <td className="table-cell text-center align-middle">
+                        <ActionButtons id={user.UserID}  viewLink={`/editUser/${user.UserID}`} />
                       </td>
                     </tr>
                   ))
@@ -515,7 +526,7 @@ const Users = () => {
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 mt-2">
-                  <ActionButtons id={user.UserID} onEdit={handleEdit} />
+                  <ActionButtons id={user.UserID}  viewLink={`/editUser/${user.UserID}`} />
                 </div>
               </div>
             ))

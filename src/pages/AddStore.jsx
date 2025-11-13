@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Building, MapPin, Phone, Mail } from "lucide-react";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import SelectWithIcon from "../components/SelectWithIcon";
+import PhoneInputWithIcon from "../components/PhoneInputWithIcon"; // Import the phone input component
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import { apiGet, apiPost, apiPut } from "../utils/ApiUtils";
@@ -28,6 +29,9 @@ import {
   clearCities,
 } from "../store/slices/allDataSlice";
 import FloatingFooter from "../components/FloatingFooter";
+
+// Import phone validation
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 const getArray = (data) =>
   Array.isArray(data)
@@ -63,6 +67,7 @@ const AddStore = () => {
     stateName: "",
     cityName: "",
     StoreID: "",
+    CountryCode: "", // New field for country code
   });
 
   const [oErrors, setErrors] = useState({});
@@ -99,6 +104,32 @@ const AddStore = () => {
     }
   }, [dispatch, oFormData.state]);
 
+  // Extract country code from phone number
+  const extractCountryCode = (phoneNumber) => {
+    if (!phoneNumber) return "";
+    
+    // The phone number from react-phone-number-input is in E.164 format (+911234567890)
+    // Extract the country code (everything between + and the first set of digits)
+    const match = phoneNumber.match(/^\+(.+?)(?=\d)/);
+    return match ? match[1] : "";
+  };
+
+  // Updated handleChange for phone input
+  const handlePhoneChange = useCallback((phoneNumber) => {
+    const countryCode = extractCountryCode(phoneNumber);
+    
+    setFormData((prev) => ({
+      ...prev,
+      phone: phoneNumber,
+      CountryCode: countryCode,
+    }));
+
+    // Clear error when user starts typing
+    if (oErrors.phone) {
+      setErrors((prev) => ({ ...prev, phone: "" }));
+    }
+  }, [oErrors.phone]);
+
   // Optimized fetchStore function without circular dependencies
   const fetchStore = useCallback(async () => {
     if (!id || isFetchingStore || hasFetchedStore.current) return;
@@ -113,13 +144,23 @@ const AddStore = () => {
       if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
         const store = oResponse.data.data;
 
+        // Extract phone number and country code if available
+        let phoneNumber = store.PhoneNumber || "";
+        let countryCode = "";
+        
+        if (phoneNumber && phoneNumber.startsWith('+')) {
+          const match = phoneNumber.match(/^\+(.+?)(?=\d)/);
+          countryCode = match ? match[1] : "";
+        }
+
         // Set basic form data immediately
         setFormData((prev) => ({
           ...prev,
           name: store.StoreName || "",
           address: store.AddressLine1 || "",
           zipCode: store.Zipcode || "",
-          phone: store.PhoneNumber || "",
+          phone: phoneNumber,
+          CountryCode: countryCode,
           StoreID: store.StoreID || "",
           email: store.Email || "",
           countryName: store.CountryName || "",
@@ -253,7 +294,7 @@ const AddStore = () => {
       else {
         setFormData((prev) => ({
           ...prev,
-          [name]: name === "phone" ? value.replace(/\D/g, "") : value,
+          [name]: value,
         }));
       }
 
@@ -272,6 +313,7 @@ const AddStore = () => {
   const validateForm = useCallback(() => {
     const newErrors = {};
     let isValid = true;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!oFormData.name.trim()) {
       newErrors.name = t("STORES.VALIDATION.STORE_NAME");
@@ -297,17 +339,46 @@ const AddStore = () => {
       newErrors.zipCode = t("STORES.VALIDATION.ZIP_CODE");
       isValid = false;
     }
-    if (!oFormData.phone.trim()) {
+
+    // Enhanced Phone validation with country code check
+    if (!oFormData.phone?.trim()) {
       newErrors.phone = t("STORES.VALIDATION.PHONE");
       isValid = false;
-    } else if (oFormData.phone.replace(/\D/g, "").length !== 10) {
-      newErrors.phone = t("STORES.VALIDATION.PHONE_LENGTH");
-      isValid = false;
+    } else {
+      // Validate phone number format using react-phone-number-input
+      if (!isValidPhoneNumber(oFormData.phone)) {
+        newErrors.phone = t("STORES.VALIDATION.PHONE_INVALID");
+        isValid = false;
+      }
+      
+      // Additional validation for country code presence
+      // The phone number should start with + followed by country code
+      if (!oFormData.phone.startsWith('+')) {
+        newErrors.phone = t("STORES.VALIDATION.COUNTRY_CODE_REQUIRED");
+        isValid = false;
+      }
+      
+      // Validate minimum phone number length (country code + number)
+      // Most countries have at least 8 digits after country code
+      const phoneWithoutSpaces = oFormData.phone.replace(/\s/g, '');
+      const digitsAfterPlus = phoneWithoutSpaces.substring(1); // Remove the +
+      if (digitsAfterPlus.length < 8) {
+        newErrors.phone = t("STORES.VALIDATION.PHONE_TOO_SHORT");
+        isValid = false;
+      }
+      
+      // Validate country code length (typically 1-3 digits)
+      const countryCodeMatch = oFormData.phone.match(/^\+\d{1,3}/);
+      if (!countryCodeMatch) {
+        newErrors.phone = t("STORES.VALIDATION.INVALID_COUNTRY_CODE");
+        isValid = false;
+      }
     }
+
     if (!oFormData.email.trim()) {
       newErrors.email = t("STORES.VALIDATION.EMAIL");
       isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(oFormData.email)) {
+    } else if (!emailRegex.test(oFormData.email)) {
       newErrors.email = t("STORES.VALIDATION.EMAIL_INVALID");
       isValid = false;
     }
@@ -345,6 +416,7 @@ const AddStore = () => {
         StoreName: oFormData.name,
         Email: oFormData.email,
         PhoneNumber: oFormData.phone,
+        CountryCode: oFormData.CountryCode || "", // Send country code to API
         AddressLine1: oFormData.address,
         AddressLine2: oFormData.addressLine2 || "", // Include AddressLine2
         CityID: parseInt(oFormData.city, 10),
@@ -529,16 +601,17 @@ const AddStore = () => {
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <TextInputWithIcon
+                  {/* Replace TextInputWithIcon with PhoneInputWithIcon */}
+                  <PhoneInputWithIcon
                     label={t("COMMON.PHONE_NUMBER")}
                     id="phone"
                     name="phone"
                     value={oFormData.phone}
-                    onChange={handleChange}
+                    onChange={handlePhoneChange} // Use the custom phone change handler
                     placeholder={t("COMMON.ENTER_PHONE_NUMBER")}
                     Icon={Phone}
-                    type="tel"
                     error={oErrors.phone}
+                    defaultCountry="IN"
                   />
                 </div>
                 <div>

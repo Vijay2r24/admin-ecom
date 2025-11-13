@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import Toolbar from "../../components/Toolbar";
-import ExportPanel from "../../components/ExportPanel";
 import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
@@ -14,7 +13,7 @@ import {
 } from "../../contants/apiRoutes";
 import Switch from "../../components/Switch.jsx";
 import { useTitle } from "../../context/TitleContext";
-import { ITEMS_PER_PAGE, STATUS } from "../../contants/constants.jsx";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS } from "../../contants/constants.jsx";
 import {
   fetchResource,
   updateStatusById,
@@ -81,7 +80,14 @@ const ProductList = () => {
   const [bFilterLoading, setFilterLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [bSubmitting, setSubmitting] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const dispatch = useDispatch();
+
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
 
   // Fetch categories, brands, and stores from Redux
   const categories = useSelector(
@@ -233,11 +239,10 @@ const ProductList = () => {
     })),
   ];
 
-  const statusOptions = [
-    { value: "all", label: t("COMMON.ALL") },
-    { value: "true", label: t("COMMON.ACTIVE") },
-    { value: "false", label: t("COMMON.INACTIVE") },
-  ];
+  const statusOptions = STATUS_OPTIONS.map((opt) => ({
+    value: opt.value,
+    label: t(opt.labelKey),
+  }));
 
   const handleDropdownInputChange = (inputValue, filterName) => {
     if (filterName === "category") {
@@ -327,20 +332,51 @@ const ProductList = () => {
     setCurrentPage(1);
   };
 
-  const [bShowExportPanel, setShowExportPanel] = useState(false);
-  const [oExportDate, setExportDate] = useState({ startDate: null, endDate: null });
+  // Helper function to format dates for API
+  const formatDateForAPI = (date) => {
+    if (!date) return undefined;
 
-  const handleExportProducts = useCallback(() => {
-    setShowExportPanel(true);
-  }, []);
+    // If it's a dayjs object
+    if (date.isValid && date.isValid()) {
+      return date.toISOString();
+    }
 
-  const handleConfirmExportProducts = useCallback(() => {
-    dispatch(exportProductReport({
-      startDate: oExportDate.startDate,
-      endDate: oExportDate.endDate,
-    }));
-    setShowExportPanel(false);
-  }, [dispatch, oExportDate]);
+    // If it's already a string
+    if (typeof date === "string") {
+      return date;
+    }
+
+    // If it's a Date object
+    if (date instanceof Date) {
+      return date.toISOString();
+    }
+
+    return undefined;
+  };
+
+  const handleExportProducts = async () => {
+    setExportLoading(true);
+    try {
+      // Find the brand and category IDs from the Redux state
+      const brand = brands.find(b => b.BrandName === oFilters.brand);
+      const category = categories.find(c => c.CategoryName === oFilters.category);
+
+      const isActiveFilter = oFilters.status === 'all' ? undefined : oFilters.status === 'true';
+
+      await dispatch(exportProductReport({
+        searchText: sSearchTerm,
+        isActive: isActiveFilter,
+        brandId: brand ? [brand.BrandID] : undefined,
+        categoryId: category ? [category.CategoryID] : undefined,
+      })).unwrap();
+
+      // Optional: show success message
+      // toast.success(t('PRODUCTS.EXPORT_SUCCESS'));
+    } catch (error) {
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -421,17 +457,9 @@ const ProductList = () => {
         onClearFilters={handleClearFilters}
         onCreate={() => navigate("/Addproduct")}
         onExport={handleExportProducts}
+        exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />
 
-      {bShowExportPanel && (
-        <ExportPanel
-          title={t("PRODUCTS.TITLE") + " – Date Range"}
-          value={oExportDate}
-          onChange={(val) => setExportDate(val)}
-          onCancel={() => setShowExportPanel(false)}
-          onConfirm={handleConfirmExportProducts}
-        />
-      )}
       {bLoading ? (
         <div className="text-center py-8 text-gray-500">
           {t("COMMON.LOADING")}
@@ -439,17 +467,23 @@ const ProductList = () => {
       ) : sError ? (
         <div className="text-center py-8 text-red-500">{sError}</div>
       ) : sViewMode === "table" ? (
-        <div className="table-container">
-          <div className="table-wrapper">
+        <div className="table-container-floating">
+          <div 
+            className="table-wrapper-floating scrollbar-hide" 
+            onScroll={handleTableScroll}
+          >
             <table className="table-base">
-              <thead className="table-head">
+              {/* Floating Header */}
+              <thead className={`table-head-floating ${
+                tableScrollTop > 10 ? 'table-head-floating-shadow' : ''
+              }`}>
                 <tr>
-                  <th className="table-head-cell">{t("PRODUCTS.TITLE")}</th>
-                  <th className="table-head-cell">{t("COMMON.CATEGORY")}</th>
-                  <th className="table-head-cell">{t("PRODUCTS.BRAND")}</th>
-                  <th className="table-head-cell">{t("PRODUCTS.STOCK")}</th>
-                  <th className="table-head-cell">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell">{t("COMMON.ACTIONS")}</th>
+                  <th className="table-head-cell-floating">{t("PRODUCTS.TITLE")}</th>
+                  <th className="table-head-cell-floating">{t("COMMON.CATEGORY")}</th>
+                  <th className="table-head-cell-floating">{t("PRODUCTS.BRAND")}</th>
+                  <th className="table-head-cell-floating">{t("PRODUCTS.STOCK")}</th>
+                  <th className="table-head-cell-floating">{t("COMMON.STATUS")}</th>
+                  <th className="table-head-cell-floating">{t("COMMON.ACTIONS")}</th>
                 </tr>
               </thead>
               <tbody className="table-body">

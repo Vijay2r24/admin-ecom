@@ -114,7 +114,7 @@ const Header = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="sticky top-0 z-10 bg-white shadow-sm">
+    <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="flex items-center justify-between h-14 px-4 lg:px-6">
         <div className="lg:hidden flex items-center">
           <button

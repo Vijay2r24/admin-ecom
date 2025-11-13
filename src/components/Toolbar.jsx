@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Search,
   List,
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Combobox } from "@headlessui/react";
 import { useTranslation } from "react-i18next";
+import { createPortal } from "react-dom";
 import DateTimeRangePickerComponent from "./CustomDatePicker";
 import { VIEW_MODES } from "../contants/constants";
 
@@ -30,11 +31,11 @@ const OrderToolbar = ({
   onCreate,
   createLabel,
   onExport,
-  exportLabel,
+  exportLabel = "Export",
 }) => {
   const { t } = useTranslation();
-
-  // Separate filters
+  
+  // Separate date vs. other filters
   const dateFilters = (additionalFilters || []).filter(
     (f) => f.type === "date"
   );
@@ -49,22 +50,19 @@ const OrderToolbar = ({
     );
   };
 
-  // Proper handler for Combobox changes
+  // Handle dropdown/combobox value changes
   const handleComboboxChange = (option, filterName) => {
     if (!option) return;
-
-    // Create a synthetic event object that matches what handleFilterChange expects
     const syntheticEvent = {
       target: {
         value: option.value,
         name: filterName,
       },
     };
-
     handleFilterChange(syntheticEvent, filterName);
   };
 
-  // Handler for date range changes
+  // Handle date range + time changes
   const handleDateRangeChange = (dateRange, filterName) => {
     const syntheticEvent = {
       target: {
@@ -72,15 +70,12 @@ const OrderToolbar = ({
         name: filterName,
       },
     };
-
     handleFilterChange(syntheticEvent, filterName);
   };
 
   return (
     <div className="mb-6">
-      {/* Toolbar Row */}
       <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-        {/* Search Box */}
         {showSearch && (
           <div className="flex-1">
             <div className="relative h-full">
@@ -99,8 +94,6 @@ const OrderToolbar = ({
             </div>
           </div>
         )}
-
-        {/* View Toggle */}
         {showViewToggle && (
           <button
             onClick={toggleViewMode}
@@ -109,7 +102,7 @@ const OrderToolbar = ({
             }`}
             title={
               viewMode === VIEW_MODES.TABLE
-                ? t("TOOLBAR.GRID") // Tooltip should indicate what you’ll switch to
+                ? t("TOOLBAR.GRID")
                 : t("TOOLBAR.TABLE")
             }
           >
@@ -126,8 +119,6 @@ const OrderToolbar = ({
             )}
           </button>
         )}
-
-        {/* Filter Button */}
         {showFilterButton && (
           <div className="relative">
             <button
@@ -142,35 +133,42 @@ const OrderToolbar = ({
             </button>
           </div>
         )}
-
-        {/* Date Range Filters */}
         {dateFilters.map((filter, index) => (
-          <div key={`date-${index}`} className="w-64 relative">
+          <div key={`date-${index}`} className="w-[315px] relative">
             <DateTimeRangePickerComponent
-              value={filter.value}
-              onChange={(dateRange) =>
-                handleDateRangeChange(dateRange, filter.name)
+              dateRange={filter.value || { start: null, end: null }}
+              setDateRange={(range) =>
+                handleDateRangeChange(range, filter.name)
               }
-              name={filter.name}
-              disableFuture={filter.disableFuture}
-              showLabel={false}
-              placeholder={filter.placeholder}
+              displayText={
+                filter.value?.start && filter.value?.end
+                  ? `${filter.value.start.format(
+                      "MMM D, YYYY h:mm A"
+                    )} - ${filter.value.end.format("MMM D, YYYY h:mm A")}`
+                  : filter.placeholder || "Select Date & Time"
+              }
+              handleQuickFilter={(value) =>
+                handleDateRangeChange(value, filter.name)
+              }
+              handleClearDates={() =>
+                handleDateRangeChange({ start: null, end: null }, filter.name)
+              }
+              t={t}
             />
           </div>
         ))}
 
-        {/* Export Button */}
         {onExport && (
           <button
             onClick={onExport}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 gap-2"
+            disabled={exportLabel === t("COMMON.EXPORTING")}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
           >
             <Download className="w-4 h-4" />
-            {exportLabel || "Export"}
+            {exportLabel}
           </button>
         )}
 
-        {/* Create Button */}
         {onCreate && (
           <button
             onClick={onCreate}
@@ -182,10 +180,8 @@ const OrderToolbar = ({
         )}
       </div>
 
-      {/* Filter Dropdown */}
       {showFilterDropdown && otherFilters.length > 0 && (
         <div className="mt-2 p-3 bg-white rounded-lg border border-gray-200 shadow-sm relative overflow-visible z-0">
-          {/* Clear button top-right */}
           <div className="flex justify-end mb-3">
             {onClearFilters && (
               <button
@@ -196,39 +192,89 @@ const OrderToolbar = ({
               </button>
             )}
           </div>
-
-          {/* Filter Fields */}
           <div className="flex flex-wrap gap-4">
             {otherFilters.map((filter, index) => (
-              <div key={index} className="w-44">
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  {filter.label || filter.name}
-                </label>
-                <Combobox
-                  value={
-                    filter.options?.find((opt) => opt.value === filter.value) ||
-                    null
+              <FilterCombobox
+                key={index}
+                filter={filter}
+                handleComboboxChange={handleComboboxChange}
+                t={t}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Separate component for the Combobox with portal functionality
+const FilterCombobox = ({ filter, handleComboboxChange, t }) => {
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const comboboxRef = useRef(null);
+
+  // Update dropdown position when options open
+  useEffect(() => {
+    if (isOptionsOpen && comboboxRef.current) {
+      const rect = comboboxRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, [isOptionsOpen]);
+
+  return (
+    <div className="w-44">
+      <label className="block text-xs font-medium text-gray-700 mb-1">
+        {filter.label || filter.name}
+      </label>
+      <Combobox
+        value={
+          filter.options?.find((opt) => opt.value === filter.value) || null
+        }
+        onChange={(option) => handleComboboxChange(option, filter.name)}
+      >
+        {({ open }) => {
+          // Update open state for portal positioning
+          useEffect(() => {
+            setIsOptionsOpen(open);
+          }, [open]);
+
+          return (
+            <div className="relative" ref={comboboxRef}>
+              <Combobox.Input
+                className="w-full border border-gray-300 rounded-md py-1.5 pl-3 pr-10 text-sm focus:ring-1 focus:ring-custom-bg focus:border-custom-bg"
+                displayValue={(option) => option?.label || ""}
+                placeholder={`Select ${filter.label || filter.name}`}
+                onChange={(event) => {
+                  const inputValue = event.target.value.toLowerCase();
+                  if (filter.onInputChange) {
+                    filter.onInputChange(inputValue);
                   }
-                  onChange={(option) =>
-                    handleComboboxChange(option, filter.name)
-                  }
-                >
-                  <div className="relative">
-                    <Combobox.Input
-                      className="w-full border border-gray-300 rounded-md py-1.5 pl-3 pr-10 text-sm focus:ring-1 focus:ring-custom-bg focus:border-custom-bg"
-                      displayValue={(option) => option?.label || ""}
-                      placeholder={`Select ${filter.label || filter.name}`}
-                      onChange={(event) => {
-                        const inputValue = event.target.value.toLowerCase();
-                        if (filter.onInputChange) {
-                          filter.onInputChange(inputValue);
-                        }
-                      }}
-                    />
-                    <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
-                      <ChevronDown className="h-4 w-4 text-gray-400" />
-                    </Combobox.Button>
-                    <Combobox.Options className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                }}
+              />
+              <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                <ChevronDown className="h-4 w-4 text-gray-400" />
+              </Combobox.Button>
+              
+              {/* Portal for dropdown options */}
+              {open &&
+                createPortal(
+                  <div
+                    className="dropdown-portal-container absolute z-[99999] bg-white border border-gray-200 rounded-md shadow-lg"
+                    style={{
+                      top: `${dropdownPos.top}px`,
+                      left: `${dropdownPos.left}px`,
+                      width: `${dropdownPos.width}px`,
+                    }}
+                  >
+                    <Combobox.Options 
+                      static
+                      className="max-h-48 w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    >
                       {filter.options?.length > 0 ? (
                         filter.options.map((option) => (
                           <Combobox.Option
@@ -256,13 +302,13 @@ const OrderToolbar = ({
                         </div>
                       )}
                     </Combobox.Options>
-                  </div>
-                </Combobox>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+                  </div>,
+                  document.body
+                )}
+            </div>
+          );
+        }}
+      </Combobox>
     </div>
   );
 };

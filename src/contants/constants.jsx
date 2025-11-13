@@ -8,7 +8,7 @@ export const STATUS = {
 };
 export const DEFAULT_COLOR = "#000000";
 export const COLORS = {
-  GRAY_PRIMARY:"#e5efff",
+  GRAY_PRIMARY: "#e5efff",
   PRIMARY: "#3498db",
   SECONDARY: "#2ecc71",
   ERROR: "#e74c3c",
@@ -20,8 +20,8 @@ export const STATUS_VALUES = {
 };
 // Make sure it matches what your API expects
 export const STATUS_OPTIONS = [
-  { value: "all", labelKey: "COMMON.ALL" },
-  { value: "true", labelKey: "COMMON.ACTIVE" },    // or true for boolean
+  { value: "", labelKey: "COMMON.ALL" },
+  { value: "true", labelKey: "COMMON.ACTIVE" }, // or true for boolean
   { value: "false", labelKey: "COMMON.INACTIVE" }, // or false for boolean
 ];
 export const ITEMS_PER_PAGE = 10;
@@ -209,8 +209,8 @@ export const FILE_CONSTANTS = {
   FILE_TYPE: "image/jpeg",
 };
 
-export const TOOLTIPSTATUS = {ACTIVE: 'active',INACTIVE: 'inactive'};
- 
+export const TOOLTIPSTATUS = { ACTIVE: "active", INACTIVE: "inactive" };
+
 export const MODULES = {
   DASHBOARD: "Dashboard Management",
   ORDER: "Order Management",
@@ -268,12 +268,13 @@ export const PERMISSIONS = {
   UPDATE_PRODUCT_GROUP: "Update Product Group",
 };
 export const QUICK_FILTERS = [
+  { label: "Last 3 hours", value: "last3hours" },
+  { label: "Last 6 hours", value: "last6hours" },
+  { label: "Last 12 hours", value: "last12hours" },
   { label: "Today", value: "today" },
   { label: "Yesterday", value: "yesterday" },
   { label: "Last 7 days", value: "last7days" },
-  { label: "Last 30 days", value: "last30days" },
-  { label: "Last 1 hour", value: "last1hour" },
-  { label: "Last 12 hours", value: "last12hours" },
+  { label: 'Last 30 days', value: 'last30days' },
 ];
 
 export const MONTHS = [

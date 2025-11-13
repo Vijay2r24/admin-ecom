@@ -126,7 +126,7 @@ code {
 }
 
 .table-head {
-  @apply bg-gray-100;
+  @apply sticky top-0 z-0 transition-all duration-200 bg-gray-100 shadow-sm;
 }
 
 .table-head-cell {
@@ -238,4 +238,86 @@ code {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;  
+}
+/* Remove default border from the internal phone input */
+.PhoneInputInput {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+/* Floating Table Container */
+.table-container-floating {
+  @apply bg-white rounded-xl shadow-sm border border-gray-100 relative;
+}
+
+/* Floating Table Wrapper - Scrollable Area */
+.table-wrapper-floating {
+  @apply overflow-x-auto max-h-[calc(100vh-200px)] relative;
+}
+
+/* Floating Table Header */
+.table-head-floating {
+  @apply sticky top-0 z-10 bg-gray-50 transition-all duration-200;
+}
+
+/* Floating Table Header with Shadow */
+.table-head-floating-shadow {
+  @apply shadow-sm;
+}
+
+/* Floating Table Header Cells */
+.table-head-cell-floating {
+  @apply px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-200;
+}
+
+/* Common Table Base Styles */
+.table-base {
+  @apply min-w-full divide-y divide-gray-200;
+}
+
+.table-head {
+  @apply bg-gray-50;
+}
+
+.table-head-cell {
+  @apply px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.table-body {
+  @apply bg-white divide-y divide-gray-200;
+}
+
+.table-row {
+  @apply hover:bg-gray-50 transition-colors duration-150;
+}
+
+.table-cell {
+  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+}
+
+.table-cell-text {
+  @apply text-sm font-medium text-gray-900;
+}
+
+.table-cell-subtext {
+  @apply text-sm text-gray-500 mt-1;
+}
+
+/* Status Badges */
+.status-badge {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.status-active {
+  @apply bg-green-100 text-green-800;
+}
+
+.status-inactive {
+  @apply bg-red-100 text-red-800;
+}
+
+/* Text Utilities */
+.ellipsis-text {
+  @apply truncate;
 }
