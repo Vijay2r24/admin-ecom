@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { MapPin, Phone, Mail, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import Toolbar from "../components/Toolbar";
-import ExportPanel from "../components/ExportPanel";
 import Pagination from "../components/Pagination";
 import ActionButtons from "../components/ActionButtons";
 import { useTranslation } from "react-i18next";
@@ -51,14 +50,16 @@ const Stores = () => {
   const [bSubmitting, setSubmitting] = useState(false);
   const [bFilterLoading, setFilterLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+
   const permissionIdForDelete = getPermissionCode("Store Management", "Delete User");
   const hasDeletePermission = hasPermissionId(permissionIdForDelete);
  
-  const statusOptions = [
-    { value: "", label: t("COMMON.ALL") },
-    { value: "true", label: t("COMMON.ACTIVE") },
-    { value: "false", label: t("COMMON.INACTIVE") }
-  ];
+  const statusOptions = STATUS_OPTIONS.map((opt) => ({
+    value: opt.value,
+    label: t(opt.labelKey),
+  }));
 
   const aAdditionalFilters = [
     {
@@ -221,22 +222,53 @@ const Stores = () => {
     setDeletePopup({ open: false, storeId: null });
   };
 
-  const [bShowExportPanel, setShowExportPanel] = useState(false);
-  const [oExportDate, setExportDate] = useState({ startDate: null, endDate: null });
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
 
-  const handleExportStores = () => {
-    setShowExportPanel(true);
+  // Helper function to format dates for API
+  const formatDateForAPI = (date) => {
+    if (!date) return undefined;
+
+    // If it's a dayjs object
+    if (date.isValid && date.isValid()) {
+      return date.toISOString();
+    }
+
+    // If it's already a string
+    if (typeof date === "string") {
+      return date;
+    }
+
+    // If it's a Date object
+    if (date instanceof Date) {
+      return date.toISOString();
+    }
+
+    return undefined;
   };
 
-  const handleConfirmExportStores = () => {
-    const isActiveFilter = oFilters.status === "" ? undefined : oFilters.status === "true";
-    
-    dispatch(exportStoreReport({
-      startDate: oExportDate.startDate,
-      endDate: oExportDate.endDate,
-      isActive: isActiveFilter
-    }));
-    setShowExportPanel(false);
+  const handleExportStores = async () => {
+    setExportLoading(true);
+    try {
+      // Format dates for API
+      const startDate = formatDateForAPI(oFilters.startDate);
+      const endDate = formatDateForAPI(oFilters.endDate);
+      const isActiveFilter = oFilters.status === "" ? undefined : oFilters.status === "true";
+
+      await dispatch(
+        exportStoreReport({
+          searchText: sSearchTerm,
+          startDate: startDate,
+          endDate: endDate,
+          isActive: isActiveFilter
+        })
+      ).unwrap();
+    } catch (error) {
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -310,35 +342,33 @@ const Stores = () => {
         searchPlaceholder={t("STORES.SEARCH_PLACEHOLDER")}
         onClearFilters={handleClearFilters}
         onExport={handleExportStores}
+        exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
         onCreate={() => navigate("/add-store")}
         createLabel={t("STORES.ADD_STORE")}
       />
 
-      {bShowExportPanel && (
-        <ExportPanel
-          value={oExportDate}
-          onChange={(val) => setExportDate(val)}
-          onCancel={() => setShowExportPanel(false)}
-          onConfirm={handleConfirmExportStores}
-        />
-      )}
-
       {viewMode === "table" ? (
-        <div className="table-container overflow-hidden">
-          <div className="table-wrapper">
+        <div className="table-container-floating">
+          <div 
+            className="table-wrapper-floating scrollbar-hide" 
+            onScroll={handleTableScroll}
+          >
             <table className="table-base">
-              <thead className="table-head">
+              {/* Floating Header */}
+              <thead className={`table-head-floating ${
+                tableScrollTop > 10 ? 'table-head-floating-shadow' : ''
+              }`}>
                 <tr>
-                  <th scope="col" className="table-head-cell">
+                  <th scope="col" className="table-head-cell-floating">
                     {t("STORES.STORE_DETAILS")}
                   </th>
-                  <th scope="col" className="table-head-cell">
+                  <th scope="col" className="table-head-cell-floating">
                     {t("STORES.CONTACT")}
                   </th>
-                  <th scope="col" className="table-head-cell">
+                  <th scope="col" className="table-head-cell-floating">
                     {t("COMMON.STATUS")}
                   </th>
-                  <th scope="col" className="table-head-cell">
+                  <th scope="col" className="table-head-cell-floating">
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>

@@ -3,7 +3,6 @@ import { Download } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import Toolbar from "../../components/Toolbar";
-import ExportPanel from "../../components/ExportPanel";
 import Pagination from "../../components/Pagination";
 import { useTranslation } from "react-i18next";
 import { apiGet } from "../../utils/ApiUtils";
@@ -17,14 +16,20 @@ import { ToastContainer } from "react-toastify";
 
 const OrderList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Initialize state from URL parameters or defaults
-  const [sSearchTerm, setSearchTerm] = useState(searchParams.get('search') || "");
+  const [sSearchTerm, setSearchTerm] = useState(
+    searchParams.get("search") || ""
+  );
   const { t } = useTranslation();
-  const [sFilterStatus, setFilterStatus] = useState(searchParams.get('status') || "all");
+  const [sFilterStatus, setFilterStatus] = useState(
+    searchParams.get("status") || "all"
+  );
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
   const [sViewMode, setViewMode] = useState("table");
-  const [nCurrentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
+  const [nCurrentPage, setCurrentPage] = useState(
+    Number(searchParams.get("page")) || 1
+  );
   const [aOrders, setOrders] = useState([]);
   const [nTotalRecords, setTotalRecords] = useState(0);
   const [sTotalPages, setTotalPages] = useState("");
@@ -32,6 +37,8 @@ const OrderList = () => {
   const [bFilterLoading, setFilterLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [expandedRows, setExpandedRows] = useState(new Set());
+  const [exportLoading, setExportLoading] = useState(false);
+  const [tableScrollTop, setTableScrollTop] = useState(0);
 
   // Redux hooks
   const dispatch = useDispatch();
@@ -50,7 +57,7 @@ const OrderList = () => {
   // Initialize filters from URL parameters
   const [oFilters, setFilters] = useState({
     ...defaultFilters,
-    paymentStatus: searchParams.get('paymentStatus') || "all",
+    paymentStatus: searchParams.get("paymentStatus") || "all",
   });
 
   const navigate = useNavigate();
@@ -61,12 +68,13 @@ const OrderList = () => {
   // Update URL parameters when filters change
   useEffect(() => {
     const params = {};
-    
+
     if (sSearchTerm) params.search = sSearchTerm;
     if (sFilterStatus !== "all") params.status = sFilterStatus;
-    if (oFilters.paymentStatus !== "all") params.paymentStatus = oFilters.paymentStatus;
+    if (oFilters.paymentStatus !== "all")
+      params.paymentStatus = oFilters.paymentStatus;
     if (nCurrentPage > 1) params.page = nCurrentPage.toString();
-    
+
     // Handle date filters - convert to ISO string for URL
     if (oFilters.startDate) {
       const startDate = formatDateForAPI(oFilters.startDate);
@@ -76,7 +84,7 @@ const OrderList = () => {
       const endDate = formatDateForAPI(oFilters.endDate);
       if (endDate) params.endDate = endDate;
     }
-    
+
     setSearchParams(params, { replace: true });
   }, [sSearchTerm, sFilterStatus, oFilters, nCurrentPage, setSearchParams]);
 
@@ -88,7 +96,7 @@ const OrderList = () => {
   const handleClearFilters = useCallback(() => {
     // Clear all URL parameters
     setSearchParams({}, { replace: true });
-    
+
     // Reset all local state
     setSearchTerm("");
     setFilterStatus("all");
@@ -106,7 +114,7 @@ const OrderList = () => {
       if (filterName === "dateRange") {
         // Handle date range picker - store the dayjs objects directly
         const dateValue = e.target.value;
-        
+
         setFilters((prevFilters) => ({
           ...prevFilters,
           startDate: dateValue?.start || null,
@@ -188,7 +196,7 @@ const OrderList = () => {
   };
 
   const toggleRowExpansion = (orderId) => {
-    setExpandedRows(prev => {
+    setExpandedRows((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(orderId)) {
         newSet.delete(orderId);
@@ -202,35 +210,23 @@ const OrderList = () => {
   // Helper function to format dates for API
   const formatDateForAPI = (date) => {
     if (!date) return undefined;
-    
+
     // If it's a dayjs object
     if (date.isValid && date.isValid()) {
       return date.toISOString();
     }
-    
+
     // If it's already a string
-    if (typeof date === 'string') {
+    if (typeof date === "string") {
       return date;
     }
-    
+
     // If it's a Date object
     if (date instanceof Date) {
       return date.toISOString();
     }
-    
-    return undefined;
-  };
 
-  // Helper function to parse date from URL parameters
-  const parseDateFromURL = (dateString) => {
-    if (!dateString) return null;
-    try {
-      // Try to parse as ISO string
-      const date = new Date(dateString);
-      return isNaN(date.getTime()) ? null : date;
-    } catch (error) {
-      return null;
-    }
+    return undefined;
   };
 
   const fetchData = useCallback(async () => {
@@ -242,7 +238,7 @@ const OrderList = () => {
       }
 
       const token = localStorage.getItem("token");
-      
+
       // Format dates for API
       const startDate = formatDateForAPI(oFilters.startDate);
       const endDate = formatDateForAPI(oFilters.endDate);
@@ -251,18 +247,18 @@ const OrderList = () => {
         searchText: sSearchTerm,
         pageNumber: nCurrentPage,
         pageSize: nProductsPerPage,
-        paymentStatus: oFilters.paymentStatus !== "all" ? oFilters.paymentStatus : undefined,
+        paymentStatus:
+          oFilters.paymentStatus !== "all" ? oFilters.paymentStatus : undefined,
         startDate: startDate,
         endDate: endDate,
       };
 
       // Remove undefined parameters
-      Object.keys(params).forEach(key => {
+      Object.keys(params).forEach((key) => {
         if (params[key] === undefined) {
           delete params[key];
         }
       });
-
 
       const oResponse = await apiGet(GETALLORDERS_API, params, token);
 
@@ -277,6 +273,7 @@ const OrderList = () => {
         // Map orders directly without flattening order items
         const formattedOrders = orders.map((order) => ({
           orderId: order.OrderID,
+          orderRefId: order.OrderRefID, // Add OrderRefID for display
           formattedOrderDate: formatOrderDateTime(order.OrderDate),
           totalAmount: order.TotalAmount,
           formattedTotalAmount: formatCurrency(order.TotalAmount),
@@ -393,28 +390,41 @@ const OrderList = () => {
     setCurrentPage(1);
   }, [sSearchTerm, sFilterStatus]);
 
-  const [bShowExportPanel, setShowExportPanel] = useState(false);
-  const [oExportDate, setExportDate] = useState({
-    startDate: null,
-    endDate: null,
-  });
+  const handleExportOrders = useCallback(async () => {
+    setExportLoading(true);
+    try {
+      // Format dates for API
+      const startDate = formatDateForAPI(oFilters.startDate);
+      const endDate = formatDateForAPI(oFilters.endDate);
 
-  const handleExportOrders = useCallback(() => {
-    setShowExportPanel(true);
+      await dispatch(
+        exportOrderReport({
+          searchText: sSearchTerm,
+          paymentStatus:
+            oFilters.paymentStatus !== "all"
+              ? oFilters.paymentStatus
+              : undefined,
+          startDate: startDate,
+          endDate: endDate,
+        })
+      ).unwrap();
+
+      // Optional: Show success message
+      // toast.success(t("ORDERS.EXPORT_SUCCESS"));
+    } catch (error) {
+  
+    } finally {
+      setExportLoading(false);
+    }
+  }, [dispatch, sSearchTerm, oFilters, t]);
+
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
   }, []);
 
-  const handleConfirmExportOrders = useCallback(() => {
-    dispatch(
-      exportOrderReport({
-        startDate: oExportDate.startDate,
-        endDate: oExportDate.endDate,
-      })
-    );
-    setShowExportPanel(false);
-  }, [dispatch, oExportDate]);
-
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2">
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 ">
       <ToastContainer />
       <Toolbar
         searchTerm={sSearchTerm}
@@ -428,45 +438,45 @@ const OrderList = () => {
         searchPlaceholder={t("ORDERS.SEARCH_PLACEHOLDER")}
         onClearFilters={handleClearFilters}
         onExport={handleExportOrders}
+        exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />
 
-      {bShowExportPanel && (
-        <ExportPanel
-          title={t("ORDERS.TITLE") + " – " + t("ORDERS.FILTERS.DATE_RANGE")}
-          value={oExportDate}
-          onChange={(val) => setExportDate(val)}
-          onCancel={() => setShowExportPanel(false)}
-          onConfirm={handleConfirmExportOrders}
-          confirmLabel={t("COMMON.DOWNLOAD")}
-        />
-      )}
-
       {sViewMode === "table" ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 relative">
+          <div
+            className="overflow-x-auto max-h-[calc(100vh-200px)] scrollbar-hide"
+            onScroll={handleTableScroll}
+          >
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="table-head">
+              {/* Floating Header */}
+              <thead
+                className={`table-head sticky top-0 z-0 transition-all duration-200 ${
+                  tableScrollTop > 10 ? "shadow-sm" : "shadow-sm"
+                }`}
+              >
                 <tr>
-                  <th className="table-head-cell w-8"></th>
-                  <th className="table-head-cell">
-                    {t("ORDERS.TABLE.ORDER_NUMBER")}
+                  <th className="table-head-cell w-8 bg-gray-50"></th>
+                  <th className="table-head-cell bg-gray-50">
+                    {t("ORDERS.TABLE.ORDER_REF")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell bg-gray-50">
                     {t("ORDERS.TABLE.ORDER_DATE")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell bg-gray-50">
                     {t("ORDERS.TABLE.CUSTOMER_NAME")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell bg-gray-50">
                     {t("ORDERS.TABLE.PHONE_NUMBER")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell bg-gray-50">
                     {t("ORDERS.TABLE.PAYMENT_STATUS")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell bg-gray-50">
                     {t("COMMON.TOTAL_ORDER_ITEMS")}
                   </th>
-                  <th className="table-head-cell">{t("COMMON.ACTIONS")}</th>
+                  <th className="table-head-cell bg-gray-50">
+                    {t("COMMON.ACTIONS")}
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -500,22 +510,26 @@ const OrderList = () => {
                               onClick={() => toggleRowExpansion(order.orderId)}
                               className="text-gray-500 hover:text-gray-700 transition-colors"
                             >
-                              {expandedRows.has(order.orderId) ? '▼' : '▶'}
+                              {expandedRows.has(order.orderId) ? "▼" : "▶"}
                             </button>
                           )}
                         </td>
                         <td className="table-cell">
                           <div className="text-caption font-semibold truncate max-w-[150px]">
-                            {order.orderId}
+                            {order.orderRefId}
                           </div>
                         </td>
                         <td className="table-cell">
                           <div className="flex flex-col">
                             <div className="text-sm text-gray-700 whitespace-nowrap">
-                              {order.formattedOrderDate.split(',')[0]}
+                              {order.formattedOrderDate.split(",")[0]}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {order.formattedOrderDate.split(',').slice(1).join(',').trim()}
+                              {order.formattedOrderDate
+                                .split(",")
+                                .slice(1)
+                                .join(",")
+                                .trim()}
                             </div>
                           </div>
                         </td>
@@ -555,42 +569,50 @@ const OrderList = () => {
                           </button>
                         </td>
                       </tr>
-                      {expandedRows.has(order.orderId) && order.orderItems.length > 0 && (
-                        <tr className="bg-gray-50">
-                          <td colSpan="8" className="px-6 py-4">
-                            <div className="mb-3">
-                              <div className="text-sm font-semibold text-gray-700 mb-2">
-                                {t("COMMON.ORDER_ITEMS")} ({order.totalOrderItems}):
-                              </div>
-                              <div className="space-y-3">
-                                {order.orderItems.map((item) => (
-                                  <div 
-                                    key={item.OrderItemID} 
-                                    className="flex items-start justify-between p-3 bg-white rounded-lg border border-gray-200"
-                                  >
-                                    <div className="flex-1">
-                                      <div className="font-medium text-gray-900 text-sm">
-                                        {item.ProductName}
+                      {expandedRows.has(order.orderId) &&
+                        order.orderItems.length > 0 && (
+                          <tr className="bg-gray-50">
+                            <td colSpan="8" className="px-6 py-4">
+                              <div className="mb-3">
+                                <div className="text-sm font-semibold text-gray-700 mb-2">
+                                  {t("COMMON.ORDER_ITEMS")} (
+                                  {order.totalOrderItems}):
+                                </div>
+                                <div className="space-y-3">
+                                  {order.orderItems.map((item) => (
+                                    <div
+                                      key={item.OrderItemID}
+                                      className="flex items-start justify-between p-3 bg-white rounded-lg border border-gray-200"
+                                    >
+                                      <div className="flex-1">
+                                        <div className="font-medium text-gray-900 text-sm">
+                                          {item.ProductName}
+                                        </div>
+                                        <div className="text-xs text-gray-600 mt-1">
+                                          {t("ORDERS.TABLE.ORDER_NUMBER")}:{" "}
+                                          {item.OrderItemID}
+                                        </div>
                                       </div>
-                                      <div className="text-xs text-gray-600 mt-1">
-                                        {t("ORDERS.TABLE.ORDER_NUMBER")}: {item.OrderItemID}
+                                      <div className="flex items-center space-x-4 ml-4">
+                                        <div className="text-sm font-medium text-gray-700">
+                                          {t("COMMON.QUANTITY")}:{" "}
+                                          {item.Quantity}
+                                        </div>
+                                        <span
+                                          className={`px-2 py-1 text-xs font-medium rounded-full border ${getOrderItemStatusColor(
+                                            item.OrderStatus
+                                          )}`}
+                                        >
+                                          {item.OrderStatus}
+                                        </span>
                                       </div>
                                     </div>
-                                    <div className="flex items-center space-x-4 ml-4">
-                                      <div className="text-sm font-medium text-gray-700">
-                                        {t("COMMON.QUANTITY")}: {item.Quantity}
-                                      </div>
-                                      <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getOrderItemStatusColor(item.OrderStatus)}`}>
-                                        {item.OrderStatus}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
+                            </td>
+                          </tr>
+                        )}
                     </React.Fragment>
                   ))
                 )}
@@ -599,99 +621,103 @@ const OrderList = () => {
           </div>
         </div>
       ) : (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    {bLoading ? (
-      <div className="col-span-full text-center py-8 text-gray-500">
-        {t("COMMON.LOADING")}
-      </div>
-    ) : bFilterLoading ? (
-      <div className="col-span-full flex justify-center py-8">
-        <Loader size="medium" />
-      </div>
-    ) : sError ? (
-      <div className="col-span-full text-center py-8 text-gray-600">
-        {sError}
-      </div>
-    ) : aOrders.length === 0 ? (
-      <div className="col-span-full text-center py-8 text-gray-600">
-        {t("ORDERS.NO_ORDERS_FOUND")}
-      </div>
-    ) : (
-      aOrders.map((order) => (
-        <div
-          key={order.orderId}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full"
-        >
-          {/* Header Section */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm font-semibold text-gray-900 truncate max-w-[120px]">
-              {order.orderId}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {bLoading ? (
+            <div className="col-span-full text-center py-8 text-gray-500">
+              {t("COMMON.LOADING")}
             </div>
-            <span
-              className={`px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${getPaymentStatusColor(
-                order.paymentStatus
-              )}`}
-            >
-              {order.paymentStatus}
-            </span>
-          </div>
-
-          {/* Order Details */}
-          <div className="space-y-3 flex-1">
-            <div className="flex flex-col">
-              <span className="text-xs text-gray-500 font-medium">
-                {t("ORDERS.TABLE.ORDER_DATE")}
-              </span>
-              <span className="text-sm text-gray-900 truncate">
-                {order.formattedOrderDate.split(',')[0]}
-              </span>
-              <span className="text-xs text-gray-500">
-                {order.formattedOrderDate.split(',').slice(1).join(',').trim()}
-              </span>
+          ) : bFilterLoading ? (
+            <div className="col-span-full flex justify-center py-8">
+              <Loader size="medium" />
             </div>
-
-            <div className="flex flex-col">
-              <span className="text-xs text-gray-500 font-medium">
-                {t("ORDERS.TABLE.CUSTOMER_NAME")}
-              </span>
-              <span className="text-sm text-gray-900 truncate">
-                {order.customerName || t("COMMON.UNKNOWN_CUSTOMER")}
-              </span>
-              <span className="text-xs text-gray-500 truncate">
-                {order.email}
-              </span>
+          ) : sError ? (
+            <div className="col-span-full text-center py-8 text-gray-600">
+              {sError}
             </div>
-
-            <div className="flex flex-col">
-              <span className="text-xs text-gray-500 font-medium">
-                {t("ORDERS.TABLE.PHONE_NUMBER")}
-              </span>
-              <span className="text-sm text-gray-900">
-                {order.phoneNumber || "N/A"}
-              </span>
+          ) : aOrders.length === 0 ? (
+            <div className="col-span-full text-center py-8 text-gray-600">
+              {t("ORDERS.NO_ORDERS_FOUND")}
             </div>
+          ) : (
+            aOrders.map((order) => (
+              <div
+                key={order.orderId}
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full"
+              >
+                {/* Header Section */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-sm font-semibold text-gray-900 truncate max-w-[120px]">
+                    {order.orderId}
+                  </div>
+                  <span
+                    className={`px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${getPaymentStatusColor(
+                      order.paymentStatus
+                    )}`}
+                  >
+                    {order.paymentStatus}
+                  </span>
+                </div>
 
-            <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-              <span className="text-xs text-gray-500 font-medium">
-                {t("COMMON.TOTAL_ORDER_ITEMS")}
-              </span>
-              <span className="text-sm font-semibold text-gray-900">
-                {order.totalOrderItems}
-              </span>
-            </div>
-          </div>
+                {/* Order Details */}
+                <div className="space-y-3 flex-1">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 font-medium">
+                      {t("ORDERS.TABLE.ORDER_DATE")}
+                    </span>
+                    <span className="text-sm text-gray-900 truncate">
+                      {order.formattedOrderDate.split(",")[0]}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {order.formattedOrderDate
+                        .split(",")
+                        .slice(1)
+                        .join(",")
+                        .trim()}
+                    </span>
+                  </div>
 
-          {/* Action Button */}
-          <button
-            onClick={() => handleViewOrder(order)}
-            className="mt-4 w-full inline-flex justify-center items-center px-4 py-2 border border-[#5B45E0] text-[#5B45E0] rounded-lg font-medium hover:bg-[#5B45E0]/10 transition-colors duration-150 text-sm"
-          >
-            {t("ORDERS.VIEW_DETAILS")}
-          </button>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 font-medium">
+                      {t("ORDERS.TABLE.CUSTOMER_NAME")}
+                    </span>
+                    <span className="text-sm text-gray-900 truncate">
+                      {order.customerName || t("COMMON.UNKNOWN_CUSTOMER")}
+                    </span>
+                    <span className="text-xs text-gray-500 truncate">
+                      {order.email}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 font-medium">
+                      {t("ORDERS.TABLE.PHONE_NUMBER")}
+                    </span>
+                    <span className="text-sm text-gray-900">
+                      {order.phoneNumber || "N/A"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                    <span className="text-xs text-gray-500 font-medium">
+                      {t("COMMON.TOTAL_ORDER_ITEMS")}
+                    </span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {order.totalOrderItems}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <button
+                  onClick={() => handleViewOrder(order)}
+                  className="mt-4 w-full inline-flex justify-center items-center px-4 py-2 border border-[#5B45E0] text-[#5B45E0] rounded-lg font-medium hover:bg-[#5B45E0]/10 transition-colors duration-150 text-sm"
+                >
+                  {t("ORDERS.VIEW_DETAILS")}
+                </button>
+              </div>
+            ))
+          )}
         </div>
-      ))
-    )}
-  </div>
       )}
 
       {aOrders.length > 0 && (

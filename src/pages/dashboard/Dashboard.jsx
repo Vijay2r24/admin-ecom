@@ -14,7 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
-import DatePicker from "../../components/CustomDatePicker";
+import DateTimeRangePickerComponent from "../../components/CustomDatePicker"; // Updated import
 import {
   GET_TOTAL_REVENUE,
   GET_TOTAL_ORDERS,
@@ -83,20 +83,13 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Calculate default date range (last 7 days) using dayjs
-  const getDefaultDateRange = () => {
-    const endDate = dayjs();
-    const startDate = dayjs().subtract(6, 'day'); // 7 days including today
+  // Date range state with DateTimeRangePickerComponent format
+  const [dateRange, setDateRange] = useState({
+    start: dayjs().subtract(6, 'day').startOf('day'), // Last 7 days by default
+    end: dayjs().endOf('day')
+  });
 
-    return {
-      start: startDate,
-      end: endDate,
-    };
-  };
-
-  // Date picker state with default 7 days
-  const [value, setValue] = useState(getDefaultDateRange());
-
+  const [displayText, setDisplayText] = useState("");
   const [nTopProductsPage, setTopProductsPage] = useState(1);
   const [nSelectedProduct, setSelectedProduct] = useState(null);
   const [bShowProductModal, setShowProductModal] = useState(false);
@@ -107,17 +100,14 @@ const Dashboard = () => {
   const formatDateToAPI = (date) => {
     if (!date) return null;
     
-    // If it's already a dayjs object
     if (date?.$isDayjsObject) {
       return date.toISOString();
     }
     
-    // If it's a JavaScript Date object
     if (date instanceof Date) {
       return date.toISOString();
     }
     
-    // Handle string dates
     if (typeof date === 'string') {
       return new Date(date).toISOString();
     }
@@ -140,76 +130,37 @@ const Dashboard = () => {
     return new Intl.NumberFormat(LOCALE).format(num);
   };
 
-  // Improved comparison text calculation that handles both date and time ranges
-  const getComparisonText = (startDate, endDate) => {
-    if (!startDate || !endDate) return t("DASHBOARD.COMPARISONTEXT");
-
-    try {
-      // Convert to dayjs objects for consistent handling
-      const start = dayjs(startDate);
-      const end = dayjs(endDate);
-
-      // Calculate the difference in milliseconds
-      const diffTime = Math.abs(end - start);
-      
-      // Calculate differences in various units
-      const diffMinutes = Math.floor(diffTime / (1000 * 60));
-      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      // Check if it's a single day selection with time range
-      const isSameDay = start.isSame(end, 'day');
-
-      if (isSameDay || diffDays === 0) {
-        // Time-based comparisons for same day or less than 24 hours
-        switch (diffHours) {
-          case 0:
-            // Less than 1 hour - show minutes
-            if (diffMinutes === 0) {
-              return t("DASHBOARD.VSLASTMINUTES", { count: 0 });
-            }
-            return t("DASHBOARD.VSLASTMINUTES", { count: diffMinutes });
-          case 1:
-            return t("DASHBOARD.VSLASTHOUR");
-          case 2:
-            return t("DASHBOARD.VSLAST2HOURS");
-          case 3:
-            return t("DASHBOARD.VSLAST3HOURS");
-          case 6:
-            return t("DASHBOARD.VSLAST6HOURS");
-          case 12:
-            return t("DASHBOARD.VSLAST12HOURS");
-          case 24:
-            return t("DASHBOARD.VSLAST24HOURS");
-          default:
-            if (diffHours < 24) {
-              return t("DASHBOARD.VSLASTHOURS", { count: diffHours });
-            }
-        }
-      }
-
-      // Date-based comparisons for multiple days
-      switch (diffDays) {
-        case 1:
-          return t("DASHBOARD.VSPREVIOUSDAY");
-        case 6:
-          return t("DASHBOARD.VSLASTWEEK");
-        case 7:
-          return t("DASHBOARD.VSLASTWEEK");
-        case 30:
-        case 31:
-          return t("DASHBOARD.VSLASTMONTH");
-        case 90:
-          return t("DASHBOARD.VSLAST3MONTHS");
-        case 365:
-        case 366:
-          return t("DASHBOARD.VSLASTYEAR");
-        default:
-          return t("DASHBOARD.VSLASTXDAYS", { count: diffDays });
-      }
-    } catch (error) {
-      return t("DASHBOARD.COMPARISONTEXT");
+  // Generate display text for date range
+  const generateDisplayText = (start, end) => {
+    if (!start || !end) return t("DASHBOARD.SELECT_DATE_RANGE");
+    
+    const isSameDay = start.isSame(end, 'day');
+    
+    if (isSameDay) {
+      return `${start.format("MMM D, YYYY")} ${start.format("HH:mm")} - ${end.format("HH:mm")}`;
+    } else {
+      return `${start.format("MMM D, YYYY HH:mm")} - ${end.format("MMM D, YYYY HH:mm")}`;
     }
+  };
+
+  // Update display text when date range changes
+  useEffect(() => {
+    if (dateRange.start && dateRange.end) {
+      setDisplayText(generateDisplayText(dateRange.start, dateRange.end));
+    }
+  }, [dateRange]);
+
+  // Handle date range change from DateTimeRangePickerComponent
+  const handleDateRangeChange = (newRange) => {
+    setDateRange(newRange);
+  };
+
+  // Handle clear dates
+  const handleClearDates = () => {
+    setDateRange({
+      start: dayjs().subtract(6, 'day').startOf('day'),
+      end: dayjs().endOf('day')
+    });
   };
 
   // Calculate percentage change and trend
@@ -276,10 +227,7 @@ const Dashboard = () => {
       setIsLoading(true);
       setError(null);
 
-      const { start, end } = value;
-
-      // Calculate comparison text based on date range
-      const comparisonText = getComparisonText(start, end);
+      const { start, end } = dateRange;
 
       // Prepare query parameters for date range with formatted dates
       const dateParams = {
@@ -410,6 +358,8 @@ const Dashboard = () => {
         }
       });
 
+      // Generate comparison text based on date range
+      const comparisonText = generateComparisonText(start, end);
 
       // Calculate metrics using actual API data
       const revenueMetrics = calculateMetrics(
@@ -553,10 +503,48 @@ const Dashboard = () => {
     }
   };
 
-  // Handle date change - now receives dayjs objects directly
-  const handleDateChange = (newValue) => {
-    setValue(newValue);
-  };
+  // Generate comparison text based on date range - FIXED VERSION
+const generateComparisonText = (startDate, endDate) => {
+  if (!startDate || !endDate) return t("DASHBOARD.COMPARISONTEXT");
+
+  const start = dayjs(startDate);
+  const end = dayjs(endDate);
+
+  const diffMinutes = end.diff(start, 'minute');
+  const diffHours = end.diff(start, 'hour', true); // float value
+  const diffDays = end.diff(start, 'day', true); // float value
+
+  // Less than 1 day -> use hours/minutes comparison
+  if (diffDays < 1) {
+    if (diffMinutes < 60) {
+      return t("DASHBOARD.VSLASTMINUTES", { count: diffMinutes });
+    } else if (diffHours <= 1) {
+      return t("DASHBOARD.VSLASTHOUR");
+    } else if (diffHours <= 2) {
+      return t("DASHBOARD.VSLAST2HOURS");
+    } else if (diffHours <= 3) {
+      return t("DASHBOARD.VSLAST3HOURS");
+    } else if (diffHours <= 6) {
+      return t("DASHBOARD.VSLAST6HOURS");
+    } else if (diffHours <= 12) {
+      return t("DASHBOARD.VSLAST12HOURS");
+    } else if (diffHours <= 24) {
+      return t("DASHBOARD.VSLAST24HOURS");
+    } else {
+      return t("DASHBOARD.VSLASTHOURS", { count: Math.round(diffHours) });
+    }
+  }
+
+  // 1+ day ranges -> date-based comparisons
+  if (Math.round(diffDays) === 1) return t("DASHBOARD.VSPREVIOUSDAY");
+  if (Math.round(diffDays) === 7) return t("DASHBOARD.VSLASTWEEK");
+  if (Math.round(diffDays) === 30) return t("DASHBOARD.VSLASTMONTH");
+  if (Math.round(diffDays) === 90) return t("DASHBOARD.VSLAST3MONTHS");
+  if (Math.round(diffDays) === 365) return t("DASHBOARD.VSLASTYEAR");
+
+  return t("DASHBOARD.VSLASTXDAYS", { count: Math.round(diffDays) });
+};
+
 
   // Set title and fetch data on component mount
   useEffect(() => {
@@ -568,10 +556,10 @@ const Dashboard = () => {
 
   // Fetch data when date range changes
   useEffect(() => {
-    if (value.start && value.end) {
+    if (dateRange.start && dateRange.end) {
       fetchDashboardData();
     }
-  }, [value]);
+  }, [dateRange]);
 
   // Loading state
   if (isLoading) {
@@ -702,16 +690,24 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Header with Date Picker Component */}
+      {/* Header with DateTimeRangePickerComponent */}
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <p className="text-secondary">{t("DASHBOARD.DESCRIPTION")}</p>
           </div>
 
-          {/* Using the new DatePicker component */}
+          {/* Using the new DateTimeRangePickerComponent */}
           <div className="relative w-[18rem] max-w-full">
-            <DatePicker value={value} onChange={handleDateChange} />
+            <DateTimeRangePickerComponent
+              dateRange={dateRange}
+              setDateRange={handleDateRangeChange}
+              displayText={displayText}
+              handleClearDates={handleClearDates}
+              t={t}
+              maxDate={dayjs()} // Don't allow future dates
+              allowFutureDates={false}
+            />
           </div>
         </div>
       </div>

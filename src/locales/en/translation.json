@@ -441,6 +441,7 @@
     "DELIVERY": "Delivery",
     "SEARCH_PLACEHOLDER": "Search by Order Number, Product",
     "TABLE": {
+      "ORDER_REF":"Order Reference Id",
       "ORDER_DATE": "Order Date",
       "PRODUCT_NAME": "Product Name",
       "CUSTOMER_INFO": "Customer Info",
@@ -805,6 +806,7 @@
     "NO_PREVIEW": "No preview available",
     "APP_NAME": "My App",
     "TIME_AGO": "1m ago",
+    "MESSAGE":"Message",
     "IMAGE_PREVIEW_ALT": "Uploaded notification image"
   },
 
@@ -1035,7 +1037,8 @@
     "REQUIRED": "is required",
     "CLEAR_DATE_RANGE":"Clear date range",
     "ACCESS_DENIED_TITLE": "Access to this page is restricted",
-    "ACCESS_DENIED_MESSAGE": "Please check with the site admin if you believe this is a mistake."
+    "ACCESS_DENIED_MESSAGE": "Please check with the site admin if you believe this is a mistake.",
+    "EXPORTING":"Exporting.."
   },
   "USER_ROLES_LIST": {
     "TITLE": "User Roles",
@@ -1110,5 +1113,43 @@
     "TITLE": "404",
     "HEADING": "Page Not Found",
     "MESSAGE": "The page you're looking for doesn't exist."
+  },
+  "SELECT_DATE_TIME": "Select Date & Time",
+  "SELECT_FROM_CALENDAR": "Select from Calendar",
+  "START_TIME": "Start Time",
+  "END_TIME": "End Time",
+  "CANCEL": "Cancel",
+  "APPLY": "Apply",
+  "CLEAR_DATE_RANGE": "Clear Date Range",
+
+  "PREVIOUS_MONTH": "Previous Month",
+  "NEXT_MONTH": "Next Month",
+  "PREVIOUS_YEAR": "Previous Year",
+  "NEXT_YEAR": "Next Year",
+  "PREVIOUS_DECADE": "Previous Decade",
+  "NEXT_DECADE": "Next Decade",
+  "VALIDATION": {
+    "SELECT_BOTH_DATES": "Please select both start and end dates.",
+    "INVALID_DATE": "The selected date is invalid.",
+    "END_BEFORE_START": "End date cannot be before start date.",
+    "NO_FUTURE_DATES": "You cannot select future dates.",
+    "MIN_DATE": "The selected date is before the minimum allowed date.",
+    "MAX_DATE": "The selected date is after the maximum allowed date.",
+    "MAX_RANGE_365": "You cannot select a range longer than 365 days.",
+    "INVALID_TIME_FORMAT": "Invalid time format.",
+    "END_TIME_AFTER_START": "End time must be after start time.",
+    "DATE_NOT_SELECTABLE": "This date is not selectable."
+  },
+  "NOTFOUND": {
+    "ERROR_CODE": "404",
+    "PAGE_NOT_FOUND": "Page Not Found",
+    "PAGE_DESCRIPTION": "The page you're looking for doesn't exist.",
+    "PAGE_HINT": "Please check the URL or navigate back.",
+    "GO_BACK": "Go Back",
+    "HOMEPAGE": "Homepage",
+    "QUICK_LINKS": "Quick Links",
+    "PRODUCTS": "Products",
+    "CATEGORIES": "Categories",
+    "SUPPORT": "Support"
   }
 }

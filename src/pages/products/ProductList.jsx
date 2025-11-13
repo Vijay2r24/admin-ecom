@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import Toolbar from "../../components/Toolbar";
-import ExportPanel from "../../components/ExportPanel";
 import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
@@ -14,7 +13,11 @@ import {
 } from "../../contants/apiRoutes";
 import Switch from "../../components/Switch.jsx";
 import { useTitle } from "../../context/TitleContext";
-import { ITEMS_PER_PAGE, STATUS } from "../../contants/constants.jsx";
+import {
+  ITEMS_PER_PAGE,
+  STATUS,
+  STATUS_OPTIONS,
+} from "../../contants/constants.jsx";
 import {
   fetchResource,
   updateStatusById,
@@ -81,7 +84,14 @@ const ProductList = () => {
   const [bFilterLoading, setFilterLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [bSubmitting, setSubmitting] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const dispatch = useDispatch();
+
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
 
   // Fetch categories, brands, and stores from Redux
   const categories = useSelector(
@@ -121,85 +131,69 @@ const ProductList = () => {
   };
 
   const fetchProducts = useCallback(async () => {
-    try {
-      if (initialLoadComplete) {
-        setFilterLoading(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-      const token = localStorage.getItem("token");
-      const params = {
-        pageNumber: nCurrentPage,
-        pageSize: itemsPerPage,
-        searchText: sSearchTerm,
-      };
-      if (oFilters.status && oFilters.status !== "all") {
-        params.IsActive = oFilters.status.toLowerCase();
-      }
-      if (oFilters.category && oFilters.category !== "all") {
-        params.categoryName = oFilters.category;
-      }
-      if (oFilters.brand && oFilters.brand !== "all") {
-        params.brandName = oFilters.brand;
-      }
-      if (oFilters.store && oFilters.store !== "all") {
-        params.storeName = oFilters.store;
-      }
+  try {
+    setLoading(true);
+    setError(null);
+    const token = localStorage.getItem("token");
 
-      const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
-      const resData = oResponse?.data;
-      if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
-        const rawProducts = Array.isArray(resData.data) ? resData.data : [];
-        const transformedProducts = rawProducts.map((product) => {
-          const firstVariant =
-            product.Variants.find((v) => v.IsActive) ||
-            product.Variants[0] ||
-            {};
-          return {
-            ...product,
-            subCategory: product.CategoryName,
-            MRP: firstVariant.MRP || "0.00",
-            quantity: getTotalStock(firstVariant.Inventory || []),
-            brandName: getBrandName(product),
-            firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
-            status:
-              product.IsActive &&
-              getTotalStock(firstVariant.Inventory || []) > 0
-                ? "active"
-                : "out-of-stock",
-          };
-        });
-        setProducts(transformedProducts);
-        setTotalItems(resData.pagination?.totalRecords || 0);
-        setTotalPages(resData.pagination?.totalPages || 0);
-      } else {
-        setError(resData?.message || t("COMMON.API_ERROR"));
-        setProducts([]);
-        setTotalItems(0);
-        setTotalPages(0);
-      }
-    } catch (err) {
-      const backendMessage = err?.response?.data?.message;
-      setError(backendMessage || t("COMMON.API_ERROR"));
+    const params = {
+      pageNumber: nCurrentPage,
+      pageSize: itemsPerPage,
+      searchText: sSearchTerm,
+    };
+
+    if (oFilters.status && oFilters.status !== "all") {
+      params.IsActive = oFilters.status === "true";
+    }
+
+    // Map selected brand name to ID only when needed
+    if (oFilters.brand && oFilters.brand !== "all") {
+      const selectedBrand = brands.find(b => b.BrandName === oFilters.brand);
+      if (selectedBrand) params.brandId = [selectedBrand.BrandID];
+    }
+
+    if (oFilters.category && oFilters.category !== "all") {
+      const selectedCategory = categories.find(c => c.CategoryName === oFilters.category);
+      if (selectedCategory) params.categoryId = [selectedCategory.CategoryID];
+    }
+
+    const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
+    const resData = oResponse?.data;
+
+    if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+      const rawProducts = Array.isArray(resData.data) ? resData.data : [];
+      const transformedProducts = rawProducts.map(product => {
+        const firstVariant = product.Variants.find(v => v.IsActive) || product.Variants[0] || {};
+        return {
+          ...product,
+          subCategory: product.CategoryName,
+          MRP: firstVariant.MRP || "0.00",
+          quantity: getTotalStock(firstVariant.Inventory || []),
+          brandName: getBrandName(product),
+          firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
+          status: product.IsActive && getTotalStock(firstVariant.Inventory || []) > 0 ? "active" : "out-of-stock",
+        };
+      });
+      setProducts(transformedProducts);
+      setTotalItems(resData.pagination?.totalRecords || 0);
+      setTotalPages(resData.pagination?.totalPages || 0);
+    } else {
+      setError(resData?.message || t("COMMON.API_ERROR"));
       setProducts([]);
       setTotalItems(0);
       setTotalPages(0);
-    } finally {
-      setLoading(false);
-      setFilterLoading(false);
-      if (!initialLoadComplete) {
-        setInitialLoadComplete(true);
-      }
     }
-  }, [
-    nCurrentPage,
-    itemsPerPage,
-    sSearchTerm,
-    oFilters,
-    t,
-    initialLoadComplete,
-  ]);
+  } catch (err) {
+    setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
+    setProducts([]);
+    setTotalItems(0);
+    setTotalPages(0);
+  } finally {
+    setLoading(false);
+    setFilterLoading(false);
+  }
+}, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
+
 
   useEffect(() => {
     fetchProducts();
@@ -233,11 +227,10 @@ const ProductList = () => {
     })),
   ];
 
-  const statusOptions = [
-    { value: "all", label: t("COMMON.ALL") },
-    { value: "true", label: t("COMMON.ACTIVE") },
-    { value: "false", label: t("COMMON.INACTIVE") },
-  ];
+  const statusOptions = STATUS_OPTIONS.map((opt) => ({
+    value: opt.value,
+    label: t(opt.labelKey),
+  }));
 
   const handleDropdownInputChange = (inputValue, filterName) => {
     if (filterName === "category") {
@@ -297,17 +290,6 @@ const ProductList = () => {
         handleDropdownInputChange(inputValue, "brand"),
     },
     {
-      label: t("SIDEBAR.STORES"),
-      name: "store",
-      value: oFilters.store,
-      options: storeOptions,
-      placeholder: t("PRODUCT_SETUP.TABS.STORES"),
-      searchable: true,
-      searchPlaceholder: t("COMMON.SEARCH_STORE"),
-      onInputChange: (inputValue) =>
-        handleDropdownInputChange(inputValue, "store"),
-    },
-    {
       label: t("COMMON.STATUS"),
       name: "status",
       value: oFilters.status,
@@ -327,20 +309,56 @@ const ProductList = () => {
     setCurrentPage(1);
   };
 
-  const [bShowExportPanel, setShowExportPanel] = useState(false);
-  const [oExportDate, setExportDate] = useState({ startDate: null, endDate: null });
+  // Helper function to format dates for API
+  const formatDateForAPI = (date) => {
+    if (!date) return undefined;
 
-  const handleExportProducts = useCallback(() => {
-    setShowExportPanel(true);
-  }, []);
+    // If it's a dayjs object
+    if (date.isValid && date.isValid()) {
+      return date.toISOString();
+    }
 
-  const handleConfirmExportProducts = useCallback(() => {
-    dispatch(exportProductReport({
-      startDate: oExportDate.startDate,
-      endDate: oExportDate.endDate,
-    }));
-    setShowExportPanel(false);
-  }, [dispatch, oExportDate]);
+    // If it's already a string
+    if (typeof date === "string") {
+      return date;
+    }
+
+    // If it's a Date object
+    if (date instanceof Date) {
+      return date.toISOString();
+    }
+
+    return undefined;
+  };
+
+  const handleExportProducts = async () => {
+    setExportLoading(true);
+    try {
+      // Find the brand and category IDs from the Redux state
+      const brand = brands.find((b) => b.BrandName === oFilters.brand);
+      const category = categories.find(
+        (c) => c.CategoryName === oFilters.category
+      );
+
+      const isActiveFilter =
+        oFilters.status === "all" ? undefined : oFilters.status === "true";
+
+      await dispatch(
+        exportProductReport({
+          searchText: sSearchTerm,
+          isActive: isActiveFilter,
+          brandId: brand ? [brand.BrandID] : undefined,
+          categoryId: category ? [category.CategoryID] : undefined,
+        })
+      ).unwrap();
+
+      // Optional: show success message
+      // toast.success(t('PRODUCTS.EXPORT_SUCCESS'));
+    } catch (error) {
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -421,17 +439,9 @@ const ProductList = () => {
         onClearFilters={handleClearFilters}
         onCreate={() => navigate("/Addproduct")}
         onExport={handleExportProducts}
+        exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />
 
-      {bShowExportPanel && (
-        <ExportPanel
-          title={t("PRODUCTS.TITLE") + " – Date Range"}
-          value={oExportDate}
-          onChange={(val) => setExportDate(val)}
-          onCancel={() => setShowExportPanel(false)}
-          onConfirm={handleConfirmExportProducts}
-        />
-      )}
       {bLoading ? (
         <div className="text-center py-8 text-gray-500">
           {t("COMMON.LOADING")}
@@ -439,17 +449,34 @@ const ProductList = () => {
       ) : sError ? (
         <div className="text-center py-8 text-red-500">{sError}</div>
       ) : sViewMode === "table" ? (
-        <div className="table-container">
-          <div className="table-wrapper">
+        <div className="table-container-floating">
+          <div
+            className="table-wrapper-floating scrollbar-hide"
+            onScroll={handleTableScroll}
+          >
             <table className="table-base">
-              <thead className="table-head">
+              {/* Floating Header */}
+              <thead
+                className={`table-head-floating ${
+                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                }`}
+              >
                 <tr>
-                  <th className="table-head-cell">{t("PRODUCTS.TITLE")}</th>
-                  <th className="table-head-cell">{t("COMMON.CATEGORY")}</th>
-                  <th className="table-head-cell">{t("PRODUCTS.BRAND")}</th>
-                  <th className="table-head-cell">{t("PRODUCTS.STOCK")}</th>
-                  <th className="table-head-cell">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell">{t("COMMON.ACTIONS")}</th>
+                  <th className="table-head-cell-floating">
+                    {t("PRODUCTS.TITLE")}
+                  </th>
+                  <th className="table-head-cell-floating mr-2">
+                    {t("COMMON.CATEGORY")}
+                  </th>
+                  <th className="table-head-cell-floating mr-2">
+                    {t("PRODUCTS.BRAND")}
+                  </th>
+                  <th className="table-head-cell-floating">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell-floating">
+                    {t("COMMON.ACTIONS")}
+                  </th>
                 </tr>
               </thead>
               <tbody className="table-body">
@@ -469,9 +496,10 @@ const ProductList = () => {
                   </tr>
                 ) : (
                   aProducts.map((product) => (
-                    <tr key={product.ProductID} className="table-row text-left">
+                    <tr key={product.ProductID} className="table-row">
+                      {/* Product Name */}
                       <td className="table-cell">
-                        <div className="flex items-center justify-left p-2">
+                        <div className="flex items-center p-2">
                           <div className="h-10 w-10 flex-shrink-0">
                             <img
                               className="h-10 w-10 rounded object-cover"
@@ -493,7 +521,9 @@ const ProductList = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="table-cell table-cell-text">
+
+                      {/* Category */}
+                      <td className="table-cell text-left">
                         <div
                           className="ellipsis-text"
                           title={product.subCategory}
@@ -501,7 +531,9 @@ const ProductList = () => {
                           {product.subCategory}
                         </div>
                       </td>
-                      <td className="table-cell text-left table-cell-text">
+
+                      {/* Brand */}
+                      <td className="table-cell text-left">
                         <div
                           className="ellipsis-text"
                           title={product.brandName}
@@ -509,10 +541,9 @@ const ProductList = () => {
                           {product.brandName}
                         </div>
                       </td>
-                      <td className="table-cell text-center table-cell-text">
-                        {product.quantity || 0}
-                      </td>
-                      <td className="table-cell">
+
+                      {/* Status */}
+                      <td className="table-cell flex justify-center items-center">
                         <Switch
                           checked={product.IsActive}
                           onChange={() =>
@@ -523,8 +554,10 @@ const ProductList = () => {
                           }
                         />
                       </td>
-                      <td className="table-cell text-left font-medium align-middle">
-                        <div className="flex justify-left items-left">
+
+                      {/* Actions */}
+                      <td className="table-cell text-left font-medium">
+                        <div className="flex items-center">
                           <ActionButtons
                             id={product.ProductID}
                             onEdit={handleEdit}
@@ -614,8 +647,8 @@ const ProductList = () => {
                     {t("PRODUCTS.STOCK")}: {product.quantity || 0}
                   </div>
                 </div>
-                <ActionButtons 
-                  id={product.ProductID} 
+                <ActionButtons
+                  id={product.ProductID}
                   onEdit={handleEdit}
                   viewLink={`/productdetails/${product.ProductID}`}
                 />

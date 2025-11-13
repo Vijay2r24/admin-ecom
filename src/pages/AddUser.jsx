@@ -11,9 +11,15 @@ import {
   XCircle,
   Store,
   Users,
+  Edit3,
+  Save,
+  Globe,
+  Navigation,
+  Hash,
 } from "lucide-react";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import SelectWithIcon from "../components/SelectWithIcon";
+import PhoneInputWithIcon from "../components/PhoneInputWithIcon"; // Import the phone input component
 import { useTranslation } from "react-i18next";
 import { FaCamera, FaTimes } from "react-icons/fa";
 import { useParams, useNavigate } from "react-router-dom";
@@ -39,7 +45,7 @@ import {
   clearStates,
   clearCities,
 } from "../store/slices/allDataSlice";
-import FloatingFooter from "../components/FloatingFooter"; // Import FloatingFooter
+import FloatingFooter from "../components/FloatingFooter";
 
 // Import password utilities
 import {
@@ -48,6 +54,9 @@ import {
   getPasswordStrengthText,
   validateFormPassword,
 } from "../utils/passwordUtils";
+
+// Import phone validation
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 const getArray = (data) =>
   Array.isArray(data)
@@ -62,6 +71,7 @@ const AddUser = () => {
     lastName: "",
     email: "",
     phone: "",
+    CountryCode: "", // New field for country code
     role: "",
     stores: [],
     password: "",
@@ -76,7 +86,7 @@ const AddUser = () => {
     cityName: "",
     documentIds: [],
     IsActive: true,
-    gender: "", // Added gender field
+    gender: "",
   });
   const [nProfileImage, setProfileImage] = useState(null);
   const [nProfileImagePreview, setProfileImagePreview] = useState(null);
@@ -87,6 +97,13 @@ const AddUser = () => {
   const [bImgLoading, setImgLoading] = useState(true);
   const [bImgError, setImgError] = useState(false);
   const [fetchUserError, setFetchUserError] = useState("");
+
+  // Edit states for each section
+  const [isPersonalInfoEditable, setIsPersonalInfoEditable] = useState(!id);
+  const [isAccountSecurityEditable, setIsAccountSecurityEditable] = useState(
+    !id
+  );
+  const [isAddressInfoEditable, setIsAddressInfoEditable] = useState(!id);
 
   // Redux hooks
   const dispatch = useDispatch();
@@ -130,16 +147,21 @@ const AddUser = () => {
   const [bSubmitting, setSubmitting] = useState(false);
 
   // Get permissions from localStorage
-  const userPermissions = JSON.parse(localStorage.getItem("PermissionIDs") || "[]");
+  const userPermissions = JSON.parse(
+    localStorage.getItem("PermissionIDs") || "[]"
+  );
 
   // Check if user has Edit Role permission
   const hasEditRolePermission = userPermissions.includes(PERMISSIONS.EDIT_ROLE);
-  
-  // Check if user has Edit Store permission  
-  const hasEditStorePermission = userPermissions.includes(PERMISSIONS.EDIT_STORE);
+
+  // Check if user has Edit Store permission
+  const hasEditStorePermission = userPermissions.includes(
+    PERMISSIONS.EDIT_STORE
+  );
 
   // Determine if we should show the entire Account Security section
-  const shouldShowAccountSecuritySection = !id || (id && (hasEditRolePermission || hasEditStorePermission));
+  const shouldShowAccountSecuritySection =
+    !id || (id && (hasEditRolePermission || hasEditStorePermission));
 
   // Gender options
   const genderOptions = useMemo(
@@ -178,12 +200,9 @@ const AddUser = () => {
       setTitle("");
     };
   }, [setTitle, setBackButton, t, id, navigate]);
-
-  // Validation function - updated to include gender validation
   const validate = useCallback(() => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
 
     if (!oFormData.firstName?.trim()) {
       errors.firstName = t("ADD_USER.VALIDATION.FIRST_NAME_REQUIRED");
@@ -199,10 +218,32 @@ const AddUser = () => {
       errors.email = t("ADD_USER.VALIDATION.EMAIL_INVALID");
     }
 
+    // Enhanced Phone validation with country code check
     if (!oFormData.phone?.trim()) {
       errors.phone = t("ADD_USER.PHONE_REQUIRED");
-    } else if (!phoneRegex.test(oFormData.phone)) {
-      errors.phone = t("ADD_USER.VALIDATION.PHONE_INVALID");
+    } else {
+      // Validate phone number format using react-phone-number-input
+      if (!isValidPhoneNumber(oFormData.phone)) {
+        errors.phone = t("ADD_USER.VALIDATION.PHONE_INVALID");
+      }
+
+      if (!oFormData.phone.startsWith("+")) {
+        errors.phone = t("ADD_USER.VALIDATION.COUNTRY_CODE_REQUIRED");
+      }
+
+      // Validate minimum phone number length (country code + number)
+      // Most countries have at least 8 digits after country code
+      const phoneWithoutSpaces = oFormData.phone.replace(/\s/g, "");
+      const digitsAfterPlus = phoneWithoutSpaces.substring(1); // Remove the +
+      if (digitsAfterPlus.length < 8) {
+        errors.phone = t("ADD_USER.VALIDATION.PHONE_TOO_SHORT");
+      }
+
+      // Validate country code length (typically 1-3 digits)
+      const countryCodeMatch = oFormData.phone.match(/^\+\d{1,3}/);
+      if (!countryCodeMatch) {
+        errors.phone = t("ADD_USER.VALIDATION.INVALID_COUNTRY_CODE");
+      }
     }
 
     // Gender validation
@@ -210,8 +251,8 @@ const AddUser = () => {
       errors.gender = t("ADD_USER.VALIDATION.GENDER_REQUIRED");
     }
 
-    // Only validate role and stores if they are visible
-    if (shouldShowAccountSecuritySection) {
+    // Only validate role and stores if they are visible and editable
+    if (shouldShowAccountSecuritySection && isAccountSecurityEditable) {
       if (!oFormData.role) {
         errors.role = t("ADD_USER.VALIDATION.ROLE_REQUIRED");
       }
@@ -221,13 +262,13 @@ const AddUser = () => {
       }
     }
 
-    // Password validation only for new users
-    if (!id) {
+    // Password validation only for new users or when editing password
+    if (!id || (id && isAccountSecurityEditable && oFormData.password)) {
       const passwordErrors = validateFormPassword(
         oFormData.password,
         oFormData.confirmPassword,
         t,
-        true // isNewUser = true when creating new user
+        !id // isNewUser = true when creating new user
       );
       Object.assign(errors, passwordErrors);
     }
@@ -253,7 +294,13 @@ const AddUser = () => {
     }
 
     return errors;
-  }, [oFormData, t, id, shouldShowAccountSecuritySection]);
+  }, [
+    oFormData,
+    t,
+    id,
+    shouldShowAccountSecuritySection,
+    isAccountSecurityEditable,
+  ]);
 
   useEffect(() => {
     if (!hasFetchedInitialData.current) {
@@ -262,7 +309,12 @@ const AddUser = () => {
         hasFetchedCountries.current = true;
         dispatch(fetchResource({ key: "countries" }));
       }
-      if (!roles.length && !rolesLoading && !hasFetchedRoles.current && shouldShowAccountSecuritySection) {
+      if (
+        !roles.length &&
+        !rolesLoading &&
+        !hasFetchedRoles.current &&
+        shouldShowAccountSecuritySection
+      ) {
         hasFetchedRoles.current = true;
         dispatch(
           fetchResource({
@@ -271,7 +323,12 @@ const AddUser = () => {
           })
         );
       }
-      if (!stores.length && !storesLoading && !hasFetchedStores.current && shouldShowAccountSecuritySection) {
+      if (
+        !stores.length &&
+        !storesLoading &&
+        !hasFetchedStores.current &&
+        shouldShowAccountSecuritySection
+      ) {
         hasFetchedStores.current = true;
         dispatch(
           fetchResource({
@@ -299,9 +356,7 @@ const AddUser = () => {
         .then((result) => {
           // States loaded successfully
         })
-        .catch((error) => {
-          console.error("Error fetching states:", error);
-        });
+        .catch((error) => {});
     } else {
       dispatch(clearStates());
       setFormData((prev) => ({ ...prev, state: "", city: "" }));
@@ -315,16 +370,43 @@ const AddUser = () => {
         .then((result) => {
           // Cities loaded successfully
         })
-        .catch((error) => {
-          console.error("Error fetching cities:", error);
-        });
+        .catch((error) => {});
     } else {
       dispatch(clearCities());
       setFormData((prev) => ({ ...prev, city: "" }));
     }
   }, [dispatch, oFormData.state]);
 
-  // Optimized fetchUser function - updated to handle gender field
+  // Extract country code from phone number
+  const extractCountryCode = (phoneNumber) => {
+    if (!phoneNumber) return "";
+
+    // The phone number from react-phone-number-input is in E.164 format (+911234567890)
+    // Extract the country code (everything between + and the first set of digits)
+    const match = phoneNumber.match(/^\+(.+?)(?=\d)/);
+    return match ? match[1] : "";
+  };
+
+  // Updated handleChange for phone input
+  const handlePhoneChange = useCallback(
+    (phoneNumber) => {
+      const countryCode = extractCountryCode(phoneNumber);
+
+      setFormData((prev) => ({
+        ...prev,
+        phone: phoneNumber,
+        CountryCode: countryCode,
+      }));
+
+      // Clear error when user starts typing
+      if (oErrors.phone) {
+        setErrors((prev) => ({ ...prev, phone: "" }));
+      }
+    },
+    [oErrors.phone]
+  );
+
+  // Optimized fetchUser function - updated to handle phone and gender fields
   const fetchUser = useCallback(async () => {
     if (!id || hasFetchedUser.current) return;
 
@@ -338,13 +420,23 @@ const AddUser = () => {
       if (resData?.status === STATUS.SUCCESS.toUpperCase() && resData.data) {
         const user = resData.data;
 
+        // Extract phone number and country code if available
+        let phoneNumber = user.PhoneNumber || "";
+        let countryCode = "";
+
+        if (phoneNumber && phoneNumber.startsWith("+")) {
+          const match = phoneNumber.match(/^\+(.+?)(?=\d)/);
+          countryCode = match ? match[1] : "";
+        }
+
         // Set basic form data immediately
         setFormData((prev) => ({
           ...prev,
           firstName: user.FirstName || "",
           lastName: user.LastName || "",
           email: user.Email || "",
-          phone: user.PhoneNumber || "",
+          phone: phoneNumber,
+          CountryCode: countryCode,
           role: user.RoleID || "",
           IsActive: user.IsActive !== undefined ? user.IsActive : true,
           stores: user.Stores ? user.Stores.map((store) => store.StoreId) : [],
@@ -356,7 +448,7 @@ const AddUser = () => {
           documentIds: user.ProfileImageUrl
             ? user.ProfileImageUrl.map((doc) => doc.documentId)
             : [],
-          gender: user.Gender || "", // Set gender from API response
+          gender: user.Gender || "",
         }));
 
         // For the profile image
@@ -433,9 +525,7 @@ const AddUser = () => {
             state: foundState.StateID,
           }));
         }
-      } catch (error) {
-        console.error("Error populating state:", error);
-      }
+      } catch (error) {}
     };
 
     populateStateAndCity();
@@ -463,9 +553,7 @@ const AddUser = () => {
             city: foundCity.CityID,
           }));
         }
-      } catch (error) {
-        console.error("Error populating city:", error);
-      }
+      } catch (error) {}
     };
 
     populateCity();
@@ -535,9 +623,77 @@ const AddUser = () => {
     navigate("/users");
   }, [navigate]);
 
+  // Function to get display value for select fields
+  const getDisplayValue = (value, options, isMultiple = false) => {
+    if (!value || value === "" || (isMultiple && value.length === 0))
+      return "-";
+
+    if (isMultiple && Array.isArray(value)) {
+      return value
+        .map((val) => {
+          const option = options.find((opt) => opt.value == val);
+          return option ? option.label : val;
+        })
+        .join(", ");
+    }
+
+    const option = options.find((opt) => opt.value == value);
+    return option ? option.label : value;
+  };
+
+  // Function to handle section update
+  const handleSectionUpdate = async (section) => {
+    const validationErrors = validate();
+
+    // Filter errors only for the current section
+    const sectionErrors = {};
+    switch (section) {
+      case "personal":
+        if (validationErrors.firstName)
+          sectionErrors.firstName = validationErrors.firstName;
+        if (validationErrors.lastName)
+          sectionErrors.lastName = validationErrors.lastName;
+        if (validationErrors.email)
+          sectionErrors.email = validationErrors.email;
+        if (validationErrors.phone)
+          sectionErrors.phone = validationErrors.phone;
+        if (validationErrors.gender)
+          sectionErrors.gender = validationErrors.gender;
+        break;
+      case "account":
+        if (validationErrors.role) sectionErrors.role = validationErrors.role;
+        if (validationErrors.stores)
+          sectionErrors.stores = validationErrors.stores;
+        if (validationErrors.password)
+          sectionErrors.password = validationErrors.password;
+        if (validationErrors.confirmPassword)
+          sectionErrors.confirmPassword = validationErrors.confirmPassword;
+        break;
+      case "address":
+        if (validationErrors.streetAddress)
+          sectionErrors.streetAddress = validationErrors.streetAddress;
+        if (validationErrors.country)
+          sectionErrors.country = validationErrors.country;
+        if (validationErrors.state)
+          sectionErrors.state = validationErrors.state;
+        if (validationErrors.city) sectionErrors.city = validationErrors.city;
+        if (validationErrors.pincode)
+          sectionErrors.pincode = validationErrors.pincode;
+        break;
+    }
+
+    if (Object.keys(sectionErrors).length > 0) {
+      setErrors(sectionErrors);
+      return;
+    }
+
+    // If no errors, submit the form
+    await handleSubmit();
+  };
+
   const handleSubmit = useCallback(
     async (e) => {
-      e?.preventDefault(); // Make it optional for the footer button
+      e?.preventDefault();
       const validationErrors = validate();
       setErrors(validationErrors);
       if (Object.keys(validationErrors).length > 0) return;
@@ -572,12 +728,13 @@ const AddUser = () => {
         }));
       }
 
-      // Base user data structure - updated to include gender
+      // Base user data structure - updated to include gender and phoneCountryCode
       const userData = {
         FirstName: oFormData.firstName || "",
         LastName: oFormData.lastName || "",
         Email: oFormData.email || "",
         PhoneNumber: oFormData.phone || "",
+        CountryCode: oFormData.CountryCode || "", // Send country code to API
         AddressLine: oFormData.streetAddress || "",
         CityID: oFormData.city ? parseInt(oFormData.city, 10) : 0,
         StateID: oFormData.state ? parseInt(oFormData.state, 10) : 0,
@@ -587,12 +744,12 @@ const AddUser = () => {
         StoreIDs: oFormData.stores || [],
         IsActive: oFormData.IsActive !== undefined ? oFormData.IsActive : true,
         documentMetadata: documentMetadata,
-        Gender: oFormData.gender || "", // Include gender in API payload
+        Gender: oFormData.gender || "",
       };
 
       // Add UserID for update and handle password differently
       if (id) {
-        // Update operation - hide password field
+        // Update operation
         userData.UserID = id;
         userData.UpdatedBy = userId;
 
@@ -600,7 +757,6 @@ const AddUser = () => {
         if (oFormData.password && oFormData.password.trim() !== "") {
           userData.Password = md5(oFormData.password);
         }
-        // If password is not provided, don't include it in the payload
       } else {
         // Create operation - password is required
         userData.Password = oFormData.password ? md5(oFormData.password) : "";
@@ -617,27 +773,21 @@ const AddUser = () => {
         let oResponse;
 
         if (id) {
-          // Use PUT for update with updateUser endpoint
-          oResponse = await apiPut(
-            UPDATE_USER,
-            formData,
-            token,
-            true // multipart/form-data
-          );
+          oResponse = await apiPut(UPDATE_USER, formData, token, true);
         } else {
-          // Use POST for create with createUser endpoint
-          oResponse = await apiPost(
-            CREATE_USER,
-            formData,
-            token,
-            true // multipart/form-data
-          );
+          oResponse = await apiPost(CREATE_USER, formData, token, true);
         }
 
         const resData = oResponse?.data;
 
         if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
           setRemovedDocumentIds([]);
+          // Reset edit states after successful submission
+          if (id) {
+            setIsPersonalInfoEditable(false);
+            setIsAccountSecurityEditable(false);
+            setIsAddressInfoEditable(false);
+          }
           showEmsg(resData?.message, STATUS.SUCCESS, 3000, async () => {
             navigate("/users");
           });
@@ -648,7 +798,6 @@ const AddUser = () => {
           );
         }
       } catch (error) {
-        console.error("API Error:", error);
         const backendMessage = error?.response?.data?.message;
         showEmsg(backendMessage || t("COMMON.ERROR_MESSAGE"), STATUS.ERROR);
       } finally {
@@ -667,12 +816,158 @@ const AddUser = () => {
     ]
   );
 
+  // Section header component with only edit button
+  const SectionHeader = ({ title, isEditable, onEditToggle, sectionKey }) => (
+    <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex justify-between items-center">
+      <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+      {id && !isEditable && (
+        <button
+          type="button"
+          onClick={() => onEditToggle(sectionKey)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#FF5A5F] text-white hover:bg-[#e04a4f] transition-colors"
+        >
+          <Edit3 size={14} />
+          {t("COMMON.EDIT")}
+        </button>
+      )}
+    </div>
+  );
+
+  // Section footer with update and cancel buttons - Only show for edit mode (id exists)
+  const SectionFooter = ({ isEditable, onEditToggle, onUpdate, sectionKey }) =>
+    id &&
+    isEditable && (
+      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => onEditToggle(sectionKey)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 transition-colors"
+        >
+          <Edit3 size={14} />
+          {t("COMMON.CANCEL")}
+        </button>
+        <button
+          type="button"
+          onClick={() => onUpdate(sectionKey)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#FF5A5F] text-white hover:bg-[#e04a4f] transition-colors"
+        >
+          <Save size={14} />
+          {t("COMMON.UPDATE")}
+        </button>
+      </div>
+    );
+
+  const toggleSectionEdit = (section) => {
+    switch (section) {
+      case "personal":
+        setIsPersonalInfoEditable(!isPersonalInfoEditable);
+        break;
+      case "account":
+        setIsAccountSecurityEditable(!isAccountSecurityEditable);
+        break;
+      case "address":
+        setIsAddressInfoEditable(!isAddressInfoEditable);
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Data display component for non-editable mode with larger font
+  const DataField = ({
+    label,
+    value,
+    placeholder = "-",
+    icon: Icon = User,
+  }) => (
+    <div className="flex flex-col mb-2">
+      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+        <Icon size={16} className="text-gray-500" />
+        {label}
+      </label>
+      <div className="pl-6">
+        <span className="text-gray-900 text-base font-medium align-middle">
+          {value || <span className="text-gray-400 italic">{placeholder}</span>}
+        </span>
+      </div>
+    </div>
+  );
+
+  // Data display component for select fields in non-editable mode
+  const DataSelectField = ({
+    label,
+    value,
+    options,
+    multiple = false,
+    placeholder = "-",
+    icon: Icon = User,
+  }) => {
+    const displayValue = getDisplayValue(value, options, multiple);
+
+    return (
+      <div className="flex flex-col mb-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+          <Icon size={16} className="text-gray-500" />
+          {label}
+        </label>
+        <div className="pl-6">
+          {displayValue !== "-" ? (
+            multiple ? (
+              <div className="flex flex-wrap gap-2">
+                {displayValue.split(", ").map((item, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="text-gray-900 text-base font-medium align-middle">
+                {displayValue}
+              </span>
+            )
+          ) : (
+            <span className="text-gray-400 italic text-base">
+              {placeholder}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Data display for password fields in non-editable mode with larger font
+  const DataPasswordField = ({
+    label,
+    placeholder = "-",
+    icon: Icon = Lock,
+  }) => (
+    <div className="flex flex-col">
+      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+        <Icon size={16} className="text-gray-500" />
+        {label}
+      </label>
+      <div className="p-2">
+        <div className="flex items-center gap-3">
+          <span className="text-xl tracking-widest text-gray-600 font-medium">
+            ••••••••
+          </span>
+          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+            {t("COMMON.HIDDEN")}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="max-w-8xl mx-auto pb-20"> {/* Added padding-bottom */}
+    <div className="max-w-8xl mx-auto pb-20">
       <ToastContainer />
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <p className="text-gray-500">
+          <p className="text-gray-600 text-sm">
             {id ? t("USERS.EDIT_USER_DESCRIPTION") : t("USERS.DESCRIPTION")}
           </p>
         </div>
@@ -695,7 +990,7 @@ const AddUser = () => {
                 : userProfile
             }
             alt={t("ADD_USER.PROFILE_PREVIEW")}
-            className={`h-20 w-20 rounded-full object-cover border ${
+            className={`h-20 w-20 rounded-full object-cover border-2 border-gray-200 shadow-sm ${
               bImgLoading ? "hidden" : ""
             }`}
             style={{ display: bImgLoading ? "none" : "block" }}
@@ -707,7 +1002,7 @@ const AddUser = () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             {t("ADD_USER.PROFILE_IMAGE")}
           </label>
           <input
@@ -716,16 +1011,21 @@ const AddUser = () => {
             accept="image/*"
             onChange={handleImageChange}
             className="hidden"
+            disabled={!isPersonalInfoEditable && id}
           />
           <label
             htmlFor="profile-image-upload"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-full cursor-pointer"
+            className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors ${
+              !isPersonalInfoEditable && id
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300"
+                : "text-white bg-blue-600 hover:bg-blue-700 border border-blue-600"
+            }`}
           >
-            <FaCamera className="text-lg" />
+            <FaCamera className="text-sm" />
             {t("COMMON.UPLOAD")}
           </label>
 
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-500 mt-2">
             {t("ADD_USER.IMAGE_UPLOAD_NOTE")}
           </p>
         </div>
@@ -733,189 +1033,305 @@ const AddUser = () => {
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {t("ADD_USER.PERSONAL_INFO")}
-              </h2>
-            </div>
+          {/* Personal Information Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <SectionHeader
+              title={t("ADD_USER.PERSONAL_INFO")}
+              isEditable={isPersonalInfoEditable}
+              onEditToggle={toggleSectionEdit}
+              sectionKey="personal"
+            />
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <TextInputWithIcon
-                  label={t("ADD_USER.FIRST_NAME")}
-                  id="firstName"
-                  name="firstName"
-                  value={oFormData.firstName}
-                  onChange={handleChange}
-                  placeholder={t("ADD_USER.ENTER_FIRST_NAME")}
-                  Icon={User}
-                  error={oErrors.firstName}
-                />
-                <TextInputWithIcon
-                  label={t("ADD_USER.LAST_NAME")}
-                  id="lastName"
-                  name="lastName"
-                  value={oFormData.lastName}
-                  onChange={handleChange}
-                  placeholder={t("ADD_USER.ENTER_LAST_NAME")}
-                  Icon={User}
-                  error={oErrors.lastName}
-                />
-                <SelectWithIcon
-                  label={t("ADD_USER.GENDER")}
-                  id="gender"
-                  name="gender"
-                  value={oFormData.gender}
-                  onChange={handleChange}
-                  options={genderOptions}
-                  Icon={Users}
-                  error={oErrors.gender}
-                  placeholder={t("ADD_USER.SELECT_GENDER")}
-                />
-                <TextInputWithIcon
-                  label={t("COMMON.EMAIL_ADDRESS")}
-                  id="email"
-                  name="email"
-                  value={oFormData.email}
-                  onChange={handleChange}
-                  placeholder={t("COMMON.ENTER_EMAIL_ADDRESS")}
-                  Icon={Mail}
-                  type="email"
-                  error={oErrors.email}
-                />
-                <TextInputWithIcon
-                  label={t("COMMON.PHONE_NUMBER")}
-                  id="phone"
-                  name="phone"
-                  value={oFormData.phone}
-                  onChange={handleChange}
-                  placeholder={t("COMMON.ENTER_PHONE_NUMBER")}
-                  Icon={Phone}
-                  type="tel"
-                  error={oErrors.phone}
-                />
+                {isPersonalInfoEditable ? (
+                  <TextInputWithIcon
+                    label={t("ADD_USER.FIRST_NAME")}
+                    id="firstName"
+                    name="firstName"
+                    value={oFormData.firstName}
+                    onChange={handleChange}
+                    placeholder={t("ADD_USER.ENTER_FIRST_NAME")}
+                    Icon={User}
+                    error={oErrors.firstName}
+                  />
+                ) : (
+                  <DataField
+                    label={t("ADD_USER.FIRST_NAME")}
+                    value={oFormData.firstName}
+                    placeholder={t("ADD_USER.ENTER_FIRST_NAME")}
+                    icon={User}
+                  />
+                )}
+
+                {isPersonalInfoEditable ? (
+                  <TextInputWithIcon
+                    label={t("ADD_USER.LAST_NAME")}
+                    id="lastName"
+                    name="lastName"
+                    value={oFormData.lastName}
+                    onChange={handleChange}
+                    placeholder={t("ADD_USER.ENTER_LAST_NAME")}
+                    Icon={User}
+                    error={oErrors.lastName}
+                  />
+                ) : (
+                  <DataField
+                    label={t("ADD_USER.LAST_NAME")}
+                    value={oFormData.lastName}
+                    placeholder={t("ADD_USER.ENTER_LAST_NAME")}
+                    icon={User}
+                  />
+                )}
+
+                {isPersonalInfoEditable ? (
+                  <SelectWithIcon
+                    label={t("ADD_USER.GENDER")}
+                    id="gender"
+                    name="gender"
+                    value={oFormData.gender}
+                    onChange={handleChange}
+                    options={genderOptions}
+                    Icon={Users}
+                    error={oErrors.gender}
+                    placeholder={t("ADD_USER.SELECT_GENDER")}
+                  />
+                ) : (
+                  <DataSelectField
+                    label={t("ADD_USER.GENDER")}
+                    value={oFormData.gender}
+                    options={genderOptions}
+                    placeholder={t("ADD_USER.SELECT_GENDER")}
+                    icon={Users}
+                  />
+                )}
+
+                {isPersonalInfoEditable ? (
+                  <TextInputWithIcon
+                    label={t("COMMON.EMAIL_ADDRESS")}
+                    id="email"
+                    name="email"
+                    value={oFormData.email}
+                    onChange={handleChange}
+                    placeholder={t("COMMON.ENTER_EMAIL_ADDRESS")}
+                    Icon={Mail}
+                    type="email"
+                    error={oErrors.email}
+                  />
+                ) : (
+                  <DataField
+                    label={t("COMMON.EMAIL_ADDRESS")}
+                    value={oFormData.email}
+                    placeholder={t("COMMON.ENTER_EMAIL_ADDRESS")}
+                    icon={Mail}
+                  />
+                )}
+
+                {/* Phone Input with International Support */}
+                {isPersonalInfoEditable ? (
+                  <PhoneInputWithIcon
+                    label={t("COMMON.PHONE_NUMBER")}
+                    id="phone"
+                    name="phone"
+                    value={oFormData.phone}
+                    onChange={handlePhoneChange} // Use the custom phone change handler
+                    placeholder={t("COMMON.ENTER_PHONE_NUMBER")}
+                    Icon={Phone}
+                    error={oErrors.phone}
+                    defaultCountry="IN"
+                  />
+                ) : (
+                  <DataField
+                    label={t("COMMON.PHONE_NUMBER")}
+                    value={oFormData.phone}
+                    placeholder={t("COMMON.ENTER_PHONE_NUMBER")}
+                    icon={Phone}
+                  />
+                )}
               </div>
             </div>
+            <SectionFooter
+              isEditable={isPersonalInfoEditable}
+              onEditToggle={toggleSectionEdit}
+              onUpdate={handleSectionUpdate}
+              sectionKey="personal"
+            />
           </div>
 
-          {/* Account Security Section - Conditionally rendered */}
           {shouldShowAccountSecuritySection && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {t("ADD_USER.ACCOUNT_SECURITY")}
-                </h2>
-              </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <SectionHeader
+                title={t("ADD_USER.ACCOUNT_SECURITY")}
+                isEditable={isAccountSecurityEditable}
+                onEditToggle={toggleSectionEdit}
+                sectionKey="account"
+              />
               <div className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Role Field - Conditionally rendered */}
-                  {(!id || hasEditRolePermission) && (
-                    <SelectWithIcon
-                      label={t("ADD_USER.USER_ROLE")}
-                      id="role"
-                      name="role"
-                      value={oFormData.role}
-                      onChange={handleChange}
-                      options={roles.map((r) => ({
-                        value: r.RoleID,
-                        label: r.RoleName,
-                      }))}
-                      Icon={Building}
-                      disabled={rolesLoading || (id && !hasEditRolePermission)}
-                      error={oErrors.role || rolesError}
-                      placeholder={
-                        rolesLoading
-                          ? t("COMMON.LOADING")
-                          : (id && !hasEditRolePermission)
-                          ? t("COMMON.NO_PERMISSION")
-                          : t("ADD_USER.SELECT_ROLE")
-                      }
-                      searchable
-                      searchPlaceholder={t("COMMON.SEARCH_ROLE") || "Search role"}
-                      onInputChange={(inputValue) => {
-                        if (!id || hasEditRolePermission) {
-                          dispatch(
-                            fetchResource({
-                              key: "roles",
-                              params: {
-                                searchText: inputValue,
-                              },
-                            })
-                          );
+                  {(!id || hasEditRolePermission) &&
+                    (isAccountSecurityEditable ? (
+                      <SelectWithIcon
+                        label={t("ADD_USER.USER_ROLE")}
+                        id="role"
+                        name="role"
+                        value={oFormData.role}
+                        onChange={handleChange}
+                        options={roles.map((r) => ({
+                          value: r.RoleID,
+                          label: r.RoleName,
+                        }))}
+                        Icon={Building}
+                        disabled={
+                          rolesLoading || (id && !hasEditRolePermission)
                         }
-                      }}
-                    />
-                  )}
+                        error={oErrors.role || rolesError}
+                        placeholder={
+                          rolesLoading
+                            ? t("COMMON.LOADING")
+                            : id && !hasEditRolePermission
+                            ? t("COMMON.NO_PERMISSION")
+                            : t("ADD_USER.SELECT_ROLE")
+                        }
+                        searchable
+                        searchPlaceholder={
+                          t("COMMON.SEARCH_ROLE") || "Search role"
+                        }
+                        onInputChange={(inputValue) => {
+                          if (
+                            (!id || hasEditRolePermission) &&
+                            isAccountSecurityEditable
+                          ) {
+                            dispatch(
+                              fetchResource({
+                                key: "roles",
+                                params: {
+                                  searchText: inputValue,
+                                },
+                              })
+                            );
+                          }
+                        }}
+                      />
+                    ) : (
+                      <DataSelectField
+                        label={t("ADD_USER.USER_ROLE")}
+                        value={oFormData.role}
+                        options={roles.map((r) => ({
+                          value: r.RoleID,
+                          label: r.RoleName,
+                        }))}
+                        placeholder={t("ADD_USER.SELECT_ROLE")}
+                        icon={Building}
+                      />
+                    ))}
 
                   {/* Stores Field - Conditionally rendered */}
-                  {(!id || hasEditStorePermission) && (
-                    <SelectWithIcon
-                      label={t("ADD_USER.ASSIGNED_STORES")}
-                      id="stores"
-                      name="stores"
-                      value={oFormData.stores}
-                      onChange={handleChange}
-                      options={stores.map((s) => ({
-                        value: s.StoreID,
-                        label: s.StoreName,
-                      }))}
-                      Icon={Store}
-                      disabled={storesLoading || (id && !hasEditStorePermission)}
-                      error={oErrors.stores || storesError}
-                      placeholder={
-                        storesLoading
-                          ? t("COMMON.LOADING")
-                          : (id && !hasEditStorePermission)
-                          ? t("COMMON.NO_PERMISSION")
-                          : t("ADD_USER.SELECT_STORES")
-                      }
-                      multiple={true}
-                      searchable
-                      searchPlaceholder={t("COMMON.SEARCH_STORES") || "Search stores"}
-                      onInputChange={(inputValue) => {
-                        if (!id || hasEditStorePermission) {
-                          dispatch(
-                            fetchResource({
-                              key: "stores",
-                              params: {
-                                searchText: inputValue,
-                              },
-                            })
-                          );
+                  {(!id || hasEditStorePermission) &&
+                    (isAccountSecurityEditable ? (
+                      <SelectWithIcon
+                        label={t("ADD_USER.ASSIGNED_STORES")}
+                        id="stores"
+                        name="stores"
+                        value={oFormData.stores}
+                        onChange={handleChange}
+                        options={stores.map((s) => ({
+                          value: s.StoreID,
+                          label: s.StoreName,
+                        }))}
+                        Icon={Store}
+                        disabled={
+                          storesLoading || (id && !hasEditStorePermission)
                         }
-                      }}
-                    />
-                  )}
+                        error={oErrors.stores || storesError}
+                        placeholder={
+                          storesLoading
+                            ? t("COMMON.LOADING")
+                            : id && !hasEditStorePermission
+                            ? t("COMMON.NO_PERMISSION")
+                            : t("ADD_USER.SELECT_STORES")
+                        }
+                        multiple={true}
+                        searchable
+                        searchPlaceholder={
+                          t("COMMON.SEARCH_STORES") || "Search stores"
+                        }
+                        onInputChange={(inputValue) => {
+                          if (
+                            (!id || hasEditStorePermission) &&
+                            isAccountSecurityEditable
+                          ) {
+                            dispatch(
+                              fetchResource({
+                                key: "stores",
+                                params: {
+                                  searchText: inputValue,
+                                },
+                              })
+                            );
+                          }
+                        }}
+                      />
+                    ) : (
+                      <DataSelectField
+                        label={t("ADD_USER.ASSIGNED_STORES")}
+                        value={oFormData.stores}
+                        options={stores.map((s) => ({
+                          value: s.StoreID,
+                          label: s.StoreName,
+                        }))}
+                        multiple={true}
+                        placeholder={t("ADD_USER.SELECT_STORES")}
+                        icon={Store}
+                      />
+                    ))}
 
-                  {/* Password Section - Only show for new users */}
+                  {/* Password Section - Show ONLY for new users */}
                   {!id && (
                     <div className="col-span-1 md:col-span-2">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <TextInputWithIcon
-                          label={t("COMMON.PASSWORD")}
-                          id="password"
-                          name="password"
-                          value={oFormData.password}
-                          onChange={handleChange}
-                          placeholder={t("COMMON.ENTER_PASSWORD")}
-                          Icon={Lock}
-                          type="password"
-                          error={oErrors.password}
-                        />
-                        <TextInputWithIcon
-                          label={t("COMMON.CONFIRM_PASSWORD")}
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          value={oFormData.confirmPassword}
-                          onChange={handleChange}
-                          placeholder={t("COMMON.CONFIRM_PASSWORD")}
-                          Icon={Lock}
-                          type="password"
-                          error={oErrors.confirmPassword}
-                        />
+                        {isAccountSecurityEditable ? (
+                          <TextInputWithIcon
+                            label={t("COMMON.PASSWORD")}
+                            id="password"
+                            name="password"
+                            value={oFormData.password}
+                            onChange={handleChange}
+                            placeholder={t("COMMON.ENTER_PASSWORD")}
+                            Icon={Lock}
+                            type="password"
+                            error={oErrors.password}
+                          />
+                        ) : (
+                          <DataPasswordField
+                            label={t("COMMON.PASSWORD")}
+                            placeholder={t("COMMON.ENTER_PASSWORD")}
+                            icon={Lock}
+                          />
+                        )}
+
+                        {isAccountSecurityEditable ? (
+                          <TextInputWithIcon
+                            label={t("COMMON.CONFIRM_PASSWORD")}
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            value={oFormData.confirmPassword}
+                            onChange={handleChange}
+                            placeholder={t("COMMON.CONFIRM_PASSWORD")}
+                            Icon={Lock}
+                            type="password"
+                            error={oErrors.confirmPassword}
+                          />
+                        ) : (
+                          <DataPasswordField
+                            label={t("COMMON.CONFIRM_PASSWORD")}
+                            placeholder={t("COMMON.CONFIRM_PASSWORD")}
+                            icon={Lock}
+                          />
+                        )}
                       </div>
 
-                      {typeof oFormData.password === "string" &&
+                      {isAccountSecurityEditable &&
+                        typeof oFormData.password === "string" &&
                         oFormData.password.length > 0 && (
                           <div
                             className="col-span-1 md:col-span-2"
@@ -976,7 +1392,7 @@ const AddUser = () => {
                             {passwordStrength !== "strong" && (
                               <div
                                 style={{
-                                  color: custom-bg,
+                                  color: "#6b7280",
                                   fontSize: 12,
                                   marginTop: 2,
                                 }}
@@ -990,28 +1406,45 @@ const AddUser = () => {
                   )}
                 </div>
               </div>
+              <SectionFooter
+                isEditable={isAccountSecurityEditable}
+                onEditToggle={toggleSectionEdit}
+                onUpdate={handleSectionUpdate}
+                sectionKey="account"
+              />
             </div>
           )}
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {t("ADD_USER.ADDRESS_INFO")}
-              </h2>
-            </div>
+          {/* Address Information Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <SectionHeader
+              title={t("ADD_USER.ADDRESS_INFO")}
+              isEditable={isAddressInfoEditable}
+              onEditToggle={toggleSectionEdit}
+              sectionKey="address"
+            />
             <div className="p-6 space-y-6">
-              <TextInputWithIcon
-                label={t("COMMON.STREET_ADDRESS")}
-                id="streetAddress"
-                name="streetAddress"
-                value={oFormData.streetAddress}
-                onChange={handleChange}
-                placeholder={t("COMMON.ENTER_STREET_ADDRESS")}
-                Icon={MapPin}
-                error={oErrors.streetAddress}
-              />
+              {isAddressInfoEditable ? (
+                <TextInputWithIcon
+                  label={t("COMMON.STREET_ADDRESS")}
+                  id="streetAddress"
+                  name="streetAddress"
+                  value={oFormData.streetAddress}
+                  onChange={handleChange}
+                  placeholder={t("COMMON.ENTER_STREET_ADDRESS")}
+                  Icon={MapPin}
+                  error={oErrors.streetAddress}
+                />
+              ) : (
+                <DataField
+                  label={t("COMMON.STREET_ADDRESS")}
+                  value={oFormData.streetAddress}
+                  placeholder={t("COMMON.ENTER_STREET_ADDRESS")}
+                  icon={MapPin}
+                />
+              )}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
+                {isAddressInfoEditable ? (
                   <SelectWithIcon
                     label={t("COMMON.COUNTRY")}
                     id="country"
@@ -1022,7 +1455,7 @@ const AddUser = () => {
                       value: c.CountryID,
                       label: c.CountryName,
                     }))}
-                    Icon={Building}
+                    Icon={Globe}
                     error={oErrors.country || countriesError}
                     placeholder={
                       countriesLoading
@@ -1031,8 +1464,20 @@ const AddUser = () => {
                     }
                     disabled={countriesLoading}
                   />
-                </div>
-                <div>
+                ) : (
+                  <DataSelectField
+                    label={t("COMMON.COUNTRY")}
+                    value={oFormData.country}
+                    options={countries.map((c) => ({
+                      value: c.CountryID,
+                      label: c.CountryName,
+                    }))}
+                    placeholder={t("COMMON.SELECT_COUNTRY")}
+                    icon={Globe}
+                  />
+                )}
+
+                {isAddressInfoEditable ? (
                   <SelectWithIcon
                     label={t("COMMON.STATE")}
                     id="state"
@@ -1043,7 +1488,7 @@ const AddUser = () => {
                       value: s.StateID,
                       label: s.StateName,
                     }))}
-                    Icon={Building}
+                    Icon={Navigation}
                     error={oErrors.state || statesError}
                     placeholder={
                       statesLoading
@@ -1052,8 +1497,20 @@ const AddUser = () => {
                     }
                     disabled={statesLoading || !oFormData.country}
                   />
-                </div>
-                <div>
+                ) : (
+                  <DataSelectField
+                    label={t("COMMON.STATE")}
+                    value={oFormData.state}
+                    options={states.map((s) => ({
+                      value: s.StateID,
+                      label: s.StateName,
+                    }))}
+                    placeholder={t("COMMON.SELECT_STATE")}
+                    icon={Navigation}
+                  />
+                )}
+
+                {isAddressInfoEditable ? (
                   <SelectWithIcon
                     label={t("COMMON.CITY")}
                     id="city"
@@ -1073,30 +1530,58 @@ const AddUser = () => {
                     }
                     disabled={citiesLoading || !oFormData.state}
                   />
-                </div>
-                <TextInputWithIcon
-                  label={t("COMMON.PINCODE")}
-                  id="pincode"
-                  name="pincode"
-                  value={oFormData.pincode}
-                  onChange={handleChange}
-                  placeholder={t("ADD_USER.ENTER_PINCODE")}
-                  Icon={MapPin}
-                  error={oErrors.pincode}
-                />
+                ) : (
+                  <DataSelectField
+                    label={t("COMMON.CITY")}
+                    value={oFormData.city}
+                    options={cities.map((c) => ({
+                      value: c.CityID,
+                      label: c.CityName,
+                    }))}
+                    placeholder={t("COMMON.SELECT_CITY")}
+                    icon={Building}
+                  />
+                )}
+
+                {isAddressInfoEditable ? (
+                  <TextInputWithIcon
+                    label={t("COMMON.PINCODE")}
+                    id="pincode"
+                    name="pincode"
+                    value={oFormData.pincode}
+                    onChange={handleChange}
+                    placeholder={t("ADD_USER.ENTER_PINCODE")}
+                    Icon={Hash}
+                    error={oErrors.pincode}
+                  />
+                ) : (
+                  <DataField
+                    label={t("COMMON.PINCODE")}
+                    value={oFormData.pincode}
+                    placeholder={t("ADD_USER.ENTER_PINCODE")}
+                    icon={Hash}
+                  />
+                )}
               </div>
             </div>
+            <SectionFooter
+              isEditable={isAddressInfoEditable}
+              onEditToggle={toggleSectionEdit}
+              onUpdate={handleSectionUpdate}
+              sectionKey="address"
+            />
           </div>
         </div>
       </form>
 
-      {/* Floating Footer */}
-      <FloatingFooter
-        onCancel={handleClose}
-        onSubmit={handleSubmit}
-        isSubmitting={bSubmitting}
-        isEditMode={!!id}
-      />
+      {!id && (
+        <FloatingFooter
+          onCancel={handleClose}
+          onSubmit={handleSubmit}
+          isSubmitting={bSubmitting}
+          isEditMode={!!id}
+        />
+      )}
     </div>
   );
 };
