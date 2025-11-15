@@ -534,8 +534,7 @@ const Notifications = () => {
                     <div className="w-full h-full flex flex-col justify-center items-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                       <BellOff className="h-12 w-12 text-gray-400 mb-4" />
                       <p className="text-gray-400 italic mb-4">
-                        {t("PUSH_NOTIFICATION.SILENT_NO_PREVIEW") || 
-                         "Silent notifications work in the background and don't have a visual preview"}
+                        {t("PUSH_NOTIFICATION.SILENT_NO_PREVIEW")}
                       </p>
                       
                       {/* Preview of the data that will be sent */}

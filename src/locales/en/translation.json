@@ -391,7 +391,7 @@
   },
   "PAYMENTS": {
     "HEADING": "Payments",
-    "SEARCH_PLACEHOLDER": "Search by Payment Ref ID, OrderRef ID",
+    "SEARCH_PLACEHOLDER": "Search by Payment Reference ID, Order Reference ID",
     "METHOD_NOT_SPECIFIED": "Payment Method Not Specified",
     "DEFAULT_DESCRIPTION": "Payment information will be updated soon",
     "PAYMENT_DETAILS": "Payment Details",
