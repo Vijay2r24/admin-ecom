@@ -6,6 +6,9 @@ import {
   MapPin,
   Bell,
   Clock,
+  BellOff,
+  Code,
+  FileText,
 } from "lucide-react";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import TextAreaWithIcon from "../components/TextAreaWithIcon";
@@ -24,15 +27,19 @@ const Notifications = () => {
   const navigate = useNavigate();
   const { setTitle, setBackButton } = useTitle();
 
+  const [activeTab, setActiveTab] = useState("notification");
   const [oPushFormData, setPushFormData] = useState({
     title: "",
     message: "",
     image: null,
+    componentName: "",
+    jsonData: "{\n  \"key\": \"value\"\n}",
   });
   const [nPreviewUrl, setPreviewUrl] = useState(null);
   const [pushError, setPushError] = useState(null);
   const [pushSuccess, setPushSuccess] = useState(null);
   const [pushValidationErrors, setPushValidationErrors] = useState({});
+  const [jsonError, setJsonError] = useState("");
 
   useEffect(() => {
     setTitle(t("NOTIFICATIONS.TITLE"));
@@ -53,6 +60,11 @@ const Notifications = () => {
       ...prev,
       [name]: undefined,
     }));
+
+    // Clear JSON error when user types
+    if (name === "jsonData") {
+      setJsonError("");
+    }
   };
 
   const handleImageChange = (e) => {
@@ -74,18 +86,70 @@ const Notifications = () => {
     setPreviewUrl(null);
   };
 
+  const validateJSON = (jsonString) => {
+    try {
+      if (jsonString.trim()) {
+        JSON.parse(jsonString);
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
   const validatePushForm = () => {
     const errors = {};
-    if (!oPushFormData.title || !oPushFormData.title.trim()) {
-      errors.title =
-        t("PUSH_NOTIFICATION.TITLE_LABEL");
+    setJsonError("");
+    
+    if (activeTab === "notification") {
+      if (!oPushFormData.title || !oPushFormData.title.trim()) {
+        errors.title = t("PUSH_NOTIFICATION.TITLE_LABEL");
+      }
+      if (!oPushFormData.message || !oPushFormData.message.trim()) {
+        errors.message = t("PUSH_NOTIFICATION.MESSAGE_LABEL");
+      }
+    } else {
+      // Silent notification validation
+      if (!oPushFormData.componentName || !oPushFormData.componentName.trim()) {
+        errors.componentName = t("PUSH_NOTIFICATION.COMPONENT_NAME_REQUIRED");
+      }
+      if (oPushFormData.jsonData && !validateJSON(oPushFormData.jsonData)) {
+        setJsonError(t("PUSH_NOTIFICATION.INVALID_JSON"));
+      }
     }
-    if (!oPushFormData.message || !oPushFormData.message.trim()) {
-      errors.message =
-        t("PUSH_NOTIFICATION.MESSAGE_LABEL");
-    }
+    
     setPushValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    return Object.keys(errors).length === 0 && !jsonError;
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    // Reset form when switching tabs
+    setPushFormData({
+      title: "",
+      message: "",
+      image: null,
+      componentName: "",
+      jsonData: "{\n  \"key\": \"value\"\n}",
+    });
+    setPreviewUrl(null);
+    setPushError(null);
+    setPushSuccess(null);
+    setPushValidationErrors({});
+    setJsonError("");
+  };
+
+  const formatJSON = () => {
+    try {
+      const parsed = JSON.parse(oPushFormData.jsonData);
+      setPushFormData(prev => ({
+        ...prev,
+        jsonData: JSON.stringify(parsed, null, 2)
+      }));
+      setJsonError("");
+    } catch (error) {
+      setJsonError(t("PUSH_NOTIFICATION.INVALID_JSON"));
+    }
   };
 
   const handlePushSubmit = async (e) => {
@@ -93,12 +157,36 @@ const Notifications = () => {
     setPushError(null);
     setPushSuccess(null);
     if (!validatePushForm()) return;
+    
     const token = localStorage.getItem("token");
     const data = new FormData();
-    data.append("title", oPushFormData.title);
-    data.append("body", oPushFormData.message.trim());
-    if (oPushFormData.image) {
-      data.append("NotificationImage", oPushFormData.image);
+    
+    if (activeTab === "notification") {
+      data.append("title", oPushFormData.title);
+      data.append("body", oPushFormData.message.trim());
+      if (oPushFormData.image) {
+        data.append("NotificationImage", oPushFormData.image);
+      }
+      data.append("type", "notification");
+    } else {
+      // Silent notification
+      let jsonPayload = {};
+      if (oPushFormData.jsonData.trim()) {
+        try {
+          jsonPayload = JSON.parse(oPushFormData.jsonData);
+        } catch (error) {
+          showEmsg(t("PUSH_NOTIFICATION.INVALID_JSON"), STATUS.ERROR);
+          return;
+        }
+      }
+      
+      const silentNotificationData = {
+        component: oPushFormData.componentName.trim(),
+        ...jsonPayload
+      };
+      
+      data.append("data", JSON.stringify(silentNotificationData));
+      data.append("type", "silent");
     }
 
     try {
@@ -109,6 +197,8 @@ const Notifications = () => {
           title: "",
           message: "",
           image: null,
+          componentName: "",
+          jsonData: "{\n  \"key\": \"value\"\n}",
         });
         setPreviewUrl(null);
       } else {
@@ -119,6 +209,38 @@ const Notifications = () => {
       showEmsg(error?.response?.data?.message);
       setPushError(error?.response?.data?.message);
     }
+  };
+
+  // Sample JSON templates
+  const jsonTemplates = {
+    basic: `{
+  "action": "refresh",
+  "timestamp": "${new Date().toISOString()}"
+}`,
+    navigation: `{
+  "screen": "Profile",
+  "params": {
+    "userId": "12345",
+    "tab": "settings"
+  }
+}`,
+    dataUpdate: `{
+  "type": "data_update",
+  "entity": "user",
+  "id": "12345",
+  "changes": {
+    "name": "John Doe",
+    "status": "active"
+  }
+}`
+  };
+
+  const applyJsonTemplate = (templateKey) => {
+    setPushFormData(prev => ({
+      ...prev,
+      jsonData: jsonTemplates[templateKey]
+    }));
+    setJsonError("");
   };
 
   return (
@@ -139,12 +261,43 @@ const Notifications = () => {
           )}
         </div>
 
-        {/* Push Notification Form */}
+        {/* Notification Type Tabs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="border-b border-gray-200">
+            <nav className="flex -mb-px">
+              <button
+                type="button"
+                onClick={() => handleTabChange("notification")}
+                className={`flex-1 py-4 px-6 text-center font-medium text-sm border-b-2 transition-colors duration-200 flex items-center justify-center gap-2 ${
+                  activeTab === "notification"
+                    ? "border-[#5B45E0] text-[#5B45E0] bg-purple-50"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <Bell className="h-4 w-4" />
+                {t("PUSH_NOTIFICATION.NOTIFICATION_TAB") || "Notification"}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange("silent")}
+                className={`flex-1 py-4 px-6 text-center font-medium text-sm border-b-2 transition-colors duration-200 flex items-center justify-center gap-2 ${
+                  activeTab === "silent"
+                    ? "border-[#5B45E0] text-[#5B45E0] bg-purple-50"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <BellOff className="h-4 w-4" />
+                {t("PUSH_NOTIFICATION.SILENT_NOTIFICATION_TAB") || "Silent Notification"}
+              </button>
+            </nav>
+          </div>
+
           <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <Send className="h-5 w-5 text-custom-bg" />
-              {t("PUSH_NOTIFICATION.DETAILS_TITLE")}
+              {activeTab === "notification" 
+                ? t("PUSH_NOTIFICATION.DETAILS_TITLE")
+                : t("PUSH_NOTIFICATION.SILENT_DETAILS_TITLE") || "Silent Notification Details"}
             </h2>
           </div>
 
@@ -153,81 +306,178 @@ const Notifications = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left Column - Form Inputs (2/3 width on large screens) */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Title and Message in separate rows */}
-                <div className="space-y-6">
-                  <TextInputWithIcon
-                    label={t("PUSH_NOTIFICATION.TITLE_LABEL")}
-                    id="title"
-                    name="title"
-                    value={oPushFormData.title}
-                    onChange={handlePushChange}
-                    placeholder={t("PUSH_NOTIFICATION.TITLE_PLACEHOLDER")}
-                    Icon={Send}
-                    error={pushValidationErrors.title}
-                    required
-                  />
+                {activeTab === "notification" ? (
+                  /* Regular Notification Form */
+                  <>
+                    {/* Title and Message in separate rows */}
+                    <div className="space-y-6">
+                      <TextInputWithIcon
+                        label={t("PUSH_NOTIFICATION.TITLE_LABEL")}
+                        id="title"
+                        name="title"
+                        value={oPushFormData.title}
+                        onChange={handlePushChange}
+                        placeholder={t("PUSH_NOTIFICATION.TITLE_PLACEHOLDER")}
+                        Icon={Send}
+                        error={pushValidationErrors.title}
+                        required
+                      />
 
-                  <TextAreaWithIcon
-                    label={t("PUSH_NOTIFICATION.MESSAGE_LABEL")}
-                    name="message"
-                    value={oPushFormData.message}
-                    onChange={handlePushChange}
-                    placeholder={t("PUSH_NOTIFICATION.MESSAGE_PLACEHOLDER")}
-                    icon={MapPin}
-                    error={pushValidationErrors.message}
-                    required
-                  />
-                </div>
+                      <TextAreaWithIcon
+                        label={t("PUSH_NOTIFICATION.MESSAGE_LABEL")}
+                        name="message"
+                        value={oPushFormData.message}
+                        onChange={handlePushChange}
+                        placeholder={t("PUSH_NOTIFICATION.MESSAGE_PLACEHOLDER")}
+                        icon={MapPin}
+                        error={pushValidationErrors.message}
+                        required
+                      />
+                    </div>
 
-                {/* Image Upload Section */}
-                <div className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {t("PUSH_NOTIFICATION.IMAGE_LABEL")}
-                  </label>
-                  <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-[#5B45E0] transition-colors duration-200 min-h-[200px]">
-                    <div className="space-y-3 text-center flex flex-col justify-center">
-                      {nPreviewUrl ? (
-                        <div className="relative inline-block">
-                          <img
-                            src={nPreviewUrl}
-                            alt={t("PUSH_NOTIFICATION.IMAGE_PREVIEW_ALT")}
-                            className="mx-auto h-32 w-auto object-contain rounded-lg shadow-sm"
-                          />
+                    {/* Image Upload Section */}
+                    <div className="space-y-4">
+                      <label className="block text-sm font-medium text-gray-700">
+                        {t("PUSH_NOTIFICATION.IMAGE_LABEL")}
+                      </label>
+                      <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-[#5B45E0] transition-colors duration-200 min-h-[200px]">
+                        <div className="space-y-3 text-center flex flex-col justify-center">
+                          {nPreviewUrl ? (
+                            <div className="relative inline-block">
+                              <img
+                                src={nPreviewUrl}
+                                alt={t("PUSH_NOTIFICATION.IMAGE_PREVIEW_ALT")}
+                                className="mx-auto h-32 w-auto object-contain rounded-lg shadow-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={removeImage}
+                                className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors duration-200 shadow-lg"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                              <div className="flex flex-col sm:flex-row text-sm text-gray-600 justify-center items-center gap-1">
+                                <label
+                                  htmlFor="image-upload"
+                                  className="relative cursor-pointer bg-white rounded-md font-medium text-[#5B45E0] hover:text-[#4c39c7] focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[#5B45E0] transition-colors duration-200"
+                                >
+                                  <span>{t("COMMON.UPLOAD_A_FILE")}</span>
+                                  <input
+                                    id="image-upload"
+                                    name="image"
+                                    type="file"
+                                    className="sr-only"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                  />
+                                </label>
+                                <p className="text-gray-500">
+                                  {t("COMMON.OR_DRAG_AND_DROP")}
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* Silent Notification Form */
+                  <div className="space-y-6">
+                    {/* Component Name */}
+                    <TextInputWithIcon
+                      label={t("PUSH_NOTIFICATION.COMPONENT_NAME_LABEL") || "Component Name"}
+                      id="componentName"
+                      name="componentName"
+                      value={oPushFormData.componentName}
+                      onChange={handlePushChange}
+                      placeholder={t("PUSH_NOTIFICATION.COMPONENT_NAME_PLACEHOLDER") || "e.g., HomeScreen, Profile, Settings"}
+                      Icon={Code}
+                      error={pushValidationErrors.componentName}
+                      required
+                    />
+
+                    {/* JSON Data */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-sm font-medium text-gray-700">
+                          {t("PUSH_NOTIFICATION.JSON_DATA_LABEL") || "JSON Data"}
+                        </label>
+                        <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={removeImage}
-                            className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors duration-200 shadow-lg"
+                            onClick={formatJSON}
+                            className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200"
                           >
-                            <X className="h-4 w-4" />
+                            {t("PUSH_NOTIFICATION.FORMAT_JSON") || "Format JSON"}
                           </button>
                         </div>
-                      ) : (
-                        <>
-                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                          <div className="flex flex-col sm:flex-row text-sm text-gray-600 justify-center items-center gap-1">
-                            <label
-                              htmlFor="image-upload"
-                              className="relative cursor-pointer bg-white rounded-md font-medium text-[#5B45E0] hover:text-[#4c39c7] focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[#5B45E0] transition-colors duration-200"
-                            >
-                              <span>{t("COMMON.UPLOAD_A_FILE")}</span>
-                              <input
-                                id="image-upload"
-                                name="image"
-                                type="file"
-                                className="sr-only"
-                                accept="image/*"
-                                onChange={handleImageChange}
-                              />
-                            </label>
-                            <p className="text-gray-500">
-                              {t("COMMON.OR_DRAG_AND_DROP")}
-                            </p>
-                          </div>
-                        </>
+                      </div>
+
+                      {/* JSON Template Buttons */}
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        <span className="text-xs text-gray-500 mr-2">Templates:</span>
+                        <button
+                          type="button"
+                          onClick={() => applyJsonTemplate('basic')}
+                          className="text-xs px-2 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded border border-blue-200 transition-colors duration-200"
+                        >
+                          Basic
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => applyJsonTemplate('navigation')}
+                          className="text-xs px-2 py-1 bg-green-50 text-green-600 hover:bg-green-100 rounded border border-green-200 transition-colors duration-200"
+                        >
+                          Navigation
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => applyJsonTemplate('dataUpdate')}
+                          className="text-xs px-2 py-1 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded border border-purple-200 transition-colors duration-200"
+                        >
+                          Data Update
+                        </button>
+                      </div>
+
+                      <textarea
+                        name="jsonData"
+                        value={oPushFormData.jsonData}
+                        onChange={handlePushChange}
+                        placeholder={t("PUSH_NOTIFICATION.JSON_DATA_PLACEHOLDER") || "Enter JSON data..."}
+                        className={`w-full h-64 font-mono text-sm border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#5B45E0] focus:border-transparent transition-colors duration-200 ${
+                          jsonError ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        }`}
+                        style={{ 
+                          fontFamily: 'monospace',
+                          lineHeight: '1.5',
+                          resize: 'vertical'
+                        }}
+                      />
+                      {jsonError && (
+                        <p className="text-red-600 text-sm flex items-center gap-1">
+                          <FileText className="h-4 w-4" />
+                          {jsonError}
+                        </p>
                       )}
                     </div>
+
+                    {/* Help Section */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-blue-800 mb-2">
+                        {t("PUSH_NOTIFICATION.SILENT_NOTIFICATION_HELP_TITLE") || "About Silent Notifications"}
+                      </h4>
+                      <p className="text-sm text-blue-700">
+                        {t("PUSH_NOTIFICATION.SILENT_NOTIFICATION_HELP") || 
+                         "Silent notifications don't display a message to users. They're used to send data payloads to the app in the background. The component name specifies which part of your app should handle the data."}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Right Column - Mobile Notification Preview (1/3 width on large screens) */}
@@ -236,45 +486,79 @@ const Notifications = () => {
                   {t("PUSH_NOTIFICATION.PREVIEW_TITLE")}
                 </label>
                 <div className="flex justify-center items-center h-300">
-                  {(!oPushFormData.title && !oPushFormData.message && !nPreviewUrl) ? (
-                    <div className="w-full h-full flex flex-col justify-center items-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                      <Bell className="h-12 w-12 text-gray-400 mb-4" />
-                      <p className="text-gray-400 italic">
-                        {t("PUSH_NOTIFICATION.NO_PREVIEW")}
-                      </p>
-                    </div>
+                  {activeTab === "notification" ? (
+                    (!oPushFormData.title && !oPushFormData.message && !nPreviewUrl) ? (
+                      <div className="w-full h-full flex flex-col justify-center items-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                        <Bell className="h-12 w-12 text-gray-400 mb-4" />
+                        <p className="text-gray-400 italic">
+                          {t("PUSH_NOTIFICATION.NO_PREVIEW")}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="w-full max-w-xs bg-[#1E1E1E] text-white rounded-xl p-3 shadow-lg border border-gray-700">
+                        {/* Header */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="bg-[#5B45E0] p-1 rounded-md">
+                            <Bell className="h-4 w-4 text-white" />
+                          </div>
+                          <span className="font-medium text-sm">
+                            {t("PUSH_NOTIFICATION.APP_NAME")}
+                          </span>
+                          <div className="ml-auto flex items-center text-xs text-gray-400 gap-1">
+                            <Clock className="h-3 w-3" /> {t("PUSH_NOTIFICATION.TIME_AGO")}
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold">
+                            {oPushFormData.title || t("PUSH_NOTIFICATION.TITLE")}
+                          </p>
+                          <p className="text-xs text-gray-300">
+                            {oPushFormData.message || t("PUSH_NOTIFICATION.MESSAGE")}
+                          </p>
+                        </div>
+
+                        {/* Image if present */}
+                        {nPreviewUrl && (
+                          <img
+                            src={nPreviewUrl}
+                            alt="Notification"
+                            className="mt-2 w-full rounded-lg object-cover max-h-32 border border-gray-600"
+                          />
+                        )}
+                      </div>
+                    )
                   ) : (
-                    <div className="w-full max-w-xs bg-[#1E1E1E] text-white rounded-xl p-3 shadow-lg border border-gray-700">
-                      {/* Header */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="bg-[#5B45E0] p-1 rounded-md">
-                          <Bell className="h-4 w-4 text-white" />
+                    /* Silent Notification Preview */
+                    <div className="w-full h-full flex flex-col justify-center items-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                      <BellOff className="h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-gray-400 italic mb-4">
+                        {t("PUSH_NOTIFICATION.SILENT_NO_PREVIEW")}
+                      </p>
+                      
+                      {/* Preview of the data that will be sent */}
+                      {(oPushFormData.componentName || oPushFormData.jsonData) && (
+                        <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200 max-w-full w-full">
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">
+                            Data to be sent:
+                          </h5>
+                          <div className="text-left">
+                            {oPushFormData.componentName && (
+                              <p className="text-xs text-gray-600 mb-1">
+                                <span className="font-medium">Component:</span> {oPushFormData.componentName}
+                              </p>
+                            )}
+                            {oPushFormData.jsonData && oPushFormData.jsonData.trim() !== "{\n  \"key\": \"value\"\n}" && (
+                              <div className="mt-2">
+                                <p className="text-xs font-medium text-gray-700 mb-1">JSON Data:</p>
+                                <pre className="text-xs text-gray-600 bg-gray-50 p-2 rounded border overflow-x-auto">
+                                  {oPushFormData.jsonData}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <span className="font-medium text-sm">
-                          {t("PUSH_NOTIFICATION.APP_NAME")}
-                        </span>
-                        <div className="ml-auto flex items-center text-xs text-gray-400 gap-1">
-                          <Clock className="h-3 w-3" /> {t("PUSH_NOTIFICATION.TIME_AGO")}
-                        </div>
-                      </div>
-
-                      {/* Content */}
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold">
-                          {oPushFormData.title || t("PUSH_NOTIFICATION.TITLE")}
-                        </p>
-                        <p className="text-xs text-gray-300">
-                          {oPushFormData.message || t("PUSH_NOTIFICATION.MESSAGE")}
-                        </p>
-                      </div>
-
-                      {/* Image if present */}
-                      {nPreviewUrl && (
-                        <img
-                          src={nPreviewUrl}
-                          alt="Notification"
-                          className="mt-2 w-full rounded-lg object-cover max-h-32 border border-gray-600"
-                        />
                       )}
                     </div>
                   )}
@@ -298,7 +582,9 @@ const Notifications = () => {
             className="btn-primary order-1 sm:order-2 flex items-center justify-center"
           >
             <Send className="h-4 w-4 mr-2" />
-            {t("BUTTONS.SEND_NOTIFICATION")}
+            {activeTab === "notification" 
+              ? t("BUTTONS.SEND_NOTIFICATION")
+              : t("BUTTONS.SEND_SILENT_NOTIFICATION") || "Send Silent Notification"}
           </button>
         </div>
       </form>

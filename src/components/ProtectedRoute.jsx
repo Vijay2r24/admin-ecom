@@ -3,15 +3,14 @@ import Layout from "../layout/Layout";
 import { Box, Typography } from "@mui/material";
 import LockIcon from "@mui/icons-material/Lock";
 import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
+
 import { Navigate } from "react-router-dom";
 const ProtectedRoute = ({ permissionCode, children }) => {
   const [hasPermission, setHasPermission] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useTranslation();
-  const { isLoggedIn } = useSelector((state) => state.auth);
   const token = localStorage.getItem("token");
-  if (!token || !isLoggedIn) {
+  if (!token) {
     return <Navigate to="/" replace />;
   }
 

@@ -215,9 +215,9 @@ const BannerForm = () => {
       IsActive: formData.isActive,
       CategoryIDs: formData.category || [],
       BrandIDs: formData.brand || [],
-      DiscountPercentage: formData.discount,
+      DiscountPercentage: Number(formData.discount) || 0, // FIXED
       SortOrder: formData.sequence || DEFAULT_PAGE,
-      SellingPrice: parseFloat(formData.price) || 0,
+      SellingPrice: Number(formData.price) || 0, // FIXED
       ...(bannerId
         ? {
             BannerID: bannerId,

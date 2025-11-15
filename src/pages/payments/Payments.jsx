@@ -467,7 +467,7 @@ const Payments = () => {
                       <td className="table-cell w-1/5">
                         <div className="table-cell-text flex items-center">
                           <FileText className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
-                          <span className="truncate">{payment.OrderID}</span>
+                          <span className="truncate">{payment.Order.OrderRefID}</span>
                         </div>
                         <div className="table-cell-subtext flex items-center">
                           <User className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
