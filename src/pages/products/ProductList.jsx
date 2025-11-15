@@ -642,11 +642,6 @@ const ProductList = () => {
                   <span className="font-medium">{t("PRODUCTS.BRAND")}</span>{" "}
                   {product.brandName}
                 </div>
-                <div className="flex items-center justify-between border-t pt-2 mt-2">
-                  <div>
-                    {t("PRODUCTS.STOCK")}: {product.quantity || 0}
-                  </div>
-                </div>
                 <ActionButtons
                   id={product.ProductID}
                   onEdit={handleEdit}

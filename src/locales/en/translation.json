@@ -391,7 +391,7 @@
   },
   "PAYMENTS": {
     "HEADING": "Payments",
-    "SEARCH_PLACEHOLDER": "Search by Payment Ref ID, Order ID",
+    "SEARCH_PLACEHOLDER": "Search by Payment Ref ID, OrderRef ID",
     "METHOD_NOT_SPECIFIED": "Payment Method Not Specified",
     "DEFAULT_DESCRIPTION": "Payment information will be updated soon",
     "PAYMENT_DETAILS": "Payment Details",
@@ -439,7 +439,7 @@
     "NO_ORDERS_FOUND": "No Orders Found",
     "VIEW_DETAILS": "View",
     "DELIVERY": "Delivery",
-    "SEARCH_PLACEHOLDER": "Search by Order Number, Product",
+    "SEARCH_PLACEHOLDER": "Search by Order Number",
     "TABLE": {
       "ORDER_REF":"Order Reference Id",
       "ORDER_DATE": "Order Date",
@@ -807,6 +807,19 @@
     "APP_NAME": "My App",
     "TIME_AGO": "1m ago",
     "MESSAGE":"Message",
+        "NOTIFICATION_TAB": "Notification",
+    "SILENT_NOTIFICATION_TAB": "Silent Notification",
+    "SILENT_DETAILS_TITLE": "Silent Notification Details",
+    "COMPONENT_NAME_LABEL": "Component Name",
+    "COMPONENT_NAME_PLACEHOLDER": "e.g., HomeScreen, Profile, Settings",
+    "COMPONENT_NAME_REQUIRED": "Component name is required",
+    "JSON_DATA_LABEL": "JSON Data",
+    "JSON_DATA_PLACEHOLDER": "Enter JSON data...",
+    "FORMAT_JSON": "Format JSON",
+    "INVALID_JSON": "Invalid JSON format",
+    "SILENT_NOTIFICATION_HELP_TITLE": "About Silent Notifications",
+    "SILENT_NOTIFICATION_HELP": "Silent notifications don't display a message to users. They're used to send data payloads to the app in the background. The component name specifies which part of your app should handle the data.",
+    "SILENT_NO_PREVIEW": "Silent notifications work in the background and don't have a visual preview",
     "IMAGE_PREVIEW_ALT": "Uploaded notification image"
   },
 
@@ -829,6 +842,7 @@
   },
   "BUTTONS": {
     "SEND_NOTIFICATION": "Send Notification",
+    "SEND_SILENT_NOTIFICATION": "Send Silent Notification",
     "ADD_NOTIFICATION": "Add Notification"
   },
   "PROFILE": {

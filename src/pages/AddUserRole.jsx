@@ -431,7 +431,7 @@ const AddUserRole = () => {
             res = await apiPut(UPDATE_ROLE_PERMISSION, roleData, token);
           } else {
             // Use POST for create with createRolePermission endpoint
-            res = await apiPost(CREATE_ROLE_PERMISSION, roleData, false);
+            res = await apiPost(CREATE_ROLE_PERMISSION, roleData, token);
           }
 
           const resData = res?.data;

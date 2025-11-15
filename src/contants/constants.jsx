@@ -13,6 +13,12 @@ export const COLORS = {
   SECONDARY: "#2ecc71",
   ERROR: "#e74c3c",
 };
+export const CUSTOM_COLORS = {
+  primary: "#FF5A5F",
+  primaryHover: "#E14E53",
+  divider: "#FF5A5F",
+  text: "#FFFFFF",
+};
 export const STATUS_VALUES = {
   ALL: "",
   BOOLEAN_ACTIVE: "true",
