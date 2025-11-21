@@ -10,9 +10,19 @@ import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Switch from "../../../components/Switch";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import { UPDATE_ATTRIBUTRE_VALUE_STATUS } from "../../../contants/apiRoutes";
-import { ITEMS_PER_PAGE ,DEFAULT_PAGE, STATUS, STATUS_VALUES, STATUS_OPTIONS} from "../../../contants/constants";
+import {
+  ITEMS_PER_PAGE,
+  DEFAULT_PAGE,
+  STATUS,
+  STATUS_VALUES,
+  STATUS_OPTIONS,
+} from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
-import { fetchResource, updateStatusById, clearResourceError } from "../../../store/slices/allDataSlice";
+import {
+  fetchResource,
+  updateStatusById,
+  clearResourceError,
+} from "../../../store/slices/allDataSlice";
 
 const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
   const [sSearchQuery, setSearchQuery] = useState("");
@@ -82,9 +92,9 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
         })
       ).unwrap();
 
-      showEmsg(result.message, result.status ||  STATUS.SUCCESS);
+      showEmsg(result.message, result.status || STATUS.SUCCESS);
     } catch (err) {
-      console.error(err);
+    
       setErrorMessage(t("COMMON.API_ERROR"));
       setShowErrorPopup(true);
     } finally {
@@ -104,7 +114,6 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
     }
   };
 
-
   const handleStatusPopupClose = () => {
     setStatusPopup({ open: false, attributeId: null, newStatus: null });
   };
@@ -118,14 +127,16 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
 
   const handlePageClick = (pageNumber) => setCurrentPage(pageNumber);
   const handlePrevPage = () =>
-    setCurrentPage((prev) => (prev > DEFAULT_PAGE ? prev - DEFAULT_PAGE : prev));
+    setCurrentPage((prev) =>
+      prev > DEFAULT_PAGE ? prev - DEFAULT_PAGE : prev
+    );
   const handleNextPage = () =>
     setCurrentPage((prev) => (prev < iTotalPages ? prev + DEFAULT_PAGE : prev));
 
   // Map STATUS_OPTIONS to the format expected by Toolbar component
-  const statusFilterOptions = STATUS_OPTIONS.map(option => ({
+  const statusFilterOptions = STATUS_OPTIONS.map((option) => ({
     value: option.value,
-    label: t(option.labelKey)
+    label: t(option.labelKey),
   }));
 
   if (bShowCreate) {
@@ -155,13 +166,13 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
             additionalFilters={
               bShowFilter
                 ? [
-                  {
-                    label: t("COMMON.STATUS"),
-                    name: "status",
-                    value: oFilters.status,
-                    options: statusFilterOptions,
-                  },
-                ]
+                    {
+                      label: t("COMMON.STATUS"),
+                      name: "status",
+                      value: oFilters.status,
+                      options: statusFilterOptions,
+                    },
+                  ]
                 : []
             }
             handleFilterChange={bShowFilter ? handleFilterChange : undefined}
@@ -184,25 +195,31 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
               <table className="table-base">
                 <thead className="table-head">
                   <tr>
-                    <th className="table-head-cell">
+                    <th className="table-head-cell text-left">
                       {t("PRODUCT_SETUP.ATTRIBUTES.TABLE.NAME")}
                     </th>
-                    <th className="table-head-cell">
+                    <th className="table-head-cell text-left">
                       {t("COMMON.UNIT")}
                     </th>
-                    <th className="table-head-cell">{t("COMMON.STATUS")}</th>
-                    <th className="table-head-cell">
+                    <th className="table-head-cell text-center">
+                      {t("COMMON.STATUS")}
+                    </th>
+                    <th className="table-head-cell text-center">
                       {t("COMMON.UPDATE_STATUS")}
                     </th>
                   </tr>
                 </thead>
+
                 <tbody className="table-body">
                   {aAttributes.map((attribute) => (
                     <tr
                       key={attribute.AttributeValueID}
-                      className={`table-row text-left ${!attribute.IsActive ? 'bg-gray-50' : ''}`}
+                      className={`table-row ${
+                        !attribute.IsActive ? "bg-gray-50" : ""
+                      }`}
                     >
-                      <td className="table-cell table-cell-text">
+                      {/* Name */}
+                      <td className="table-cell table-cell-text text-left align-middle">
                         {attribute.IsActive ? (
                           <Link
                             to={`/browse/editattribute/${attribute.AttributeValueID}`}
@@ -212,15 +229,23 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                             {attribute.Value}
                           </Link>
                         ) : (
-                          <span 
+                          <span
                             className="text-gray-500 block truncate max-w-[180px] cursor-not-allowed"
-                            title={t("PRODUCT_SETUP.ATTRIBUTES.EDIT_DISABLED_TOOLTIP")}
+                            title={t(
+                              "PRODUCT_SETUP.ATTRIBUTES.EDIT_DISABLED_TOOLTIP"
+                            )}
                           >
                             {attribute.Value}
                           </span>
                         )}
                       </td>
-                      <td className={`table-cell table-cell-text ${!attribute.IsActive ? 'text-gray-400' : ''}`}>
+
+                      {/* Unit */}
+                      <td
+                        className={`table-cell table-cell-text text-left align-middle ${
+                          !attribute.IsActive ? "text-gray-400" : ""
+                        }`}
+                      >
                         <div
                           className="truncate max-w-[220px]"
                           title={attribute.Unit}
@@ -228,22 +253,35 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                           {attribute.Unit}
                         </div>
                       </td>
-                      <td className="table-cell">
+
+                      {/* Status */}
+                      <td className="table-cell text-center">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${attribute.IsActive ? "status-active" : "status-inactive"
-                            }`}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            attribute.IsActive
+                              ? "status-active"
+                              : "status-inactive"
+                          }`}
                         >
-                          {t(`COMMON.${attribute.IsActive ? "ACTIVE" : "INACTIVE"}`)}
+                          {t(
+                            `COMMON.${
+                              attribute.IsActive ? "ACTIVE" : "INACTIVE"
+                            }`
+                          )}
                         </span>
                       </td>
-                      <td className="table-cell table-cell-text">
+
+                      {/* Update Status (Switch) */}
+                      <td className="table-cell text-center">
                         <Switch
                           checked={attribute.IsActive}
                           onChange={() =>
-                            handleStatusChange(attribute.AttributeValueID, attribute.IsActive) // ✅ correct
+                            handleStatusChange(
+                              attribute.AttributeValueID,
+                              attribute.IsActive
+                            )
                           }
                         />
-
                       </td>
                     </tr>
                   ))}

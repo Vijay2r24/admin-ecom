@@ -12,12 +12,20 @@ import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { UPDATE_ROLE_STATUS } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, FILTERS } from "../contants/constants.jsx";
+import {
+  ITEMS_PER_PAGE,
+  STATUS,
+  STATUS_OPTIONS,
+  FILTERS,
+} from "../contants/constants.jsx";
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchResource, updateStatusById } from "../store/slices/allDataSlice.jsx";
+import {
+  fetchResource,
+  updateStatusById,
+} from "../store/slices/allDataSlice.jsx";
 
 const UserRolesList = () => {
   const { t } = useTranslation();
@@ -26,8 +34,19 @@ const UserRolesList = () => {
   const { setTitle } = useTitle();
 
   // Redux selectors
-  const { data: contextRoles = [], loading: bLoading, error: nError, total } = useSelector(
-    (state) => state.allData.resources.roles || { data: [], loading: false, error: null, total: 0 }
+  const {
+    data: contextRoles = [],
+    loading: bLoading,
+    error: nError,
+    total,
+  } = useSelector(
+    (state) =>
+      state.allData.resources.roles || {
+        data: [],
+        loading: false,
+        error: null,
+        total: 0,
+      }
   );
 
   const [sSearchTerm, setSearchTerm] = useState("");
@@ -64,7 +83,9 @@ const UserRolesList = () => {
   }));
 
   const isAdminRole = (role) => {
-    const roleName = (role.rolename || role.RoleName || '').toLowerCase().trim();
+    const roleName = (role.rolename || role.RoleName || "")
+      .toLowerCase()
+      .trim();
     return roleName === "admin";
   };
 
@@ -96,9 +117,9 @@ const UserRolesList = () => {
     if (selectedStatus && selectedStatus !== "all") {
       // Convert string to boolean - assuming API expects boolean for IsActive
       // If your API expects string "true"/"false", use: filterParams.IsActive = selectedStatus;
-      filterParams.IsActive = selectedStatus === "true" || selectedStatus === true;
+      filterParams.IsActive =
+        selectedStatus === "true" || selectedStatus === true;
     }
-
 
     const fetchData = async () => {
       try {
@@ -169,13 +190,15 @@ const UserRolesList = () => {
 
     try {
       // Update status using Redux thunk
-      const result = await dispatch(updateStatusById({
-        key: "roles",
-        id: roleId,
-        newStatus,
-        apiRoute: UPDATE_ROLE_STATUS,
-        idField: "RoleID"
-      })).unwrap();
+      const result = await dispatch(
+        updateStatusById({
+          key: "roles",
+          id: roleId,
+          newStatus,
+          apiRoute: UPDATE_ROLE_STATUS,
+          idField: "RoleID",
+        })
+      ).unwrap();
 
       showEmsg(result.message, STATUS.SUCCESS);
 
@@ -186,11 +209,11 @@ const UserRolesList = () => {
         searchText: sSearchTerm,
       };
       if (selectedStatus !== "all") {
-        filterParams.IsActive = selectedStatus === "true" || selectedStatus === true;
+        filterParams.IsActive =
+          selectedStatus === "true" || selectedStatus === true;
       }
 
       await dispatch(fetchResource({ key: "roles", params: filterParams }));
-
     } catch (err) {
       showEmsg(err.error || t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
@@ -226,26 +249,34 @@ const UserRolesList = () => {
       />
       {sViewMode === "table" ? (
         <div className="table-container-floating">
-          <div 
-            className="table-wrapper-floating scrollbar-hide" 
+          <div
+            className="table-wrapper-floating scrollbar-hide"
             onScroll={handleTableScroll}
           >
             <table className="table-base">
               {/* Floating Header */}
-              <thead className={`table-head-floating ${
-                tableScrollTop > 10 ? 'table-head-floating-shadow' : ''
-              }`}>
+              <thead
+                className={`table-head-floating ${
+                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                }`}
+              >
                 <tr>
-                  <th scope="col" className="table-head-cell-floating">
+                  <th
+                    scope="col"
+                    className="table-head-cell-floating text-left align-middle"
+                  >
                     {t("USER_ROLES_LIST.TABLE.ROLE_NAME")}
                   </th>
                   <th
                     scope="col"
-                    className="table-head-cell-floating hidden sm:table-cell"
+                    className="table-head-cell-floating hidden sm:table-cell text-center align-middle"
                   >
                     {t("COMMON.STATUS")}
                   </th>
-                  <th scope="col" className="table-head-cell-floating text-center">
+                  <th
+                    scope="col"
+                    className="table-head-cell-floating text-center align-middle"
+                  >
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>
@@ -273,16 +304,25 @@ const UserRolesList = () => {
                   </tr>
                 ) : (
                   paginatedRoles.map((role) => {
-                    const roleName = role.rolename || role.RoleName || '';
+                    const roleName = role.rolename || role.RoleName || "";
                     const isAdmin = isAdminRole(role);
 
                     return (
-                      <tr key={role.roleid || role.RoleID} className="table-row">
-                        <td className="table-cell">
-                          <div className="flex items-center">
+                      <tr
+                        key={role.roleid || role.RoleID}
+                        className="table-row"
+                      >
+                        <td className="table-cell text-left align-middle">
+                          <div className="flex justify-start items-center">
                             <Shield className="h-4 w-4 mr-2 text-gray-400" />
-                            <div className="flex items-center space-x-2">
-                              <span className={`status-badge ${isAdmin ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                            <div className="flex items-left space-x-2">
+                              <span
+                                className={`status-badge ${
+                                  isAdmin
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-blue-100 text-blue-800"
+                                }`}
+                              >
                                 <span className="ellipsis-text">
                                   {roleName}
                                 </span>
@@ -290,16 +330,17 @@ const UserRolesList = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="table-cell">
-                          <div className="flex items-center">
-                            {isAdmin ? (
-                              <div className="flex items-center space-x-2">
-                                <span className="w-4 h-4 bg-green-500 rounded-full"></span>
-                                <span className="text-sm text-gray-500">
-                                  {t("LOCKED")}
-                                </span>
-                              </div>
-                            ) : (
+
+                        <td className="table-cell text-center align-middle">
+                          {isAdmin ? (
+                            <div className="flex justify-center items-center space-x-2">
+                              <span className="w-4 h-4 bg-green-500 rounded-full"></span>
+                              <span className="text-sm text-gray-500">
+                                {t("LOCKED")}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex justify-center items-center">
                               <Switch
                                 checked={role.IsActive === true}
                                 onChange={() =>
@@ -311,15 +352,18 @@ const UserRolesList = () => {
                                 }
                                 disabled={isAdmin}
                               />
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </td>
-                        <td className="table-cell text-center font-medium align-middle">
-                          <div className="flex justify-left items-left">
+
+                        <td className="table-cell text-center align-middle">
+                          <div className="flex justify-center items-center">
                             <ActionButtons
                               id={role.roleid || role.RoleID}
-                              onEdit={() => handleEdit(role.RoleID, roleName, role.IsActive)}
-                              disableEdit={isAdminRole({ RoleName: roleName })} 
+                              onEdit={() =>
+                                handleEdit(role.RoleID, roleName, role.IsActive)
+                              }
+                              disableEdit={isAdminRole({ RoleName: roleName })}
                             />
                           </div>
                         </td>
@@ -334,20 +378,31 @@ const UserRolesList = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {roles.map((role) => {
-            const roleName = role.rolename || role.RoleName || '';
+            const roleName = role.rolename || role.RoleName || "";
             const isAdmin = isAdminRole(role);
 
             return (
               <div
                 key={role.roleid || role.RoleID}
-                className={`bg-white shadow-md rounded-lg p-6 flex flex-col transition-all duration-200 ${isAdmin ? 'border-l-4 border-red-500' : ''
-                  }`}
+                className={`bg-white shadow-md rounded-lg p-6 flex flex-col transition-all duration-200 ${
+                  isAdmin ? "border-l-4 border-red-500" : ""
+                }`}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <div className="flex items-center mb-2">
-                      <Shield className={`h-4 w-4 mr-2 ${isAdmin ? 'text-red-500' : 'text-gray-400'}`} />
-                      <span className={`status-badge ${isAdmin ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                      <Shield
+                        className={`h-4 w-4 mr-2 ${
+                          isAdmin ? "text-red-500" : "text-gray-400"
+                        }`}
+                      />
+                      <span
+                        className={`status-badge ${
+                          isAdmin
+                            ? "bg-red-100 text-red-800"
+                            : "bg-blue-100 text-blue-800"
+                        }`}
+                      >
                         {roleName}
                       </span>
                     </div>
@@ -358,12 +413,15 @@ const UserRolesList = () => {
                   </div>
                   <div className="flex flex-col items-end">
                     <span
-                      className={`px-3 py-1 text-sm font-medium rounded-full ${role.IsActive === true
+                      className={`px-3 py-1 text-sm font-medium rounded-full ${
+                        role.IsActive === true
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
-                        }`}
+                      }`}
                     >
-                      {role.IsActive === true ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")}
+                      {role.IsActive === true
+                        ? t("COMMON.ACTIVE")
+                        : t("COMMON.INACTIVE")}
                     </span>
                     {isAdmin && (
                       <span className="text-xs text-red-600 mt-1 font-medium">
@@ -374,7 +432,9 @@ const UserRolesList = () => {
                 </div>
                 <ActionButtons
                   id={role.roleid || role.RoleID}
-                  onEdit={() => handleEdit(role.RoleID, roleName, role.IsActive)}
+                  onEdit={() =>
+                    handleEdit(role.RoleID, roleName, role.IsActive)
+                  }
                   disableEdit={isAdmin}
                 />
               </div>

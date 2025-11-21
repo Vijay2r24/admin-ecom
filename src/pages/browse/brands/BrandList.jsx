@@ -14,7 +14,13 @@ import { showEmsg } from "../../../utils/ShowEmsg";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import { UPDATE_BRAND_STATUS } from "../../../contants/apiRoutes";
 import Switch from "../../../components/Switch";
-import { ITEMS_PER_PAGE,DEFAULT_PAGE, STATUS, STATUS_VALUES, STATUS_OPTIONS } from "../../../contants/constants";
+import {
+  ITEMS_PER_PAGE,
+  DEFAULT_PAGE,
+  STATUS,
+  STATUS_VALUES,
+  STATUS_OPTIONS,
+} from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 
 const BrandList = ({ onCreate, onBack, setSubmitting }) => {
@@ -119,8 +125,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       }
       dispatch(fetchResource({ key: "brands", params }));
     } catch (err) {
-      console.error(err);
-      showEmsg(err?.message || t("COMMON.API_ERROR"),STATUS.ERROR);
+      showEmsg(err?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
       // Reset popup state and stop loader
       setStatusPopup({ open: false, brandId: null, newStatus: null });
@@ -142,9 +147,9 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
   };
 
   // Map STATUS_OPTIONS to the format expected by Toolbar component
-  const statusFilterOptions = STATUS_OPTIONS.map(option => ({
+  const statusFilterOptions = STATUS_OPTIONS.map((option) => ({
     value: option.value,
-    label: t(option.labelKey)
+    label: t(option.labelKey),
   }));
 
   if (bShowCreate) {
@@ -207,54 +212,67 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
             <table className="table-base">
               <thead className="table-head">
                 <tr>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-left">
                     {t("PRODUCT_SETUP.BRANDS.TABLE.NAME")}
                   </th>
-                  <th className="table-head-cell">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-center">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell text-center">
                     {t("PRODUCT_SETUP.BRANDS.TABLE.CREATED_AT")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-center">
                     {t("COMMON.UPDATE_STATUS")}
                   </th>
                 </tr>
               </thead>
+
               <tbody className="table-body">
                 {aBrands.map((brand) => (
-                  <tr 
-                    key={brand.BrandID} 
-                    className={`table-row items-center ${!brand.IsActive ? 'bg-gray-50' : ''}`}
+                  <tr
+                    key={brand.BrandID}
+                    className={`table-row items-center ${
+                      !brand.IsActive ? "bg-gray-50" : ""
+                    }`}
                   >
                     {/* Brand Name & Logo */}
-                    <td className="table-cell table-cell-text align-middle">
+                    <td className="table-cell table-cell-text text-left align-middle">
                       <div className="flex items-center gap-2">
                         {/* Brand Logo */}
-                        <div className={`h-10 w-10 flex items-center justify-center rounded-full border overflow-hidden ${
-                          !brand.IsActive ? 'bg-gray-100 border-gray-200' : 'bg-white'
-                        }`}>
+                        <div
+                          className={`h-10 w-10 flex items-center justify-center rounded-full border overflow-hidden ${
+                            !brand.IsActive
+                              ? "bg-gray-100 border-gray-200"
+                              : "bg-white"
+                          }`}
+                        >
                           {Array.isArray(brand.BrandLogo) &&
                           brand.BrandLogo.length > 0 ? (
                             <img
-                              src={brand.BrandLogo[0].documentUrl} // Display first logo
+                              src={brand.BrandLogo[0].documentUrl}
                               alt={brand.BrandName}
                               className={`w-full h-full object-cover ${
-                                !brand.IsActive ? 'opacity-60' : ''
+                                !brand.IsActive ? "opacity-60" : ""
                               }`}
                               onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src = "/no-image.png"; // Fallback image
+                                e.target.src = "/no-image.png";
                               }}
                             />
                           ) : (
-                            <span className={`text-xs ${
-                              !brand.IsActive ? 'text-gray-400' : 'text-gray-400'
-                            }`}>
+                            <span
+                              className={`text-xs ${
+                                !brand.IsActive
+                                  ? "text-gray-400"
+                                  : "text-gray-400"
+                              }`}
+                            >
                               {t("COMMON.NO_IMAGE")}
                             </span>
                           )}
                         </div>
 
-                        {/* Brand Name with Edit Link - Disabled for inactive brands */}
+                        {/* Brand Name */}
                         {brand.IsActive ? (
                           <Link
                             to={`/browse/editbrand/${brand.BrandID}`}
@@ -263,9 +281,11 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                             {brand.BrandName}
                           </Link>
                         ) : (
-                          <span 
+                          <span
                             className="text-gray-500 block truncate max-w-[200px] cursor-not-allowed"
-                            title={t("PRODUCT_SETUP.BRANDS.EDIT_DISABLED_TOOLTIP")}
+                            title={t(
+                              "PRODUCT_SETUP.BRANDS.EDIT_DISABLED_TOOLTIP"
+                            )}
                           >
                             {brand.BrandName}
                           </span>
@@ -274,7 +294,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                     </td>
 
                     {/* Status Badge */}
-                    <td className="table-cell">
+                    <td className="table-cell text-center">
                       <span
                         className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           brand.IsActive ? "status-active" : "status-inactive"
@@ -286,10 +306,12 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                       </span>
                     </td>
 
-                    {/* Created At Timestamp */}
-                    <td className={`table-cell table-cell-text ${
-                      !brand.IsActive ? 'text-gray-400' : ''
-                    }`}>
+                    {/* Created At */}
+                    <td
+                      className={`table-cell text-center table-cell-text ${
+                        !brand.IsActive ? "text-gray-400" : ""
+                      }`}
+                    >
                       {new Date(brand.CreatedAt).toLocaleString(undefined, {
                         year: "numeric",
                         month: "2-digit",
@@ -300,8 +322,8 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                       })}
                     </td>
 
-                    {/* Toggle Switch for Status */}
-                    <td className="table-cell table-cell-text">
+                    {/* Toggle Switch */}
+                    <td className="table-cell text-center table-cell-text">
                       <Switch
                         checked={brand.IsActive}
                         onChange={() =>

@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchResource, updateStatusById, clearResourceError } from "../../../store/slices/allDataSlice";
+import {
+  fetchResource,
+  updateStatusById,
+  clearResourceError,
+} from "../../../store/slices/allDataSlice";
 import Toolbar from "../../../components/Toolbar";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -9,18 +13,26 @@ import { showEmsg } from "../../../utils/ShowEmsg";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import { UPDATE_CATEGORY_STATUS } from "../../../contants/apiRoutes";
 import Switch from "../../../components/Switch";
-import { ITEMS_PER_PAGE, DEFAULT_PAGE, STATUS,STATUS_VALUES, STATUS_OPTIONS } from "../../../contants/constants";
-import { hideLoaderWithDelay } from "../../../utils/loaderUtils"; 
+import {
+  ITEMS_PER_PAGE,
+  DEFAULT_PAGE,
+  STATUS,
+  STATUS_VALUES,
+  STATUS_OPTIONS,
+} from "../../../contants/constants";
+import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 
 const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const [sSearchQuery, setSearchQuery] = useState("");
   const [bShowFilters, setShowFilters] = useState(false);
-  const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL  });
+  const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
 
   // Redux selectors
-  const categoriesState = useSelector((state) => state.allData.resources.categories);
+  const categoriesState = useSelector(
+    (state) => state.allData.resources.categories
+  );
   const aCategories = categoriesState?.data || [];
   const bLoading = categoriesState?.loading || false;
   const sError = categoriesState?.error || null;
@@ -41,10 +53,10 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
       pageSize: iItemsPerPage,
       searchText: sSearchQuery,
     };
-    if (oFilters.status && oFilters.status !== STATUS_VALUES.ALL ) {
+    if (oFilters.status && oFilters.status !== STATUS_VALUES.ALL) {
       params.IsActive = oFilters.status;
     }
-    
+
     // Dispatch fetchResource thunk
     dispatch(fetchResource({ key: "categories", params }));
   }, [dispatch, nCurrentPage, iItemsPerPage, sSearchQuery, oFilters.status]);
@@ -61,10 +73,10 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
   const handleStatusChange = (categoryId, currentStatus) => {
     // Convert current status to boolean for the new status
     const isCurrentlyActive = currentStatus === "Active";
-    setStatusPopup({ 
-      open: true, 
-      categoryId, 
-      newStatus: !isCurrentlyActive 
+    setStatusPopup({
+      open: true,
+      categoryId,
+      newStatus: !isCurrentlyActive,
     });
   };
 
@@ -74,30 +86,31 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
 
     try {
       // Dispatch updateStatusById thunk
-      const result = await dispatch(updateStatusById({
-        key: "categories",
-        id: categoryId,
-        newStatus: newStatus,
-        apiRoute: UPDATE_CATEGORY_STATUS,
-        idField: "CategoryID"
-      })).unwrap();
-      
+      const result = await dispatch(
+        updateStatusById({
+          key: "categories",
+          id: categoryId,
+          newStatus: newStatus,
+          apiRoute: UPDATE_CATEGORY_STATUS,
+          idField: "CategoryID",
+        })
+      ).unwrap();
+
       showEmsg(result.message, STATUS.SUCCESS);
-      
+
       // Refetch data after status update
       const params = {
         pageNumber: nCurrentPage,
         pageSize: iItemsPerPage,
         searchText: sSearchQuery,
       };
-      if (oFilters.status && oFilters.status !== STATUS_VALUES.ALL ) {
+      if (oFilters.status && oFilters.status !== STATUS_VALUES.ALL) {
         params.IsActive = oFilters.status;
       }
       dispatch(fetchResource({ key: "categories", params }));
-      
     } catch (err) {
-      console.error(err);
-      const errorMessage = err?.response?.data?.MESSAGE || t("COMMON.API_ERROR");
+      const errorMessage =
+        err?.response?.data?.MESSAGE || t("COMMON.API_ERROR");
       showEmsg(errorMessage, STATUS.ERROR);
     } finally {
       setStatusPopup({ open: false, categoryId: null, newStatus: null });
@@ -121,7 +134,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
 
   const handlePrevPage = () => {
     if (nCurrentPage > DEFAULT_PAGE) {
-      setCurrentPage((prev) => prev -DEFAULT_PAGE);
+      setCurrentPage((prev) => prev - DEFAULT_PAGE);
     }
   };
 
@@ -138,7 +151,8 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
   const getStatusText = (category) => {
     // Check both possible status fields
     if (category.Status) return category.Status;
-    if (category.IsActive !== undefined) return category.IsActive ? "Active" : "Inactive";
+    if (category.IsActive !== undefined)
+      return category.IsActive ? "Active" : "Inactive";
     return "Inactive"; // Default
   };
 
@@ -149,10 +163,10 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
     return false; // Default
   };
 
-  const statusFilterOptions = STATUS_OPTIONS.map(option => ({
-  value: option.value,
-  label: t(option.labelKey)
-}));
+  const statusFilterOptions = STATUS_OPTIONS.map((option) => ({
+    value: option.value,
+    label: t(option.labelKey),
+  }));
 
   return (
     <div>
@@ -180,7 +194,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                     label: t("COMMON.STATUS"),
                     name: "status",
                     value: oFilters.status,
-                   options: statusFilterOptions,
+                    options: statusFilterOptions,
                   },
                 ]
               : []
@@ -203,40 +217,59 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
             <table className="table-base">
               <thead className="table-head">
                 <tr>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-left">
                     {t("PRODUCT_SETUP.CATEGORIES.TABLE.NAME")}
                   </th>
-                  <th className="table-head-cell">{t("COMMON.DESCRIPTION")}</th>
-                  <th className="table-head-cell">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell">{t("COMMON.CREATED_AT")}</th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-center">
+                    {t("COMMON.DESCRIPTION")}
+                  </th>
+                  <th className="table-head-cell text-center">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell text-center">
+                    {t("COMMON.CREATED_AT")}
+                  </th>
+                  <th className="table-head-cell text-center">
                     {t("COMMON.UPDATE_STATUS")}
                   </th>
                 </tr>
               </thead>
+
               <tbody className="table-body">
                 {aCategories.map((category) => (
-                  <tr 
-                    key={category.CategoryID} 
-                    className={`table-row ${!isCategoryActive(category) ? 'bg-gray-50' : ''}`}
+                  <tr
+                    key={category.CategoryID}
+                    className={`table-row ${
+                      !isCategoryActive(category) ? "bg-gray-50" : ""
+                    }`}
                   >
-                    <td className="table-cell table-cell-text align-middle">
+                    {/* Category Name & Image */}
+                    <td className="table-cell table-cell-text text-left align-middle">
                       <div className="flex items-center gap-2">
-                        <div className={`h-10 w-10 flex items-center justify-center rounded-full border overflow-hidden ${
-                          !isCategoryActive(category) ? 'bg-gray-100 border-gray-200' : 'bg-white'
-                        }`}>
-                            {category.CategoryImages && category.CategoryImages.length > 0 ? (
+                        <div
+                          className={`h-10 w-10 flex items-center justify-center rounded-full border overflow-hidden ${
+                            !isCategoryActive(category)
+                              ? "bg-gray-100 border-gray-200"
+                              : "bg-white"
+                          }`}
+                        >
+                          {category.CategoryImages &&
+                          category.CategoryImages.length > 0 ? (
                             <img
                               src={category.CategoryImages[0].documentUrl}
                               alt={category.CategoryName}
                               className={`w-full h-full object-cover ${
-                                !isCategoryActive(category) ? 'opacity-60' : ''
+                                !isCategoryActive(category) ? "opacity-60" : ""
                               }`}
                             />
                           ) : (
-                            <span className={`text-xs ${
-                              !isCategoryActive(category) ? 'text-gray-400' : 'text-gray-400'
-                            }`}>
+                            <span
+                              className={`text-xs ${
+                                !isCategoryActive(category)
+                                  ? "text-gray-400"
+                                  : "text-gray-400"
+                              }`}
+                            >
                               No Image
                             </span>
                           )}
@@ -250,18 +283,24 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                             {category.CategoryName}
                           </Link>
                         ) : (
-                          <span 
+                          <span
                             className="text-gray-500 block truncate max-w-[180px] cursor-not-allowed"
-                            title={t("PRODUCT_SETUP.CATEGORIES.EDIT_DISABLED_TOOLTIP")}
+                            title={t(
+                              "PRODUCT_SETUP.CATEGORIES.EDIT_DISABLED_TOOLTIP"
+                            )}
                           >
                             {category.CategoryName}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className={`table-cell text-left align-middle max-w-[200px] overflow-hidden ${
-                      !isCategoryActive(category) ? 'text-gray-400' : ''
-                    }`}>
+
+                    {/* Description */}
+                    <td
+                      className={`table-cell text-left align-middle max-w-[200px] overflow-hidden ${
+                        !isCategoryActive(category) ? "text-gray-400" : ""
+                      }`}
+                    >
                       <div
                         className="truncate table-cell-subtext"
                         title={category.CategoryDescription}
@@ -270,7 +309,8 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                       </div>
                     </td>
 
-                    <td className="table-cell">
+                    {/* Status */}
+                    <td className="table-cell text-center">
                       <span
                         className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           isCategoryActive(category)
@@ -285,9 +325,13 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                         )}
                       </span>
                     </td>
-                    <td className={`table-cell table-cell-text ${
-                      !isCategoryActive(category) ? 'text-gray-400' : ''
-                    }`}>
+
+                    {/* Created At */}
+                    <td
+                      className={`table-cell table-cell-text text-center ${
+                        !isCategoryActive(category) ? "text-gray-400" : ""
+                      }`}
+                    >
                       {new Date(category.CreatedAt).toLocaleString(undefined, {
                         year: "numeric",
                         month: "2-digit",
@@ -297,8 +341,10 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                         hour12: true,
                       })}
                     </td>
+
+                    {/* Toggle Switch */}
                     <td
-                      className="table-cell"
+                      className="table-cell text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Switch

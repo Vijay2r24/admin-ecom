@@ -39,7 +39,14 @@ const CreateAttribute = () => {
   });
 
   const [oErrors, setErrors] = useState({});
+  const [oFieldValid, setFieldValid] = useState({});
   const [bSubmitting, setSubmitting] = useState(false);
+
+  // Required fields configuration
+  const requiredFields = {
+    Value: true,
+    AttributeTypeID: true,
+  };
 
   // Redux state for attribute types
   const attributeTypesState = useSelector((state) => state.allData.resources.attributeTypes);
@@ -47,9 +54,73 @@ const CreateAttribute = () => {
   const attributeTypesLoading = attributeTypesState?.loading || false;
   const attributeTypesError = attributeTypesState?.error;
 
+  // Filter active attribute types
+  const activeAttributeTypes = aAttributeTypes.filter(attrType => attrType.IsActive === true);
+
   const goBackToBrowse = () => {
     navigate("/browse", { state: { fromAttributeEdit: true } });
   };
+
+  /**
+   * Live validation functions
+   */
+  const validateValue = (value) => {
+    if (!value?.trim()) {
+      return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.NAME_REQUIRED");
+    }
+    if (value.trim().length < 2) {
+      return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.NAME_MIN_LENGTH");
+    }
+    if (value.trim().length > 100) {
+      return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.NAME_MAX_LENGTH");
+    }
+    return "";
+  };
+
+  const validateAttributeType = (typeId) => {
+    if (!typeId) {
+      return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.TYPE_REQUIRED");
+    }
+    return "";
+  };
+
+  const validateUnit = (unit) => {
+    if (unit && unit.trim().length > 50) {
+      return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.UNIT_MAX_LENGTH");
+    }
+    return "";
+  };
+
+  /**
+   * Live validation for a specific field
+   */
+  const validateField = useCallback((name, value) => {
+    let error = "";
+    
+    switch (name) {
+      case "Value":
+        error = validateValue(value);
+        break;
+      case "AttributeTypeID":
+        error = validateAttributeType(value);
+        break;
+      case "Unit":
+        error = validateUnit(value);
+        break;
+      default:
+        break;
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+
+    setFieldValid(prev => ({
+      ...prev,
+      [name]: !error && (value !== "" && value !== null && value !== undefined)
+    }));
+  }, [t]);
 
   const fetchAttributeDetails = useCallback(async () => {
     setSubmitting(true);
@@ -72,11 +143,17 @@ const CreateAttribute = () => {
           TenantID: tenantID,
           IsActive: attributeData.IsActive,
         }));
+
+        // Validate initial data after setting
+        setTimeout(() => {
+          validateField("Value", attributeData.Value || "");
+          validateField("AttributeTypeID", attributeData.AttributeTypeID || "");
+          validateField("Unit", attributeData.Unit || "");
+        }, 100);
       } else {
         showEmsg(response.data.message || t("COMMON.ERROR"), STATUS.WARNING);
       }
     } catch (err) {
-      console.error(err);
       showEmsg(
         err?.response?.data?.message || t("COMMON.API_ERROR"),
         STATUS.ERROR
@@ -84,11 +161,11 @@ const CreateAttribute = () => {
     } finally {
       hideLoaderWithDelay(setSubmitting);
     }
-  }, [attributeValueId, token, tenantID, t]);
+  }, [attributeValueId, token, tenantID, t, validateField]);
 
   useEffect(() => {
-    // Fetch attribute types on component mount
-    dispatch(fetchResource({ key: "attributeTypes", params: {} }));
+    // Fetch attribute types on component mount - only active ones
+    dispatch(fetchResource({ key: "attributeTypes", params: { IsActive: true } }));
 
     if (isEditing && attributeValueId) {
       fetchAttributeDetails();
@@ -102,40 +179,64 @@ const CreateAttribute = () => {
     };
   }, [dispatch, isEditing, attributeValueId, fetchAttributeDetails, attributeTypesError]);
 
-  /** Input change */
+  /** Input change with live validation */
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: newValue,
     }));
 
-    if (oErrors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    validateField(name, newValue);
+  };
+
+  /** Handle field blur for additional validation */
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    validateField(name, value);
   };
 
   /** Validation */
   const validateForm = () => {
     const errors = {};
-    const { Value, AttributeTypeID } = oFormData;
+    
+    errors.Value = validateValue(oFormData.Value);
+    errors.AttributeTypeID = validateAttributeType(oFormData.AttributeTypeID);
+    errors.Unit = validateUnit(oFormData.Unit);
 
-    if (!Value?.trim()) {
-      errors.Value = t("PRODUCT_SETUP.CREATE_ATTRIBUTES.NAME_REQUIRED");
-    }
-    if (!AttributeTypeID) {
-      errors.AttributeTypeID = t("PRODUCT_SETUP.CREATE_ATTRIBUTES.TYPE_REQUIRED");
-    }
+    // Update field validation states
+    setFieldValid({
+      Value: !errors.Value && oFormData.Value.trim() !== "",
+      AttributeTypeID: !errors.AttributeTypeID && oFormData.AttributeTypeID !== "",
+      Unit: !errors.Unit,
+    });
 
-    return errors;
+    // Return only errors that have messages
+    const filteredErrors = Object.fromEntries(
+      Object.entries(errors).filter(([_, value]) => value !== "")
+    );
+
+    setErrors(filteredErrors);
+    return Object.keys(filteredErrors).length === 0;
   };
 
   /** Submit */
  const handleSubmit = async (e) => {
   e.preventDefault();
-  const errors = validateForm();
-  if (Object.keys(errors).length > 0) {
-    setErrors(errors);
+  
+  // Run validation
+  if (!validateForm()) {
+    // Scroll to first error
+    const firstErrorField = Object.keys(oErrors)[0];
+    if (firstErrorField) {
+      const element = document.getElementById(firstErrorField);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.focus();
+      }
+    }
     return;
   }
 
@@ -178,7 +279,18 @@ const CreateAttribute = () => {
   }
 };
 
-  // Prepare attribute types options with proper field mapping
+  // Helper function to render label with required asterisk
+  const renderLabel = (fieldName, translationKey) => {
+    const isRequired = requiredFields[fieldName];
+    return (
+      <span>
+        {t(translationKey)}
+        {isRequired && <span className="text-red-500 ml-1">*</span>}
+      </span>
+    );
+  };
+
+  // Prepare attribute types options with proper field mapping - using active attribute types
   const attributeTypeOptions = [
     {
       value: "",
@@ -188,7 +300,7 @@ const CreateAttribute = () => {
         ? t("COMMON.ERROR")
         : t("PRODUCT_SETUP.CREATE_ATTRIBUTES.SELECT_TYPE"),
     },
-    ...aAttributeTypes.map((type) => ({
+    ...activeAttributeTypes.map((type) => ({
       value: type.AttributeTypeID, 
       label: type.Name, 
     })),
@@ -225,13 +337,16 @@ const CreateAttribute = () => {
         <div className="flex flex-col md:flex-row md:space-x-4">
           <div className="w-full md:w-1/2">
             <TextInputWithIcon
-              label={t("PRODUCT_SETUP.CREATE_ATTRIBUTES.NAME_LABEL")}
+              label={renderLabel("Value", "PRODUCT_SETUP.CREATE_ATTRIBUTES.NAME_LABEL")}
               id="Value"
               name="Value"
               value={oFormData.Value}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               placeholder={t("PRODUCT_SETUP.CREATE_ATTRIBUTES.NAME_PLACEHOLDER")}
               error={oErrors.Value}
+              isValid={oFieldValid.Value}
+              required={requiredFields.Value}
               Icon={Tag}
             />
           </div>
@@ -242,9 +357,14 @@ const CreateAttribute = () => {
               name="Unit"
               value={oFormData.Unit}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               placeholder={t("COMMON.UNIT")}
               error={oErrors.Unit}
+              isValid={oFieldValid.Unit}
               Icon={Info}
+              showCharCount={true}
+              maxChars={50}
+              currentChars={oFormData.Unit?.length || 0}
             />
           </div>
         </div>
@@ -253,27 +373,32 @@ const CreateAttribute = () => {
         <div className="flex flex-col md:flex-row md:space-x-4">
           <div className="w-full md:w-1/2">
             <SelectWithIcon
-              label={t("PRODUCT_SETUP.CREATE_ATTRIBUTES.TYPE_LABEL")}
+              label={renderLabel("AttributeTypeID", "PRODUCT_SETUP.CREATE_ATTRIBUTES.TYPE_LABEL")}
               id="AttributeTypeID"
               name="AttributeTypeID"
               value={oFormData.AttributeTypeID}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               options={attributeTypeOptions}
               Icon={Tag}
               error={oErrors.AttributeTypeID}
+              isValid={oFieldValid.AttributeTypeID}
+              required={requiredFields.AttributeTypeID}
               disabled={attributeTypesLoading}
               onInputChange={(value) => {
                 if (value && value.length >= 2) {
                   dispatch(fetchResource({ 
                     key: "attributeTypes", 
                     params: { 
-                      searchText: value
+                      searchText: value,
+                      IsActive: true  // Only search active attribute types
                     } 
                   }));
                 } else if (!value) {
-                  // Fetch all if search is cleared
+                  // Fetch all active attribute types if search is cleared
                   dispatch(fetchResource({ 
-                    key: "attributeTypes"
+                    key: "attributeTypes",
+                    params: { IsActive: true }
                   }));
                 }
               }}
@@ -300,11 +425,20 @@ const CreateAttribute = () => {
 
         {/* Buttons */}
         <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
-          <BackButton onClick={goBackToBrowse} className="btn-cancel">
+          <button 
+            type="button" 
+            onClick={goBackToBrowse} 
+            className="btn-cancel"
+            disabled={bSubmitting}
+          >
             {t("COMMON.CANCEL")}
-          </BackButton>
-          <button type="submit" className="btn-primary" disabled={bSubmitting}>
-            {isEditing ? t("COMMON.SAVE_BUTTON") :t("PRODUCT_SETUP.CREATE_ATTRIBUTES.CREATE_TITLE")}
+          </button>
+          <button 
+            type="submit" 
+            className="btn-primary" 
+            disabled={bSubmitting}
+          >
+            {bSubmitting ? t("COMMON.SUBMITTING") : isEditing ? t("COMMON.SAVE_BUTTON") : t("PRODUCT_SETUP.CREATE_ATTRIBUTES.CREATE_TITLE")}
           </button>
         </div>
       </form>

@@ -25,18 +25,20 @@ const Stores = () => {
   const { setBackButton, setTitle } = useTitle();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const storesData = useSelector(
-    (state) => state.allData.resources.stores || { data: [], total: 0, loading: false }
+    (state) =>
+      state.allData.resources.stores || { data: [], total: 0, loading: false }
   );
 
   const aStores = storesData.data || [];
-  
+
   // FIX: Updated pagination extraction to match actual API response structure
   const totalItems = storesData.totalRecords || storesData.total || 0;
   const currentPageFromAPI = storesData.currentPage || 1;
-  const totalPagesFromAPI = storesData.totalPages || Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
-  
+  const totalPagesFromAPI =
+    storesData.totalPages || Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+
   const storesLoading = storesData.loading;
 
   const [sSearchTerm, setSearchTerm] = useState("");
@@ -53,9 +55,12 @@ const Stores = () => {
   const [exportLoading, setExportLoading] = useState(false);
   const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
 
-  const permissionIdForDelete = getPermissionCode("Store Management", "Delete User");
+  const permissionIdForDelete = getPermissionCode(
+    "Store Management",
+    "Delete User"
+  );
   const hasDeletePermission = hasPermissionId(permissionIdForDelete);
- 
+
   const statusOptions = STATUS_OPTIONS.map((opt) => ({
     value: opt.value,
     label: t(opt.labelKey),
@@ -82,11 +87,11 @@ const Stores = () => {
   });
 
   const itemsPerPage = ITEMS_PER_PAGE;
-  
+
   // FIX: Use pagination data from API or calculate fallback
   const totalPages = totalPagesFromAPI;
   const [viewMode, setViewMode] = useState("table");
-  
+
   // FIX: Sync currentPage with API response or use local state
   const [currentPage, setCurrentPage] = useState(currentPageFromAPI);
 
@@ -111,13 +116,13 @@ const Stores = () => {
     if (initialLoadComplete) {
       setFilterLoading(true);
     }
-    
-    if (filterName === 'dateRange') {
+
+    if (filterName === "dateRange") {
       const dateValue = e.target.value;
       setFilters((prevFilters) => ({
         ...prevFilters,
-        startDate: dateValue?.startDate || '',
-        endDate: dateValue?.endDate || '',
+        startDate: dateValue?.startDate || "",
+        endDate: dateValue?.endDate || "",
       }));
     } else {
       const { name, value } = e.target;
@@ -148,7 +153,7 @@ const Stores = () => {
   const handleStatusConfirm = async () => {
     setSubmitting(true);
     const { storeId, newStatus } = statusPopup;
-    
+
     try {
       const result = await dispatch(
         updateStatusById({
@@ -156,26 +161,28 @@ const Stores = () => {
           id: storeId,
           newStatus,
           apiRoute: UPDATE_STORE_STATUS,
-          idField: "StoreID"
+          idField: "StoreID",
         })
       ).unwrap();
-      
+
       showEmsg(result.message, STATUS.SUCCESS);
       setStatusPopup({ open: false, storeId: null, newStatus: null });
-      
-      const isActiveFilter = oFilters.status === "" ? undefined : oFilters.status === "true";
-      
+
+      const isActiveFilter =
+        oFilters.status === "" ? undefined : oFilters.status === "true";
+
       // Refresh the stores list after status update
-      dispatch(fetchResource({
-        key: "stores",
-        params: {
-          pageNumber: currentPage,
-          pageSize: itemsPerPage,
-          searchText: sSearchTerm,
-          IsActive: isActiveFilter,
-        }
-      }));
-      
+      dispatch(
+        fetchResource({
+          key: "stores",
+          params: {
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+            searchText: sSearchTerm,
+            IsActive: isActiveFilter,
+          },
+        })
+      );
     } catch (err) {
       showEmsg(err.error || t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
@@ -195,20 +202,23 @@ const Stores = () => {
       const oResponse = await apiDelete(`${DELETE_STORE}/${storeId}`, token);
       const backendMessage = oResponse.data.MESSAGE;
       showEmsg(backendMessage, STATUS.SUCCESS);
-      
-      const isActiveFilter = oFilters.status === "" ? undefined : oFilters.status === "true";
-      
+
+      const isActiveFilter =
+        oFilters.status === "" ? undefined : oFilters.status === "true";
+
       // Refresh the stores list after deletion
-      dispatch(fetchResource({
-        key: "stores",
-        params: {
-          pageNumber: currentPage,
-          pageSize: itemsPerPage,
-          searchText: sSearchTerm,
-          IsActive: isActiveFilter,
-        }
-      }));
-      
+      dispatch(
+        fetchResource({
+          key: "stores",
+          params: {
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+            searchText: sSearchTerm,
+            IsActive: isActiveFilter,
+          },
+        })
+      );
+
       setDeletePopup({ open: false, storeId: null });
     } catch (err) {
       const errorMessage = err?.response?.data?.MESSAGE;
@@ -255,14 +265,15 @@ const Stores = () => {
       // Format dates for API
       const startDate = formatDateForAPI(oFilters.startDate);
       const endDate = formatDateForAPI(oFilters.endDate);
-      const isActiveFilter = oFilters.status === "" ? undefined : oFilters.status === "true";
+      const isActiveFilter =
+        oFilters.status === "" ? undefined : oFilters.status === "true";
 
       await dispatch(
         exportStoreReport({
           searchText: sSearchTerm,
           startDate: startDate,
           endDate: endDate,
-          isActive: isActiveFilter
+          isActive: isActiveFilter,
         })
       ).unwrap();
     } catch (error) {
@@ -274,17 +285,20 @@ const Stores = () => {
   useEffect(() => {
     const fetchStoresData = async () => {
       try {
-        const isActiveFilter = oFilters.status === "" ? undefined : oFilters.status === "true";
-        
-        await dispatch(fetchResource({
-          key: "stores",
-          params: {
-            pageNumber: currentPage,
-            pageSize: itemsPerPage,
-            searchText: sSearchTerm,
-            IsActive: isActiveFilter,
-          }
-        })).unwrap();
+        const isActiveFilter =
+          oFilters.status === "" ? undefined : oFilters.status === "true";
+
+        await dispatch(
+          fetchResource({
+            key: "stores",
+            params: {
+              pageNumber: currentPage,
+              pageSize: itemsPerPage,
+              searchText: sSearchTerm,
+              IsActive: isActiveFilter,
+            },
+          })
+        ).unwrap();
       } catch (err) {
         showEmsg(err.error || t("COMMON.API_ERROR"), STATUS.ERROR);
       } finally {
@@ -297,7 +311,7 @@ const Stores = () => {
 
     fetchStoresData();
     setTitle(t("STORES.HEADING"));
-    
+
     return () => {
       setBackButton(null);
       setTitle("");
@@ -310,7 +324,7 @@ const Stores = () => {
     setBackButton,
     setTitle,
     t,
-    dispatch
+    dispatch,
   ]);
 
   useEffect(() => {
@@ -349,30 +363,45 @@ const Stores = () => {
 
       {viewMode === "table" ? (
         <div className="table-container-floating">
-          <div 
-            className="table-wrapper-floating scrollbar-hide" 
+          <div
+            className="table-wrapper-floating scrollbar-hide"
             onScroll={handleTableScroll}
           >
             <table className="table-base">
               {/* Floating Header */}
-              <thead className={`table-head-floating ${
-                tableScrollTop > 10 ? 'table-head-floating-shadow' : ''
-              }`}>
+              <thead
+                className={`table-head-floating ${
+                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                }`}
+              >
                 <tr>
-                  <th scope="col" className="table-head-cell-floating">
+                  <th
+                    scope="col"
+                    className="table-head-cell-floating text-left"
+                  >
                     {t("STORES.STORE_DETAILS")}
                   </th>
-                  <th scope="col" className="table-head-cell-floating">
+                  <th
+                    scope="col"
+                    className="table-head-cell-floating text-center"
+                  >
                     {t("STORES.CONTACT")}
                   </th>
-                  <th scope="col" className="table-head-cell-floating">
+                  <th
+                    scope="col"
+                    className="table-head-cell-floating text-center"
+                  >
                     {t("COMMON.STATUS")}
                   </th>
-                  <th scope="col" className="table-head-cell-floating">
+                  <th
+                    scope="col"
+                    className="table-head-cell-floating text-center"
+                  >
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>
               </thead>
+
               <tbody className="table-body">
                 {bFilterLoading || storesLoading ? (
                   <tr>
@@ -391,7 +420,8 @@ const Stores = () => {
                 ) : (
                   aStores.map((store) => (
                     <tr key={store.StoreID} className="table-row">
-                      <td className="table-cell">
+                      {/* Store Details */}
+                      <td className="table-cell text-left">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10 bg-custom-bg/10 rounded-lg flex items-center justify-center">
                             <Building className="h-5 w-5 text-custom-bg" />
@@ -404,24 +434,38 @@ const Stores = () => {
                               <MapPin className="h-4 w-4 mr-1" />
                               <span className="ellipsis-text">
                                 {store.AddressLine1}
-                                {store.AddressLine2 && `, ${store.AddressLine2}`}
-                                {store.City?.CityName && `, ${store.City.CityName}`}
+                                {store.AddressLine2 &&
+                                  `, ${store.AddressLine2}`}
+                                {store.City?.CityName &&
+                                  `, ${store.City.CityName}`}
                               </span>
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="table-cell">
-                        <div className="table-cell-text flex items-center">
-                          <Phone className="h-4 w-4 mr-1 text-gray-400" />
-                          {store.PhoneNumber}
-                        </div>
-                        <div className="table-cell-subtext flex items-center ">
-                          <Mail className="h-4 w-4 mr-1 text-gray-400" />
-                          <span className="ellipsis-text">{store.Email}</span>
+
+                      {/* Contact */}
+                      <td className="table-cell text-center">
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="flex flex-col items-start space-y-1 w-full max-w-[150px]">
+                            {" "}
+                            {/* adjust max-w as needed */}
+                            <div className="table-cell-text flex items-center">
+                              <Phone className="h-4 w-4 mr-1 text-gray-400" />
+                             {store.CountryCode ? `${store.CountryCode} ${store.PhoneNumber}` : store.PhoneNumber}
+                            </div>
+                            <div className="table-cell-subtext flex items-center">
+                              <Mail className="h-4 w-4 mr-1 text-gray-400" />
+                              <span className="ellipsis-text">
+                                {store.Email}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </td>
-                      <td className="table-cell">
+
+                      {/* Status */}
+                      <td className="table-cell text-center">
                         <Switch
                           checked={store.IsActive}
                           onChange={() =>
@@ -429,14 +473,14 @@ const Stores = () => {
                           }
                         />
                       </td>
-                      <td className="table-cell text-left font-medium align-middle">
-                        <div className="flex justify-center items-center">
-                          <ActionButtons
-                            id={store.StoreID}
-                            onEdit={handleEdit}
-                            onDelete={hasDeletePermission ? handleDelete : null}
-                          />
-                        </div>
+
+                      {/* Actions */}
+                      <td className="table-cell text-center">
+                        <ActionButtons
+                          id={store.StoreID}
+                          onEdit={handleEdit}
+                          onDelete={hasDeletePermission ? handleDelete : null}
+                        />
                       </td>
                     </tr>
                   ))
@@ -495,9 +539,7 @@ const Stores = () => {
                 <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
                   <span
                     className={`status-badge ${
-                      store.IsActive
-                        ? "status-active"
-                        : "status-inactive"
+                      store.IsActive ? "status-active" : "status-inactive"
                     }`}
                   >
                     {getStatusText(store.IsActive)}

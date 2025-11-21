@@ -131,69 +131,79 @@ const ProductList = () => {
   };
 
   const fetchProducts = useCallback(async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    const token = localStorage.getItem("token");
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem("token");
 
-    const params = {
-      pageNumber: nCurrentPage,
-      pageSize: itemsPerPage,
-      searchText: sSearchTerm,
-    };
+      const params = {
+        pageNumber: nCurrentPage,
+        pageSize: itemsPerPage,
+        searchText: sSearchTerm,
+      };
 
-    if (oFilters.status && oFilters.status !== "all") {
-      params.IsActive = oFilters.status === "true";
-    }
+      if (oFilters.status && oFilters.status !== "all") {
+        params.IsActive = oFilters.status === "true";
+      }
 
-    // Map selected brand name to ID only when needed
-    if (oFilters.brand && oFilters.brand !== "all") {
-      const selectedBrand = brands.find(b => b.BrandName === oFilters.brand);
-      if (selectedBrand) params.brandId = [selectedBrand.BrandID];
-    }
+      // Map selected brand name to ID only when needed
+      if (oFilters.brand && oFilters.brand !== "all") {
+        const selectedBrand = brands.find(
+          (b) => b.BrandName === oFilters.brand
+        );
+        if (selectedBrand) params.brandId = [selectedBrand.BrandID];
+      }
 
-    if (oFilters.category && oFilters.category !== "all") {
-      const selectedCategory = categories.find(c => c.CategoryName === oFilters.category);
-      if (selectedCategory) params.categoryId = [selectedCategory.CategoryID];
-    }
+      if (oFilters.category && oFilters.category !== "all") {
+        const selectedCategory = categories.find(
+          (c) => c.CategoryName === oFilters.category
+        );
+        if (selectedCategory) params.categoryId = [selectedCategory.CategoryID];
+      }
 
-    const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
-    const resData = oResponse?.data;
+      const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
+      const resData = oResponse?.data;
 
-    if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
-      const rawProducts = Array.isArray(resData.data) ? resData.data : [];
-      const transformedProducts = rawProducts.map(product => {
-        const firstVariant = product.Variants.find(v => v.IsActive) || product.Variants[0] || {};
-        return {
-          ...product,
-          subCategory: product.CategoryName,
-          MRP: firstVariant.MRP || "0.00",
-          quantity: getTotalStock(firstVariant.Inventory || []),
-          brandName: getBrandName(product),
-          firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
-          status: product.IsActive && getTotalStock(firstVariant.Inventory || []) > 0 ? "active" : "out-of-stock",
-        };
-      });
-      setProducts(transformedProducts);
-      setTotalItems(resData.pagination?.totalRecords || 0);
-      setTotalPages(resData.pagination?.totalPages || 0);
-    } else {
-      setError(resData?.message || t("COMMON.API_ERROR"));
+      if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+        const rawProducts = Array.isArray(resData.data) ? resData.data : [];
+        const transformedProducts = rawProducts.map((product) => {
+          const firstVariant =
+            product.Variants.find((v) => v.IsActive) ||
+            product.Variants[0] ||
+            {};
+          return {
+            ...product,
+            subCategory: product.CategoryName,
+            MRP: firstVariant.MRP || "0.00",
+            quantity: getTotalStock(firstVariant.Inventory || []),
+            brandName: getBrandName(product),
+            firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
+            status:
+              product.IsActive &&
+              getTotalStock(firstVariant.Inventory || []) > 0
+                ? "active"
+                : "out-of-stock",
+          };
+        });
+        setProducts(transformedProducts);
+        setTotalItems(resData.pagination?.totalRecords || 0);
+        setTotalPages(resData.pagination?.totalPages || 0);
+      } else {
+        setError(resData?.message || t("COMMON.API_ERROR"));
+        setProducts([]);
+        setTotalItems(0);
+        setTotalPages(0);
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
       setProducts([]);
       setTotalItems(0);
       setTotalPages(0);
+    } finally {
+      setLoading(false);
+      setFilterLoading(false);
     }
-  } catch (err) {
-    setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
-    setProducts([]);
-    setTotalItems(0);
-    setTotalPages(0);
-  } finally {
-    setLoading(false);
-    setFilterLoading(false);
-  }
-}, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
-
+  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
 
   useEffect(() => {
     fetchProducts();
@@ -462,27 +472,28 @@ const ProductList = () => {
                 }`}
               >
                 <tr>
-                  <th className="table-head-cell-floating">
+                  <th className="table-head-cell-floating text-left">
                     {t("PRODUCTS.TITLE")}
                   </th>
-                  <th className="table-head-cell-floating mr-2">
+                  <th className="table-head-cell-floating text-center">
                     {t("COMMON.CATEGORY")}
                   </th>
-                  <th className="table-head-cell-floating mr-2">
+                  <th className="table-head-cell-floating text-center">
                     {t("PRODUCTS.BRAND")}
                   </th>
-                  <th className="table-head-cell-floating">
+                  <th className="table-head-cell-floating text-center">
                     {t("COMMON.STATUS")}
                   </th>
-                  <th className="table-head-cell-floating">
+                  <th className="table-head-cell-floating text-center">
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>
               </thead>
+
               <tbody className="table-body">
                 {bFilterLoading ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center">
+                    <td colSpan={5} className="py-8 text-center">
                       <div className="flex justify-center">
                         <Loader size="small" />
                       </div>
@@ -490,7 +501,7 @@ const ProductList = () => {
                   </tr>
                 ) : aProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-gray-500">
+                    <td colSpan={5} className="py-8 text-center text-gray-500">
                       {t("PRODUCTS.NO_PRODUCTS")}
                     </td>
                   </tr>
@@ -498,7 +509,7 @@ const ProductList = () => {
                   aProducts.map((product) => (
                     <tr key={product.ProductID} className="table-row">
                       {/* Product Name */}
-                      <td className="table-cell">
+                      <td className="table-cell text-left align-middle">
                         <div className="flex items-center p-2">
                           <div className="h-10 w-10 flex-shrink-0">
                             <img
@@ -523,7 +534,7 @@ const ProductList = () => {
                       </td>
 
                       {/* Category */}
-                      <td className="table-cell text-left">
+                      <td className="table-cell text-center align-middle">
                         <div
                           className="ellipsis-text"
                           title={product.subCategory}
@@ -533,7 +544,7 @@ const ProductList = () => {
                       </td>
 
                       {/* Brand */}
-                      <td className="table-cell text-left">
+                      <td className="table-cell text-center align-middle">
                         <div
                           className="ellipsis-text"
                           title={product.brandName}
@@ -543,7 +554,7 @@ const ProductList = () => {
                       </td>
 
                       {/* Status */}
-                      <td className="table-cell flex justify-center items-center">
+                      <td className="table-cell text-center align-middle">
                         <Switch
                           checked={product.IsActive}
                           onChange={() =>
@@ -556,14 +567,12 @@ const ProductList = () => {
                       </td>
 
                       {/* Actions */}
-                      <td className="table-cell text-left font-medium">
-                        <div className="flex items-center">
-                          <ActionButtons
-                            id={product.ProductID}
-                            onEdit={handleEdit}
-                            viewLink={`/productdetails/${product.ProductID}`}
-                          />
-                        </div>
+                      <td className="table-cell text-center align-middle">
+                        <ActionButtons
+                          id={product.ProductID}
+                          onEdit={handleEdit}
+                          viewLink={`/productdetails/${product.ProductID}`}
+                        />
                       </td>
                     </tr>
                   ))

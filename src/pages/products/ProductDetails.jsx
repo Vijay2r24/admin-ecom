@@ -77,7 +77,8 @@ const ProductDetails = () => {
   const getVariantAttributes = (variant) => {
     const attributes = {};
     variant.Attributes.forEach((attr) => {
-      attributes[attr.Name] = {
+      const key = attr.Name.trim(); // <-- trim whitespace
+      attributes[key] = {
         id: attr.AttributeValueID,
         value: attr.Value,
         unit: attr.Unit,
@@ -326,6 +327,7 @@ const ProductDetails = () => {
                 </div>
 
                 {/* All Variants Table */}
+                {/* All Variants Table */}
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-semibold text-gray-900">
@@ -341,10 +343,10 @@ const ProductDetails = () => {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {t("PRODUCT_CREATION.SIZE")}
+                            {t("PRODUCT_CREATION.VARIANT")}
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {t("PRODUCT_CREATION.VARIANT")}
+                            {t("PRODUCT_CREATION.SIZE")}
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             {t("PRODUCT_CREATION.COLOUR_ID")}
@@ -369,10 +371,15 @@ const ProductDetails = () => {
                       <tbody className="bg-white divide-y divide-gray-200">
                         {product.Variants.map((variant, index) => {
                           const attributes = getVariantAttributes(variant);
-                          const discount = calculateDiscount(
-                            variant.MRP,
-                            variant.SellingPrice
-                          );
+                          // Get the first inventory item for pricing (assuming same price across stores)
+                          const inventory =
+                            variant.Inventory && variant.Inventory[0];
+                          const sellingPrice = inventory
+                            ? inventory.SellingPrice
+                            : "0.00";
+                          const discountPercentage = inventory
+                            ? inventory.DiscountPercentage
+                            : "0.00";
                           const totalStock = getTotalInventory(variant);
 
                           return (
@@ -441,12 +448,12 @@ const ProductDetails = () => {
                                 ₹{parseFloat(variant.MRP).toFixed(2)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                                ₹{parseFloat(variant.SellingPrice).toFixed(2)}
+                                ₹{parseFloat(sellingPrice).toFixed(2)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                {discount > 0 ? (
+                                {parseFloat(discountPercentage) > 0 ? (
                                   <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
-                                    {discount}%
+                                    {parseFloat(discountPercentage)}%
                                   </span>
                                 ) : (
                                   <span className="text-gray-500">-</span>
@@ -662,31 +669,6 @@ const ProductDetails = () => {
                       </p>
                       <p className="text-gray-700 text-lg font-medium">
                         {product.CategoryName}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div className="p-3 bg-purple-50 rounded-lg">
-                      <IndianRupee className="h-6 w-6 text-purple-600 flex-shrink-0" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 mb-1">
-                        {t("PRODUCTS.PRICING_RANGE")}
-                      </p>
-                      <p className="text-gray-700 text-lg font-medium">
-                        ₹
-                        {Math.min(
-                          ...product.Variants.map((v) =>
-                            parseFloat(v.SellingPrice)
-                          )
-                        ).toLocaleString("en-IN")}{" "}
-                        - ₹
-                        {Math.max(
-                          ...product.Variants.map((v) =>
-                            parseFloat(v.SellingPrice)
-                          )
-                        ).toLocaleString("en-IN")}
                       </p>
                     </div>
                   </div>

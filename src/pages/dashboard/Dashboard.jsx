@@ -443,7 +443,7 @@ const Dashboard = () => {
       // Update recent orders
       setRecentOrders(
         recentOrdersData.map((order) => ({
-          id: order.OrderID || `ORD-${Math.random().toString(36).substr(2, 9)}`,
+          id: order.OrderRefID || `ORD-${Math.random().toString(36).substr(2, 9)}`,
           customer: order.Customer
             ? `${order.Customer.FirstName} ${order.Customer.LastName}`
             : "Unknown Customer",

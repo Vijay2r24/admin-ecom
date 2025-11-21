@@ -382,22 +382,29 @@ const SpecificationTypeList = ({ setSubmitting }) => {
             <table className="table-base">
               <thead className="table-head">
                 <tr>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-left">
                     {t("PRODUCT_SETUP.SPECIFICATION_TYPES.TABLE.NAME")}
                   </th>
-                  <th className="table-head-cell">{t("COMMON.CREATED_AT")}</th>
-                  <th className="table-head-cell">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-center">
+                    {t("COMMON.CREATED_AT")}
+                  </th>
+                  <th className="table-head-cell text-center">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell text-center">
                     {t("COMMON.UPDATE_STATUS")}
                   </th>
-                  <th className="table-head-cell">{t("COMMON.ACTIONS")}</th>
+                  <th className="table-head-cell text-center">
+                    {t("COMMON.ACTIONS")}
+                  </th>
                 </tr>
               </thead>
+
               <tbody className="table-body">
                 {/* Create row */}
                 {editForm.open && editForm.mode === FORM_MODES.CREATE && (
                   <tr className="table-row bg-blue-50">
-                    <td className="table-cell">
+                    <td className="table-cell text-left align-middle">
                       <input
                         type="text"
                         name="name"
@@ -410,17 +417,19 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                         required
                       />
                     </td>
-                    <td className="table-cell table-cell-text">-</td>
-                    <td className="table-cell">
+                    <td className="table-cell text-center align-middle table-cell-text">
+                      -
+                    </td>
+                    <td className="table-cell text-center align-middle">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-active">
                         {t("COMMON.ACTIVE")}
                       </span>
                     </td>
-                    <td className="table-cell table-cell-text">
+                    <td className="table-cell text-center align-middle table-cell-text">
                       <Switch checked={true} disabled={true} />
                     </td>
-                    <td className="table-cell">
-                      <div className="flex items-center gap-2">
+                    <td className="table-cell text-center align-middle">
+                      <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={handleFormSubmit}
                           className="btn-primary py-1 px-3 text-sm"
@@ -453,7 +462,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                     >
                       {/* Name column */}
                       <td
-                        className={`table-cell ${
+                        className={`table-cell text-left align-middle ${
                           isInactive && !editing ? "text-gray-500" : ""
                         }`}
                       >
@@ -489,27 +498,20 @@ const SpecificationTypeList = ({ setSubmitting }) => {
 
                       {/* Created At column */}
                       <td
-                        className={`table-cell table-cell-text ${
+                        className={`table-cell text-center align-middle table-cell-text ${
                           isInactive && !editing ? "text-gray-400" : ""
                         }`}
                       >
                         {specType.CreatedAt
                           ? new Date(specType.CreatedAt).toLocaleString(
                               undefined,
-                              {
-                                year:DATE_FORMAT_OPTIONS.year,
-                                month: DATE_FORMAT_OPTIONS.month,
-                                day: DATE_FORMAT_OPTIONS.day,
-                                hour: DATE_FORMAT_OPTIONS.hour,
-                                minute: DATE_FORMAT_OPTIONS.minute,
-                                hour12: true,
-                              }
+                              DATE_FORMAT_OPTIONS
                             )
                           : "-"}
                       </td>
 
                       {/* Status */}
-                      <td className="table-cell">
+                      <td className="table-cell text-center align-middle">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             currentStatus ? "status-active" : "status-inactive"
@@ -520,9 +522,9 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                       </td>
 
                       {/* Toggle status */}
-                      <td className="table-cell table-cell-text">
+                      <td className="table-cell text-center align-middle table-cell-text">
                         <Switch
-                          checked={Boolean(currentStatus)} // Ensure it's a boolean
+                          checked={Boolean(currentStatus)}
                           onChange={() =>
                             handleStatusChange(
                               specType.SpecificationTypeID,
@@ -534,8 +536,8 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                       </td>
 
                       {/* Actions */}
-                      <td className="table-cell">
-                        <div className="flex items-center gap-2">
+                      <td className="table-cell text-center align-middle">
+                        <div className="flex items-center justify-center gap-2">
                           {editing ? (
                             <>
                               <button
@@ -554,7 +556,6 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                           ) : (
                             <ActionButtons
                               id={specType.SpecificationTypeID}
-                              className="mr-10"
                               onEdit={() => handleEdit(specType)}
                               disableEdit={isInactive}
                             />
