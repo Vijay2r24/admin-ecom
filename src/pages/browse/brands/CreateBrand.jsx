@@ -22,6 +22,7 @@ import {
   STATUS_VALUES,
   STATUS_OPTIONS,
   FILE_CONSTANTS,
+  STATUS_VALUE_NAMES,
 } from "../../../contants/constants";
 
 import { ToastContainer } from "react-toastify";
@@ -177,7 +178,7 @@ const CreateBrand = () => {
               IsActive:
                 brand.IsActive !== undefined
                   ? brand.IsActive
-                  : brand.Status === "Active",
+                  : brand.Status === STATUS_VALUE_NAMES.ACTIVE,
               BrandLogo: null,
               description: brand.BrandDescription || "",
               CreatedBy: brand.CreatedBy || t("COMMON.ADMIN"),

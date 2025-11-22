@@ -13,7 +13,7 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { COLORS, STATUS, STATUS_DROPDOWN_OPTIONS } from "../contants/constants";
+import { COLORS, STATUS, STATUS_DROPDOWN_OPTIONS, STATUS_VALUES } from "../contants/constants";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
 import SelectWithIcon from "../components/SelectWithIcon";
@@ -474,7 +474,7 @@ const AddUserRole = () => {
     if (isAdminRole()) {
       return;
     }
-    setIsActive(e.target.value === "true");
+    setIsActive(e.target.value === STATUS_VALUES.BOOLEAN_ACTIVE);
   };
 
   const handleSave = useCallback(

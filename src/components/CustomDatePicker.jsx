@@ -9,12 +9,13 @@ import {
   AlertCircle,
 } from "lucide-react";
 import {
-  QUICK_FILTERS,
   MONTHS,
   WEEK_DAYS,
   STYLES,
   DATE_FORMATS,
   DATE_UNITS,
+  QUICK_FILTER_VALUES,
+  QUICK_FILTER_LABELS,
 } from "../contants/constants";
 
 function DateTimeRangePickerComponent({
@@ -198,14 +199,10 @@ function DateTimeRangePickerComponent({
     setShowDropdown(false);
   };
 
-  const filteredQuickFilters = [
-    { value: "last3hours", label: "Last 3 Hours" },
-    { value: "last6hours", label: "Last 6 Hours" },
-    { value: "last12hours", label: "Last 12 Hours" },
-    { value: "last24hours", label: "Last 24 Hours" },
-    { value: "last2days", label: "Last 2 Days" },
-    { value: "last7days", label: "Last 7 Days" },
-  ];
+const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
+  value,
+  label: QUICK_FILTER_LABELS[index],
+}));
 
   const startOfMonth = selectedMonth.startOf("month");
   const endOfMonth = selectedMonth.endOf("month");

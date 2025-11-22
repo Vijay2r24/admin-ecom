@@ -28,7 +28,7 @@ const CreateColor = () => {
     HexCode: DEFAULT_COLOR,
     IsActive: true,
     RgbCode: "",
-    CreatedBy: userId || "Admin",
+    CreatedBy: userId,
   });
 
   const [oErrors, setErrors] = useState({});
@@ -191,7 +191,7 @@ const CreateColor = () => {
       RgbCode: oFormData.RgbCode,
       TenantID: oFormData.TenantID,
       IsActive: oFormData.IsActive,
-      CreatedBy: userId || "Admin",
+      CreatedBy: userId,
     };
 
     try {

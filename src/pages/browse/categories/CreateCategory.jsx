@@ -14,7 +14,7 @@ import {
 } from "../../../contants/apiRoutes";
 import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
-import { STATUS } from "../../../contants/constants";
+import { STATUS, TOOLTIPSTATUS } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 
 import TextInputWithIcon from "../../../components/TextInputWithIcon";
@@ -79,20 +79,17 @@ const CreateCategory = () => {
   const validateCategoryName = (name) => {
     if (!name?.trim()) {
       return (
-        t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_ERROR") ||
-        "Category name is required"
+        t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_ERROR")
       );
     }
     if (name.trim().length < 2) {
       return (
-        t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_MIN_LENGTH") ||
-        "Category name must be at least 2 characters"
+        t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_MIN_LENGTH")
       );
     }
     if (name.trim().length > 100) {
       return (
-        t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_MAX_LENGTH") ||
-        "Category name must be less than 100 characters"
+        t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_MAX_LENGTH")
       );
     }
     return "";
@@ -102,14 +99,12 @@ const CreateCategory = () => {
     const descLength = description?.trim().length || 0;
     if (descLength < 10 && descLength > 0) {
       return (
-        t("PRODUCT_SETUP.CREATE_CATEGORY.DESCRIPTION_MIN_LENGTH") ||
-        "Description must be at least 10 characters long"
+        t("PRODUCT_SETUP.CREATE_CATEGORY.DESCRIPTION_MIN_LENGTH")
       );
     }
     if (descLength > 500) {
       return (
-        t("PRODUCT_SETUP.CREATE_CATEGORY.DESCRIPTION_MAX_LENGTH") ||
-        "Description cannot exceed 500 characters"
+        t("PRODUCT_SETUP.CREATE_CATEGORY.DESCRIPTION_MAX_LENGTH")
       );
     }
     return "";
@@ -118,8 +113,7 @@ const CreateCategory = () => {
   const validateCategoryImage = (hasImage) => {
     if (!isEditing && !hasImage) {
       return (
-        t("PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_REQUIRED") ||
-        "Category image is required"
+        t("PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_REQUIRED")
       );
     }
     return "";
@@ -212,7 +206,7 @@ const CreateCategory = () => {
               IsActive:
                 categoryData.IsActive !== undefined
                   ? categoryData.IsActive
-                  : categoryData.Status?.toLowerCase() === "active",
+                  : categoryData.Status?.toLowerCase() === TOOLTIPSTATUS.ACTIVE,
               UpdatedBy: "",
             });
 

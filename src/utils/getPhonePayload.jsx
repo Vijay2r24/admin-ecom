@@ -1,6 +1,7 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { COUNTRY_CODES } from "../contants/constants";
 
-export const getPhonePayload = (fullNumber = "", defaultCountryCode = "+91") => {
+export const getPhonePayload = (fullNumber = "", defaultCountryCode = COUNTRY_CODES.INDIA) => {
   // If empty value
   if (!fullNumber) {
     return {

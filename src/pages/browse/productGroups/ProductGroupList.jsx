@@ -6,7 +6,7 @@ import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Switch from "../../../components/Switch";
 import { useProductGroups } from "../../../context/AllDataContext";
-import { STATUS } from "../../../contants/constants";
+import { STATUS, STATUS_VALUES } from "../../../contants/constants";
 import {UPDATE_PRODUCT_GROUPSTATUS } from "../../../contants/apiRoutes";
 
 const ITEMS_PER_PAGE = 10;
@@ -194,14 +194,14 @@ const ProductGroupList = ({ onCreate }) => {
                   <td className="table-cell">
                     <span
                       className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        group.IsActive === true || group.IsActive === "true"
+                        group.IsActive === true || group.IsActive === STATUS_VALUES.BOOLEAN_ACTIVE
                           ? "status-active"
                           : "status-inactive"
                       }`}
                     >
                       {t(
                         `COMMON.${
-                          group.IsActive === true || group.IsActive === "true"
+                          group.IsActive === true || group.IsActive === STATUS_VALUES.BOOLEAN_ACTIVE
                             ? "ACTIVE"
                             : "INACTIVE"
                         }`
@@ -210,11 +210,11 @@ const ProductGroupList = ({ onCreate }) => {
                   </td>
                   <td className="table-cell" onClick={(e) => e.stopPropagation()}>
                     <Switch
-                      checked={group.IsActive === true || group.IsActive === "true"}
+                      checked={group.IsActive === true || group.IsActive === STATUS_VALUES.BOOLEAN_ACTIVE}
                       onChange={() =>
                         handleStatusChange(
                           group.ProductGroupID,
-                          group.IsActive === true || group.IsActive === "true"
+                          group.IsActive === true || group.IsActive === STATUS_VALUES.BOOLEAN_ACTIVE
                         )
                       }
                     />
