@@ -14,7 +14,7 @@ import {
 } from "../../../contants/apiRoutes";
 import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
-import { STATUS, TOOLTIPSTATUS } from "../../../contants/constants";
+import { FILETYPE, SCROLL_CONSTANTS, STATUS, TOOLTIPSTATUS } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 
 import TextInputWithIcon from "../../../components/TextInputWithIcon";
@@ -27,7 +27,7 @@ import Loader from "../../../components/Loader";
 
 const FILE_CONSTANTS = {
   CATEGORY_IMAGE_PREFIX: "category",
-  FILE_TYPE: "image/jpeg",
+  FILE_TYPE: FILETYPE,
 };
 
 const defaultFormData = {
@@ -456,7 +456,8 @@ const CreateCategory = () => {
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
         if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
+          block: SCROLL_CONSTANTS.BLOCK, });
           element.focus();
         }
       }

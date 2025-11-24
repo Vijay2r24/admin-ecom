@@ -9,7 +9,7 @@ import Loader from "../../../components/Loader";
 import { ToastContainer } from "react-toastify";
 
 import { CREATE_COLOUR } from "../../../contants/apiRoutes";
-import { STATUS, STATUS_VALUES, STATUS_OPTIONS, DEFAULT_COLOR } from "../../../contants/constants";
+import { STATUS, STATUS_VALUES, STATUS_OPTIONS, DEFAULT_COLOR, SCROLL_CONSTANTS } from "../../../contants/constants";
 import { apiPost } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
@@ -177,7 +177,8 @@ const CreateColor = () => {
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
         if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
+          block: SCROLL_CONSTANTS.BLOCK, });
           element.focus();
         }
       }

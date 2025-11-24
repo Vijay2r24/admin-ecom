@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { apiPost } from "../utils/ApiUtils";
 import { SEND_NOTIFICATIONS } from "../contants/apiRoutes";
-import { STATUS } from "../contants/constants";
+import { REGEX_CONSTANTS, SCROLL_CONSTANTS, STATUS } from "../contants/constants";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
 import { useTitle } from "../context/TitleContext";
@@ -99,7 +99,7 @@ const Notifications = () => {
       return t("PUSH_NOTIFICATION.VALIDATION.COMPONENT_NAME_MAX_LENGTH");
     }
     // Validate component name format (alphanumeric and underscores)
-    if (componentName?.trim() && !/^[a-zA-Z0-9_]+$/.test(componentName.trim())) {
+    if (componentName?.trim() && !REGEX_CONSTANTS.COMPONENT_NAME.test(componentName.trim())) {
       return t("PUSH_NOTIFICATION.VALIDATION.COMPONENT_NAME_INVALID");
     }
     return "";
@@ -341,7 +341,8 @@ const Notifications = () => {
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
         if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
+          block: SCROLL_CONSTANTS.BLOCK, });
           element.focus();
         }
       }

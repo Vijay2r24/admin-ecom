@@ -330,6 +330,11 @@ export const DATE_UNITS = {
   HOURS: "hours",
 };
 export const DEFAULT_COUNTRY = "IN";
+export const FILETYPE= "image/jpeg";
+export const SCROLL_CONSTANTS = {
+  BEHAVIOR: "smooth",
+  BLOCK: "center",
+};
 export const DEFAULT_PROPS = {
   showLabel: true,
   placeholder: "Select date range",
@@ -413,4 +418,8 @@ export const COUNTRY_CODES = {
   USA: "+1",
   UK: "+44",
   // Add more if needed
+};
+export const REGEX_CONSTANTS = {
+  COMPONENT_NAME: /^[a-zA-Z0-9_]+$/,    // for componentName validation
+  ROLE_NAME: /^[A-Za-z0-9\s\-_]+$/,     // for roleName validation
 };

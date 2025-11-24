@@ -89,7 +89,6 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
 
       showEmsg(result.message, result.status || STATUS.SUCCESS);
     } catch (err) {
-    
       showEmsg(t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
       setStatusPopup({ open: false, AttributeTypeID: null, newStatus: null });
@@ -203,7 +202,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                   <th className="table-head-cell text-left">
                     {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.NAME")}
                   </th>
-                  <th className="table-head-cell text-left">
+                  <th className="table-head-cell text-center">
                     {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.DESCRIPTION_LABEL")}
                   </th>
                   <th className="table-head-cell text-center">
@@ -250,12 +249,12 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
 
                     {/* Description */}
                     <td
-                      className={`table-cell text-left align-middle ${
+                      className={`table-cell text-center align-middle ${
                         !type.IsActive ? "text-gray-400" : ""
                       }`}
                     >
                       <div
-                        className="table-cell-subtext truncate max-w-[220px]"
+                        className="table-cell-subtext truncate max-w-[220px] mx-auto"
                         title={type.AttributeTypeDescription}
                       >
                         {type.AttributeTypeDescription}

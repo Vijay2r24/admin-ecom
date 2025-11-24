@@ -13,7 +13,7 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { STATUS } from "../contants/constants";
+import { COUNTRY_CODES, STATUS } from "../contants/constants";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -375,8 +375,8 @@ const AddStore = () => {
           rawPhoneNumber = phoneWithoutSpaces.substring(countryCode.length);
         } else if (store.PhoneNumber) {
           // If no country code but has phone number, use default country code
-          formattedPhone = `+91 ${store.PhoneNumber}`;
-          countryCode = "+91";
+          formattedPhone = `+${COUNTRY_CODES.INDIA} ${store.PhoneNumber}`;
+           countryCode = COUNTRY_CODES.INDIA;
           rawPhoneNumber = store.PhoneNumber.replace(/\D/g, "");
         }
 

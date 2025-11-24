@@ -13,7 +13,7 @@ import {
   CREATE_ATTRIBUTE_VALUE,
 } from "../../../contants/apiRoutes";
 import { showEmsg } from "../../../utils/ShowEmsg";
-import { STATUS, STATUS_VALUES, STATUS_OPTIONS } from "../../../contants/constants";
+import { STATUS, STATUS_VALUES, STATUS_OPTIONS, SCROLL_CONSTANTS } from "../../../contants/constants";
 import BackButton from "../../../components/BackButton";
 import { ToastContainer } from "react-toastify";
 import Loader from "../../../components/Loader";
@@ -233,7 +233,8 @@ const CreateAttribute = () => {
     if (firstErrorField) {
       const element = document.getElementById(firstErrorField);
       if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
+        block: SCROLL_CONSTANTS.BLOCK, });
         element.focus();
       }
     }

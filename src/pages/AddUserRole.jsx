@@ -13,7 +13,14 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { COLORS, STATUS, STATUS_DROPDOWN_OPTIONS, STATUS_VALUES } from "../contants/constants";
+import {
+  COLORS,
+  REGEX_CONSTANTS,
+  SCROLL_CONSTANTS,
+  STATUS,
+  STATUS_DROPDOWN_OPTIONS,
+  STATUS_VALUES,
+} from "../contants/constants";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
 import SelectWithIcon from "../components/SelectWithIcon";
@@ -84,7 +91,7 @@ const AddUserRole = () => {
       return t("CREATE_USER_ROLE.ROLE_NAME_MAX_LENGTH");
     }
     // Check for special characters (only allow letters, numbers, spaces, and basic punctuation)
-    const roleNameRegex = /^[A-Za-z0-9\s\-_]+$/;
+    const roleNameRegex = REGEX_CONSTANTS.ROLE_NAME;
     if (!roleNameRegex.test(roleName.trim())) {
       return t("CREATE_USER_ROLE.ROLE_NAME_INVALID");
     }
@@ -92,8 +99,9 @@ const AddUserRole = () => {
   };
 
   const validatePermissions = (permissions) => {
-    const hasSelectedPermissions = Object.values(permissions).some(modulePermissions =>
-      modulePermissions.some(permission => permission.IsChecked)
+    const hasSelectedPermissions = Object.values(permissions).some(
+      (modulePermissions) =>
+        modulePermissions.some((permission) => permission.IsChecked)
     );
     if (!hasSelectedPermissions) {
       return t("CREATE_USER_ROLE.PERMISSIONS_REQUIRED");
@@ -104,30 +112,33 @@ const AddUserRole = () => {
   /**
    * Live validation for a specific field
    */
-  const validateField = useCallback((name, value) => {
-    let error = "";
-    
-    switch (name) {
-      case "RoleName":
-        error = validateRoleName(value);
-        break;
-      case "Permissions":
-        error = validatePermissions(value);
-        break;
-      default:
-        break;
-    }
+  const validateField = useCallback(
+    (name, value) => {
+      let error = "";
 
-    setErrors(prev => ({
-      ...prev,
-      [name]: error
-    }));
+      switch (name) {
+        case "RoleName":
+          error = validateRoleName(value);
+          break;
+        case "Permissions":
+          error = validatePermissions(value);
+          break;
+        default:
+          break;
+      }
 
-    setFieldValid(prev => ({
-      ...prev,
-      [name]: !error && (value !== "" && value !== null && value !== undefined)
-    }));
-  }, [t]);
+      setErrors((prev) => ({
+        ...prev,
+        [name]: error,
+      }));
+
+      setFieldValid((prev) => ({
+        ...prev,
+        [name]: !error && value !== "" && value !== null && value !== undefined,
+      }));
+    },
+    [t]
+  );
 
   const isViewPermissionName = (name) => {
     if (!name || typeof name !== "string") return false;
@@ -361,7 +372,7 @@ const AddUserRole = () => {
           });
 
         setPermissionsByModule(ordered);
-        
+
         // Validate permissions after setting
         setTimeout(() => {
           validateField("Permissions", ordered);
@@ -432,7 +443,7 @@ const AddUserRole = () => {
 
   const validateRoleDataSubmit = useCallback(() => {
     const newErrors = {};
-    
+
     newErrors.RoleName = validateRoleName(sRoleName);
     newErrors.Permissions = validatePermissions(oPermissionsByModule);
 
@@ -486,13 +497,21 @@ const AddUserRole = () => {
         if (firstErrorField) {
           const element = document.getElementById(firstErrorField);
           if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            element.scrollIntoView({
+              behavior: SCROLL_CONSTANTS.BEHAVIOR,
+              block: SCROLL_CONSTANTS.BLOCK,
+            });
             element.focus();
           } else if (firstErrorField === "Permissions") {
             // Scroll to permissions section if permissions error
-            const permissionsSection = document.querySelector('.permissions-section');
+            const permissionsSection = document.querySelector(
+              ".permissions-section"
+            );
             if (permissionsSection) {
-              permissionsSection.scrollIntoView({ behavior: "smooth", block: "center" });
+              permissionsSection.scrollIntoView({
+                behavior: SCROLL_CONSTANTS.BEHAVIOR,
+                block: SCROLL_CONSTANTS.BLOCK,
+              });
             }
           }
         }
@@ -612,7 +631,7 @@ const AddUserRole = () => {
   // Count selected permissions for feedback
   const selectedPermissionsCount = Object.values(oPermissionsByModule)
     .flat()
-    .filter(permission => permission.IsChecked).length;
+    .filter((permission) => permission.IsChecked).length;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -664,10 +683,9 @@ const AddUserRole = () => {
                 />
               </div>
             </div>
-            
 
             <hr className="border-gray-300 my-4 mb-6" />
-            
+
             <div className="permissions-section">
               {loadingPermissions ? (
                 <div className="text-center py-8 truncate">
@@ -677,9 +695,9 @@ const AddUserRole = () => {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Object.keys(oPermissionsByModule).map((moduleName) => {
-                      const isAllSelected = oPermissionsByModule[moduleName].every(
-                        (permission) => permission.IsChecked
-                      );
+                      const isAllSelected = oPermissionsByModule[
+                        moduleName
+                      ].every((permission) => permission.IsChecked);
 
                       return (
                         <div
@@ -713,29 +731,34 @@ const AddUserRole = () => {
                             </label>
                           </div>
                           <hr className="border-gray-300 my-4 mt-2 mb-4" />
-                          {oPermissionsByModule[moduleName].map((permission) => (
-                            <div
-                              key={permission.ID}
-                              className="flex items-center mb-2"
-                            >
-                              <label className="truncate">
-                                <input
-                                  type="checkbox"
-                                  checked={permission.IsChecked}
-                                  onChange={() =>
-                                    handleCheckboxChange(moduleName, permission.ID)
-                                  }
-                                  className={`mr-2 form-checkbox h-[12px] w-[12px] ${
-                                    isEditingAdmin
-                                      ? "text-gray-400 cursor-not-allowed"
-                                      : "text-blue-600"
-                                  }`}
-                                  disabled={isEditingAdmin}
-                                />
-                                {permission.Name}
-                              </label>
-                            </div>
-                          ))}
+                          {oPermissionsByModule[moduleName].map(
+                            (permission) => (
+                              <div
+                                key={permission.ID}
+                                className="flex items-center mb-2"
+                              >
+                                <label className="truncate">
+                                  <input
+                                    type="checkbox"
+                                    checked={permission.IsChecked}
+                                    onChange={() =>
+                                      handleCheckboxChange(
+                                        moduleName,
+                                        permission.ID
+                                      )
+                                    }
+                                    className={`mr-2 form-checkbox h-[12px] w-[12px] ${
+                                      isEditingAdmin
+                                        ? "text-gray-400 cursor-not-allowed"
+                                        : "text-blue-600"
+                                    }`}
+                                    disabled={isEditingAdmin}
+                                  />
+                                  {permission.Name}
+                                </label>
+                              </div>
+                            )
+                          )}
                         </div>
                       );
                     })}

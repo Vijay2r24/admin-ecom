@@ -23,6 +23,7 @@ import {
   STATUS_OPTIONS,
   FILE_CONSTANTS,
   STATUS_VALUE_NAMES,
+  SCROLL_CONSTANTS,
 } from "../../../contants/constants";
 
 import { ToastContainer } from "react-toastify";
@@ -411,7 +412,8 @@ const CreateBrand = () => {
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
         if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
+         block: SCROLL_CONSTANTS.BLOCK, });
           element.focus();
         }
       }

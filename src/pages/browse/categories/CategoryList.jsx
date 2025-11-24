@@ -297,12 +297,12 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
 
                     {/* Description */}
                     <td
-                      className={`table-cell text-left align-middle max-w-[200px] overflow-hidden ${
+                      className={`table-cell text-center align-middle max-w-[200px] overflow-hidden ${
                         !isCategoryActive(category) ? "text-gray-400" : ""
                       }`}
                     >
                       <div
-                        className="truncate table-cell-subtext"
+                        className="truncate table-cell-subtext mx-auto"
                         title={category.CategoryDescription}
                       >
                         {category.CategoryDescription}

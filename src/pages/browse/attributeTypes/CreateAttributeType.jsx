@@ -16,13 +16,14 @@ import {
   STATUS,
   STATUS_VALUES,
   STATUS_OPTIONS,
+  SCROLL_CONSTANTS,
 } from "../../../contants/constants";
 import BackButton from "../../../components/BackButton";
 import SelectWithIcon from "../../../components/SelectWithIcon";
 import { ToastContainer } from "react-toastify";
 import Loader from "../../../components/Loader";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
-import { fetchResource } from "../../../store/slices/allDataSlice"; 
+import { fetchResource } from "../../../store/slices/allDataSlice";
 
 const CreateAttributeType = () => {
   const { id: AttributeTypeID } = useParams();
@@ -94,30 +95,33 @@ const CreateAttributeType = () => {
   /**
    * Live validation for a specific field
    */
-  const validateField = useCallback((name, value) => {
-    let error = "";
-    
-    switch (name) {
-      case "Name":
-        error = validateName(value);
-        break;
-      case "AttributeTypeDescription":
-        error = validateDescription(value);
-        break;
-      default:
-        break;
-    }
+  const validateField = useCallback(
+    (name, value) => {
+      let error = "";
 
-    setErrors(prev => ({
-      ...prev,
-      [name]: error
-    }));
+      switch (name) {
+        case "Name":
+          error = validateName(value);
+          break;
+        case "AttributeTypeDescription":
+          error = validateDescription(value);
+          break;
+        default:
+          break;
+      }
 
-    setFieldValid(prev => ({
-      ...prev,
-      [name]: !error && (value !== "" && value !== null && value !== undefined)
-    }));
-  }, [t]);
+      setErrors((prev) => ({
+        ...prev,
+        [name]: error,
+      }));
+
+      setFieldValid((prev) => ({
+        ...prev,
+        [name]: !error && value !== "" && value !== null && value !== undefined,
+      }));
+    },
+    [t]
+  );
 
   const fetchAttributeTypeDetails = useCallback(async () => {
     try {
@@ -139,7 +143,10 @@ const CreateAttributeType = () => {
         // Validate initial data after setting
         setTimeout(() => {
           validateField("Name", data.Name || "");
-          validateField("AttributeTypeDescription", data.AttributeTypeDescription || "");
+          validateField(
+            "AttributeTypeDescription",
+            data.AttributeTypeDescription || ""
+          );
         }, 100);
       } else {
         showEmsg(
@@ -171,7 +178,7 @@ const CreateAttributeType = () => {
   const handleInputChange = useCallback(
     ({ target: { name, value, type, checked } }) => {
       const newValue = type === "checkbox" ? checked : value;
-      
+
       setFormData((prev) => ({
         ...prev,
         [name]: newValue,
@@ -185,21 +192,28 @@ const CreateAttributeType = () => {
   /**
    * Handle field blur for additional validation
    */
-  const handleBlur = useCallback((e) => {
-    const { name, value } = e.target;
-    validateField(name, value);
-  }, [validateField]);
+  const handleBlur = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      validateField(name, value);
+    },
+    [validateField]
+  );
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     newErrors.Name = validateName(formData.Name);
-    newErrors.AttributeTypeDescription = validateDescription(formData.AttributeTypeDescription);
+    newErrors.AttributeTypeDescription = validateDescription(
+      formData.AttributeTypeDescription
+    );
 
     // Update field validation states
     setFieldValid({
       Name: !newErrors.Name && formData.Name.trim() !== "",
-      AttributeTypeDescription: !newErrors.AttributeTypeDescription && formData.AttributeTypeDescription.trim() !== "",
+      AttributeTypeDescription:
+        !newErrors.AttributeTypeDescription &&
+        formData.AttributeTypeDescription.trim() !== "",
     });
 
     // Return only errors that have messages
@@ -214,7 +228,7 @@ const CreateAttributeType = () => {
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-      
+
       // Run validation
       if (!validateForm()) {
         // Scroll to first error
@@ -222,7 +236,10 @@ const CreateAttributeType = () => {
         if (firstErrorField) {
           const element = document.getElementById(firstErrorField);
           if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            element.scrollIntoView({
+              behavior: SCROLL_CONSTANTS.BEHAVIOR,
+              block: SCROLL_CONSTANTS.BLOCK,
+            });
             element.focus();
           }
         }
@@ -271,7 +288,6 @@ const CreateAttributeType = () => {
           showEmsg(response.data.message, STATUS.WARNING);
         }
       } catch (err) {
-      
         showEmsg(
           err?.response?.data?.message || t("COMMON.API_ERROR"),
           STATUS.ERROR
@@ -337,12 +353,18 @@ const CreateAttributeType = () => {
             : t("PRODUCT_SETUP.CREATE_ATTRIBUTE_TYPE.CREATE_TITLE")}
         </h2>
       </div>
- 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+      >
         <div className="flex flex-col md:flex-row md:space-x-4">
           <div className="w-full md:w-1/2">
             <TextInputWithIcon
-              label={renderLabel("Name", "PRODUCT_SETUP.CREATE_ATTRIBUTE_TYPE.NAME_LABEL")}
+              label={renderLabel(
+                "Name",
+                "PRODUCT_SETUP.CREATE_ATTRIBUTE_TYPE.NAME_LABEL"
+              )}
               id="Name"
               name="Name"
               value={formData.Name}
@@ -370,10 +392,13 @@ const CreateAttributeType = () => {
             />
           </div>
         </div>
-        
+
         <div className="w-full">
           <TextAreaWithIcon
-            label={renderLabel("AttributeTypeDescription", "COMMON.DESCRIPTION")}
+            label={renderLabel(
+              "AttributeTypeDescription",
+              "COMMON.DESCRIPTION"
+            )}
             id="AttributeTypeDescription"
             name="AttributeTypeDescription"
             value={formData.AttributeTypeDescription}
@@ -391,27 +416,25 @@ const CreateAttributeType = () => {
             currentChars={formData.AttributeTypeDescription?.length || 0}
           />
         </div>
-        
+
         <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
-          <button 
-            type="button" 
-            onClick={navigateBack} 
+          <button
+            type="button"
+            onClick={navigateBack}
             className="btn-cancel"
             disabled={submitting}
           >
             {t("COMMON.CANCEL")}
           </button>
-          <button 
-            type="submit" 
-            className="btn-primary"
-            disabled={submitting}
-          >
-            {submitting ? t("COMMON.SUBMITTING") : isEditing
+          <button type="submit" className="btn-primary" disabled={submitting}>
+            {submitting
+              ? t("COMMON.SUBMITTING")
+              : isEditing
               ? t("COMMON.SAVE_BUTTON")
               : t("PRODUCT_SETUP.CREATE_ATTRIBUTE_TYPE.CREATE_BUTTON")}
           </button>
         </div>
-        
+
         {isEditing && (
           <div className="mt-8 pt-6 border-t border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -429,7 +452,9 @@ const CreateAttributeType = () => {
               </div>
             ) : attributesError ? (
               <div className="text-center py-8 text-red-500 bg-red-50 rounded-lg p-4">
-                <p className="font-medium">{t("COMMON.ERROR")}: {attributesError}</p>
+                <p className="font-medium">
+                  {t("COMMON.ERROR")}: {attributesError}
+                </p>
               </div>
             ) : attributeValues.length > 0 ? (
               <div className="overflow-x-auto">

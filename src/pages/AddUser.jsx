@@ -31,7 +31,7 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { GENDER_OPTIONS, PERMISSIONS, STATUS } from "../contants/constants";
+import { COUNTRY_CODES, GENDER_OPTIONS, PERMISSIONS, STATUS } from "../contants/constants";
 import md5 from "md5";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
@@ -660,7 +660,7 @@ const AddUser = () => {
           formattedPhone = user.PhoneNumber;
         } else if (user.PhoneNumber) {
           // If no country code but has phone number, use default country code
-          formattedPhone = `+91 ${user.PhoneNumber}`;
+          formattedPhone = `+${COUNTRY_CODES.INDIA} ${user.PhoneNumber}`;
         }
 
         // Set basic form data immediately
@@ -670,7 +670,7 @@ const AddUser = () => {
           lastName: user.LastName || "",
           email: user.Email || "",
           phone: formattedPhone, // Use formatted phone number
-          CountryCode: user.CountryCode || "+91", // Ensure country code is set
+          CountryCode: user.CountryCode || COUNTRY_CODES.INDIA, // Ensure country code is set
           PhoneNumber: user.PhoneNumber || "", // Keep raw phone number
           role: user.RoleID || "",
           IsActive: user.IsActive !== undefined ? user.IsActive : true,

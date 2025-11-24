@@ -23,6 +23,7 @@ import {
   DEFAULT_PAGE,
   BANNER_WIDTH,
   BANNER_HEIGHT,
+  SCROLL_CONSTANTS,
 } from "../contants/constants";
 import { ToastContainer } from "react-toastify";
 import Loader from "../components/Loader";
@@ -426,7 +427,8 @@ const BannerForm = () => {
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
         if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
+          block: SCROLL_CONSTANTS.BLOCK, });
           element.focus();
         }
       }
