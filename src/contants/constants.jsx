@@ -273,15 +273,26 @@ export const PERMISSIONS = {
   VIEW_PRODUCT_GROUPS: "View Product Groups",
   UPDATE_PRODUCT_GROUP: "Update Product Group",
 };
-export const QUICK_FILTERS = [
-  { label: "Last 3 hours", value: "last3hours" },
-  { label: "Last 6 hours", value: "last6hours" },
-  { label: "Last 12 hours", value: "last12hours" },
-  { label: "Today", value: "today" },
-  { label: "Yesterday", value: "yesterday" },
-  { label: "Last 7 days", value: "last7days" },
-  { label: 'Last 30 days', value: 'last30days' },
+// quickFilters.js
+
+export const QUICK_FILTER_VALUES = [
+  "last3hours",
+  "last6hours",
+  "last12hours",
+  "last24hours",
+  "last2days",
+  "last7days",
 ];
+
+export const QUICK_FILTER_LABELS = [
+  "Last 3 Hours",
+  "Last 6 Hours",
+  "Last 12 Hours",
+  "Last 24 Hours",
+  "Last 2 Days",
+  "Last 7 Days",
+];
+
 
 export const MONTHS = [
   "January",
@@ -319,6 +330,11 @@ export const DATE_UNITS = {
   HOURS: "hours",
 };
 export const DEFAULT_COUNTRY = "IN";
+export const FILETYPE= "image/jpeg";
+export const SCROLL_CONSTANTS = {
+  BEHAVIOR: "smooth",
+  BLOCK: "center",
+};
 export const DEFAULT_PROPS = {
   showLabel: true,
   placeholder: "Select date range",
@@ -396,4 +412,14 @@ export const STYLES = {
 export const STATUS_VALUE_NAMES = {
   ACTIVE: "Active",
   INACTIVE: "Inactive",
+};
+export const COUNTRY_CODES = {
+  INDIA: "+91",
+  USA: "+1",
+  UK: "+44",
+  // Add more if needed
+};
+export const REGEX_CONSTANTS = {
+  COMPONENT_NAME: /^[a-zA-Z0-9_]+$/,    // for componentName validation
+  ROLE_NAME: /^[A-Za-z0-9\s\-_]+$/,     // for roleName validation
 };

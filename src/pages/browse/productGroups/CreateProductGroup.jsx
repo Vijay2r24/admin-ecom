@@ -8,7 +8,7 @@ import BackButton from "../../../components/BackButton";
 import { CREATE_OR_UPDATE_PRODUCT_GROUP, GET_PRODUCT_GROUPBY_ID } from "../../../contants/apiRoutes";
 import { apiPost, apiGet } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
-import { STATUS } from "../../../contants/constants";
+import { STATUS, STATUS_VALUE_NAMES } from "../../../contants/constants";
 import Loader from "../../../components/Loader";
 import { ToastContainer } from "react-toastify";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
@@ -22,7 +22,7 @@ const CreateProductGroup = () => {
   const [formData, setFormData] = useState({
     ProductGroupName: "",
     ProductGroupCode: "",
-    IsActive: "Active",
+    IsActive: STATUS_VALUE_NAMES.ACTIVE,
     ProductGroupID: ""
   });
 
@@ -42,7 +42,7 @@ const CreateProductGroup = () => {
           setFormData({
             ProductGroupName: group.ProductGroupName || "",
             ProductGroupCode: group.ProductGroupCode || "",
-            IsActive: group.IsActive ? "Active" : "Inactive",
+            IsActive: group.IsActive ? STATUS_VALUE_NAMES.ACTIVE : STATUS_VALUE_NAMES.INACTIVE,
             ProductGroupID: group.ProductGroupID || ""
           });
         }
@@ -86,7 +86,7 @@ const CreateProductGroup = () => {
       ProductGroupName: formData.ProductGroupName,
       ProductGroupCode: formData.ProductGroupCode,
       TenantID: tenantID,
-      IsActive: formData.IsActive === "Active",
+      IsActive: formData.IsActive === STATUS_VALUE_NAMES.ACTIVE,
       CreatedBy: userId,
     };
 

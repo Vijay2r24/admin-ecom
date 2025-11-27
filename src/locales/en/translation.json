@@ -136,7 +136,7 @@
     "RECENT_ORDERS": {
       "RECENT_ORDERS": "Recent Orders",
       "CUSTOMER": "Customer",
-      "ORDER_ID": "Order ID",
+      "ORDER_ID": "Order RefID",
       "AMOUNT": "Amount"
     },
     "STATUSES": {
@@ -237,7 +237,7 @@
     },
     "ATTRIBUTE_TYPE": {
       "LIST_TITLE": "Trait Types",
-      "SEARCH_PLACEHOLDER": "Search Trail Types...",
+      "SEARCH_PLACEHOLDER": "Search Trait Types...",
       "NAME": "Name",
       "CODE": "Code",
       "DESCRIPTION_LABEL": "Description",
@@ -260,6 +260,10 @@
       "CODE_REQUIRED": "Code is required",
       "DESCRIPTION_REQUIRED": "Description is required",
       "FETCH_ERROR": "Failed to fetch attribute type details.",
+      "NAME_MIN_LENGTH": "Name must be at least 2 characters",
+      "NAME_MAX_LENGTH": "Name must be less than 100 characters",
+      "DESCRIPTION_MIN_LENGTH": "Description must be at least 10 characters",
+      "DESCRIPTION_MAX_LENGTH": "Description must be less than 500 characters",
       "NAME_REQUIRED": "Trait type name is required"
     },
     "BRANDS": {
@@ -300,7 +304,14 @@
       "HEADING_REQUIRED": "Heading is required",
       "BRAND_CODE_REQUIRED": "Brand code is required",
       "BRAND_LOGO_REQUIRED": "Brand logo is required",
-      "IMAGE_ERROR": "File size should be less than 10MB"
+      "BRAND_NAME_MIN": "Brand name must be at least 2 characters",
+      "BRAND_NAME_MAX": "Brand name must be less than 100 characters",
+      "BRAND_CODE_MIN": "Brand code must be at least 2 characters",
+      "BRAND_CODE_MAX": "Brand code must be less than 50 characters",
+      "BRAND_CODE_INVALID": "Brand code can only contain letters, numbers and underscores",
+      "DESCRIPTION_MAX": "Description must be less than 500 characters",
+      "IMAGE_ERROR": "Image size must be less than 10MB",
+      "IMAGE_TYPE_ERROR": "Please select a valid image file (PNG, JPG, JPEG)"
     },
     "CATEGORIES": {
       "TITLE": "Categories",
@@ -338,11 +349,14 @@
       "CREATE_BUTTON": "Create Category",
       "IMAGE_ERROR": "File size should be less than 10MB",
       "NAME_ERROR": "Category name is required",
-      "IMAGE_REQUIRED": "Category image is required",
       "PARENT_CATEGORY_REQUIRED": "Parent category is required",
       "DESCRIPTION_MIN_LENGTH": "Description must be at least 10 characters",
       "DESCRIPTION_MAX_LENGTH": "Description cannot exceed 500 characters",
       "STATUS_INVALID": "Invalid status selected",
+       "NAME_MIN_LENGTH": "Category name must be at least 2 characters",
+      "NAME_MAX_LENGTH": "Category name must be less than 100 characters",
+      "IMAGE_REQUIRED": "Category image is required",
+      "IMAGE_TYPE_ERROR": "Please select a valid image file (PNG, JPG, JPEG)",
       "HEADING_REQUIRED": "Heading is required"
     },
     "COLORS": {
@@ -371,6 +385,10 @@
       "CREATE_BUTTON": "Create Color",
       "ERRORS": {
         "NAME_REQUIRED": "Color name is required",
+        "NAME_MIN_LENGTH": "Color name must be at least 2 characters",
+        "NAME_MAX_LENGTH": "Color name must be less than 50 characters",
+        "HEX_CODE_INVALID": "Please enter a valid HEX color code (e.g. #FF0000 or #F00)",
+        "RGB_CODE_INVALID": "Please enter a valid RGB color code (e.g. rgb(255, 0, 0))",
         "HEX_CODE_REQUIRED": "Color code is required"
       }
     },
@@ -439,9 +457,9 @@
     "NO_ORDERS_FOUND": "No Orders Found",
     "VIEW_DETAILS": "View",
     "DELIVERY": "Delivery",
-    "SEARCH_PLACEHOLDER": "Search by Order Number",
+    "SEARCH_PLACEHOLDER": "Search by Order Reference ID",
     "TABLE": {
-      "ORDER_REF":"Order Reference Id",
+      "ORDER_REF": "Order Reference Id",
       "ORDER_DATE": "Order Date",
       "PRODUCT_NAME": "Product Name",
       "CUSTOMER_INFO": "Customer Info",
@@ -645,7 +663,15 @@
       "PHONE": "Phone number is required",
       "PHONE_LENGTH": "Phone number must be 10 digits",
       "EMAIL": "Email is required",
-      "EMAIL_INVALID": "Please enter a valid email address"
+      "EMAIL_INVALID": "Please enter a valid email address",
+      "STORE_NAME_MIN": "Store name must be at least 2 characters",
+      "STORE_NAME_MAX": "Store name must be less than 100 characters",
+      "ADDRESS_MIN": "Address must be at least 10 characters",
+      "ZIP_CODE_INVALID": "Zip code is invalid",
+      "PHONE_INVALID": "Phone number is invalid",
+      "COUNTRY_CODE_REQUIRED": "Country code is required (e.g. +1, +91)",
+      "PHONE_TOO_SHORT": "Phone number is too short",
+      "INVALID_COUNTRY_CODE": "Invalid country code"
     },
     "STATUS_CONFIRM_ACTIVE": "Are you sure you want to set this store as Active?",
     "STATUS_CONFIRM_INACTIVE": "Are you sure you want to set this store as Inactive?",
@@ -663,6 +689,8 @@
     "ENTER_NUMBER_OF_EMPLOYEES": "Enter number of employees",
     "STORE_INFORMATION": "Store Information",
     "CONTACT_INFORMATION": "Contact Information",
+    "STREET_ADDRESS": "Street Address",
+    "ENTER_STREET_ADDRESS": "Enter your street address",
     "ADD_STORE": "Create Store"
   },
   "USERS": {
@@ -741,7 +769,19 @@
       "PASSWORD_UPPERCASE": "At least one uppercase letter",
       "PASSWORD_LOWERCASE": "At least one lowercase letter",
       "PASSWORD_NUMBER": "At least one number",
-      "PASSWORD_SPECIAL": "At least one special character"
+      "PASSWORD_SPECIAL": "At least one special character",
+      "FIRST_NAME_MIN_LENGTH": "First name must be at least 2 characters",
+      "FIRST_NAME_MAX_LENGTH": "First name must be less than 50 characters",
+      "LAST_NAME_MIN_LENGTH": "Last name must be at least 2 characters",
+      "LAST_NAME_MAX_LENGTH": "Last name must be less than 50 characters",
+      "COUNTRY_CODE_REQUIRED": "Country code is required (e.g. +1, +91)",
+      "PHONE_TOO_SHORT": "Phone number is too short",
+      "INVALID_COUNTRY_CODE": "Invalid country code",
+      "GENDER_REQUIRED": "Gender is required",
+      "STORES_REQUIRED": "At least one store must be selected",
+      "CONFIRM_PASSWORD_REQUIRED": "Please confirm your password",
+      "ADDRESS_MIN_LENGTH": "Address must be at least 10 characters",
+      "PINCODE_INVALID": "Please enter a valid pincode"
     }
   },
   "CREATE_USER_ROLE": {
@@ -757,6 +797,9 @@
     "SAVE_ROLE": "Save Role",
     "UPDATE_ROLE": "Update Role",
     "FAILED_TO_FETCH_PERMISSIONS": "Failed to fetch permissions.",
+     "ROLE_NAME_MIN_LENGTH": "Role name must be at least 2 characters",
+    "ROLE_NAME_MAX_LENGTH": "Role name must be less than 50 characters",
+    "ROLE_NAME_INVALID": "Role name can only contain letters, numbers, spaces, hyphens and underscores",
     "FAILED_TO_SAVE_ROLE": "Failed to save user role."
   },
   "BANNER_FORM": {
@@ -783,7 +826,22 @@
     "NO_BANNERS_FOUND": "No banners found.",
     "PAGE": "page",
     "OF": "of",
-    "IMAGE_DIMENSIONS_TOO_SMALL": "Image dimensions are too small. Minimum size required is {{width}}x{{height}} pixels."
+    "IMAGE_DIMENSIONS_TOO_SMALL": "Image dimensions are too small. Minimum size required is {{width}}x{{height}} pixels.",
+      "VALIDATION": {
+      "BANNER_NAME_REQUIRED": "Banner name is required",
+      "BANNER_NAME_MIN_LENGTH": "Banner name must be at least 2 characters",
+      "BANNER_NAME_MAX_LENGTH": "Banner name must be less than 100 characters",
+      "IMAGE_REQUIRED": "Banner image is required",
+      "CATEGORY_REQUIRED": "At least one category is required",
+      "BRAND_REQUIRED": "At least one brand is required",
+      "DISCOUNT_REQUIRED": "Discount percentage is required",
+      "DISCOUNT_NUMBER": "Discount must be a valid number",
+      "DISCOUNT_NON_NEGATIVE": "Discount cannot be negative",
+      "DISCOUNT_MAX_PERCENTAGE": "Discount cannot exceed 100%",
+      "PRICE_REQUIRED": "Price is required",
+      "PRICE_NUMBER": "Price must be a valid number",
+      "PRICE_NON_NEGATIVE": "Price cannot be negative"
+    }
   },
   "NOTIFICATIONS": {
     "TITLE": "Notifications",
@@ -806,8 +864,8 @@
     "NO_PREVIEW": "No preview available",
     "APP_NAME": "My App",
     "TIME_AGO": "1m ago",
-    "MESSAGE":"Message",
-        "NOTIFICATION_TAB": "Notification",
+    "MESSAGE": "Message",
+    "NOTIFICATION_TAB": "Notification",
     "SILENT_NOTIFICATION_TAB": "Silent Notification",
     "SILENT_DETAILS_TITLE": "Silent Notification Details",
     "COMPONENT_NAME_LABEL": "Component Name",
@@ -820,7 +878,25 @@
     "SILENT_NOTIFICATION_HELP_TITLE": "About Silent Notifications",
     "SILENT_NOTIFICATION_HELP": "Silent notifications don't display a message to users. They're used to send data payloads to the app in the background. The component name specifies which part of your app should handle the data.",
     "SILENT_NO_PREVIEW": "Silent notifications work in the background and don't have a visual preview",
-    "IMAGE_PREVIEW_ALT": "Uploaded notification image"
+    "IMAGE_PREVIEW_ALT": "Uploaded notification image",
+    "VALIDATION": {
+      "TITLE_REQUIRED": "Notification title is required",
+      "TITLE_MIN_LENGTH": "Title must be at least 2 characters",
+      "TITLE_MAX_LENGTH": "Title must be less than 100 characters",
+      "MESSAGE_REQUIRED": "Notification message is required",
+      "MESSAGE_MIN_LENGTH": "Message must be at least 5 characters",
+      "MESSAGE_MAX_LENGTH": "Message must be less than 500 characters",
+      "COMPONENT_NAME_REQUIRED": "Component name is required",
+      "COMPONENT_NAME_MIN_LENGTH": "Component name must be at least 2 characters",
+      "COMPONENT_NAME_MAX_LENGTH": "Component name must be less than 50 characters",
+      "COMPONENT_NAME_INVALID": "Component name can only contain letters, numbers, and underscores",
+      "JSON_DATA_REQUIRED": "JSON data is required for silent notifications",
+      "JSON_DATA_INVALID": "Invalid JSON format",
+      "JSON_DATA_VALID": "Valid JSON",
+      "IMAGE_INVALID": "Invalid image file",
+      "IMAGE_TYPE_INVALID": "Please select a valid image file",
+      "IMAGE_SIZE_TOO_LARGE": "Image must be smaller than 5MB"
+    }
   },
 
   "SILENT_NOTIFICATION": {
@@ -953,8 +1029,8 @@
     "PREVIOUS": "Previous",
     "DOWNLOAD": "Download",
     "DATE_RANGE": "Date Range",
-    "START_TIME":"Start Time",
-    "END_TIME":"End time",
+    "START_TIME": "Start Time",
+    "END_TIME": "End time",
     "NEXT": "Next",
     "ALL": "All",
     "EDIT": "Edit",
@@ -1049,10 +1125,10 @@
     "ENTER_EMAIL_ADDRESS": "Enter email address",
     "ENTER_PASSWORD": "Enter password",
     "REQUIRED": "is required",
-    "CLEAR_DATE_RANGE":"Clear date range",
+    "CLEAR_DATE_RANGE": "Clear date range",
     "ACCESS_DENIED_TITLE": "Access to this page is restricted",
     "ACCESS_DENIED_MESSAGE": "Please check with the site admin if you believe this is a mistake.",
-    "EXPORTING":"Exporting.."
+    "EXPORTING": "Exporting.."
   },
   "USER_ROLES_LIST": {
     "TITLE": "User Roles",

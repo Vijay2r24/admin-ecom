@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowLeft, Building, Info, Image, X, Tag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -7,7 +7,7 @@ import TextInputWithIcon from "../../../components/TextInputWithIcon";
 import TextAreaWithIcon from "../../../components/TextAreaWithIcon";
 import Loader from "../../../components/Loader";
 import SelectWithIcon from "../../../components/SelectWithIcon";
-import ImageCropperModal from "../../../components/ImageCropperModal"; // Import the cropper modal
+import ImageCropperModal from "../../../components/ImageCropperModal";
 
 import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
@@ -22,6 +22,8 @@ import {
   STATUS_VALUES,
   STATUS_OPTIONS,
   FILE_CONSTANTS,
+  STATUS_VALUE_NAMES,
+  SCROLL_CONSTANTS,
 } from "../../../contants/constants";
 
 import { ToastContainer } from "react-toastify";
@@ -52,6 +54,8 @@ const CreateBrand = () => {
 
   // Error messages
   const [oErrors, setErrors] = useState({});
+  // Field validation state
+  const [oFieldValid, setFieldValid] = useState({});
   // Preview URL for uploaded or existing logo
   const [sImagePreview, setImagePreview] = useState(null);
   // Submission loader
@@ -62,6 +66,95 @@ const CreateBrand = () => {
   const croppedFileName = `${
     FILE_CONSTANTS.BRAND_LOGO_PREFIX
   }-${Date.now()}.jpg`;
+
+  // Required fields configuration
+  const requiredFields = {
+    BrandName: true,
+    BrandCode: true,
+    BrandLogo: !isEditing, // Logo is required only for new brands
+  };
+
+  /**
+   * Live validation functions
+   */
+  const validateBrandName = (name) => {
+    if (!name.trim()) {
+      return t("PRODUCT_SETUP.CREATE_BRAND.BRAND_NAME_REQUIRED");
+    }
+    if (name.trim().length < 2) {
+      return t("PRODUCT_SETUP.CREATE_BRAND.BRAND_NAME_MIN");
+    }
+    if (name.trim().length > 100) {
+      return t("PRODUCT_SETUP.CREATE_BRAND.BRAND_NAME_MAX");
+    }
+    return "";
+  };
+
+  const validateBrandCode = (code) => {
+    if (!code.trim()) {
+      return t("PRODUCT_SETUP.CREATE_BRAND.BRAND_CODE_REQUIRED");
+    }
+    if (code.trim().length < 2) {
+      return t("PRODUCT_SETUP.CREATE_BRAND.BRAND_CODE_MIN");
+    }
+    if (code.trim().length > 50) {
+      return t("PRODUCT_SETUP.CREATE_BRAND.BRAND_CODE_MAX");
+    }
+    // Allow only alphanumeric and underscore
+    const codeRegex = /^[A-Za-z0-9_]+$/;
+    if (!codeRegex.test(code.trim())) {
+      return t("PRODUCT_SETUP.CREATE_BRAND.BRAND_CODE_INVALID");
+    }
+    return "";
+  };
+
+  const validateBrandLogo = (hasLogo) => {
+    if (!isEditing && !hasLogo) {
+      return t("PRODUCT_SETUP.CREATE_BRAND.BRAND_LOGO_REQUIRED");
+    }
+    return "";
+  };
+
+  const validateDescription = (description) => {
+    if (description && description.length > 500) {
+      return t("PRODUCT_SETUP.CREATE_BRAND.DESCRIPTION_MAX");
+    }
+    return "";
+  };
+
+  /**
+   * Live validation for a specific field
+   */
+  const validateField = useCallback((name, value) => {
+    let error = "";
+    
+    switch (name) {
+      case "BrandName":
+        error = validateBrandName(value);
+        break;
+      case "BrandCode":
+        error = validateBrandCode(value);
+        break;
+      case "description":
+        error = validateDescription(value);
+        break;
+      case "BrandLogo":
+        error = validateBrandLogo(value || sImagePreview);
+        break;
+      default:
+        break;
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+
+    setFieldValid(prev => ({
+      ...prev,
+      [name]: !error && (value !== "" && value !== null && value !== undefined)
+    }));
+  }, [sImagePreview, isEditing, t]);
 
   /**
    * Fetch brand details if editing
@@ -86,7 +179,7 @@ const CreateBrand = () => {
               IsActive:
                 brand.IsActive !== undefined
                   ? brand.IsActive
-                  : brand.Status === "Active",
+                  : brand.Status === STATUS_VALUE_NAMES.ACTIVE,
               BrandLogo: null,
               description: brand.BrandDescription || "",
               CreatedBy: brand.CreatedBy || t("COMMON.ADMIN"),
@@ -98,14 +191,21 @@ const CreateBrand = () => {
             if (brand.BrandLogo && brand.BrandLogo.length > 0) {
               setImagePreview(brand.BrandLogo[0].documentUrl);
             }
+
+            // Validate initial data after setting
+            setTimeout(() => {
+              validateField("BrandName", brand.BrandName || "");
+              validateField("BrandCode", brand.BrandCode || "");
+              validateField("description", brand.BrandDescription || "");
+              validateField("BrandLogo", brand.BrandLogo?.[0] || null);
+            }, 100);
           }
         } catch (error) {
-          console.error("Error fetching brand details:", error);
         }
       };
       fetchBrandDetails();
     }
-  }, [brandId, isEditing, t, token]);
+  }, [brandId, isEditing, t, token, validateField]);
 
   /**
    * Cleanup blob URLs on unmount
@@ -123,16 +223,25 @@ const CreateBrand = () => {
   }, [sImagePreview]);
 
   /**
-   * Generic form field change handler
+   * Generic form field change handler with live validation
    */
   const handleInputChange = ({ target: { name, value, type, checked } }) => {
+    const newValue = type === "checkbox" ? checked : value;
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: newValue,
     }));
-    if (oErrors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+
+    validateField(name, newValue);
+  };
+
+  /**
+   * Handle field blur for additional validation
+   */
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    validateField(name, value);
   };
 
   /**
@@ -144,18 +253,28 @@ const CreateBrand = () => {
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
+      const error = t("PRODUCT_SETUP.CREATE_BRAND.IMAGE_ERROR");
       setErrors((prev) => ({
         ...prev,
-        BrandLogo: t("PRODUCT_SETUP.CREATE_BRAND.IMAGE_ERROR"),
+        BrandLogo: error,
+      }));
+      setFieldValid((prev) => ({
+        ...prev,
+        BrandLogo: false,
       }));
       return;
     }
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
+      const error = t("PRODUCT_SETUP.CREATE_BRAND.IMAGE_TYPE_ERROR");
       setErrors((prev) => ({
         ...prev,
-        BrandLogo: t("PRODUCT_SETUP.CREATE_BRAND.IMAGE_TYPE_ERROR"),
+        BrandLogo: error,
+      }));
+      setFieldValid((prev) => ({
+        ...prev,
+        BrandLogo: false,
       }));
       return;
     }
@@ -194,8 +313,8 @@ const CreateBrand = () => {
     // Set preview
     setImagePreview(croppedImageUrl);
 
-    // Clear any existing errors
-    setErrors((prev) => ({ ...prev, BrandLogo: "" }));
+    // Validate the logo field
+    validateField("BrandLogo", croppedFile);
 
     // Close cropper
     setShowCropper(false);
@@ -242,7 +361,9 @@ const CreateBrand = () => {
       existingLogo: null,
     }));
     setImagePreview(null);
-    setErrors((prev) => ({ ...prev, BrandLogo: "" }));
+    
+    // Validate the logo field after removal
+    validateField("BrandLogo", null);
 
     // Reset file input
     if (fileInputRef.current) {
@@ -255,16 +376,27 @@ const CreateBrand = () => {
    */
   const validateForm = () => {
     const errors = {};
-    const { BrandName, BrandCode } = oFormData;
+    
+    errors.BrandName = validateBrandName(oFormData.BrandName);
+    errors.BrandCode = validateBrandCode(oFormData.BrandCode);
+    errors.BrandLogo = validateBrandLogo(oFormData.BrandLogo || sImagePreview);
+    errors.description = validateDescription(oFormData.description);
 
-    if (!BrandName.trim())
-      errors.BrandName = t("PRODUCT_SETUP.CREATE_BRAND.BRAND_NAME_REQUIRED");
-    if (!BrandCode.trim())
-      errors.BrandCode = t("PRODUCT_SETUP.CREATE_BRAND.BRAND_CODE_REQUIRED");
-    if (!sImagePreview && !isEditing)
-      errors.BrandLogo = t("PRODUCT_SETUP.CREATE_BRAND.BRAND_LOGO_REQUIRED");
+    // Update field validation states
+    setFieldValid({
+      BrandName: !errors.BrandName && oFormData.BrandName.trim() !== "",
+      BrandCode: !errors.BrandCode && oFormData.BrandCode.trim() !== "",
+      BrandLogo: !errors.BrandLogo && (oFormData.BrandLogo || sImagePreview),
+      description: !errors.description,
+    });
 
-    return errors;
+    // Return only errors that have messages
+    const filteredErrors = Object.fromEntries(
+      Object.entries(errors).filter(([_, value]) => value !== "")
+    );
+
+    setErrors(filteredErrors);
+    return Object.keys(filteredErrors).length === 0;
   };
 
   /**
@@ -274,9 +406,17 @@ const CreateBrand = () => {
     e.preventDefault();
 
     // Run validation
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length) {
-      setErrors(validationErrors);
+    if (!validateForm()) {
+      // Scroll to first error
+      const firstErrorField = Object.keys(oErrors)[0];
+      if (firstErrorField) {
+        const element = document.getElementById(firstErrorField);
+        if (element) {
+          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
+         block: SCROLL_CONSTANTS.BLOCK, });
+          element.focus();
+        }
+      }
       return;
     }
 
@@ -370,7 +510,6 @@ const CreateBrand = () => {
         setErrors((prev) => ({ ...prev, api: responseMessage }));
       }
     } catch (err) {
-      console.error("API Error:", err);
       const message =
         err?.response?.data?.MESSAGE ||
         err?.response?.data?.message ||
@@ -379,6 +518,17 @@ const CreateBrand = () => {
     } finally {
       hideLoaderWithDelay(setSubmitting);
     }
+  };
+
+  // Helper function to render label with required asterisk
+  const renderLabel = (fieldName, translationKey) => {
+    const isRequired = requiredFields[fieldName];
+    return (
+      <span>
+        {t(translationKey)}
+        {isRequired && <span className="text-red-500 ml-1">*</span>}
+      </span>
+    );
   };
 
   // Prepare status options
@@ -440,27 +590,33 @@ const CreateBrand = () => {
           <div className="flex flex-col md:flex-row md:space-x-4">
             <div className="w-full md:w-1/2">
               <TextInputWithIcon
-                label={t("PRODUCT_SETUP.CREATE_BRAND.NAME_LABEL")}
+                label={renderLabel("BrandName", "PRODUCT_SETUP.CREATE_BRAND.NAME_LABEL")}
                 id="BrandName"
                 name="BrandName"
                 value={oFormData.BrandName}
                 onChange={handleInputChange}
+                onBlur={handleBlur}
                 placeholder={t("PRODUCT_SETUP.CREATE_BRAND.NAME_PLACEHOLDER")}
                 error={oErrors.BrandName}
+                isValid={oFieldValid.BrandName}
+                required={requiredFields.BrandName}
                 Icon={Building}
               />
             </div>
             <div className="w-full md:w-1/2">
               <TextInputWithIcon
-                label={t("PRODUCT_SETUP.CREATE_BRAND.BRAND_CODE_LABEL")}
+                label={renderLabel("BrandCode", "PRODUCT_SETUP.CREATE_BRAND.BRAND_CODE_LABEL")}
                 id="BrandCode"
                 name="BrandCode"
                 value={oFormData.BrandCode}
                 onChange={handleInputChange}
+                onBlur={handleBlur}
                 placeholder={t(
                   "PRODUCT_SETUP.CREATE_BRAND.BRAND_CODE_PLACEHOLDER"
                 )}
                 error={oErrors.BrandCode}
+                isValid={oFieldValid.BrandCode}
+                required={requiredFields.BrandCode}
                 Icon={Tag}
               />
             </div>
@@ -494,11 +650,11 @@ const CreateBrand = () => {
             {/* Logo Upload */}
             <div className="w-full md:w-1/2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t("PRODUCT_SETUP.CREATE_BRAND.LOGO_LABEL")}
+                {renderLabel("BrandLogo", "PRODUCT_SETUP.CREATE_BRAND.LOGO_LABEL")}
               </label>
               <div
                 className={`relative group rounded-xl border-2 ${
-                  oErrors.BrandLogo ? "border-red-300" : "border-gray-200"
+                  oErrors.BrandLogo ? "border-red-300" : oFieldValid.BrandLogo ? "border-green-300" : "border-gray-200"
                 } border-dashed transition-all duration-200 hover:border-bg-hover bg-gray-50 hover:bg-gray-50/50`}
               >
                 <div className="p-6">
@@ -555,6 +711,13 @@ const CreateBrand = () => {
                             >
                               <X className="h-3 w-3" />
                             </button>
+                            {oFieldValid.BrandLogo && (
+                              <div className="absolute -top-2 -left-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg">
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
                           </div>
                           <p className="text-xs text-gray-500 mt-2">
                            {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
@@ -582,10 +745,16 @@ const CreateBrand = () => {
                 name="description"
                 value={oFormData.description}
                 onChange={handleInputChange}
+                onBlur={handleBlur}
                 placeholder={t(
                   "PRODUCT_SETUP.CREATE_BRAND.DESCRIPTION_PLACEHOLDER"
                 )}
+                error={oErrors.description}
+                isValid={oFieldValid.description}
                 icon={Info}
+                showCharCount={true}
+                maxChars={500}
+                currentChars={oFormData.description.length}
               />
             </div>
           </div>
@@ -601,8 +770,12 @@ const CreateBrand = () => {
             >
               {t("COMMON.CANCEL")}
             </button>
-            <button type="submit" className="btn-primary">
-              {isEditing
+            <button 
+              type="submit" 
+              className="btn-primary"
+              disabled={bSubmitting}
+            >
+              {bSubmitting ? t("COMMON.SUBMITTING") : isEditing
                 ? t("COMMON.SAVE_BUTTON")
                 : t("PRODUCT_SETUP.CREATE_BRAND.CREATE_BUTTON")}
             </button>

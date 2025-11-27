@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Upload,
   X,
@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { apiPost } from "../utils/ApiUtils";
 import { SEND_NOTIFICATIONS } from "../contants/apiRoutes";
-import { STATUS } from "../contants/constants";
+import { REGEX_CONSTANTS, SCROLL_CONSTANTS, STATUS } from "../contants/constants";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
 import { useTitle } from "../context/TitleContext";
@@ -39,7 +39,16 @@ const Notifications = () => {
   const [pushError, setPushError] = useState(null);
   const [pushSuccess, setPushSuccess] = useState(null);
   const [pushValidationErrors, setPushValidationErrors] = useState({});
+  const [fieldValid, setFieldValid] = useState({});
   const [jsonError, setJsonError] = useState("");
+
+  // Required fields configuration
+  const requiredFields = useMemo(() => ({
+    title: activeTab === "notification",
+    message: activeTab === "notification",
+    componentName: activeTab === "silent",
+    jsonData: activeTab === "silent",
+  }), [activeTab]);
 
   useEffect(() => {
     setTitle(t("NOTIFICATIONS.TITLE"));
@@ -50,43 +59,189 @@ const Notifications = () => {
     };
   }, [setTitle, setBackButton, t, navigate]);
 
-  const handlePushChange = (e) => {
+  /**
+   * Live validation functions
+   */
+  const validateTitle = useCallback((title) => {
+    if (!title?.trim() && activeTab === "notification") {
+      return t("PUSH_NOTIFICATION.VALIDATION.TITLE_REQUIRED");
+    }
+    if (title?.trim() && title.trim().length < 2) {
+      return t("PUSH_NOTIFICATION.VALIDATION.TITLE_MIN_LENGTH");
+    }
+    if (title?.trim() && title.trim().length > 100) {
+      return t("PUSH_NOTIFICATION.VALIDATION.TITLE_MAX_LENGTH");
+    }
+    return "";
+  }, [t, activeTab]);
+
+  const validateMessage = useCallback((message) => {
+    if (!message?.trim() && activeTab === "notification") {
+      return t("PUSH_NOTIFICATION.VALIDATION.MESSAGE_REQUIRED");
+    }
+    if (message?.trim() && message.trim().length < 5) {
+      return t("PUSH_NOTIFICATION.VALIDATION.MESSAGE_MIN_LENGTH");
+    }
+    if (message?.trim() && message.trim().length > 500) {
+      return t("PUSH_NOTIFICATION.VALIDATION.MESSAGE_MAX_LENGTH");
+    }
+    return "";
+  }, [t, activeTab]);
+
+  const validateComponentName = useCallback((componentName) => {
+    if (!componentName?.trim() && activeTab === "silent") {
+      return t("PUSH_NOTIFICATION.VALIDATION.COMPONENT_NAME_REQUIRED");
+    }
+    if (componentName?.trim() && componentName.trim().length < 2) {
+      return t("PUSH_NOTIFICATION.VALIDATION.COMPONENT_NAME_MIN_LENGTH");
+    }
+    if (componentName?.trim() && componentName.trim().length > 50) {
+      return t("PUSH_NOTIFICATION.VALIDATION.COMPONENT_NAME_MAX_LENGTH");
+    }
+    // Validate component name format (alphanumeric and underscores)
+    if (componentName?.trim() && !REGEX_CONSTANTS.COMPONENT_NAME.test(componentName.trim())) {
+      return t("PUSH_NOTIFICATION.VALIDATION.COMPONENT_NAME_INVALID");
+    }
+    return "";
+  }, [t, activeTab]);
+
+  const validateJsonData = useCallback((jsonData) => {
+    if (!jsonData?.trim() && activeTab === "silent") {
+      return t("PUSH_NOTIFICATION.VALIDATION.JSON_DATA_REQUIRED");
+    }
+    
+    if (jsonData?.trim()) {
+      try {
+        JSON.parse(jsonData);
+        return "";
+      } catch (error) {
+        return t("PUSH_NOTIFICATION.VALIDATION.JSON_DATA_INVALID");
+      }
+    }
+    return "";
+  }, [t, activeTab]);
+
+  const validateImage = useCallback((image, previewUrl) => {
+    // Image is optional, but if provided, validate it
+    if (image && !previewUrl) {
+      return t("PUSH_NOTIFICATION.VALIDATION.IMAGE_INVALID");
+    }
+    return "";
+  }, [t]);
+
+  /**
+   * Live validation for a specific field
+   */
+  const validateField = useCallback((name, value) => {
+    let error = "";
+    
+    switch (name) {
+      case "title":
+        error = validateTitle(value);
+        break;
+      case "message":
+        error = validateMessage(value);
+        break;
+      case "componentName":
+        error = validateComponentName(value);
+        break;
+      case "jsonData":
+        error = validateJsonData(value);
+        break;
+      case "image":
+        error = validateImage(value, nPreviewUrl);
+        break;
+      default:
+        break;
+    }
+
+    setPushValidationErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+
+    setFieldValid(prev => ({
+      ...prev,
+      [name]: !error && (value !== "" && value !== null && value !== undefined)
+    }));
+
+    // Special handling for JSON errors
+    if (name === "jsonData") {
+      setJsonError(error);
+    }
+  }, [
+    validateTitle,
+    validateMessage,
+    validateComponentName,
+    validateJsonData,
+    validateImage,
+    nPreviewUrl
+  ]);
+
+  /**
+   * Handle field blur for additional validation
+   */
+  const handleBlur = useCallback((e) => {
     const { name, value } = e.target;
+    validateField(name, value);
+  }, [validateField]);
+
+  const handlePushChange = useCallback((e) => {
+    const { name, value } = e.target;
+    
     setPushFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    setPushValidationErrors((prev) => ({
-      ...prev,
-      [name]: undefined,
-    }));
+    
+    // Validate the field immediately
+    validateField(name, value);
+  }, [validateField]);
 
-    // Clear JSON error when user types
-    if (name === "jsonData") {
-      setJsonError("");
-    }
-  };
-
-  const handleImageChange = (e) => {
+  const handleImageChange = useCallback((e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      if (!file.type.match("image.*")) {
+        setPushValidationErrors(prev => ({
+          ...prev,
+          image: t("PUSH_NOTIFICATION.VALIDATION.IMAGE_TYPE_INVALID")
+        }));
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setPushValidationErrors(prev => ({
+          ...prev,
+          image: t("PUSH_NOTIFICATION.VALIDATION.IMAGE_SIZE_TOO_LARGE")
+        }));
+        return;
+      }
+
+      const previewUrl = URL.createObjectURL(file);
       setPushFormData((prev) => ({
         ...prev,
         image: file,
       }));
-      setPreviewUrl(URL.createObjectURL(file));
+      setPreviewUrl(previewUrl);
+      
+      // Validate the image after setting
+      setTimeout(() => validateField("image", file), 100);
     }
-  };
+  }, [t, validateField]);
 
-  const removeImage = () => {
+  const removeImage = useCallback(() => {
     setPushFormData((prev) => ({
       ...prev,
       image: null,
     }));
     setPreviewUrl(null);
-  };
+    // Clear image validation
+    validateField("image", null);
+  }, [validateField]);
 
-  const validateJSON = (jsonString) => {
+  const validateJSON = useCallback((jsonString) => {
     try {
       if (jsonString.trim()) {
         JSON.parse(jsonString);
@@ -95,34 +250,51 @@ const Notifications = () => {
     } catch (error) {
       return false;
     }
-  };
+  }, []);
 
-  const validatePushForm = () => {
+  const validatePushForm = useCallback(() => {
     const errors = {};
-    setJsonError("");
     
+    // Validate based on active tab
     if (activeTab === "notification") {
-      if (!oPushFormData.title || !oPushFormData.title.trim()) {
-        errors.title = t("PUSH_NOTIFICATION.TITLE_LABEL");
-      }
-      if (!oPushFormData.message || !oPushFormData.message.trim()) {
-        errors.message = t("PUSH_NOTIFICATION.MESSAGE_LABEL");
-      }
+      errors.title = validateTitle(oPushFormData.title);
+      errors.message = validateMessage(oPushFormData.message);
+      errors.image = validateImage(oPushFormData.image, nPreviewUrl);
     } else {
-      // Silent notification validation
-      if (!oPushFormData.componentName || !oPushFormData.componentName.trim()) {
-        errors.componentName = t("PUSH_NOTIFICATION.COMPONENT_NAME_REQUIRED");
-      }
-      if (oPushFormData.jsonData && !validateJSON(oPushFormData.jsonData)) {
-        setJsonError(t("PUSH_NOTIFICATION.INVALID_JSON"));
-      }
+      errors.componentName = validateComponentName(oPushFormData.componentName);
+      errors.jsonData = validateJsonData(oPushFormData.jsonData);
     }
-    
-    setPushValidationErrors(errors);
-    return Object.keys(errors).length === 0 && !jsonError;
-  };
 
-  const handleTabChange = (tab) => {
+    // Update field validation states
+    setFieldValid({
+      title: !errors.title && oPushFormData.title.trim() !== "",
+      message: !errors.message && oPushFormData.message.trim() !== "",
+      componentName: !errors.componentName && oPushFormData.componentName.trim() !== "",
+      jsonData: !errors.jsonData && oPushFormData.jsonData.trim() !== "",
+      image: !errors.image,
+    });
+
+    // Return only errors that have messages
+    const filteredErrors = Object.fromEntries(
+      Object.entries(errors).filter(([_, value]) => value !== "")
+    );
+
+    setPushValidationErrors(filteredErrors);
+    setJsonError(errors.jsonData || "");
+    
+    return Object.keys(filteredErrors).length === 0;
+  }, [
+    activeTab,
+    oPushFormData,
+    nPreviewUrl,
+    validateTitle,
+    validateMessage,
+    validateComponentName,
+    validateJsonData,
+    validateImage
+  ]);
+
+  const handleTabChange = useCallback((tab) => {
     setActiveTab(tab);
     // Reset form when switching tabs
     setPushFormData({
@@ -136,27 +308,46 @@ const Notifications = () => {
     setPushError(null);
     setPushSuccess(null);
     setPushValidationErrors({});
+    setFieldValid({});
     setJsonError("");
-  };
+  }, []);
 
-  const formatJSON = () => {
+  const formatJSON = useCallback(() => {
     try {
       const parsed = JSON.parse(oPushFormData.jsonData);
+      const formattedJson = JSON.stringify(parsed, null, 2);
       setPushFormData(prev => ({
         ...prev,
-        jsonData: JSON.stringify(parsed, null, 2)
+        jsonData: formattedJson
       }));
-      setJsonError("");
+      validateField("jsonData", formattedJson);
     } catch (error) {
-      setJsonError(t("PUSH_NOTIFICATION.INVALID_JSON"));
+      const errorMsg = t("PUSH_NOTIFICATION.VALIDATION.JSON_DATA_INVALID");
+      setPushValidationErrors(prev => ({ ...prev, jsonData: errorMsg }));
+      setJsonError(errorMsg);
     }
-  };
+  }, [oPushFormData.jsonData, t, validateField]);
 
   const handlePushSubmit = async (e) => {
     e.preventDefault();
     setPushError(null);
     setPushSuccess(null);
-    if (!validatePushForm()) return;
+    
+    // Run comprehensive validation
+    const isValid = validatePushForm();
+    if (!isValid) {
+      // Scroll to first error
+      const firstErrorField = Object.keys(pushValidationErrors)[0];
+      if (firstErrorField) {
+        const element = document.getElementById(firstErrorField);
+        if (element) {
+          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
+          block: SCROLL_CONSTANTS.BLOCK, });
+          element.focus();
+        }
+      }
+      return;
+    }
     
     const token = localStorage.getItem("token");
     const data = new FormData();
@@ -175,7 +366,7 @@ const Notifications = () => {
         try {
           jsonPayload = JSON.parse(oPushFormData.jsonData);
         } catch (error) {
-          showEmsg(t("PUSH_NOTIFICATION.INVALID_JSON"), STATUS.ERROR);
+          showEmsg(t("PUSH_NOTIFICATION.VALIDATION.JSON_DATA_INVALID"), STATUS.ERROR);
           return;
         }
       }
@@ -201,6 +392,7 @@ const Notifications = () => {
           jsonData: "{\n  \"key\": \"value\"\n}",
         });
         setPreviewUrl(null);
+        setFieldValid({});
       } else {
         showEmsg(oResponse?.data?.message, STATUS.ERROR);
         setPushError(oResponse?.data?.MESSAGE);
@@ -235,12 +427,25 @@ const Notifications = () => {
 }`
   };
 
-  const applyJsonTemplate = (templateKey) => {
+  const applyJsonTemplate = useCallback((templateKey) => {
+    const template = jsonTemplates[templateKey];
     setPushFormData(prev => ({
       ...prev,
-      jsonData: jsonTemplates[templateKey]
+      jsonData: template
     }));
-    setJsonError("");
+    // Validate the template immediately
+    setTimeout(() => validateField("jsonData", template), 100);
+  }, [jsonTemplates, validateField]);
+
+  // Helper function to render label with required asterisk
+  const renderLabel = (fieldName, translationKey) => {
+    const isRequired = requiredFields[fieldName];
+    return (
+      <span>
+        {t(translationKey)}
+        {isRequired && <span className="text-red-500 ml-1">*</span>}
+      </span>
+    );
   };
 
   return (
@@ -312,26 +517,31 @@ const Notifications = () => {
                     {/* Title and Message in separate rows */}
                     <div className="space-y-6">
                       <TextInputWithIcon
-                        label={t("PUSH_NOTIFICATION.TITLE_LABEL")}
+                        label={renderLabel("title", "PUSH_NOTIFICATION.TITLE_LABEL")}
                         id="title"
                         name="title"
                         value={oPushFormData.title}
                         onChange={handlePushChange}
+                        onBlur={handleBlur}
                         placeholder={t("PUSH_NOTIFICATION.TITLE_PLACEHOLDER")}
                         Icon={Send}
                         error={pushValidationErrors.title}
-                        required
+                        isValid={fieldValid.title}
+                        required={requiredFields.title}
                       />
 
                       <TextAreaWithIcon
-                        label={t("PUSH_NOTIFICATION.MESSAGE_LABEL")}
+                        label={renderLabel("message", "PUSH_NOTIFICATION.MESSAGE_LABEL")}
+                        id="message"
                         name="message"
                         value={oPushFormData.message}
                         onChange={handlePushChange}
+                        onBlur={handleBlur}
                         placeholder={t("PUSH_NOTIFICATION.MESSAGE_PLACEHOLDER")}
                         icon={MapPin}
                         error={pushValidationErrors.message}
-                        required
+                        isValid={fieldValid.message}
+                        required={requiredFields.message}
                       />
                     </div>
 
@@ -340,7 +550,9 @@ const Notifications = () => {
                       <label className="block text-sm font-medium text-gray-700">
                         {t("PUSH_NOTIFICATION.IMAGE_LABEL")}
                       </label>
-                      <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-[#5B45E0] transition-colors duration-200 min-h-[200px]">
+                      <div className={`flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-lg transition-colors duration-200 min-h-[200px] ${
+                        pushValidationErrors.image ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-[#5B45E0]'
+                      }`}>
                         <div className="space-y-3 text-center flex flex-col justify-center">
                           {nPreviewUrl ? (
                             <div className="relative inline-block">
@@ -383,6 +595,9 @@ const Notifications = () => {
                           )}
                         </div>
                       </div>
+                      {pushValidationErrors.image && (
+                        <p className="text-red-600 text-sm">{pushValidationErrors.image}</p>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -390,22 +605,24 @@ const Notifications = () => {
                   <div className="space-y-6">
                     {/* Component Name */}
                     <TextInputWithIcon
-                      label={t("PUSH_NOTIFICATION.COMPONENT_NAME_LABEL") || "Component Name"}
+                      label={renderLabel("componentName", "PUSH_NOTIFICATION.COMPONENT_NAME_LABEL") || "Component Name"}
                       id="componentName"
                       name="componentName"
                       value={oPushFormData.componentName}
                       onChange={handlePushChange}
+                      onBlur={handleBlur}
                       placeholder={t("PUSH_NOTIFICATION.COMPONENT_NAME_PLACEHOLDER") || "e.g., HomeScreen, Profile, Settings"}
                       Icon={Code}
                       error={pushValidationErrors.componentName}
-                      required
+                      isValid={fieldValid.componentName}
+                      required={requiredFields.componentName}
                     />
 
                     {/* JSON Data */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="block text-sm font-medium text-gray-700">
-                          {t("PUSH_NOTIFICATION.JSON_DATA_LABEL") || "JSON Data"}
+                          {renderLabel("jsonData", "PUSH_NOTIFICATION.JSON_DATA_LABEL") || "JSON Data"}
                         </label>
                         <div className="flex gap-2">
                           <button
@@ -448,9 +665,10 @@ const Notifications = () => {
                         name="jsonData"
                         value={oPushFormData.jsonData}
                         onChange={handlePushChange}
+                        onBlur={handleBlur}
                         placeholder={t("PUSH_NOTIFICATION.JSON_DATA_PLACEHOLDER") || "Enter JSON data..."}
                         className={`w-full h-64 font-mono text-sm border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#5B45E0] focus:border-transparent transition-colors duration-200 ${
-                          jsonError ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          jsonError ? 'border-red-300 bg-red-50' : fieldValid.jsonData ? 'border-green-300 bg-green-50' : 'border-gray-300'
                         }`}
                         style={{ 
                           fontFamily: 'monospace',
@@ -462,6 +680,12 @@ const Notifications = () => {
                         <p className="text-red-600 text-sm flex items-center gap-1">
                           <FileText className="h-4 w-4" />
                           {jsonError}
+                        </p>
+                      )}
+                      {fieldValid.jsonData && !jsonError && (
+                        <p className="text-green-600 text-sm flex items-center gap-1">
+                          <FileText className="h-4 w-4" />
+                          {t("PUSH_NOTIFICATION.VALIDATION.JSON_DATA_VALID") || "Valid JSON"}
                         </p>
                       )}
                     </div>
@@ -512,7 +736,7 @@ const Notifications = () => {
                         {/* Content */}
                         <div className="space-y-1">
                           <p className="text-sm font-semibold">
-                            {oPushFormData.title || t("PUSH_NOTIFICATION.TITLE")}
+                            {oPushFormData.title || t("PUSH_NOTIFICATION.TITLE_LABEL")}
                           </p>
                           <p className="text-xs text-gray-300">
                             {oPushFormData.message || t("PUSH_NOTIFICATION.MESSAGE")}
@@ -545,13 +769,20 @@ const Notifications = () => {
                           </h5>
                           <div className="text-left">
                             {oPushFormData.componentName && (
-                              <p className="text-xs text-gray-600 mb-1">
+                              <p className={`text-xs mb-1 ${
+                                fieldValid.componentName ? 'text-green-600' : 'text-gray-600'
+                              }`}>
                                 <span className="font-medium">Component:</span> {oPushFormData.componentName}
+                                {fieldValid.componentName && " ✓"}
                               </p>
                             )}
                             {oPushFormData.jsonData && oPushFormData.jsonData.trim() !== "{\n  \"key\": \"value\"\n}" && (
                               <div className="mt-2">
-                                <p className="text-xs font-medium text-gray-700 mb-1">JSON Data:</p>
+                                <p className={`text-xs font-medium mb-1 ${
+                                  fieldValid.jsonData ? 'text-green-600' : 'text-gray-700'
+                                }`}>
+                                  JSON Data: {fieldValid.jsonData && "✓"}
+                                </p>
                                 <pre className="text-xs text-gray-600 bg-gray-50 p-2 rounded border overflow-x-auto">
                                   {oPushFormData.jsonData}
                                 </pre>

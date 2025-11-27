@@ -9,12 +9,13 @@ import {
   AlertCircle,
 } from "lucide-react";
 import {
-  QUICK_FILTERS,
   MONTHS,
   WEEK_DAYS,
   STYLES,
   DATE_FORMATS,
   DATE_UNITS,
+  QUICK_FILTER_VALUES,
+  QUICK_FILTER_LABELS,
 } from "../contants/constants";
 
 function DateTimeRangePickerComponent({
@@ -31,12 +32,13 @@ function DateTimeRangePickerComponent({
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [tempRange, setTempRange] = useState({ start: null, end: null });
-  
+
+  // Set endTime to current time by default
   const [timeRange, setTimeRange] = useState({
-    startTime: dayjs().format(DATE_FORMATS.time),
-    endTime: dayjs().add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
+    startTime: dayjs().subtract(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
+    endTime: dayjs().format(DATE_FORMATS.time), // Current time as default for end
   });
-  
+
   const [view, setView] = useState(DATE_UNITS.DAYS);
   const [validationError, setValidationError] = useState(null);
   const calendarRef = useRef(null);
@@ -55,9 +57,10 @@ function DateTimeRangePickerComponent({
 
   useEffect(() => {
     if (!dateRange.start && !dateRange.end) {
+      // Reset to current time for end when no date range is selected
       setTimeRange({
-        startTime: dayjs().format(DATE_FORMATS.time),
-        endTime: dayjs().add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
+        startTime: dayjs().subtract(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
+        endTime: dayjs().format(DATE_FORMATS.time), // Current time for end
       });
       setTempRange({ start: null, end: null });
     }
@@ -134,55 +137,50 @@ function DateTimeRangePickerComponent({
     setValidationError(null);
     const now = dayjs();
     let start, end;
-    let startTime = "00:00";
-    let endTime = "23:59";
+
+    let startTime = dayjs().subtract(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time);
+    let endTime = dayjs().format(DATE_FORMATS.time); // ALWAYS current time for end
 
     switch (filterValue) {
-      case "today":
-        start = now.startOf(DATE_UNITS.DAY);
-        end = now.endOf(DATE_UNITS.DAY);
-        startTime = now.format(DATE_FORMATS.time);
-        endTime = now.add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time);
-        break;
-      case "yesterday":
-        start = now.subtract(1, DATE_UNITS.DAY).startOf(DATE_UNITS.DAY);
-        end = now.subtract(1, DATE_UNITS.DAY).endOf(DATE_UNITS.DAY);
-        break;
-      case "last7days":
-        start = now.subtract(6, DATE_UNITS.DAY).startOf(DATE_UNITS.DAY);
-        end = now.endOf(DATE_UNITS.DAY);
-        startTime = "00:00";
-        endTime = now.format(DATE_FORMATS.time);
-        break;
-      case "last30days":
-        start = now.subtract(29, DATE_UNITS.DAY).startOf(DATE_UNITS.DAY);
-        end = now.endOf(DATE_UNITS.DAY);
-        startTime = "00:00";
-        endTime = now.format(DATE_FORMATS.time);
-        break;
       case "last3hours":
         start = now.subtract(3, DATE_UNITS.HOUR);
         end = now;
         startTime = start.format(DATE_FORMATS.time);
-        endTime = end.format(DATE_FORMATS.time);
         break;
+
       case "last6hours":
         start = now.subtract(6, DATE_UNITS.HOUR);
         end = now;
         startTime = start.format(DATE_FORMATS.time);
-        endTime = end.format(DATE_FORMATS.time);
         break;
+
       case "last12hours":
         start = now.subtract(12, DATE_UNITS.HOUR);
         end = now;
         startTime = start.format(DATE_FORMATS.time);
-        endTime = end.format(DATE_FORMATS.time);
         break;
+
+      case "last24hours":
+        start = now.subtract(24, DATE_UNITS.HOUR);
+        end = now;
+        startTime = start.format(DATE_FORMATS.time);
+        break;
+
+      case "last2days":
+        start = now.subtract(2, DATE_UNITS.DAY).startOf("day");
+        end = now;
+        startTime = "00:00";
+        break;
+
+      case "last7days":
+        start = now.subtract(7, DATE_UNITS.DAY).startOf("day");
+        end = now;
+        startTime = "00:00";
+        break;
+
       default:
-        start = now.startOf(DATE_UNITS.DAY);
-        end = now.endOf(DATE_UNITS.DAY);
-        startTime = now.format(DATE_FORMATS.time);
-        endTime = now.add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time);
+        start = now.subtract(3, DATE_UNITS.HOUR);
+        end = now;
     }
 
     const error = validateDateRange(start, end);
@@ -201,12 +199,10 @@ function DateTimeRangePickerComponent({
     setShowDropdown(false);
   };
 
-  const filteredQuickFilters = QUICK_FILTERS.filter(
-    (filter) => filter.value !== "last1hour"
-  ).sort((a, b) => {
-    const hourOrder = { last3hours: 1, last6hours: 2, last12hours: 3 };
-    return (hourOrder[a.value] || 99) - (hourOrder[b.value] || 99);
-  });
+const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
+  value,
+  label: QUICK_FILTER_LABELS[index],
+}));
 
   const startOfMonth = selectedMonth.startOf("month");
   const endOfMonth = selectedMonth.endOf("month");
@@ -336,9 +332,10 @@ function DateTimeRangePickerComponent({
 
   const handleClearAll = () => {
     handleClearDates();
+    // Reset to current time for end when clearing
     setTimeRange({
-      startTime: dayjs().format(DATE_FORMATS.time),
-      endTime: dayjs().add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
+      startTime: dayjs().subtract(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
+      endTime: dayjs().format(DATE_FORMATS.time), // Current time for end
     });
     setTempRange({ start: null, end: null });
     setValidationError(null);
@@ -538,9 +535,10 @@ function DateTimeRangePickerComponent({
               onClick={() => handleQuickFilterSelection(filter.value)}
               className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 transition-colors"
             >
-              {t(filter.label)}
+              {filter.label}
             </button>
           ))}
+
           <button
             onClick={() => {
               setShowCalendar(true);
@@ -574,7 +572,7 @@ function DateTimeRangePickerComponent({
                 type="time"
                 value={timeRange.startTime}
                 onChange={(e) => handleTimeChange("start", e.target.value)}
-                className="border border-gray-300 rounded-md px-2 py-1 text-xs w-24"
+                className="border border-gray-300 rounded-md px-2 py-1 text-xs w-26"
               />
             </div>
             <div className="flex flex-col text-xs text-gray-600">
@@ -583,7 +581,7 @@ function DateTimeRangePickerComponent({
                 type="time"
                 value={timeRange.endTime}
                 onChange={(e) => handleTimeChange("end", e.target.value)}
-                className="border border-gray-300 rounded-md px-2 py-1 text-xs w-24"
+                className="border border-gray-300 rounded-md px-2 py-1 text-xs w-26"
               />
             </div>
           </div>

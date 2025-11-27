@@ -156,22 +156,22 @@ const Payments = () => {
   // Helper function to format dates for API
   const formatDateForAPI = (date) => {
     if (!date) return undefined;
-    
+
     // If it's a dayjs object
     if (date.isValid && date.isValid()) {
       return date.toISOString();
     }
-    
+
     // If it's already a string
-    if (typeof date === 'string') {
+    if (typeof date === "string") {
       return date;
     }
-    
+
     // If it's a Date object
     if (date instanceof Date) {
       return date.toISOString();
     }
-    
+
     return undefined;
   };
 
@@ -192,7 +192,7 @@ const Payments = () => {
           endDate: endDate,
         })
       ).unwrap();
-      
+
       // Optional: Show success message
       // toast.success(t("PAYMENTS.EXPORT_SUCCESS"));
     } catch (error) {
@@ -223,32 +223,34 @@ const Payments = () => {
     }
   };
 
-  const handleFilterChange = useCallback((e, filterName) => {
-  if (initialLoadComplete) {
-    setFilterLoading(true);
-  }
+  const handleFilterChange = useCallback(
+    (e, filterName) => {
+      if (initialLoadComplete) {
+        setFilterLoading(true);
+      }
 
-  if (filterName === "dateRange") {
-    const dateValue = e.target?.value || e; // handles different structures
-    setFilters((prev) => ({
-      ...prev,
-      startDate: dateValue?.start || null,
-      endDate: dateValue?.end || null,
-    }));
+      if (filterName === "dateRange") {
+        const dateValue = e.target?.value || e; // handles different structures
+        setFilters((prev) => ({
+          ...prev,
+          startDate: dateValue?.start || null,
+          endDate: dateValue?.end || null,
+        }));
 
-    // 👇 ensure page resets and re-fetch triggers properly
-    setCurrentPage(1);
-  } else {
-    const { name, value } = e.target;
-    setFilters((prev) => ({
-      ...prev,
-      [filterName || name]: value,
-    }));
+        // 👇 ensure page resets and re-fetch triggers properly
+        setCurrentPage(1);
+      } else {
+        const { name, value } = e.target;
+        setFilters((prev) => ({
+          ...prev,
+          [filterName || name]: value,
+        }));
 
-    setCurrentPage(1);
-  }
-}, [initialLoadComplete]);
-
+        setCurrentPage(1);
+      }
+    },
+    [initialLoadComplete]
+  );
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
@@ -396,15 +398,17 @@ const Payments = () => {
 
       {viewMode === "table" ? (
         <div className="table-container-floating">
-          <div 
-            className="table-wrapper-floating scrollbar-hide" 
+          <div
+            className="table-wrapper-floating scrollbar-hide"
             onScroll={handleTableScroll}
           >
             <table className="table-base">
               {/* Floating Header */}
-              <thead className={`table-head-floating ${
-                tableScrollTop > 10 ? 'table-head-floating-shadow' : ''
-              }`}>
+              <thead
+                className={`table-head-floating ${
+                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                }`}
+              >
                 <tr>
                   <th scope="col" className="table-head-cell-floating w-1/4">
                     {t("PAYMENTS.PAYMENT_DETAILS")}
@@ -420,7 +424,10 @@ const Payments = () => {
                       {t("PAYMENTS.AMOUNT")}
                     </div>
                   </th>
-                  <th scope="col" className="table-head-cell-floating w-1/6 pl-4">
+                  <th
+                    scope="col"
+                    className="table-head-cell-floating w-1/6 pl-4"
+                  >
                     {t("COMMON.STATUS")}
                   </th>
                   <th scope="col" className="table-head-cell-floating w-1/6">
@@ -467,23 +474,28 @@ const Payments = () => {
                       <td className="table-cell w-1/5">
                         <div className="table-cell-text flex items-center">
                           <FileText className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
-                          <span className="truncate">{payment.Order.OrderRefID}</span>
+                          <span className="truncate">
+                            {payment.Order.OrderRefID}
+                          </span>
                         </div>
+
                         <div className="table-cell-subtext flex items-center">
                           <User className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
                           <span className="truncate">
                             {payment.PaymentType?.PaymentTypeName || "N/A"}
                           </span>
                         </div>
-                        {payment.PaymentMethod && (
+
+                        {payment.PaymentMethod?.PaymentMethodName && (
                           <div className="table-cell-subtext flex items-center">
                             <CreditCard className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
                             <span className="truncate">
-                              {payment.PaymentMethod?.PaymentMethodName}
+                              {payment.PaymentMethod.PaymentMethodName}
                             </span>
                           </div>
                         )}
                       </td>
+
                       <td className="table-cell w-1/6 text-right font-medium text-gray-900 pr-8">
                         <div className="flex justify-end">
                           {formatCurrency(payment.Amount)}

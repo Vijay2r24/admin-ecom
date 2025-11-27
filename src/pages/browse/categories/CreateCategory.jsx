@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Tag, Info, Image, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
@@ -14,7 +14,7 @@ import {
 } from "../../../contants/apiRoutes";
 import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
-import { STATUS } from "../../../contants/constants";
+import { FILETYPE, SCROLL_CONSTANTS, STATUS, TOOLTIPSTATUS } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 
 import TextInputWithIcon from "../../../components/TextInputWithIcon";
@@ -27,7 +27,7 @@ import Loader from "../../../components/Loader";
 
 const FILE_CONSTANTS = {
   CATEGORY_IMAGE_PREFIX: "category",
-  FILE_TYPE: "image/jpeg"
+  FILE_TYPE: FILETYPE,
 };
 
 const defaultFormData = {
@@ -53,10 +53,17 @@ const CreateCategory = () => {
 
   const [oFormData, setFormData] = useState(defaultFormData);
   const [oErrors, setErrors] = useState({});
+  const [oFieldValid, setFieldValid] = useState({});
   const [sImagePreview, setImagePreview] = useState(null);
   const [bSubmitting, setSubmitting] = useState(false);
   const [bShowCropper, setShowCropper] = useState(false);
   const [oImageToCrop, setImageToCrop] = useState(null);
+
+  // Required fields configuration
+  const requiredFields = {
+    CategoryName: true,
+    CategoryImage: !isEditing, // Image is required only for new categories
+  };
 
   // Redux state for categories
   const categoriesState = useSelector(
@@ -65,6 +72,91 @@ const CreateCategory = () => {
   const aCategories = categoriesState?.data || [];
   const bLoadingCategories = categoriesState?.loading || false;
   const categoriesError = categoriesState?.error;
+
+  /**
+   * Live validation functions
+   */
+  const validateCategoryName = (name) => {
+    if (!name?.trim()) {
+      return (
+        t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_ERROR")
+      );
+    }
+    if (name.trim().length < 2) {
+      return (
+        t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_MIN_LENGTH")
+      );
+    }
+    if (name.trim().length > 100) {
+      return (
+        t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_MAX_LENGTH")
+      );
+    }
+    return "";
+  };
+
+  const validateCategoryDescription = (description) => {
+    const descLength = description?.trim().length || 0;
+    if (descLength < 10 && descLength > 0) {
+      return (
+        t("PRODUCT_SETUP.CREATE_CATEGORY.DESCRIPTION_MIN_LENGTH")
+      );
+    }
+    if (descLength > 500) {
+      return (
+        t("PRODUCT_SETUP.CREATE_CATEGORY.DESCRIPTION_MAX_LENGTH")
+      );
+    }
+    return "";
+  };
+
+  const validateCategoryImage = (hasImage) => {
+    if (!isEditing && !hasImage) {
+      return (
+        t("PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_REQUIRED")
+      );
+    }
+    return "";
+  };
+
+  /**
+   * Live validation for a specific field
+   */
+  const validateField = useCallback(
+    (name, value) => {
+      let error = "";
+
+      switch (name) {
+        case "Name":
+          error = validateName(value);
+          break;
+
+        case "AttributeTypeDescription":
+          error = validateDescription(value);
+          break;
+
+        case "IsActive":
+          if (value === "" || value === null || value === undefined) {
+            error = t("COMMON.STATUS_REQUIRED"); // add error message from translation
+          }
+          break;
+
+        default:
+          break;
+      }
+
+      setErrors((prev) => ({
+        ...prev,
+        [name]: error,
+      }));
+
+      setFieldValid((prev) => ({
+        ...prev,
+        [name]: !error,
+      }));
+    },
+    [t]
+  );
 
   // Fetch categories on mount
   useEffect(() => {
@@ -114,7 +206,7 @@ const CreateCategory = () => {
               IsActive:
                 categoryData.IsActive !== undefined
                   ? categoryData.IsActive
-                  : categoryData.Status?.toLowerCase() === "active",
+                  : categoryData.Status?.toLowerCase() === TOOLTIPSTATUS.ACTIVE,
               UpdatedBy: "",
             });
 
@@ -141,6 +233,16 @@ const CreateCategory = () => {
               }));
               setImagePreview(existingImageData.documentUrl);
             }
+
+            // Validate initial data after setting
+            setTimeout(() => {
+              validateField("CategoryName", categoryData.CategoryName || "");
+              validateField(
+                "CategoryDescription",
+                categoryData.CategoryDescription || ""
+              );
+              validateField("CategoryImage", existingImageData || null);
+            }, 100);
           }
         }
       } catch (err) {
@@ -156,18 +258,26 @@ const CreateCategory = () => {
     if (isEditing && categoryId) {
       fetchCategoryDetails();
     }
-  }, [categoryId, isEditing, t]);
+  }, [categoryId, isEditing, t, validateField]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: newValue,
     }));
-    // Clear error when user starts typing
-    if (oErrors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+
+    validateField(name, newValue);
+  };
+
+  /**
+   * Handle field blur for additional validation
+   */
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    validateField(name, value);
   };
 
   /**
@@ -179,18 +289,28 @@ const CreateCategory = () => {
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
+      const error = t("PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_ERROR");
       setErrors((prev) => ({
         ...prev,
-        CategoryImage: t("PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_ERROR"),
+        CategoryImage: error,
+      }));
+      setFieldValid((prev) => ({
+        ...prev,
+        CategoryImage: false,
       }));
       return;
     }
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
+      const error = t("PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_TYPE_ERROR");
       setErrors((prev) => ({
         ...prev,
-        CategoryImage: t("PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_TYPE_ERROR"),
+        CategoryImage: error,
+      }));
+      setFieldValid((prev) => ({
+        ...prev,
+        CategoryImage: false,
       }));
       return;
     }
@@ -233,8 +353,8 @@ const CreateCategory = () => {
     // Set preview
     setImagePreview(croppedImageUrl);
 
-    // Clear any existing errors
-    setErrors((prev) => ({ ...prev, CategoryImage: "" }));
+    // Validate the image field
+    validateField("CategoryImage", croppedFile);
 
     // Close cropper
     setShowCropper(false);
@@ -278,7 +398,9 @@ const CreateCategory = () => {
       existingImage: null,
     }));
     setImagePreview(null);
-    setErrors((prev) => ({ ...prev, CategoryImage: "" }));
+
+    // Validate the image field after removal
+    validateField("CategoryImage", null);
 
     // Reset file input
     if (fileInputRef.current) {
@@ -289,38 +411,56 @@ const CreateCategory = () => {
   const validateForm = () => {
     const errors = {};
 
-    // Category Name validation
-    if (!oFormData.CategoryName?.trim()) {
-      errors.CategoryName =
-        t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_ERROR") ||
-        "Category name is required";
-    }
+    // Existing validations
+    errors.CategoryName = validateCategoryName(oFormData.CategoryName);
+    errors.CategoryDescription = validateCategoryDescription(
+      oFormData.CategoryDescription
+    );
+    errors.CategoryImage = validateCategoryImage(
+      oFormData.CategoryImage || sImagePreview
+    );
 
-    // Category Description validation
-    const descLength = oFormData.CategoryDescription?.trim().length || 0;
-    if (descLength < 10 && descLength > 0) {
-      errors.CategoryDescription =
-        t("PRODUCT_SETUP.CREATE_CATEGORY.DESCRIPTION_MIN_LENGTH") ||
-        "Description must be at least 10 characters long";
-    }
-    if (descLength > 500) {
-      errors.CategoryDescription =
-        t("PRODUCT_SETUP.CREATE_CATEGORY.DESCRIPTION_MAX_LENGTH") ||
-        "Description cannot exceed 500 characters";
-    }
-    return errors;
+    errors.IsActive =
+      oFormData.IsActive === "" ||
+      oFormData.IsActive === null ||
+      oFormData.IsActive === undefined
+        ? t("COMMON.STATUS_REQUIRED")
+        : "";
+
+    // Update field validation states
+    setFieldValid({
+      CategoryName:
+        !errors.CategoryName && oFormData.CategoryName.trim() !== "",
+      CategoryDescription: !errors.CategoryDescription,
+      CategoryImage:
+        !errors.CategoryImage && (oFormData.CategoryImage || sImagePreview),
+      IsActive: !errors.IsActive,
+    });
+
+    // Return only fields that actually contain an error message
+    const filteredErrors = Object.fromEntries(
+      Object.entries(errors).filter(([_, value]) => value !== "")
+    );
+
+    setErrors(filteredErrors);
+    return Object.keys(filteredErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Clear previous errors
-    setErrors({});
-
-    const newErrors = validateForm();
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    // Run validation
+    if (!validateForm()) {
+      // Scroll to first error
+      const firstErrorField = Object.keys(oErrors)[0];
+      if (firstErrorField) {
+        const element = document.getElementById(firstErrorField);
+        if (element) {
+          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
+          block: SCROLL_CONSTANTS.BLOCK, });
+          element.focus();
+        }
+      }
       return;
     }
 
@@ -426,7 +566,18 @@ const CreateCategory = () => {
     }
   };
 
-  // Filter categories to only include parent categories (ParentCategoryID is null)
+  // Helper function to render label with required asterisk
+  const renderLabel = (fieldName, translationKey) => {
+    const isRequired = requiredFields[fieldName];
+    return (
+      <span>
+        {t(translationKey)}
+        {isRequired && <span className="text-red-500 ml-1">*</span>}
+      </span>
+    );
+  };
+
+  // Filter categories to only include active parent categories (ParentCategoryID is null AND IsActive is true)
   const parentCategories = [
     {
       value: "",
@@ -435,26 +586,14 @@ const CreateCategory = () => {
     ...aCategories
       .filter(
         (cat) =>
-          cat.ParentCategoryID === null || cat.ParentCategoryID === undefined
+          (cat.ParentCategoryID === null || cat.ParentCategoryID === undefined) &&
+          cat.IsActive === true
       )
       .map((cat) => ({
         value: cat.CategoryID,
         label: cat.CategoryName,
       })),
   ];
-
-  // Helper function to render error messages
-  const renderErrorMessage = (error) => {
-    if (!error) return null;
-    return (
-      <div className="mt-1">
-        <p className="text-red-600 text-sm flex items-center">
-          <span className="mr-1">⚠️</span>
-          {error}
-        </p>
-      </div>
-    );
-  };
 
   return (
     <div className="w-full min-h-screen">
@@ -511,13 +650,19 @@ const CreateCategory = () => {
         <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
           <div className="flex-1">
             <TextInputWithIcon
-              label={t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_LABEL")}
+              label={renderLabel(
+                "CategoryName",
+                "PRODUCT_SETUP.CREATE_CATEGORY.NAME_LABEL"
+              )}
               id="CategoryName"
               name="CategoryName"
               value={oFormData.CategoryName}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               placeholder={t("PRODUCT_SETUP.CREATE_CATEGORY.NAME_PLACEHOLDER")}
               error={oErrors.CategoryName}
+              isValid={oFieldValid.CategoryName}
+              required={requiredFields.CategoryName}
               Icon={Tag}
             />
           </div>
@@ -565,11 +710,18 @@ const CreateCategory = () => {
           {/* Image Upload */}
           <div className="w-full md:w-1/2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t("PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_LABEL")}
+              {renderLabel(
+                "CategoryImage",
+                "PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_LABEL"
+              )}
             </label>
             <div
               className={`relative group rounded-xl border-2 ${
-                oErrors.CategoryImage ? "border-red-300" : "border-gray-200"
+                oErrors.CategoryImage
+                  ? "border-red-300"
+                  : oFieldValid.CategoryImage
+                  ? "border-green-300"
+                  : "border-gray-200"
               } border-dashed transition-all duration-200 hover:border-bg-hover bg-gray-50 hover:bg-gray-50/50`}
             >
               <div className="p-6">
@@ -626,9 +778,26 @@ const CreateCategory = () => {
                           >
                             <X className="h-3 w-3" />
                           </button>
+                          {oFieldValid.CategoryImage && (
+                            <div className="absolute -top-2 -left-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg">
+                              <svg
+                                className="h-3 w-3"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            </div>
+                          )}
                         </div>
                         <p className="text-xs text-gray-500 mt-2">
-                         {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
+                          {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
                         </p>
                       </>
                     )}
@@ -653,19 +822,18 @@ const CreateCategory = () => {
               name="CategoryDescription"
               value={oFormData.CategoryDescription}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               placeholder={t(
                 "PRODUCT_SETUP.CREATE_CATEGORY.DESCRIPTION_PLACEHOLDER"
               )}
               error={oErrors.CategoryDescription}
+              isValid={oFieldValid.CategoryDescription}
               icon={Info}
-              className={
-                oErrors.CategoryDescription
-                  ? "border-red-300 focus:border-red-500"
-                  : ""
-              }
+              showCharCount={true}
+              maxChars={500}
+              currentChars={oFormData.CategoryDescription?.length || 0}
               rows={4}
             />
-            {renderErrorMessage(oErrors.CategoryDescription)}
           </div>
         </div>
 
@@ -698,7 +866,7 @@ const CreateCategory = () => {
           </button>
           <button type="submit" className="btn-primary" disabled={bSubmitting}>
             {bSubmitting
-              ? t("COMMON.LOADING")
+              ? t("COMMON.SUBMITTING")
               : isEditing
               ? t("COMMON.SAVE_BUTTON")
               : t("PRODUCT_SETUP.CREATE_CATEGORY.CREATE_BUTTON")}

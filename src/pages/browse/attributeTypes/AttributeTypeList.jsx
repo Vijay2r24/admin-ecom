@@ -8,9 +8,19 @@ import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Switch from "../../../components/Switch";
 import { UPDATE_ATTRIBUTE_TYPE_STATUS } from "../../../contants/apiRoutes";
-import { ITEMS_PER_PAGE, DEFAULT_PAGE, STATUS, STATUS_VALUES, STATUS_OPTIONS } from "../../../contants/constants";
+import {
+  ITEMS_PER_PAGE,
+  DEFAULT_PAGE,
+  STATUS,
+  STATUS_VALUES,
+  STATUS_OPTIONS,
+} from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
-import { fetchResource, updateStatusById, clearResourceError } from "../../../store/slices/allDataSlice"; // Adjust path as needed
+import {
+  fetchResource,
+  updateStatusById,
+  clearResourceError,
+} from "../../../store/slices/allDataSlice"; // Adjust path as needed
 
 const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
   const [sSearchQuery, setSearchQuery] = useState("");
@@ -79,7 +89,6 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
 
       showEmsg(result.message, result.status || STATUS.SUCCESS);
     } catch (err) {
-      console.error(err);
       showEmsg(t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
       setStatusPopup({ open: false, AttributeTypeID: null, newStatus: null });
@@ -131,9 +140,9 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
   };
 
   // Map STATUS_OPTIONS to the format
-  const statusFilterOptions = STATUS_OPTIONS.map(option => ({
+  const statusFilterOptions = STATUS_OPTIONS.map((option) => ({
     value: option.value,
-    label: t(option.labelKey)
+    label: t(option.labelKey),
   }));
 
   return (
@@ -190,41 +199,48 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
             <table className="table-base">
               <thead className="table-head">
                 <tr>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-left">
                     {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.NAME")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-center">
                     {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.DESCRIPTION_LABEL")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-center">
                     {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.ATTRIBUTES")}
                   </th>
-                  <th className="table-head-cell">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell text-center">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell text-center">
                     {t("COMMON.UPDATE_STATUS")}
                   </th>
                 </tr>
               </thead>
+
               <tbody className="table-body">
                 {aAttributeTypes.map((type) => (
                   <tr
                     key={type.AttributeTypeID}
-                    className={`table-row text-left ${!type.IsActive ? 'bg-gray-50' : ''}`}
+                    className={`table-row ${
+                      !type.IsActive ? "bg-gray-50" : ""
+                    }`}
                   >
                     {/* Name */}
-                    <td className="table-cell table-cell-text">
+                    <td className="table-cell text-left align-middle">
                       {type.IsActive ? (
                         <Link
                           to={`/browse/editattributetype/${type.AttributeTypeID}`}
                           className="text-sm font-medium text-blue-600 hover:underline block truncate max-w-[180px]"
-                          title={type.name}
+                          title={type.Name}
                         >
                           {type.Name}
                         </Link>
                       ) : (
-                        <span 
+                        <span
                           className="text-sm font-medium text-gray-500 block truncate max-w-[180px] cursor-not-allowed"
-                          title={t("PRODUCT_SETUP.ATTRIBUTE_TYPE.EDIT_DISABLED_TOOLTIP")}
+                          title={t(
+                            "PRODUCT_SETUP.ATTRIBUTE_TYPE.EDIT_DISABLED_TOOLTIP"
+                          )}
                         >
                           {type.Name}
                         </span>
@@ -232,24 +248,32 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                     </td>
 
                     {/* Description */}
-                    <td className={`table-cell ${!type.IsActive ? 'text-gray-400' : ''}`}>
+                    <td
+                      className={`table-cell text-center align-middle ${
+                        !type.IsActive ? "text-gray-400" : ""
+                      }`}
+                    >
                       <div
-                        className="table-cell-subtext truncate max-w-[220px]"
-                        title={type.attributeTypeDescription}
+                        className="table-cell-subtext truncate max-w-[220px] mx-auto"
+                        title={type.AttributeTypeDescription}
                       >
                         {type.AttributeTypeDescription}
                       </div>
                     </td>
 
                     {/* Total Attributes */}
-                    <td className={`table-cell table-cell-text text-center ${!type.IsActive ? 'text-gray-400' : ''}`}>
-                      <div className="text-sm text-center">
+                    <td className="table-cell text-center align-middle">
+                      <div
+                        className={`text-sm ${
+                          !type.IsActive ? "text-gray-400" : ""
+                        }`}
+                      >
                         {type.TotalAttributes}
                       </div>
                     </td>
 
                     {/* Status */}
-                    <td className="table-cell">
+                    <td className="table-cell text-center align-middle">
                       <span
                         className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           type.IsActive ? "status-active" : "status-inactive"
@@ -260,11 +284,14 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                     </td>
 
                     {/* Switch */}
-                    <td className="table-cell table-cell-text">
+                    <td className="table-cell text-center align-middle">
                       <Switch
                         checked={type.IsActive}
                         onChange={() =>
-                          handleStatusChange(type.AttributeTypeID, type.IsActive)
+                          handleStatusChange(
+                            type.AttributeTypeID,
+                            type.IsActive
+                          )
                         }
                       />
                     </td>

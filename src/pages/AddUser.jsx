@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import SelectWithIcon from "../components/SelectWithIcon";
-import PhoneInputWithIcon from "../components/PhoneInputWithIcon"; // Import the phone input component
+import PhoneInputWithIcon from "../components/PhoneInputWithIcon";
 import { useTranslation } from "react-i18next";
 import { FaCamera, FaTimes } from "react-icons/fa";
 import { useParams, useNavigate } from "react-router-dom";
@@ -31,7 +31,7 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { GENDER_OPTIONS, PERMISSIONS, STATUS } from "../contants/constants";
+import { COUNTRY_CODES, GENDER_OPTIONS, PERMISSIONS, STATUS } from "../contants/constants";
 import md5 from "md5";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
@@ -71,7 +71,7 @@ const AddUser = () => {
     lastName: "",
     email: "",
     phone: "",
-    CountryCode: "", // New field for country code
+    CountryCode: "",
     role: "",
     stores: [],
     password: "",
@@ -104,6 +104,28 @@ const AddUser = () => {
     !id
   );
   const [isAddressInfoEditable, setIsAddressInfoEditable] = useState(!id);
+
+  // Live validation states
+  const [oFieldValid, setFieldValid] = useState({});
+  const [oFieldTouched, setFieldTouched] = useState({});
+
+  // Required fields configuration
+  const requiredFields = {
+    firstName: true,
+    lastName: true,
+    email: true,
+    phone: true,
+    gender: true,
+    role: true,
+    stores: true,
+    password: !id, // Required only for new users
+    confirmPassword: !id, // Required only for new users
+    streetAddress: true,
+    country: true,
+    state: true,
+    city: true,
+    pincode: true,
+  };
 
   // Redux hooks
   const dispatch = useDispatch();
@@ -192,6 +214,210 @@ const AddUser = () => {
     [passwordStrength, t]
   );
 
+  // Helper function to render label with required asterisk
+  const renderLabel = (fieldName, translationKey) => {
+    const isRequired = requiredFields[fieldName];
+    return (
+      <span>
+        {t(translationKey)}
+        {isRequired && <span className="text-red-500 ml-1">*</span>}
+      </span>
+    );
+  };
+
+  /**
+   * Live validation functions
+   */
+  const validateFirstName = (firstName) => {
+    if (!firstName?.trim()) {
+      return t("ADD_USER.VALIDATION.FIRST_NAME_REQUIRED");
+    }
+    if (firstName.trim().length < 2) {
+      return t("ADD_USER.VALIDATION.FIRST_NAME_MIN_LENGTH");
+    }
+    if (firstName.trim().length > 50) {
+      return t("ADD_USER.VALIDATION.FIRST_NAME_MAX_LENGTH");
+    }
+    return "";
+  };
+
+  const validateLastName = (lastName) => {
+    if (!lastName?.trim()) {
+      return t("ADD_USER.VALIDATION.LAST_NAME_REQUIRED");
+    }
+    if (lastName.trim().length < 2) {
+      return t("ADD_USER.VALIDATION.LAST_NAME_MIN_LENGTH");
+    }
+    if (lastName.trim().length > 50) {
+      return t("ADD_USER.VALIDATION.LAST_NAME_MAX_LENGTH");
+    }
+    return "";
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email?.trim()) {
+      return t("ADD_USER.VALIDATION.EMAIL_REQUIRED");
+    }
+    if (!emailRegex.test(email)) {
+      return t("ADD_USER.VALIDATION.EMAIL_INVALID");
+    }
+    return "";
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone?.trim()) {
+      return t("ADD_USER.PHONE_REQUIRED");
+    }
+    if (!isValidPhoneNumber(phone)) {
+      return t("ADD_USER.VALIDATION.PHONE_INVALID");
+    }
+    if (!phone.startsWith("+")) {
+      return t("ADD_USER.VALIDATION.COUNTRY_CODE_REQUIRED");
+    }
+    const phoneWithoutSpaces = phone.replace(/\s/g, "");
+    const digitsAfterPlus = phoneWithoutSpaces.substring(1);
+    if (digitsAfterPlus.length < 8) {
+      return t("ADD_USER.VALIDATION.PHONE_TOO_SHORT");
+    }
+    const countryCodeMatch = phone.match(/^\+\d{1,3}/);
+    if (!countryCodeMatch) {
+      return t("ADD_USER.VALIDATION.INVALID_COUNTRY_CODE");
+    }
+    return "";
+  };
+
+  const validateGender = (gender) => {
+    if (!gender) {
+      return t("ADD_USER.VALIDATION.GENDER_REQUIRED");
+    }
+    return "";
+  };
+
+  const validateRole = (role) => {
+    if (!role && shouldShowAccountSecuritySection && isAccountSecurityEditable) {
+      return t("ADD_USER.VALIDATION.ROLE_REQUIRED");
+    }
+    return "";
+  };
+
+  const validateStores = (stores) => {
+    if ((!stores || stores.length === 0) && shouldShowAccountSecuritySection && isAccountSecurityEditable) {
+      return t("ADD_USER.VALIDATION.STORES_REQUIRED");
+    }
+    return "";
+  };
+
+  const validateStreetAddress = (address) => {
+    if (!address?.trim()) {
+      return t("ADD_USER.VALIDATION.ADDRESS_REQUIRED");
+    }
+    if (address.trim().length < 10) {
+      return t("ADD_USER.VALIDATION.ADDRESS_MIN_LENGTH");
+    }
+    return "";
+  };
+
+  const validateCountry = (country) => {
+    if (!country) {
+      return t("ADD_USER.VALIDATION.COUNTRY_REQUIRED");
+    }
+    return "";
+  };
+
+  const validateState = (state) => {
+    if (!state) {
+      return t("ADD_USER.VALIDATION.STATE_REQUIRED");
+    }
+    return "";
+  };
+
+  const validateCity = (city) => {
+    if (!city) {
+      return t("ADD_USER.VALIDATION.CITY_REQUIRED");
+    }
+    return "";
+  };
+
+  const validatePincode = (pincode) => {
+    if (!pincode?.trim()) {
+      return t("ADD_USER.VALIDATION.PINCODE_REQUIRED");
+    }
+    const pincodeRegex = /^[A-Z0-9\s-]{3,10}$/i;
+    if (!pincodeRegex.test(pincode.trim())) {
+      return t("ADD_USER.VALIDATION.PINCODE_INVALID");
+    }
+    return "";
+  };
+
+  /**
+   * Live validation for a specific field
+   */
+  const validateField = useCallback((name, value) => {
+    let error = "";
+    
+    switch (name) {
+      case "firstName":
+        error = validateFirstName(value);
+        break;
+      case "lastName":
+        error = validateLastName(value);
+        break;
+      case "email":
+        error = validateEmail(value);
+        break;
+      case "phone":
+        error = validatePhone(value);
+        break;
+      case "gender":
+        error = validateGender(value);
+        break;
+      case "role":
+        error = validateRole(value);
+        break;
+      case "stores":
+        error = validateStores(value);
+        break;
+      case "streetAddress":
+        error = validateStreetAddress(value);
+        break;
+      case "country":
+        error = validateCountry(value);
+        break;
+      case "state":
+        error = validateState(value);
+        break;
+      case "city":
+        error = validateCity(value);
+        break;
+      case "pincode":
+        error = validatePincode(value);
+        break;
+      case "password":
+      case "confirmPassword":
+        const passwordErrors = validateFormPassword(
+          name === "password" ? value : oFormData.password,
+          name === "confirmPassword" ? value : oFormData.confirmPassword,
+          t,
+          !id
+        );
+        error = passwordErrors[name] || "";
+        break;
+      default:
+        break;
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+
+    setFieldValid(prev => ({
+      ...prev,
+      [name]: !error && (value !== "" && value !== null && value !== undefined)
+    }));
+  }, [oFormData.password, oFormData.confirmPassword, t, id, shouldShowAccountSecuritySection, isAccountSecurityEditable]);
+
   useEffect(() => {
     setTitle(id ? t("USERS.EDIT_USER") : t("USERS.ADD_NEW_USER"));
     setBackButton(<BackButton onClick={() => navigate("/users")} />);
@@ -200,6 +426,7 @@ const AddUser = () => {
       setTitle("");
     };
   }, [setTitle, setBackButton, t, id, navigate]);
+
   const validate = useCallback(() => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -389,24 +616,25 @@ const AddUser = () => {
 
   // Updated handleChange for phone input
   const handlePhoneChange = useCallback(
-    (phoneNumber) => {
-      const countryCode = extractCountryCode(phoneNumber);
+    (data) => {
+      // Normalize data to ensure it always has consistent structure
+      const formatted = data?.formatted || "";
+      const countryCode = data?.countryCode || "";
+      const phoneNumber = data?.phoneNumber || "";
 
       setFormData((prev) => ({
         ...prev,
-        phone: phoneNumber,
+        phone: formatted,
         CountryCode: countryCode,
+        PhoneNumber: phoneNumber,
       }));
 
-      // Clear error when user starts typing
-      if (oErrors.phone) {
-        setErrors((prev) => ({ ...prev, phone: "" }));
-      }
+      validateField("phone", formatted);
     },
-    [oErrors.phone]
+    [validateField]
   );
 
-  // Optimized fetchUser function - updated to handle phone and gender fields
+  // Optimized fetchUser function - FIXED to handle phone number binding properly
   const fetchUser = useCallback(async () => {
     if (!id || hasFetchedUser.current) return;
 
@@ -420,13 +648,19 @@ const AddUser = () => {
       if (resData?.status === STATUS.SUCCESS.toUpperCase() && resData.data) {
         const user = resData.data;
 
-        // Extract phone number and country code if available
-        let phoneNumber = user.PhoneNumber || "";
-        let countryCode = "";
+        // FIX: Properly format phone number for the phone input component
+        let formattedPhone = "";
 
-        if (phoneNumber && phoneNumber.startsWith("+")) {
-          const match = phoneNumber.match(/^\+(.+?)(?=\d)/);
-          countryCode = match ? match[1] : "";
+        if (user.PhoneNumber && user.CountryCode) {
+          // Format: "+91 63644 37189" (with spaces for better readability)
+          const cleanPhone = user.PhoneNumber.replace(/\D/g, ""); // Remove any non-digits
+          formattedPhone = `${user.CountryCode} ${cleanPhone}`;
+        } else if (user.PhoneNumber && user.PhoneNumber.startsWith("+")) {
+          // If phone number already has country code but no separate CountryCode field
+          formattedPhone = user.PhoneNumber;
+        } else if (user.PhoneNumber) {
+          // If no country code but has phone number, use default country code
+          formattedPhone = `+${COUNTRY_CODES.INDIA} ${user.PhoneNumber}`;
         }
 
         // Set basic form data immediately
@@ -435,8 +669,9 @@ const AddUser = () => {
           firstName: user.FirstName || "",
           lastName: user.LastName || "",
           email: user.Email || "",
-          phone: phoneNumber,
-          CountryCode: countryCode,
+          phone: formattedPhone, // Use formatted phone number
+          CountryCode: user.CountryCode || COUNTRY_CODES.INDIA, // Ensure country code is set
+          PhoneNumber: user.PhoneNumber || "", // Keep raw phone number
           role: user.RoleID || "",
           IsActive: user.IsActive !== undefined ? user.IsActive : true,
           stores: user.Stores ? user.Stores.map((store) => store.StoreId) : [],
@@ -450,6 +685,19 @@ const AddUser = () => {
             : [],
           gender: user.Gender || "",
         }));
+
+        // Validate initial data
+        setTimeout(() => {
+          validateField("firstName", user.FirstName || "");
+          validateField("lastName", user.LastName || "");
+          validateField("email", user.Email || "");
+          validateField("phone", formattedPhone);
+          validateField("gender", user.Gender || "");
+          validateField("role", user.RoleID || "");
+          validateField("stores", user.Stores ? user.Stores.map((store) => store.StoreId) : []);
+          validateField("streetAddress", user.AddressLine || "");
+          validateField("pincode", user.Zipcode || "");
+        }, 100);
 
         // For the profile image
         if (user.ProfileImageUrl && user.ProfileImageUrl.length > 0) {
@@ -479,6 +727,7 @@ const AddUser = () => {
               ...prev,
               country: foundCountry.CountryID,
             }));
+            validateField("country", foundCountry.CountryID);
           }
         } else {
           // If countries aren't loaded yet, store the names for later
@@ -501,7 +750,7 @@ const AddUser = () => {
       const backendMessage = error?.response?.data?.message;
       setFetchUserError(backendMessage || t("COMMON.ERROR_MESSAGE"));
     }
-  }, [id, t, countries]);
+  }, [id, t, countries, validateField]);
 
   useEffect(() => {
     const populateStateAndCity = async () => {
@@ -524,6 +773,7 @@ const AddUser = () => {
             ...prev,
             state: foundState.StateID,
           }));
+          validateField("state", foundState.StateID);
         }
       } catch (error) {}
     };
@@ -535,6 +785,7 @@ const AddUser = () => {
     oFormData.stateName,
     oFormData.countryName,
     states,
+    validateField,
   ]);
 
   useEffect(() => {
@@ -552,12 +803,13 @@ const AddUser = () => {
             ...prev,
             city: foundCity.CityID,
           }));
+          validateField("city", foundCity.CityID);
         }
       } catch (error) {}
     };
 
     populateCity();
-  }, [id, oFormData.state, oFormData.cityName, cities]);
+  }, [id, oFormData.state, oFormData.cityName, cities, validateField]);
 
   useEffect(() => {
     if (id && !hasFetchedUser.current && countries.length > 0) {
@@ -582,6 +834,9 @@ const AddUser = () => {
           stateName: "",
           cityName: "",
         }));
+        validateField(name, value);
+        validateField("state", "");
+        validateField("city", "");
       } else if (name === "state") {
         setFormData((prev) => ({
           ...prev,
@@ -589,6 +844,8 @@ const AddUser = () => {
           city: "",
           cityName: "",
         }));
+        validateField(name, value);
+        validateField("city", "");
       }
       // For all other fields
       else {
@@ -596,15 +853,29 @@ const AddUser = () => {
           ...prev,
           [name]: value,
         }));
+        validateField(name, value);
       }
 
-      // Clear error when user starts typing
-      if (oErrors[name]) {
-        setErrors((prev) => ({ ...prev, [name]: "" }));
-      }
+      // Mark field as touched
+      setFieldTouched(prev => ({
+        ...prev,
+        [name]: true
+      }));
     },
-    [oErrors]
+    [validateField]
   );
+
+  /**
+   * Handle field blur for additional validation
+   */
+  const handleBlur = useCallback((e) => {
+    const { name, value } = e.target;
+    setFieldTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
+    validateField(name, value);
+  }, [validateField]);
 
   const handleImageChange = useCallback((e) => {
     const file = e.target.files[0];
@@ -684,6 +955,17 @@ const AddUser = () => {
 
     if (Object.keys(sectionErrors).length > 0) {
       setErrors(sectionErrors);
+      // Mark all fields in the section as touched
+      const sectionFields = {
+        personal: ['firstName', 'lastName', 'email', 'phone', 'gender'],
+        account: ['role', 'stores', 'password', 'confirmPassword'],
+        address: ['streetAddress', 'country', 'state', 'city', 'pincode']
+      };
+      const touchedFields = {};
+      sectionFields[section].forEach(field => {
+        touchedFields[field] = true;
+      });
+      setFieldTouched(prev => ({ ...prev, ...touchedFields }));
       return;
     }
 
@@ -696,6 +978,19 @@ const AddUser = () => {
       e?.preventDefault();
       const validationErrors = validate();
       setErrors(validationErrors);
+      
+      // Mark all fields as touched on submit
+      const allFields = [
+        'firstName', 'lastName', 'email', 'phone', 'gender', 
+        'role', 'stores', 'password', 'confirmPassword', 
+        'streetAddress', 'country', 'state', 'city', 'pincode'
+      ];
+      const touchedFields = {};
+      allFields.forEach(field => {
+        touchedFields[field] = true;
+      });
+      setFieldTouched(touchedFields);
+
       if (Object.keys(validationErrors).length > 0) return;
 
       setSubmitting(true);
@@ -733,7 +1028,7 @@ const AddUser = () => {
         FirstName: oFormData.firstName || "",
         LastName: oFormData.lastName || "",
         Email: oFormData.email || "",
-        PhoneNumber: oFormData.phone || "",
+        PhoneNumber: oFormData.PhoneNumber || "",
         CountryCode: oFormData.CountryCode || "", // Send country code to API
         AddressLine: oFormData.streetAddress || "",
         CityID: oFormData.city ? parseInt(oFormData.city, 10) : 0,
@@ -1045,18 +1340,21 @@ const AddUser = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {isPersonalInfoEditable ? (
                   <TextInputWithIcon
-                    label={t("ADD_USER.FIRST_NAME")}
+                    label={renderLabel("firstName", "ADD_USER.FIRST_NAME")}
                     id="firstName"
                     name="firstName"
                     value={oFormData.firstName}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder={t("ADD_USER.ENTER_FIRST_NAME")}
                     Icon={User}
                     error={oErrors.firstName}
+                    isValid={oFieldValid.firstName}
+                    required={requiredFields.firstName}
                   />
                 ) : (
                   <DataField
-                    label={t("ADD_USER.FIRST_NAME")}
+                    label={renderLabel("firstName", "ADD_USER.FIRST_NAME")}
                     value={oFormData.firstName}
                     placeholder={t("ADD_USER.ENTER_FIRST_NAME")}
                     icon={User}
@@ -1065,18 +1363,21 @@ const AddUser = () => {
 
                 {isPersonalInfoEditable ? (
                   <TextInputWithIcon
-                    label={t("ADD_USER.LAST_NAME")}
+                    label={renderLabel("lastName", "ADD_USER.LAST_NAME")}
                     id="lastName"
                     name="lastName"
                     value={oFormData.lastName}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder={t("ADD_USER.ENTER_LAST_NAME")}
                     Icon={User}
                     error={oErrors.lastName}
+                    isValid={oFieldValid.lastName}
+                    required={requiredFields.lastName}
                   />
                 ) : (
                   <DataField
-                    label={t("ADD_USER.LAST_NAME")}
+                    label={renderLabel("lastName", "ADD_USER.LAST_NAME")}
                     value={oFormData.lastName}
                     placeholder={t("ADD_USER.ENTER_LAST_NAME")}
                     icon={User}
@@ -1085,19 +1386,22 @@ const AddUser = () => {
 
                 {isPersonalInfoEditable ? (
                   <SelectWithIcon
-                    label={t("ADD_USER.GENDER")}
+                    label={renderLabel("gender", "ADD_USER.GENDER")}
                     id="gender"
                     name="gender"
                     value={oFormData.gender}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     options={genderOptions}
                     Icon={Users}
                     error={oErrors.gender}
+                    isValid={oFieldValid.gender}
+                    required={requiredFields.gender}
                     placeholder={t("ADD_USER.SELECT_GENDER")}
                   />
                 ) : (
                   <DataSelectField
-                    label={t("ADD_USER.GENDER")}
+                    label={renderLabel("gender", "ADD_USER.GENDER")}
                     value={oFormData.gender}
                     options={genderOptions}
                     placeholder={t("ADD_USER.SELECT_GENDER")}
@@ -1107,19 +1411,22 @@ const AddUser = () => {
 
                 {isPersonalInfoEditable ? (
                   <TextInputWithIcon
-                    label={t("COMMON.EMAIL_ADDRESS")}
+                    label={renderLabel("email", "COMMON.EMAIL_ADDRESS")}
                     id="email"
                     name="email"
                     value={oFormData.email}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder={t("COMMON.ENTER_EMAIL_ADDRESS")}
                     Icon={Mail}
                     type="email"
                     error={oErrors.email}
+                    isValid={oFieldValid.email}
+                    required={requiredFields.email}
                   />
                 ) : (
                   <DataField
-                    label={t("COMMON.EMAIL_ADDRESS")}
+                    label={renderLabel("email", "COMMON.EMAIL_ADDRESS")}
                     value={oFormData.email}
                     placeholder={t("COMMON.ENTER_EMAIL_ADDRESS")}
                     icon={Mail}
@@ -1128,12 +1435,12 @@ const AddUser = () => {
 
                 {/* Phone Input with International Support */}
                 {isPersonalInfoEditable ? (
-                  <PhoneInputWithIcon
+                   <PhoneInputWithIcon
                     label={t("COMMON.PHONE_NUMBER")}
                     id="phone"
                     name="phone"
-                    value={oFormData.phone}
-                    onChange={handlePhoneChange} // Use the custom phone change handler
+                    value={oFormData.phone} // holds formatted number
+                    onChange={handlePhoneChange} // updated handler
                     placeholder={t("COMMON.ENTER_PHONE_NUMBER")}
                     Icon={Phone}
                     error={oErrors.phone}
@@ -1171,11 +1478,12 @@ const AddUser = () => {
                   {(!id || hasEditRolePermission) &&
                     (isAccountSecurityEditable ? (
                       <SelectWithIcon
-                        label={t("ADD_USER.USER_ROLE")}
+                        label={renderLabel("role", "ADD_USER.USER_ROLE")}
                         id="role"
                         name="role"
                         value={oFormData.role}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         options={roles.map((r) => ({
                           value: r.RoleID,
                           label: r.RoleName,
@@ -1185,6 +1493,8 @@ const AddUser = () => {
                           rolesLoading || (id && !hasEditRolePermission)
                         }
                         error={oErrors.role || rolesError}
+                        isValid={oFieldValid.role}
+                        required={requiredFields.role}
                         placeholder={
                           rolesLoading
                             ? t("COMMON.LOADING")
@@ -1194,7 +1504,7 @@ const AddUser = () => {
                         }
                         searchable
                         searchPlaceholder={
-                          t("COMMON.SEARCH_ROLE") || "Search role"
+                          t("COMMON.SEARCH_ROLE")
                         }
                         onInputChange={(inputValue) => {
                           if (
@@ -1214,7 +1524,7 @@ const AddUser = () => {
                       />
                     ) : (
                       <DataSelectField
-                        label={t("ADD_USER.USER_ROLE")}
+                        label={renderLabel("role", "ADD_USER.USER_ROLE")}
                         value={oFormData.role}
                         options={roles.map((r) => ({
                           value: r.RoleID,
@@ -1229,11 +1539,12 @@ const AddUser = () => {
                   {(!id || hasEditStorePermission) &&
                     (isAccountSecurityEditable ? (
                       <SelectWithIcon
-                        label={t("ADD_USER.ASSIGNED_STORES")}
+                        label={renderLabel("stores", "ADD_USER.ASSIGNED_STORES")}
                         id="stores"
                         name="stores"
                         value={oFormData.stores}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         options={stores.map((s) => ({
                           value: s.StoreID,
                           label: s.StoreName,
@@ -1243,6 +1554,8 @@ const AddUser = () => {
                           storesLoading || (id && !hasEditStorePermission)
                         }
                         error={oErrors.stores || storesError}
+                        isValid={oFieldValid.stores}
+                        required={requiredFields.stores}
                         placeholder={
                           storesLoading
                             ? t("COMMON.LOADING")
@@ -1273,7 +1586,7 @@ const AddUser = () => {
                       />
                     ) : (
                       <DataSelectField
-                        label={t("ADD_USER.ASSIGNED_STORES")}
+                        label={renderLabel("stores", "ADD_USER.ASSIGNED_STORES")}
                         value={oFormData.stores}
                         options={stores.map((s) => ({
                           value: s.StoreID,
@@ -1291,19 +1604,22 @@ const AddUser = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {isAccountSecurityEditable ? (
                           <TextInputWithIcon
-                            label={t("COMMON.PASSWORD")}
+                            label={renderLabel("password", "COMMON.PASSWORD")}
                             id="password"
                             name="password"
                             value={oFormData.password}
                             onChange={handleChange}
+                            onBlur={handleBlur}
                             placeholder={t("COMMON.ENTER_PASSWORD")}
                             Icon={Lock}
                             type="password"
                             error={oErrors.password}
+                            isValid={oFieldValid.password}
+                            required={requiredFields.password}
                           />
                         ) : (
                           <DataPasswordField
-                            label={t("COMMON.PASSWORD")}
+                            label={renderLabel("password", "COMMON.PASSWORD")}
                             placeholder={t("COMMON.ENTER_PASSWORD")}
                             icon={Lock}
                           />
@@ -1311,19 +1627,22 @@ const AddUser = () => {
 
                         {isAccountSecurityEditable ? (
                           <TextInputWithIcon
-                            label={t("COMMON.CONFIRM_PASSWORD")}
+                            label={renderLabel("confirmPassword", "COMMON.CONFIRM_PASSWORD")}
                             id="confirmPassword"
                             name="confirmPassword"
                             value={oFormData.confirmPassword}
                             onChange={handleChange}
+                            onBlur={handleBlur}
                             placeholder={t("COMMON.CONFIRM_PASSWORD")}
                             Icon={Lock}
                             type="password"
                             error={oErrors.confirmPassword}
+                            isValid={oFieldValid.confirmPassword}
+                            required={requiredFields.confirmPassword}
                           />
                         ) : (
                           <DataPasswordField
-                            label={t("COMMON.CONFIRM_PASSWORD")}
+                            label={renderLabel("confirmPassword", "COMMON.CONFIRM_PASSWORD")}
                             placeholder={t("COMMON.CONFIRM_PASSWORD")}
                             icon={Lock}
                           />
@@ -1426,18 +1745,21 @@ const AddUser = () => {
             <div className="p-6 space-y-6">
               {isAddressInfoEditable ? (
                 <TextInputWithIcon
-                  label={t("COMMON.STREET_ADDRESS")}
+                  label={renderLabel("streetAddress", "COMMON.STREET_ADDRESS")}
                   id="streetAddress"
                   name="streetAddress"
                   value={oFormData.streetAddress}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder={t("COMMON.ENTER_STREET_ADDRESS")}
                   Icon={MapPin}
                   error={oErrors.streetAddress}
+                  isValid={oFieldValid.streetAddress}
+                  required={requiredFields.streetAddress}
                 />
               ) : (
                 <DataField
-                  label={t("COMMON.STREET_ADDRESS")}
+                  label={renderLabel("streetAddress", "COMMON.STREET_ADDRESS")}
                   value={oFormData.streetAddress}
                   placeholder={t("COMMON.ENTER_STREET_ADDRESS")}
                   icon={MapPin}
@@ -1446,17 +1768,20 @@ const AddUser = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {isAddressInfoEditable ? (
                   <SelectWithIcon
-                    label={t("COMMON.COUNTRY")}
+                    label={renderLabel("country", "COMMON.COUNTRY")}
                     id="country"
                     name="country"
                     value={oFormData.country}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     options={countries.map((c) => ({
                       value: c.CountryID,
                       label: c.CountryName,
                     }))}
                     Icon={Globe}
                     error={oErrors.country || countriesError}
+                    isValid={oFieldValid.country}
+                    required={requiredFields.country}
                     placeholder={
                       countriesLoading
                         ? t("COMMON.LOADING")
@@ -1466,7 +1791,7 @@ const AddUser = () => {
                   />
                 ) : (
                   <DataSelectField
-                    label={t("COMMON.COUNTRY")}
+                    label={renderLabel("country", "COMMON.COUNTRY")}
                     value={oFormData.country}
                     options={countries.map((c) => ({
                       value: c.CountryID,
@@ -1479,17 +1804,20 @@ const AddUser = () => {
 
                 {isAddressInfoEditable ? (
                   <SelectWithIcon
-                    label={t("COMMON.STATE")}
+                    label={renderLabel("state", "COMMON.STATE")}
                     id="state"
                     name="state"
                     value={oFormData.state}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     options={states.map((s) => ({
                       value: s.StateID,
                       label: s.StateName,
                     }))}
                     Icon={Navigation}
                     error={oErrors.state || statesError}
+                    isValid={oFieldValid.state}
+                    required={requiredFields.state}
                     placeholder={
                       statesLoading
                         ? t("COMMON.LOADING")
@@ -1499,7 +1827,7 @@ const AddUser = () => {
                   />
                 ) : (
                   <DataSelectField
-                    label={t("COMMON.STATE")}
+                    label={renderLabel("state", "COMMON.STATE")}
                     value={oFormData.state}
                     options={states.map((s) => ({
                       value: s.StateID,
@@ -1512,17 +1840,20 @@ const AddUser = () => {
 
                 {isAddressInfoEditable ? (
                   <SelectWithIcon
-                    label={t("COMMON.CITY")}
+                    label={renderLabel("city", "COMMON.CITY")}
                     id="city"
                     name="city"
                     value={oFormData.city}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     options={cities.map((c) => ({
                       value: c.CityID,
                       label: c.CityName,
                     }))}
                     Icon={Building}
                     error={oErrors.city || citiesError}
+                    isValid={oFieldValid.city}
+                    required={requiredFields.city}
                     placeholder={
                       citiesLoading
                         ? t("COMMON.LOADING")
@@ -1532,7 +1863,7 @@ const AddUser = () => {
                   />
                 ) : (
                   <DataSelectField
-                    label={t("COMMON.CITY")}
+                    label={renderLabel("city", "COMMON.CITY")}
                     value={oFormData.city}
                     options={cities.map((c) => ({
                       value: c.CityID,
@@ -1545,18 +1876,21 @@ const AddUser = () => {
 
                 {isAddressInfoEditable ? (
                   <TextInputWithIcon
-                    label={t("COMMON.PINCODE")}
+                    label={renderLabel("pincode", "COMMON.PINCODE")}
                     id="pincode"
                     name="pincode"
                     value={oFormData.pincode}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder={t("ADD_USER.ENTER_PINCODE")}
                     Icon={Hash}
                     error={oErrors.pincode}
+                    isValid={oFieldValid.pincode}
+                    required={requiredFields.pincode}
                   />
                 ) : (
                   <DataField
-                    label={t("COMMON.PINCODE")}
+                    label={renderLabel("pincode", "COMMON.PINCODE")}
                     value={oFormData.pincode}
                     placeholder={t("ADD_USER.ENTER_PINCODE")}
                     icon={Hash}

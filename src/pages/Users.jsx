@@ -338,115 +338,114 @@ const Users = () => {
       {/* table view */}
       {sViewMode === "table" ? (
         <div className="table-container-floating">
-          <div 
-            className="table-wrapper-floating scrollbar-hide" 
+          <div
+            className="table-wrapper-floating scrollbar-hide"
             onScroll={handleTableScroll}
           >
             <table className="table-base">
               {/* Floating Header */}
-              <thead className={`table-head-floating ${
-                tableScrollTop > 10 ? 'table-head-floating-shadow' : ''
-              }`}>
+              <thead
+                className={`table-head-floating ${
+                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                }`}
+              >
                 <tr>
-                  <th className="table-head-cell-floating">{t("COMMON.USER")}</th>
-                  <th className="table-head-cell-floating hidden sm:table-cell">
+                  <th className="table-head-cell-floating text-left">
+                    {t("COMMON.USER")}
+                  </th>
+                  <th className="table-head-cell-floating hidden sm:table-cell text-center">
                     {t("USERS.TABLE.CONTACT")}
                   </th>
-                  <th className="table-head-cell-floating">{t("COMMON.ROLE")}</th>
-                  <th className="table-head-cell-floating">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell-floating hidden sm:table-cell">
+                  <th className="table-head-cell-floating text-center">
+                    {t("COMMON.ROLE")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell-floating hidden sm:table-cell text-right">
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>
               </thead>
+
               <tbody className="table-body">
-                {loading ? (
-                  <tr>
-                    <td colSpan="6" className="text-center py-8">
-                      <div className="flex justify-center items-center h-32">
-                        <Loader className="h-8 w-8" />
-                      </div>
-                    </td>
-                  </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan="6" className="text-center py-4 text-muted">
-                      {t("USERS.FETCH_ERROR")}
-                    </td>
-                  </tr>
-                ) : usersData.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="text-center text-muted py-4">
-                      {t("USERS.NO_USERS_FOUND")}
-                    </td>
-                  </tr>
-                ) : (
-                  usersData.map((user) => (
-                    <tr key={user.UserID} className="table-row">
-                      <td className="table-cell">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            <img
-                              className="h-10 w-10 rounded-full object-cover"
-                              src={getProfileImageUrl(user)}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = userProfile;
-                              }}
-                              alt=""
-                            />
+                {usersData.map((user) => (
+                  <tr key={user.UserID} className="table-row">
+                    {/* User */}
+                    <td className="table-cell text-left">
+                      <div className="flex items-center">
+                        <img
+                          className="h-10 w-10 rounded-full object-cover"
+                          src={getProfileImageUrl(user)}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = userProfile;
+                          }}
+                          alt=""
+                        />
+                        <div className="ml-4">
+                          <div className="table-cell-text">
+                            <span className="ellipsis-text">
+                              {user.FirstName} {user.LastName}
+                            </span>
                           </div>
-                          <div className="ml-4">
-                            <div className="table-cell-text">
-                              <span className="ellipsis-text">
-                                {user.FirstName} {user.LastName}
-                              </span>
-                            </div>
-                            <div className="table-cell-subtext sm:hidden">
-                              {user.Email}
-                            </div>
-                            <div className="table-cell-subtext lg:hidden">
-                              {getStoresString(user)}
-                            </div>
+                          <div className="table-cell-subtext sm:hidden">
+                            {user.Email}
+                          </div>
+                          <div className="table-cell-subtext lg:hidden">
+                            {getStoresString(user)}
                           </div>
                         </div>
-                      </td>
-                      <td className="table-cell hidden sm:table-cell">
-                        <div className="flex flex-col space-y-1">
-                          <div className="table-cell-subtext flex items-center">
+                      </div>
+                    </td>
+
+                    {/* Contact */}
+                    <td className="table-cell hidden sm:table-cell text-center">
+                      <div className="flex flex-col items-center space-y-1">
+                        <div className="flex flex-col items-start space-y-1 w-full max-w-[150px]">
+                          {" "}
+                          {/* adjust max-w as needed */}
+                          <div className="table-cell-subtext flex items-center justify-start">
                             <Mail className="h-4 w-4 mr-2" />
                             <span className="ellipsis-text">{user.Email}</span>
                           </div>
-                          <div className="table-cell-subtext flex items-center">
+                          <div className="table-cell-subtext flex items-center justify-start">
                             <Phone className="h-4 w-4 mr-2" />
-                            {user.PhoneNumber}
+                           {user.CountryCode ? `${user.CountryCode} ${user.PhoneNumber}` : user.PhoneNumber}
                           </div>
                         </div>
-                      </td>
-                      <td className="table-cell">
-                        <div className="flex items-center">
-                          <Shield className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="status-badge bg-blue-100 text-blue-800">
-                            <span className="ellipsis-text">
-                              {user.RoleName}
-                            </span>
-                          </span>
-                        </div>
-                      </td>
-                      <td className="table-cell">
-                        <Switch
-                          checked={user.IsActive}
-                          onChange={(e) =>
-                            handleStatusChange(user.UserID, e.target.checked)
-                          }
-                        />
-                      </td>
-                      <td className="table-cell text-center align-middle">
-                        <ActionButtons id={user.UserID}  viewLink={`/editUser/${user.UserID}`} />
-                      </td>
-                    </tr>
-                  ))
-                )}
+                      </div>
+                    </td>
+
+                    {/* Role */}
+                    <td className="table-cell text-center">
+                      <div className="flex items-center justify-center">
+                        <Shield className="h-4 w-4 mr-2 text-gray-400" />
+                        <span className="status-badge bg-blue-100 text-blue-800">
+                          <span className="ellipsis-text">{user.RoleName}</span>
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td className="table-cell text-center">
+                      <Switch
+                        checked={user.IsActive}
+                        onChange={(e) =>
+                          handleStatusChange(user.UserID, e.target.checked)
+                        }
+                      />
+                    </td>
+
+                    {/* Actions */}
+                    <td className="table-cell text-right">
+                      <ActionButtons
+                        id={user.UserID}
+                        viewLink={`/editUser/${user.UserID}`}
+                      />
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -526,7 +525,10 @@ const Users = () => {
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 mt-2">
-                  <ActionButtons id={user.UserID}  viewLink={`/editUser/${user.UserID}`} />
+                  <ActionButtons
+                    id={user.UserID}
+                    viewLink={`/editUser/${user.UserID}`}
+                  />
                 </div>
               </div>
             ))

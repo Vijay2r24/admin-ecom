@@ -1,15 +1,23 @@
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchResource, clearResourceError } from '../../../store/slices/allDataSlice';
-import Toolbar from '../../../components/Toolbar';
-import { useTranslation } from 'react-i18next';
-import Pagination from '../../../components/Pagination';
-import FullscreenErrorPopup from '../../../components/FullscreenErrorPopup';
-import { ITEMS_PER_PAGE,DEFAULT_PAGE,STATUS_VALUES, STATUS_OPTIONS } from '../../../contants/constants';
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchResource,
+  clearResourceError,
+} from "../../../store/slices/allDataSlice";
+import Toolbar from "../../../components/Toolbar";
+import { useTranslation } from "react-i18next";
+import Pagination from "../../../components/Pagination";
+import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
+import {
+  ITEMS_PER_PAGE,
+  DEFAULT_PAGE,
+  STATUS_VALUES,
+  STATUS_OPTIONS,
+} from "../../../contants/constants";
 
 const ColorList = ({ onCreate, onBack, setSubmitting }) => {
-  const [sSearchQuery, setSearchQuery] = useState('');
-  const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL  });
+  const [sSearchQuery, setSearchQuery] = useState("");
+  const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
   const [bShowFilters, setShowFilters] = useState(false);
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -22,7 +30,7 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
   const iTotalItems = colorsState?.total || 0;
 
   const [nCurrentPage, setCurrentPage] = useState(DEFAULT_PAGE);
-  const [iItemsPerPage] = useState(ITEMS_PER_PAGE); 
+  const [iItemsPerPage] = useState(ITEMS_PER_PAGE);
 
   // Local state for optimistic UI updates (just keeping data in sync)
   const [localColors, setLocalColors] = useState(aColors || []);
@@ -63,20 +71,22 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
 
   const handleNextPage = () => {
     if (nCurrentPage < Math.ceil(iTotalItems / iItemsPerPage)) {
-      setCurrentPage(prev => prev + DEFAULT_PAGE);
+      setCurrentPage((prev) => prev + DEFAULT_PAGE);
     }
   };
 
   const handlePrevPage = () => {
     if (nCurrentPage > DEFAULT_PAGE) {
-      setCurrentPage(prev => prev - DEFAULT_PAGE);
+      setCurrentPage((prev) => prev - DEFAULT_PAGE);
     }
   };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-medium text-gray-900">{t("PRODUCT_SETUP.COLORS.TITLE")}</h2>
+        <h2 className="text-lg font-medium text-gray-900">
+          {t("PRODUCT_SETUP.COLORS.TITLE")}
+        </h2>
       </div>
 
       <div className="mb-6">
@@ -96,7 +106,9 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
       </div>
 
       {bLoading ? (
-        <div className="text-center py-8 text-gray-500">{t('COMMON.LOADING')}</div>
+        <div className="text-center py-8 text-gray-500">
+          {t("COMMON.LOADING")}
+        </div>
       ) : sError ? (
         <FullscreenErrorPopup
           message={sError}
@@ -109,14 +121,20 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
             <table className="table-base">
               <thead className="table-head">
                 <tr>
-                  <th className="table-head-cell">{t("PRODUCT_SETUP.COLORS.TABLE.COLOR")}</th>
-                  <th className="table-head-cell">{t("PRODUCT_SETUP.COLORS.TABLE.HEX_CODE")}</th>        
+                  <th className="table-head-cell text-left">
+                    {t("PRODUCT_SETUP.COLORS.TABLE.COLOR")}
+                  </th>
+                  <th className="table-head-cell text-center">
+                    {t("PRODUCT_SETUP.COLORS.TABLE.HEX_CODE")}
+                  </th>
                 </tr>
               </thead>
+
               <tbody className="table-body">
                 {localColors.map((color) => (
                   <tr key={color.ColourID} className="table-row">
-                    <td className="table-cell table-cell-text">
+                    {/* Color Name & Circle */}
+                    <td className="table-cell text-left align-middle">
                       <div className="flex items-center">
                         <div
                           className="h-6 w-6 rounded-full mr-3 border border-gray-200"
@@ -127,7 +145,11 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
                         </div>
                       </div>
                     </td>
-                    <td className="table-cell table-cell-text text-secondary">{color.HexCode}</td>            
+
+                    {/* Hex Code */}
+                    <td className="table-cell text-center align-middle text-secondary">
+                      {color.HexCode}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -138,12 +160,14 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
 
       {iTotalItems === 0 && !bLoading && !sError && (
         <div className="text-center py-12">
-          <div className="text-gray-500">{t("PRODUCT_SETUP.COLORS.EMPTY.MESSAGE")}</div>
+          <div className="text-gray-500">
+            {t("PRODUCT_SETUP.COLORS.EMPTY.MESSAGE")}
+          </div>
           {sSearchQuery && (
             <button
               onClick={() => {
                 setSearchQuery("");
-                setFilters({ status: STATUS_VALUES.ALL});
+                setFilters({ status: STATUS_VALUES.ALL });
               }}
               className="mt-2 text-[#5B45E0] hover:text-[#4c39c7]"
             >

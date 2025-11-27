@@ -3,6 +3,7 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { DEFAULT_COUNTRY } from "../contants/constants";
+import { getPhonePayload } from "../utils/getPhonePayload";
 
 const PhoneInputWithIcon = forwardRef(
   (
@@ -21,6 +22,12 @@ const PhoneInputWithIcon = forwardRef(
     },
     ref
   ) => {
+
+    const handlePhoneChange = (val) => {
+      const payload = getPhonePayload(val);
+      onChange(payload); 
+    };
+
     return (
       <div className="w-full">
         <label
@@ -44,7 +51,7 @@ const PhoneInputWithIcon = forwardRef(
             id={id}
             name={name}
             value={value}
-            onChange={onChange}
+            onChange={handlePhoneChange}
             defaultCountry={defaultCountry}
             international
             countryCallingCodeEditable={false}
@@ -72,8 +79,7 @@ const PhoneInputWithIcon = forwardRef(
             {error}
           </p>
         ) : value && !isValidPhoneNumber(value) ? (
-          <p className="mt-1.5 text-sm text-red flex items-center">
-          </p>
+          <p className="mt-1.5 text-sm text-red flex items-center"></p>
         ) : null}
       </div>
     );

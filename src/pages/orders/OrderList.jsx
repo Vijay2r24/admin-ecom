@@ -412,7 +412,6 @@ const OrderList = () => {
       // Optional: Show success message
       // toast.success(t("ORDERS.EXPORT_SUCCESS"));
     } catch (error) {
-  
     } finally {
       setExportLoading(false);
     }
@@ -447,7 +446,7 @@ const OrderList = () => {
             className="overflow-x-auto max-h-[calc(100vh-200px)] scrollbar-hide"
             onScroll={handleTableScroll}
           >
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="table-base">
               {/* Floating Header */}
               <thead
                 className={`table-head sticky top-0 z-0 transition-all duration-200 ${
@@ -455,31 +454,30 @@ const OrderList = () => {
                 }`}
               >
                 <tr>
-                  <th className="table-head-cell w-8 bg-gray-50"></th>
-                  <th className="table-head-cell bg-gray-50">
+                  <th className="table-head-cell w-8"></th>
+                  <th className="table-head-cell text-left">
                     {t("ORDERS.TABLE.ORDER_REF")}
                   </th>
-                  <th className="table-head-cell bg-gray-50">
+                  <th className="table-head-cell">
                     {t("ORDERS.TABLE.ORDER_DATE")}
                   </th>
-                  <th className="table-head-cell bg-gray-50">
+                  <th className="table-head-cell text-left">
                     {t("ORDERS.TABLE.CUSTOMER_NAME")}
                   </th>
-                  <th className="table-head-cell bg-gray-50">
+                  <th className="table-head-cell">
                     {t("ORDERS.TABLE.PHONE_NUMBER")}
                   </th>
-                  <th className="table-head-cell bg-gray-50">
+                  <th className="table-head-cell">
                     {t("ORDERS.TABLE.PAYMENT_STATUS")}
                   </th>
-                  <th className="table-head-cell bg-gray-50">
+                  <th className="table-head-cell">
                     {t("COMMON.TOTAL_ORDER_ITEMS")}
                   </th>
-                  <th className="table-head-cell bg-gray-50">
-                    {t("COMMON.ACTIONS")}
-                  </th>
+                  <th className="table-head-cell">{t("COMMON.ACTIONS")}</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+
+              <tbody className="table-body">
                 {bFilterLoading ? (
                   <tr>
                     <td colSpan={8} className="py-8 text-center">
@@ -490,21 +488,21 @@ const OrderList = () => {
                   </tr>
                 ) : sError ? (
                   <tr>
-                    <td colSpan="8" className="text-center py-8 text-gray-600">
+                    <td colSpan={8} className="text-center py-8 text-gray-600">
                       {sError}
                     </td>
                   </tr>
                 ) : aOrders.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="text-center py-8 text-gray-600">
+                    <td colSpan={8} className="text-center py-8 text-gray-600">
                       {t("ORDERS.NO_ORDERS_FOUND")}
                     </td>
                   </tr>
                 ) : (
                   aOrders.map((order) => (
                     <React.Fragment key={order.orderId}>
-                      <tr className="hover:bg-gray-50 transition-colors duration-150">
-                        <td className="table-cell px-4">
+                      <tr className="table-row">
+                        <td className="table-cell">
                           {order.orderItems.length > 0 && (
                             <button
                               onClick={() => toggleRowExpansion(order.orderId)}
@@ -514,12 +512,17 @@ const OrderList = () => {
                             </button>
                           )}
                         </td>
-                        <td className="table-cell">
-                          <div className="text-caption font-semibold truncate max-w-[150px]">
+
+                        <td className="table-cell table-cell-text">
+                          <span
+                            className="ellipsis-text"
+                            title={order.orderRefId}
+                          >
                             {order.orderRefId}
-                          </div>
+                          </span>
                         </td>
-                        <td className="table-cell">
+
+                        <td className="table-cell table-cell-text">
                           <div className="flex flex-col">
                             <div className="text-sm text-gray-700 whitespace-nowrap">
                               {order.formattedOrderDate.split(",")[0]}
@@ -533,7 +536,8 @@ const OrderList = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="table-cell">
+
+                        <td className="table-cell table-cell-text">
                           <div className="text-sm text-gray-700 truncate max-w-[200px]">
                             {order.customerName || t("COMMON.UNKNOWN_CUSTOMER")}
                           </div>
@@ -541,38 +545,39 @@ const OrderList = () => {
                             {order.email}
                           </div>
                         </td>
-                        <td className="table-cell">
-                          <div className="text-sm text-gray-700">
-                            {order.phoneNumber || "N/A"}
-                          </div>
+
+                        <td className="table-cell table-cell-text text-right">
+                          {order.phoneNumber || "N/A"}
                         </td>
+
                         <td className="table-cell text-center">
                           <span
-                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusColor(
+                            className={`status-badge ${getPaymentStatusColor(
                               order.paymentStatus
                             )}`}
                           >
                             {order.paymentStatus}
                           </span>
                         </td>
-                        <td className="table-cell">
-                          <div className="text-sm text-gray-900 text-center">
-                            {order.totalOrderItems}
-                          </div>
+
+                        <td className="table-cell table-cell-text text-center">
+                          {order.totalOrderItems}
                         </td>
+
                         <td className="table-cell">
                           <button
                             onClick={() => handleViewOrder(order)}
-                            className="text-[#5B45E0] hover:text-[#4c39c7] font-medium transition-colors duration-150"
+                            className="action-button"
                           >
                             {t("ORDERS.VIEW_DETAILS")}
                           </button>
                         </td>
                       </tr>
+
                       {expandedRows.has(order.orderId) &&
                         order.orderItems.length > 0 && (
-                          <tr className="bg-gray-50">
-                            <td colSpan="8" className="px-6 py-4">
+                          <tr className="table-row bg-gray-50">
+                            <td colSpan={8} className="table-cell-wrap">
                               <div className="mb-3">
                                 <div className="text-sm font-semibold text-gray-700 mb-2">
                                   {t("COMMON.ORDER_ITEMS")} (
@@ -599,7 +604,7 @@ const OrderList = () => {
                                           {item.Quantity}
                                         </div>
                                         <span
-                                          className={`px-2 py-1 text-xs font-medium rounded-full border ${getOrderItemStatusColor(
+                                          className={`status-badge ${getOrderItemStatusColor(
                                             item.OrderStatus
                                           )}`}
                                         >
