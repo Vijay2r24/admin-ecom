@@ -13,6 +13,7 @@ import {
   DEFAULT_PAGE,
   STATUS_VALUES,
   STATUS_OPTIONS,
+  customScrollbarStyles,
 } from "../../../contants/constants";
 
 const ColorList = ({ onCreate, onBack, setSubmitting }) => {
@@ -100,36 +101,10 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
   return (
     <div 
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-      style={{
-        // Hide scrollbar for all browsers
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-      }}
     >
       {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
       <style>
-        {`
-          .max-w-8xl::-webkit-scrollbar {
-            display: none;
-          }
-          
-          /* Custom scrollbar for table */
-          .table-scroll-container::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-          }
-          .table-scroll-container::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-          }
-          .table-scroll-container::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-          }
-          .table-scroll-container::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-          }
-        `}
+        {customScrollbarStyles}
       </style>
 
       <div className="mb-6">

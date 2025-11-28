@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS } from "../../contants/constants";
+import {ITEMS_PER_PAGE, STATUS } from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
 import {
@@ -385,21 +385,7 @@ const Payments = () => {
   return (
     <div 
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-      style={{
-        // Hide scrollbar for all browsers
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-      }}
-    >
-      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
-      <style>
-        {`
-          .max-w-8xl::-webkit-scrollbar {
-            display: none;
-          }
-        `}
-      </style>
-      
+    > 
       <ToastContainer />
       {bSubmitting && (
         <div className="global-loader-overlay">

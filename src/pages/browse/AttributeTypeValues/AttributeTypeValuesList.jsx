@@ -16,6 +16,7 @@ import {
   STATUS,
   STATUS_VALUES,
   STATUS_OPTIONS,
+  customScrollbarStyles,
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 import {
@@ -57,11 +58,11 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    
+    document.body.style.overflow = "hidden";
+
     // Re-enable scrollbar when component unmounts
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, []);
 
@@ -110,7 +111,6 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
 
       showEmsg(result.message, result.status || STATUS.SUCCESS);
     } catch (err) {
-    
       setErrorMessage(t("COMMON.API_ERROR"));
       setShowErrorPopup(true);
     } finally {
@@ -160,39 +160,8 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
   }
 
   return (
-    <div 
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-      style={{
-        // Hide scrollbar for all browsers
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-      }}
-    >
-      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
-      <style>
-        {`
-          .max-w-8xl::-webkit-scrollbar {
-            display: none;
-          }
-          
-          /* Custom scrollbar for table */
-          .table-scroll-container::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-          }
-          .table-scroll-container::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-          }
-          .table-scroll-container::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-          }
-          .table-scroll-container::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-          }
-        `}
-      </style>
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+      <style>{customScrollbarStyles}</style>
 
       <div className="relative">
         <div className="mb-6">
@@ -362,18 +331,18 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
             )}
           </div>
         )}
-        
+
         {/* Pagination Controls - Fixed at bottom */}
         {!bLoading && !sError && iTotalItems > 0 && (
-            <Pagination
-              itemsPerPage={iItemsPerPage}
-              totalItems={iTotalItems}
-              currentPage={iCurrentPage}
-              totalPages={iTotalPages}
-              handlePageClick={handlePageClick}
-              handlePrevPage={handlePrevPage}
-              handleNextPage={handleNextPage}
-            />
+          <Pagination
+            itemsPerPage={iItemsPerPage}
+            totalItems={iTotalItems}
+            currentPage={iCurrentPage}
+            totalPages={iTotalPages}
+            handlePageClick={handlePageClick}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+          />
         )}
       </div>
       {bShowErrorPopup && (

@@ -423,3 +423,25 @@ export const REGEX_CONSTANTS = {
   COMPONENT_NAME: /^[a-zA-Z0-9_]+$/,    // for componentName validation
   ROLE_NAME: /^[A-Za-z0-9\s\-_]+$/,     // for roleName validation
 };
+export const customScrollbarStyles = `
+  .max-w-8xl::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Custom scrollbar for table */
+  .table-scroll-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .table-scroll-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+  .table-scroll-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  .table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+`;

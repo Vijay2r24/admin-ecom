@@ -239,23 +239,7 @@ const UserRolesList = () => {
   return (
     <div 
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-      style={{
-        // Hide scrollbar for all browsers
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-      }}
     >
-      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
-      <style>
-        {`
-          .max-w-8xl::-webkit-scrollbar {
-            display: none;
-          }
-          body {
-            overflow: hidden;
-          }
-        `}
-      </style>
       
       {bSubmitting && (
         <div className="global-loader-overlay">

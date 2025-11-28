@@ -25,6 +25,7 @@ import {
   STATUS_VALUES,
   STATUS_OPTIONS,
   DATE_FORMAT_OPTIONS,
+  customScrollbarStyles,
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
@@ -70,11 +71,11 @@ const SpecificationTypeList = ({ setSubmitting }) => {
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    
+    document.body.style.overflow = "hidden";
+
     // Re-enable scrollbar when component unmounts
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, []);
 
@@ -344,39 +345,8 @@ const SpecificationTypeList = ({ setSubmitting }) => {
   }));
 
   return (
-    <div 
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-      style={{
-        // Hide scrollbar for all browsers
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-      }}
-    >
-      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
-      <style>
-        {`
-          .max-w-8xl::-webkit-scrollbar {
-            display: none;
-          }
-          
-          /* Custom scrollbar for table */
-          .table-scroll-container::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-          }
-          .table-scroll-container::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-          }
-          .table-scroll-container::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-          }
-          .table-scroll-container::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-          }
-        `}
-      </style>
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+      <style>{customScrollbarStyles}</style>
 
       {/* Header */}
 
@@ -555,7 +525,9 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                       {/* Created At column */}
                       <td
                         className={`table-cell text-center align-middle table-cell-text px-6 py-4 ${
-                          isInactive && !editing ? "text-gray-400" : "text-gray-600"
+                          isInactive && !editing
+                            ? "text-gray-400"
+                            : "text-gray-600"
                         }`}
                       >
                         {specType.CreatedAt
@@ -570,8 +542,8 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                       <td className="table-cell text-center align-middle px-6 py-4">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                            currentStatus 
-                              ? "bg-green-100 text-green-800 border border-green-200" 
+                            currentStatus
+                              ? "bg-green-100 text-green-800 border border-green-200"
                               : "bg-red-100 text-red-800 border border-red-200"
                           }`}
                         >
@@ -653,15 +625,15 @@ const SpecificationTypeList = ({ setSubmitting }) => {
 
       {/* Pagination - Fixed at bottom */}
       {iTotalItems > 0 && (
-          <Pagination
-            currentPage={nCurrentPage}
-            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-            totalItems={iTotalItems}
-            itemsPerPage={iItemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
+        <Pagination
+          currentPage={nCurrentPage}
+          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+          totalItems={iTotalItems}
+          itemsPerPage={iItemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
       )}
 
       {/* Confirmation popup for status change */}
