@@ -70,14 +70,30 @@ const showLogoutNotification = (message, fallbackText = INACTIVE_USER_MESSAGE) =
   });
 };
 
+/* ------------------------------------------------------------------
+   ABORT CONTROLLER STORE — Prevent duplicate API calls
+------------------------------------------------------------------ */
+
+const abortControllers = new Map();
 
 /* ------------------------------------------------------------------
    SINGLE FACTORY — NOW THIS REPLACES **api**
 ------------------------------------------------------------------ */
 
-const oCreateApiInstance = (token = null, isFormData = false) => {
+const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
+  const controller = new AbortController();
+
+  // cancel previous request with same key
+  if (key) {
+    const prev = abortControllers.get(key);
+    if (prev) prev.abort();
+
+    abortControllers.set(key, controller);
+  }
+
   const instance = axios.create({
     baseURL: BASE_URL,
+    signal: controller.signal,
     headers: {
       "Content-Type": isFormData ? "multipart/form-data" : "application/json",
       ...(token && { Authorization: `Bearer ${token}` }),
@@ -96,8 +112,12 @@ const oCreateApiInstance = (token = null, isFormData = false) => {
 
   /* ------------------------ RESPONSE INTERCEPTOR ------------------------ */
   instance.interceptors.response.use(
-    // SUCCESS RESPONSE
     (response) => {
+      // Clean up abort controller on successful response
+      if (key) {
+        abortControllers.delete(key);
+      }
+
       const status = (response?.data?.status ?? "").toString().toLowerCase();
       const failure = STATUS.FAILURE.toLowerCase();
       const msg = response?.data?.message || "";
@@ -109,26 +129,38 @@ const oCreateApiInstance = (token = null, isFormData = false) => {
           normalized.includes("deactivated") ||
           normalized.includes("account has been deactivated")
         ) {
-          // BLOCK POPUP ON LOGIN PAGE
-          if (!isLoginPage()) {
-            showLogoutNotification(msg);
-          }
+          if (!isLoginPage()) showLogoutNotification(msg);
         } else {
           showEmsg(msg || DEFAULT_ERROR_MESSAGE, "error");
         }
-
         return Promise.reject(new Error(msg));
       }
 
       return response;
     },
 
-    // ERROR RESPONSE
     (error) => {
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        DEFAULT_ERROR_MESSAGE;
+      // Clean up abort controller on error response
+      if (key) {
+        abortControllers.delete(key);
+      }
+
+      // COMPLETE SILENT HANDLING OF ABORT/CANCEL EVENTS
+      if (axios.isCancel(error)) {
+        // Return a special promise that never resolves or rejects
+        // This completely silences the error for the caller
+        return new Promise(() => {}); // Hung promise - never settles
+      }
+
+      // Safe error message extraction
+      let msg = DEFAULT_ERROR_MESSAGE;
+      try {
+        msg = error?.response?.data?.message || 
+               error?.message || 
+               DEFAULT_ERROR_MESSAGE;
+      } catch (e) {
+        msg = DEFAULT_ERROR_MESSAGE;
+      }
 
       const normalized = msg.toLowerCase();
 
@@ -137,10 +169,7 @@ const oCreateApiInstance = (token = null, isFormData = false) => {
         normalized.includes("deactivated") ||
         normalized.includes("account has been deactivated")
       ) {
-        // BLOCK POPUP ON LOGIN PAGE
-        if (!isLoginPage()) {
-          showLogoutNotification(msg);
-        }
+        if (!isLoginPage()) showLogoutNotification(msg);
       } else {
         showEmsg(msg, "error");
       }
@@ -152,14 +181,31 @@ const oCreateApiInstance = (token = null, isFormData = false) => {
   return instance;
 };
 
-
 /* ------------------------------------------------------------------
-   BELOW — SAME AS YOUR ORIGINAL FUNCTIONS
+   API FUNCTIONS WITH COMPLETE ABORT SILENCING
 ------------------------------------------------------------------ */
 
+// Helper function to handle API calls with silent abort handling
+const makeApiCall = async (apiCall) => {
+  try {
+    return await apiCall();
+  } catch (error) {
+    // If it's an abort error, completely silence it by not rejecting
+    if (axios.isCancel(error)) {
+      // Return a special object or just return undefined silently
+      return undefined;
+    }
+    // For non-abort errors, re-throw so caller can handle
+    throw error;
+  }
+};
+
 export const apiGet = async (endpoint, oParams = {}, token = null) => {
-  const api = oCreateApiInstance(token);
-  return await api.get(endpoint, { params: oParams });
+  return makeApiCall(async () => {
+    const api = oCreateApiInstance(token, false, endpoint);
+    const response = await api.get(endpoint, { params: oParams });
+    return response;
+  });
 };
 
 export const apiPost = async (
@@ -169,21 +215,55 @@ export const apiPost = async (
   isFormData = false,
   responseType = "json"
 ) => {
-  const api = oCreateApiInstance(token, isFormData);
-  return await api.post(endpoint, data, { responseType });
+  return makeApiCall(async () => {
+    const api = oCreateApiInstance(token, isFormData, endpoint);
+    const response = await api.post(endpoint, data, { responseType });
+    return response;
+  });
 };
 
 export const apiPut = async (endpoint, data, token = null, isFormData = false) => {
-  const api = oCreateApiInstance(token, isFormData);
-  return await api.put(endpoint, data);
+  return makeApiCall(async () => {
+    const api = oCreateApiInstance(token, isFormData, endpoint);
+    const response = await api.put(endpoint, data);
+    return response;
+  });
 };
 
 export const apiPatch = async (endpoint, data, token = null, isFormData = false) => {
-  const api = oCreateApiInstance(token, isFormData);
-  return await api.patch(endpoint, data);
+  return makeApiCall(async () => {
+    const api = oCreateApiInstance(token, isFormData, endpoint);
+    const response = await api.patch(endpoint, data);
+    return response;
+  });
 };
 
 export const apiDelete = async (endpoint, token = null) => {
-  const api = oCreateApiInstance(token);
-  return await api.delete(endpoint);
+  return makeApiCall(async () => {
+    const api = oCreateApiInstance(token, false, endpoint);
+    const response = await api.delete(endpoint);
+    return response;
+  });
+};
+
+// Utility function to cancel specific API call
+export const cancelApiCall = (key) => {
+  const controller = abortControllers.get(key);
+  if (controller) {
+    controller.abort();
+    abortControllers.delete(key);
+  }
+};
+
+// Utility function to cancel all pending API calls
+export const cancelAllApiCalls = () => {
+  abortControllers.forEach((controller, key) => {
+    controller.abort();
+    abortControllers.delete(key);
+  });
+};
+
+// Check if a request was aborted
+export const isAbortedError = (error) => {
+  return axios.isCancel(error);
 };

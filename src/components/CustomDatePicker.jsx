@@ -346,23 +346,23 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
       <div className="flex justify-between items-center mb-1">
         <button
           onClick={() => setSelectedMonth(selectedMonth.subtract(1, "month"))}
-          className="p-1 hover:bg-gray-100 rounded-full"
+          className="p-0.5 hover:bg-gray-100 rounded-full"
           aria-label={t("PREVIOUS_MONTH")}
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={14} />
         </button>
         <button
           onClick={() => setView("months")}
-          className="font-medium text-gray-700 hover:bg-gray-100 px-2 py-1 rounded text-sm"
+          className="font-semibold text-gray-700 hover:bg-gray-100 px-2 py-0.5 rounded text-xs"
         >
           {MONTHS[selectedMonth.month()]} {selectedMonth.year()}
         </button>
         <button
           onClick={() => setSelectedMonth(selectedMonth.add(1, "month"))}
-          className="p-1 hover:bg-gray-100 rounded-full"
+          className="p-0.5 hover:bg-gray-100 rounded-full"
           aria-label={t("NEXT_MONTH")}
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={14} />
         </button>
       </div>
 
@@ -377,7 +377,7 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
       <div className="grid grid-cols-7 gap-0.5 text-xs">
         {days.map((day, idx) => {
           if (!day) {
-            return <div key={idx} className="invisible h-6" />;
+            return <div key={idx} className="invisible h-5" />;
           }
 
           const current = dayjs(selectedMonth).date(day);
@@ -393,7 +393,7 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
           return (
             <div
               key={idx}
-              className={`h-6 flex items-center justify-center rounded text-xs
+              className={`h-5 flex items-center justify-center rounded text-xs font-medium
                 ${
                   isDisabled
                     ? "text-gray-300 cursor-not-allowed"
@@ -418,31 +418,31 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
       <div className="flex justify-between items-center mb-2">
         <button
           onClick={() => setSelectedMonth(selectedMonth.subtract(1, "year"))}
-          className="p-1 hover:bg-gray-100 rounded-full"
+          className="p-0.5 hover:bg-gray-100 rounded-full"
           aria-label={t("PREVIOUS_YEAR")}
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={14} />
         </button>
         <button
           onClick={() => setView("years")}
-          className="font-medium text-gray-700 hover:bg-gray-100 px-2 py-1 rounded text-sm"
+          className="font-semibold text-gray-700 hover:bg-gray-100 px-2 py-0.5 rounded text-xs"
         >
           {selectedMonth.year()}
         </button>
         <button
           onClick={() => setSelectedMonth(selectedMonth.add(1, "year"))}
-          className="p-1 hover:bg-gray-100 rounded-full"
+          className="p-0.5 hover:bg-gray-100 rounded-full"
           aria-label={t("NEXT_YEAR")}
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={14} />
         </button>
       </div>
-      <div className="grid grid-cols-3 gap-1 text-sm">
+      <div className="grid grid-cols-3 gap-1">
         {MONTHS.map((month, index) => (
           <button
             key={month}
             onClick={() => handleMonthSelect(index)}
-            className={`p-2 text-xs rounded hover:bg-gray-100 ${
+            className={`p-1.5 text-xs rounded hover:bg-gray-100 font-medium ${
               selectedMonth.month() === index
                 ? "bg-blue-500 text-white hover:bg-blue-600"
                 : "text-gray-700"
@@ -460,20 +460,20 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
       <div className="flex justify-between items-center mb-2">
         <button
           onClick={() => setSelectedMonth(selectedMonth.subtract(10, "year"))}
-          className="p-1 hover:bg-gray-100 rounded-full"
+          className="p-0.5 hover:bg-gray-100 rounded-full"
           aria-label={t("PREVIOUS_DECADE")}
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={14} />
         </button>
-        <span className="font-medium text-gray-700 text-sm">
+        <span className="font-semibold text-gray-700 text-xs">
           {years[0]} - {years[years.length - 1]}
         </span>
         <button
           onClick={() => setSelectedMonth(selectedMonth.add(10, "year"))}
-          className="p-1 hover:bg-gray-100 rounded-full"
+          className="p-0.5 hover:bg-gray-100 rounded-full"
           aria-label={t("NEXT_DECADE")}
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={14} />
         </button>
       </div>
       <div className="grid grid-cols-4 gap-1 max-h-40 overflow-y-auto">
@@ -481,7 +481,7 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
           <button
             key={year}
             onClick={() => handleYearSelect(year)}
-            className={`p-2 text-xs rounded hover:bg-gray-100 ${
+            className={`p-1.5 text-xs rounded hover:bg-gray-100 font-medium ${
               selectedMonth.year() === year
                 ? "bg-blue-500 text-white hover:bg-blue-600"
                 : "text-gray-700"
@@ -500,31 +500,34 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
     <div className="relative" ref={calendarRef}>
       <button
         onClick={() => setShowDropdown((prev) => !prev)}
-        className={`flex items-center justify-between gap-2 w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white ${STYLES.backgroundColor.hover} transition-colors focus:outline-none ${STYLES.border.focus}`}
-        style={{ minWidth: "260px" }}
+        className={`flex items-center justify-between gap-1.5 w-full px-2.5 py-1.5 border border-gray-300 rounded-md bg-white ${STYLES.backgroundColor.hover} transition-colors focus:outline-none ${STYLES.border.focus} h-full`}
+        style={{ minWidth: "320px" }}
       >
-        <div className="flex items-center gap-2">
-          <Calendar size={18} className={STYLES.textColor.secondary} />
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <Calendar size={12} className={STYLES.textColor.secondary} />
           <span
-            className="text-gray-700 whitespace-nowrap overflow-hidden text-ellipsis"
-            style={{
-              fontSize:
-                displayText?.length > 30
-                  ? "0.7rem"
-                  : displayText?.length > 20
-                  ? "0.8rem"
-                  : "0.9rem",
-              maxWidth: "280px",
-              display: "inline-block",
-            }}
+            className="text-gray-700 whitespace-nowrap font-medium flex-1 text-left text-xs"
           >
             {displayText || t("SELECT_DATE_TIME")}
           </span>
         </div>
 
-        {!isDateSelected && (
-          <ChevronDown size={16} className={STYLES.textColor.secondary} />
-        )}
+        <div className="flex items-center gap-1">
+          {isDateSelected ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClearAll();
+              }}
+              className="p-0.5 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              title={t("CLEAR_DATE_RANGE")}
+            >
+              <X size={12} className="text-gray-500 hover:text-gray-700" />
+            </button>
+          ) : (
+            <ChevronDown size={12} className={STYLES.textColor.secondary} />
+          )}
+        </div>
       </button>
 
       {showDropdown && (
@@ -533,7 +536,8 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
             <button
               key={filter.value}
               onClick={() => handleQuickFilterSelection(filter.value)}
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 transition-colors"
+              className="w-full px-2.5 py-1.5 text-xs text-left hover:bg-gray-100 transition-colors font-medium"
+              style={{ fontSize: "0.7rem" }}
             >
               {filter.label}
             </button>
@@ -545,7 +549,8 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
               setShowDropdown(false);
               setValidationError(null);
             }}
-            className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 border-t mt-1"
+            className="w-full px-2.5 py-1.5 text-left hover:bg-gray-100 border-t mt-1 font-medium"
+            style={{ fontSize: "0.7rem" }}
           >
             📅 {t("SELECT_FROM_CALENDAR")}
           </button>
@@ -553,11 +558,13 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
       )}
 
       {showCalendar && (
-        <div className="absolute z-50 mt-2 w-72 bg-white border border-gray-300 rounded-lg shadow-lg p-3">
+        <div className="absolute z-50 mt-2 w-64 bg-white border border-gray-300 rounded-md shadow-lg p-2.5">
           {validationError && (
-            <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
-              <AlertCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
-              <span className="text-xs text-red-600">{validationError.message}</span>
+            <div className="mb-2.5 p-2 bg-red-50 border border-red-200 rounded-md flex items-start gap-1.5">
+              <AlertCircle size={12} className="text-red-500 mt-0.5 flex-shrink-0" />
+              <span className="text-red-600" style={{ fontSize: "0.7rem" }}>
+                {validationError.message}
+              </span>
             </div>
           )}
 
@@ -565,56 +572,54 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
           {view === "months" && renderMonthsView()}
           {view === "years" && renderYearsView()}
 
-          <div className="flex items-center justify-between mt-3">
-            <div className="flex flex-col text-xs text-gray-600">
-              <label>{t("START_TIME")}</label>
+          <div className="flex items-center justify-between mt-2.5">
+            <div className="flex flex-col text-gray-600">
+              <label className="font-semibold mb-0.5" style={{ fontSize: "0.7rem" }}>
+                {t("START_TIME")}
+              </label>
               <input
                 type="time"
                 value={timeRange.startTime}
                 onChange={(e) => handleTimeChange("start", e.target.value)}
-                className="border border-gray-300 rounded-md px-2 py-1 text-xs w-26"
+                className="border border-gray-300 rounded-md px-2 py-1 w-24"
+                style={{ fontSize: "0.7rem" }}
               />
             </div>
-            <div className="flex flex-col text-xs text-gray-600">
-              <label>{t("END_TIME")}</label>
+            <div className="flex flex-col text-gray-600">
+              <label className="font-semibold mb-0.5" style={{ fontSize: "0.7rem" }}>
+                {t("END_TIME")}
+              </label>
               <input
                 type="time"
                 value={timeRange.endTime}
                 onChange={(e) => handleTimeChange("end", e.target.value)}
-                className="border border-gray-300 rounded-md px-2 py-1 text-xs w-26"
+                className="border border-gray-300 rounded-md px-2 py-1 w-24"
+                style={{ fontSize: "0.7rem" }}
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 mt-3">
+          <div className="flex justify-end gap-2 mt-2.5">
             <button
               onClick={() => {
                 setShowCalendar(false);
                 setView(DATE_UNITS.DAYS);
                 setValidationError(null);
               }}
-              className="text-xs px-3 py-1 rounded-md hover:bg-gray-100 text-gray-600"
+              className="px-2.5 py-1 rounded-md hover:bg-gray-100 text-gray-600 font-semibold"
+              style={{ fontSize: "0.7rem" }}
             >
               {t("CANCEL")}
             </button>
             <button
               onClick={applyDateRange}
-              className="text-xs px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="px-2.5 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 font-semibold"
+              style={{ fontSize: "0.7rem" }}
             >
               {t("APPLY")}
             </button>
           </div>
         </div>
-      )}
-
-      {isDateSelected && (
-        <button
-          onClick={handleClearAll}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
-          title={t("CLEAR_DATE_RANGE")}
-        >
-          <X size={16} className="text-gray-500 hover:text-gray-700" />
-        </button>
       )}
     </div>
   );

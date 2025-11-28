@@ -71,6 +71,9 @@ const BannerForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [existingImageData, setExistingImageData] = useState(null);
 
+  // Track touched state for fields
+  const [touchedFields, setTouchedFields] = useState({});
+
   // Required fields configuration
   const requiredFields = {
     BannerName: true,
@@ -159,7 +162,7 @@ const BannerForm = () => {
   /**
    * Live validation for a specific field
    */
-  const validateField = useCallback((name, value) => {
+  const validateField = useCallback((name, value, forceShowError = false) => {
     let error = "";
     
     switch (name) {
@@ -185,9 +188,12 @@ const BannerForm = () => {
         break;
     }
 
+    // Only show error if field is touched or we're forcing the error display
+    const shouldShowError = forceShowError || touchedFields[name];
+
     setValidationErrors(prev => ({
       ...prev,
-      [name]: error
+      [name]: shouldShowError ? error : ""
     }));
 
     setFieldValid(prev => ({
@@ -195,22 +201,38 @@ const BannerForm = () => {
       [name]: !error && (value !== "" && value !== null && value !== undefined && 
                (!Array.isArray(value) || value.length > 0))
     }));
+
+    return error;
   }, [
     validateBannerName,
     validatePreview,
     validateCategory,
     validateBrand,
     validateDiscount,
-    validatePrice
+    validatePrice,
+    touchedFields
   ]);
+
+  /**
+   * Mark field as touched
+   */
+  const markFieldTouched = useCallback((fieldName) => {
+    setTouchedFields(prev => ({
+      ...prev,
+      [fieldName]: true
+    }));
+    // Validate the field when it's touched (force error display)
+    validateField(fieldName, formData[fieldName], true);
+  }, [formData, validateField]);
 
   /**
    * Handle field blur for additional validation
    */
   const handleBlur = useCallback((e) => {
     const { name, value } = e.target;
-    validateField(name, value);
-  }, [validateField]);
+    markFieldTouched(name);
+    validateField(name, value, true);
+  }, [markFieldTouched, validateField]);
 
   /**
    * Handle field change with live validation
@@ -221,8 +243,8 @@ const BannerForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     
     // Validate the field immediately
-    validateField(name, value);
-  }, [validateField]);
+    validateField(name, value, touchedFields[name]);
+  }, [validateField, touchedFields]);
 
   /**
    * Handle select field changes
@@ -236,8 +258,16 @@ const BannerForm = () => {
     }
     
     setFormData((prev) => ({ ...prev, [name]: processedValue }));
-    validateField(name, processedValue);
+    validateField(name, processedValue, true); // Force validation on select change
   }, [validateField]);
+
+  /**
+   * Handle select blur - specifically for dropdowns
+   */
+  const handleSelectBlur = useCallback((fieldName) => {
+    markFieldTouched(fieldName);
+    validateField(fieldName, formData[fieldName], true);
+  }, [markFieldTouched, validateField, formData]);
 
   const fetchBanner = useCallback(async () => {
     if (!bannerId || hasFetchedBanner.current) return;
@@ -272,14 +302,13 @@ const BannerForm = () => {
         setExistingImageData(firstImage);
         setError(null);
 
-        // Validate initial data after setting
+        // Mark all fields as touched for edit mode to show validation immediately
         setTimeout(() => {
-          validateField("BannerName", newFormData.BannerName);
-          validateField("preview", newFormData.preview);
-          validateField("category", newFormData.category);
-          validateField("brand", newFormData.brand);
-          validateField("discount", newFormData.discount);
-          validateField("price", newFormData.price);
+          const fieldsToValidate = ["BannerName", "preview", "category", "brand", "discount", "price"];
+          fieldsToValidate.forEach(field => {
+            markFieldTouched(field);
+            validateField(field, newFormData[field], true);
+          });
         }, 100);
       } else {
         setError(response?.data?.message || t("COMMON.API_ERROR"));
@@ -287,7 +316,7 @@ const BannerForm = () => {
     } catch (error) {
       setError(error?.response?.data?.message || t("COMMON.API_ERROR"));
     }
-  }, [bannerId, t, validateField]);
+  }, [bannerId, t, validateField, markFieldTouched]);
 
   useEffect(() => {
     setTitle(
@@ -360,8 +389,9 @@ const BannerForm = () => {
       }));
       setCroppingImage(null);
       
-      // Validate the preview after setting
-      validateField("preview", previewUrl);
+      // Validate the preview after setting and mark as touched
+      markFieldTouched("preview");
+      validateField("preview", previewUrl, true);
     };
     reader.readAsDataURL(blob);
   };
@@ -372,14 +402,22 @@ const BannerForm = () => {
       file: null,
       preview: "",
     }));
-    // Validate the preview after removal
-    validateField("preview", "");
+    // Validate the preview after removal and mark as touched
+    markFieldTouched("preview");
+    validateField("preview", "", true);
   };
 
   /**
    * Comprehensive form validation
    */
   const validateForm = useCallback(() => {
+    // Mark all required fields as touched for validation
+    Object.keys(requiredFields).forEach(field => {
+      if (requiredFields[field]) {
+        markFieldTouched(field);
+      }
+    });
+
     const errors = {};
     
     errors.BannerName = validateBannerName(formData.BannerName);
@@ -413,7 +451,9 @@ const BannerForm = () => {
     validateCategory,
     validateBrand,
     validateDiscount,
-    validatePrice
+    validatePrice,
+    markFieldTouched,
+    requiredFields
   ]);
 
   const handleSubmit = async (e) => {
@@ -647,7 +687,7 @@ const BannerForm = () => {
                   name="category"
                   value={formData.category || []}
                   onChange={handleSelectChange}
-                  onBlur={handleBlur}
+                  onBlur={() => handleSelectBlur("category")}
                   options={activeCategories.map((cat) => ({
                     value: cat.CategoryID,
                     label: cat.CategoryName,
@@ -677,7 +717,7 @@ const BannerForm = () => {
                   name="brand"
                   value={formData.brand || []}
                   onChange={handleSelectChange}
-                  onBlur={handleBlur}
+                  onBlur={() => handleSelectBlur("brand")}
                   options={activeBrands.map((b) => ({
                     value: b.BrandID,
                     label: b.BrandName,
@@ -747,6 +787,7 @@ const BannerForm = () => {
                   name="isActive"
                   value={formData.isActive.toString()}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   options={[
                     { value: "true", label: t("COMMON.ACTIVE") },
                     { value: "false", label: t("COMMON.INACTIVE") },

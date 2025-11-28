@@ -40,6 +40,7 @@ const CreateAttribute = () => {
 
   const [oErrors, setErrors] = useState({});
   const [oFieldValid, setFieldValid] = useState({});
+  const [oFieldTouched, setFieldTouched] = useState({});
   const [bSubmitting, setSubmitting] = useState(false);
 
   // Required fields configuration
@@ -94,7 +95,7 @@ const CreateAttribute = () => {
   /**
    * Live validation for a specific field
    */
-  const validateField = useCallback((name, value) => {
+  const validateField = useCallback((name, value, forceShowError = false) => {
     let error = "";
     
     switch (name) {
@@ -111,16 +112,63 @@ const CreateAttribute = () => {
         break;
     }
 
+    // Only show error if field is touched or we're forcing the error display
+    const shouldShowError = forceShowError || oFieldTouched[name];
+
     setErrors(prev => ({
       ...prev,
-      [name]: error
+      [name]: shouldShowError ? error : ""
     }));
 
     setFieldValid(prev => ({
       ...prev,
       [name]: !error && (value !== "" && value !== null && value !== undefined)
     }));
-  }, [t]);
+
+    return error;
+  }, [t, oFieldTouched]);
+
+  /**
+   * Mark field as touched
+   */
+  const markFieldTouched = useCallback((fieldName) => {
+    setFieldTouched(prev => ({
+      ...prev,
+      [fieldName]: true
+    }));
+    // Validate the field when it's touched (force error display)
+    validateField(fieldName, oFormData[fieldName], true);
+  }, [oFormData, validateField]);
+
+  /**
+   * Handle field blur for additional validation
+   */
+  const handleBlur = useCallback((e) => {
+    const { name, value } = e.target;
+    markFieldTouched(name);
+    validateField(name, value, true);
+  }, [markFieldTouched, validateField]);
+
+  /**
+   * Handle select field changes
+   */
+  const handleSelectChange = useCallback((e) => {
+    const { name, value } = e.target;
+    
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    validateField(name, value, true);
+  }, [validateField]);
+
+  /**
+   * Handle select blur - specifically for dropdowns
+   */
+  const handleSelectBlur = useCallback((fieldName) => {
+    markFieldTouched(fieldName);
+    validateField(fieldName, oFormData[fieldName], true);
+  }, [markFieldTouched, validateField, oFormData]);
 
   const fetchAttributeDetails = useCallback(async () => {
     setSubmitting(true);
@@ -144,11 +192,19 @@ const CreateAttribute = () => {
           IsActive: attributeData.IsActive,
         }));
 
-        // Validate initial data after setting
+        // Mark all fields as touched for edit mode to show validation immediately
         setTimeout(() => {
-          validateField("Value", attributeData.Value || "");
-          validateField("AttributeTypeID", attributeData.AttributeTypeID || "");
-          validateField("Unit", attributeData.Unit || "");
+          const fieldsToValidate = ["Value", "AttributeTypeID", "Unit"];
+          fieldsToValidate.forEach(field => {
+            markFieldTouched(field);
+            validateField(field, 
+              field === "Value" ? attributeData.Value || "" :
+              field === "AttributeTypeID" ? attributeData.AttributeTypeID || "" :
+              field === "Unit" ? attributeData.Unit || "" :
+              "", 
+              true
+            );
+          });
         }, 100);
       } else {
         showEmsg(response.data.message || t("COMMON.ERROR"), STATUS.WARNING);
@@ -161,7 +217,7 @@ const CreateAttribute = () => {
     } finally {
       hideLoaderWithDelay(setSubmitting);
     }
-  }, [attributeValueId, token, tenantID, t, validateField]);
+  }, [attributeValueId, token, tenantID, t, validateField, markFieldTouched]);
 
   useEffect(() => {
     // Fetch attribute types on component mount - only active ones
@@ -180,7 +236,7 @@ const CreateAttribute = () => {
   }, [dispatch, isEditing, attributeValueId, fetchAttributeDetails, attributeTypesError]);
 
   /** Input change with live validation */
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === "checkbox" ? checked : value;
     
@@ -189,17 +245,19 @@ const CreateAttribute = () => {
       [name]: newValue,
     }));
 
-    validateField(name, newValue);
-  };
-
-  /** Handle field blur for additional validation */
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    validateField(name, value);
-  };
+    validateField(name, newValue, oFieldTouched[name]);
+    markFieldTouched(name);
+  }, [validateField, markFieldTouched, oFieldTouched]);
 
   /** Validation */
   const validateForm = () => {
+    // Mark all required fields as touched before validation
+    Object.keys(requiredFields).forEach(field => {
+      if (requiredFields[field]) {
+        markFieldTouched(field);
+      }
+    });
+
     const errors = {};
     
     errors.Value = validateValue(oFormData.Value);
@@ -378,8 +436,8 @@ const CreateAttribute = () => {
               id="AttributeTypeID"
               name="AttributeTypeID"
               value={oFormData.AttributeTypeID}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
+              onChange={handleSelectChange}
+              onBlur={() => handleSelectBlur("AttributeTypeID")}
               options={attributeTypeOptions}
               Icon={Tag}
               error={oErrors.AttributeTypeID}
@@ -412,12 +470,8 @@ const CreateAttribute = () => {
               id="IsActive"
               name="IsActive"
               value={oFormData.IsActive ? "Active" : "Inactive"}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  IsActive: e.target.value === "Active",
-                }))
-              }
+              onChange={handleSelectChange}
+              onBlur={() => handleSelectBlur("IsActive")}
               options={statusOptions}
               Icon={Tag}
             />

@@ -10,21 +10,23 @@ const Pagination = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <div className="px-6 py-4 border-t border-gray-100 print:px-3 print:py-2 print:border-t print:border-gray-300">
+    <div className="sticky bottom-0 bg-white z-10">
+<div className="px-4 py-2.5 bg-gray-100">
+
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <div className="text-secondary print:text-xs">
           <span className="mr-1">{t("COMMON.SHOWING")}</span>
-          <span className="font-medium">
+          <span className="font-semibold">
             {(currentPage - 1) * itemsPerPage + 1}
           </span>{" "}
           to{" "}
-          <span className="font-medium">
+          <span className="font-semibold">
             {Math.min(currentPage * itemsPerPage, totalItems)}
           </span>{" "}
-          {t("COMMON.OF")} <span className="font-medium">{totalItems}</span>{" "}
+          {t("COMMON.OF")} <span className="font-semibold">{totalItems}</span>{" "}
           {t("COMMON.RESULTS")}
         </div>
-
+ 
         <div className="flex flex-wrap items-center gap-2">
           <button
             className="pagination-btn"
@@ -60,7 +62,7 @@ const Pagination = ({
               );
               if (startPage > 2) {
                 pageButtons.push(
-                  <span key="start-ellipsis" className="px-2">
+                  <span key="start-ellipsis" className="px-1.5 text-xs text-gray-500">
                     ...
                   </span>
                 );
@@ -82,7 +84,7 @@ const Pagination = ({
             if (endPage < totalPages) {
               if (endPage < totalPages - 1) {
                 pageButtons.push(
-                  <span key="end-ellipsis" className="px-2">
+                  <span key="end-ellipsis" className="px-1.5 text-xs text-gray-500">
                     ...
                   </span>
                 );
@@ -111,7 +113,8 @@ const Pagination = ({
         </div>
       </div>
     </div>
+    </div>
   );
 };
-
+ 
 export default Pagination;

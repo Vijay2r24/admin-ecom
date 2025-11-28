@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchResource,
@@ -20,6 +20,7 @@ import {
   STATUS,
   STATUS_VALUES,
   STATUS_OPTIONS,
+  customScrollbarStyles,
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 
@@ -34,6 +35,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
 
   const [nCurrentPage, setCurrentPage] = useState(DEFAULT_PAGE); // Current pagination page
   const [iItemsPerPage] = useState(ITEMS_PER_PAGE); // Number of items per page (constant)
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
 
   // Popup state for brand status confirmation
   const [statusPopup, setStatusPopup] = useState({
@@ -48,6 +50,16 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
   const bLoading = brandsState?.loading || false; // Loading state
   const sError = brandsState?.error || null; // Error message
   const iTotalItems = brandsState?.total || 0; // Total number of brands
+
+  // Hide body scrollbar when component mounts
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    
+    // Re-enable scrollbar when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   /**
    * Fetch brands whenever filters, search query, or page changes
@@ -74,6 +86,11 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       }
     };
   }, [sError, dispatch]);
+
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
 
   // --- Pagination Handlers ---
   const handlePageClick = (pageNumber) => setCurrentPage(pageNumber);
@@ -158,13 +175,12 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
   }
 
   return (
-    <div>
-      {/* Header Section */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-medium text-gray-900">
-          {t("PRODUCT_SETUP.BRANDS.HEADING")}
-        </h2>
-      </div>
+    <div 
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
+    >
+      <style>
+        {customScrollbarStyles}
+      </style>
 
       {/* Toolbar with Search & Filters */}
       <div className="mb-6">
@@ -207,21 +223,29 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
           showConfirmButton={false}
         />
       ) : (
-        <div className="table-container">
-          <div className="table-wrapper">
-            <table className="table-base">
-              <thead className="table-head">
+        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+          <div
+            className="table-scroll-container overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)]"
+            onScroll={handleTableScroll}
+          >
+            <table className="table-base w-full">
+              {/* Floating Header */}
+              <thead
+                className={`table-head-floating sticky top-0 z-10 ${
+                  tableScrollTop > 10 ? "shadow-sm" : ""
+                }`}
+              >
                 <tr>
-                  <th className="table-head-cell text-left">
+                  <th className="table-head-cell-floating text-left px-6 py-4">
                     {t("PRODUCT_SETUP.BRANDS.TABLE.NAME")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("COMMON.STATUS")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("PRODUCT_SETUP.BRANDS.TABLE.CREATED_AT")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("COMMON.UPDATE_STATUS")}
                   </th>
                 </tr>
@@ -231,19 +255,19 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                 {aBrands.map((brand) => (
                   <tr
                     key={brand.BrandID}
-                    className={`table-row items-center ${
+                    className={`table-row items-center hover:bg-gray-50 ${
                       !brand.IsActive ? "bg-gray-50" : ""
                     }`}
                   >
                     {/* Brand Name & Logo */}
-                    <td className="table-cell table-cell-text text-left align-middle">
-                      <div className="flex items-center gap-2">
+                    <td className="table-cell table-cell-text text-left align-middle px-6 py-4">
+                      <div className="flex items-center gap-3">
                         {/* Brand Logo */}
                         <div
                           className={`h-10 w-10 flex items-center justify-center rounded-full border overflow-hidden ${
                             !brand.IsActive
                               ? "bg-gray-100 border-gray-200"
-                              : "bg-white"
+                              : "bg-white border-gray-300"
                           }`}
                         >
                           {Array.isArray(brand.BrandLogo) &&
@@ -276,13 +300,13 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                         {brand.IsActive ? (
                           <Link
                             to={`/browse/editbrand/${brand.BrandID}`}
-                            className="text-blue-600 hover:underline block truncate max-w-[200px]"
+                            className="text-blue-600 hover:underline block truncate max-w-[200px] font-medium"
                           >
                             {brand.BrandName}
                           </Link>
                         ) : (
                           <span
-                            className="text-gray-500 block truncate max-w-[200px] cursor-not-allowed"
+                            className="text-gray-500 block truncate max-w-[200px] cursor-not-allowed font-medium"
                             title={t(
                               "PRODUCT_SETUP.BRANDS.EDIT_DISABLED_TOOLTIP"
                             )}
@@ -294,10 +318,12 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                     </td>
 
                     {/* Status Badge */}
-                    <td className="table-cell text-center">
+                    <td className="table-cell text-center align-middle px-6 py-4">
                       <span
-                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          brand.IsActive ? "status-active" : "status-inactive"
+                        className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                          brand.IsActive 
+                            ? "bg-green-100 text-green-800 border border-green-200" 
+                            : "bg-red-100 text-red-800 border border-red-200"
                         }`}
                       >
                         {brand.IsActive
@@ -308,8 +334,8 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
 
                     {/* Created At */}
                     <td
-                      className={`table-cell text-center table-cell-text ${
-                        !brand.IsActive ? "text-gray-400" : ""
+                      className={`table-cell text-center table-cell-text align-middle px-6 py-4 ${
+                        !brand.IsActive ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
                       {new Date(brand.CreatedAt).toLocaleString(undefined, {
@@ -323,13 +349,15 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                     </td>
 
                     {/* Toggle Switch */}
-                    <td className="table-cell text-center table-cell-text">
-                      <Switch
-                        checked={brand.IsActive}
-                        onChange={() =>
-                          handleStatusChange(brand.BrandID, brand.IsActive)
-                        }
-                      />
+                    <td className="table-cell text-center table-cell-text align-middle px-6 py-4">
+                      <div className="flex justify-center">
+                        <Switch
+                          checked={brand.IsActive}
+                          onChange={() =>
+                            handleStatusChange(brand.BrandID, brand.IsActive)
+                          }
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -341,12 +369,13 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
 
       {/* No Results Message */}
       {bLoading === false && aBrands.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100">
+          <p className="text-lg mb-4">{t("PRODUCT_SETUP.BRANDS.NO_BRANDS_FOUND")}</p>
           {sSearchQuery && (
             <div>
               <button
                 onClick={() => setSearchQuery("")}
-                className="mt-2 text-[#5B45E0] hover:text-[#4c39c7]"
+                className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
               >
                 {t("COMMON.CLEAR_SEARCH")}
               </button>
@@ -355,17 +384,17 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
         </div>
       )}
 
-      {/* Pagination Controls */}
+      {/* Pagination Controls - Fixed at bottom */}
       {iTotalItems > 0 && (
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-          totalItems={iTotalItems}
-          itemsPerPage={iItemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+            totalItems={iTotalItems}
+            itemsPerPage={iItemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
       )}
 
       {/* Confirmation Popup for Status Change */}

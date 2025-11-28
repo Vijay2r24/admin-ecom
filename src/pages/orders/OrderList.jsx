@@ -8,7 +8,11 @@ import { useTranslation } from "react-i18next";
 import { apiGet } from "../../utils/ApiUtils";
 import { GETALLORDERS_API } from "../../contants/apiRoutes";
 import { useTitle } from "../../context/TitleContext";
-import { DATE_FORMAT_OPTIONS, LOCALES, STATUS } from "../../contants/constants";
+import {
+  DATE_FORMAT_OPTIONS,
+  LOCALES,
+  STATUS,
+} from "../../contants/constants";
 import Loader from "../../components/Loader";
 import { fetchResource } from "../../store/slices/allDataSlice";
 import { exportOrderReport } from "../../store/slices/exportSlice";
@@ -228,6 +232,14 @@ const OrderList = () => {
 
     return undefined;
   };
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+
+    // Re-enable scrollbar when component unmounts
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -423,7 +435,7 @@ const OrderList = () => {
   }, []);
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 ">
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       <ToastContainer />
       <Toolbar
         searchTerm={sSearchTerm}
@@ -443,7 +455,7 @@ const OrderList = () => {
       {sViewMode === "table" ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 relative">
           <div
-            className="overflow-x-auto max-h-[calc(100vh-200px)] scrollbar-hide"
+            className="overflow-x-auto max-h-[calc(100vh-170px)]"
             onScroll={handleTableScroll}
           >
             <table className="table-base">

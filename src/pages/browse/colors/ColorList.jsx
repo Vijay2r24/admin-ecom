@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchResource,
@@ -13,12 +13,14 @@ import {
   DEFAULT_PAGE,
   STATUS_VALUES,
   STATUS_OPTIONS,
+  customScrollbarStyles,
 } from "../../../contants/constants";
 
 const ColorList = ({ onCreate, onBack, setSubmitting }) => {
   const [sSearchQuery, setSearchQuery] = useState("");
   const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
   const [bShowFilters, setShowFilters] = useState(false);
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
@@ -34,6 +36,16 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
 
   // Local state for optimistic UI updates (just keeping data in sync)
   const [localColors, setLocalColors] = useState(aColors || []);
+
+  // Hide body scrollbar when component mounts
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    
+    // Re-enable scrollbar when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   useEffect(() => {
     setLocalColors(aColors || []);
@@ -57,6 +69,11 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
       }
     };
   }, [sError, dispatch]);
+
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
 
   const handleFilterChange = (e, filterName) => {
     setFilters({
@@ -82,12 +99,13 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-medium text-gray-900">
-          {t("PRODUCT_SETUP.COLORS.TITLE")}
-        </h2>
-      </div>
+    <div 
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
+    >
+      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
+      <style>
+        {customScrollbarStyles}
+      </style>
 
       <div className="mb-6">
         <Toolbar
@@ -116,15 +134,23 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
           showConfirmButton={false}
         />
       ) : (
-        <div className="table-container">
-          <div className="table-wrapper">
-            <table className="table-base">
-              <thead className="table-head">
+        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+          <div
+            className="table-scroll-container overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)]"
+            onScroll={handleTableScroll}
+          >
+            <table className="table-base w-full">
+              {/* Floating Header */}
+              <thead
+                className={`table-head-floating sticky top-0 z-10 ${
+                  tableScrollTop > 10 ? "shadow-sm" : ""
+                }`}
+              >
                 <tr>
-                  <th className="table-head-cell text-left">
+                  <th className="table-head-cell-floating text-left px-6 py-4">
                     {t("PRODUCT_SETUP.COLORS.TABLE.COLOR")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("PRODUCT_SETUP.COLORS.TABLE.HEX_CODE")}
                   </th>
                 </tr>
@@ -132,12 +158,12 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
 
               <tbody className="table-body">
                 {localColors.map((color) => (
-                  <tr key={color.ColourID} className="table-row">
+                  <tr key={color.ColourID} className="table-row items-center hover:bg-gray-50">
                     {/* Color Name & Circle */}
-                    <td className="table-cell text-left align-middle">
-                      <div className="flex items-center">
+                    <td className="table-cell text-left align-middle px-6 py-4">
+                      <div className="flex items-center gap-3">
                         <div
-                          className="h-6 w-6 rounded-full mr-3 border border-gray-200"
+                          className="h-8 w-8 rounded-full border-2 border-gray-200 shadow-sm"
                           style={{ backgroundColor: color.HexCode }}
                         />
                         <div className="text-sm font-medium text-gray-900">
@@ -147,8 +173,16 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
                     </td>
 
                     {/* Hex Code */}
-                    <td className="table-cell text-center align-middle text-secondary">
-                      {color.HexCode}
+                    <td className="table-cell text-center align-middle px-6 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <div
+                          className="h-4 w-4 rounded border border-gray-300"
+                          style={{ backgroundColor: color.HexCode }}
+                        />
+                        <span className="text-secondary font-mono text-sm">
+                          {color.HexCode}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -159,7 +193,7 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
       )}
 
       {iTotalItems === 0 && !bLoading && !sError && (
-        <div className="text-center py-12">
+        <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="text-gray-500">
             {t("PRODUCT_SETUP.COLORS.EMPTY.MESSAGE")}
           </div>
@@ -169,7 +203,7 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
                 setSearchQuery("");
                 setFilters({ status: STATUS_VALUES.ALL });
               }}
-              className="mt-2 text-[#5B45E0] hover:text-[#4c39c7]"
+              className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
             >
               {t("COMMON.CLEAR_SEARCH")}
             </button>
@@ -177,16 +211,17 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
         </div>
       )}
 
+      {/* Pagination Controls - Fixed at bottom */}
       {iTotalItems > 0 && (
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-          totalItems={iTotalItems}
-          itemsPerPage={iItemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+            totalItems={iTotalItems}
+            itemsPerPage={iItemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
       )}
     </div>
   );

@@ -7,7 +7,7 @@ import ActionButtons from "../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { USER_ACTIVE_STATUS } from "../contants/apiRoutes";
 import { useTitle } from "../context/TitleContext";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS } from "../contants/constants";
+import {ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS } from "../contants/constants";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
@@ -75,6 +75,16 @@ const Users = () => {
     "User Management",
     "Delete User"
   );
+
+  // Hide body scrollbar when component mounts
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    
+    // Re-enable scrollbar when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   // Handle table scroll for floating header
   const handleTableScroll = useCallback((e) => {
@@ -313,7 +323,9 @@ const Users = () => {
   }, [sShowFilterDropdown, dispatch]);
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+    <div 
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
+    >
       {bSubmitting && (
         <div className="global-loader-overlay">
           <Loader />
@@ -339,7 +351,7 @@ const Users = () => {
       {sViewMode === "table" ? (
         <div className="table-container-floating">
           <div
-            className="table-wrapper-floating scrollbar-hide"
+            className="table-wrapper-floating"
             onScroll={handleTableScroll}
           >
             <table className="table-base">

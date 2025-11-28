@@ -40,6 +40,7 @@ import ProductDetails from "./pages/products/ProductDetails";
 import Payments from './pages/payments/Payments';
 import PaymentDetailsWrapper from './pages/payments/PaymentDetails';
 import NotFound from "./components/NotFound";
+import ScrollToTop from './components/ScrollToTop';
 
 const dashboardPermission = getPermissionCode(MODULES.DASHBOARD, PERMISSIONS.VIEW_DASHBOARD);
 
@@ -101,6 +102,7 @@ const App = () => {
         <TitleProvider>
           <LocationDataProvider>
             {/* Removed Suspense wrapper since we're not using lazy loading anymore */}
+            <ScrollToTop />
             <Routes>
               <Route path="/" element={<Login />} />
 
