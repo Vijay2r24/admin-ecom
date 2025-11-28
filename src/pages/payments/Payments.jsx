@@ -77,6 +77,16 @@ const Payments = () => {
       })) || []
   );
 
+  // Hide body scrollbar when component mounts
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    
+    // Re-enable scrollbar when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   const aAdditionalFilters = [
     {
       label: t("COMMON.STATUS"),
@@ -373,7 +383,23 @@ const Payments = () => {
   };
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+    <div 
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
+      style={{
+        // Hide scrollbar for all browsers
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+      }}
+    >
+      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
+      <style>
+        {`
+          .max-w-8xl::-webkit-scrollbar {
+            display: none;
+          }
+        `}
+      </style>
+      
       <ToastContainer />
       {bSubmitting && (
         <div className="global-loader-overlay">
@@ -399,7 +425,7 @@ const Payments = () => {
       {viewMode === "table" ? (
         <div className="table-container-floating">
           <div
-            className="table-wrapper-floating scrollbar-hide"
+            className="table-wrapper-floating"
             onScroll={handleTableScroll}
           >
             <table className="table-base">

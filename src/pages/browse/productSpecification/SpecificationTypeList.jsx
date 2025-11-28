@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchResource,
@@ -37,6 +37,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
   const [sSearchQuery, setSearchQuery] = useState(""); // Search input
   const [bShowFilters, setShowFilters] = useState(false); // Toggle filter dropdown
   const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL }); // Filters applied on table
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
 
   // Redux state for specification types
   const specificationTypesState = useSelector(
@@ -67,6 +68,16 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     originalData: null,
   });
 
+  // Hide body scrollbar when component mounts
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    
+    // Re-enable scrollbar when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   // Fetch specification types whenever search, page, or filters change
   useEffect(() => {
     const params = {
@@ -89,6 +100,11 @@ const SpecificationTypeList = ({ setSubmitting }) => {
       }
     };
   }, [dispatch, sError]);
+
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
 
   // Open confirmation popup when toggling Active/Inactive
   const handleStatusChange = (specificationTypeId, currentStatus) => {
@@ -328,13 +344,41 @@ const SpecificationTypeList = ({ setSubmitting }) => {
   }));
 
   return (
-    <div>
+    <div 
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
+      style={{
+        // Hide scrollbar for all browsers
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+      }}
+    >
+      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
+      <style>
+        {`
+          .max-w-8xl::-webkit-scrollbar {
+            display: none;
+          }
+          
+          /* Custom scrollbar for table */
+          .table-scroll-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+          .table-scroll-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+          }
+          .table-scroll-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+          }
+          .table-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+          }
+        `}
+      </style>
+
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-medium text-gray-900">
-          {t("PRODUCT_SETUP.SPECIFICATION_TYPES.TITLE")}
-        </h2>
-      </div>
 
       {/* Toolbar with search and filters */}
       <div className="mb-6">
@@ -377,24 +421,32 @@ const SpecificationTypeList = ({ setSubmitting }) => {
           {t("COMMON.ERROR")}: {sError}
         </div>
       ) : (
-        <div className="table-container">
-          <div className="table-wrapper">
-            <table className="table-base">
-              <thead className="table-head">
+        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+          <div
+            className="table-scroll-container overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)]"
+            onScroll={handleTableScroll}
+          >
+            <table className="table-base w-full">
+              {/* Floating Header */}
+              <thead
+                className={`table-head-floating sticky top-0 z-10 ${
+                  tableScrollTop > 10 ? "shadow-sm" : ""
+                }`}
+              >
                 <tr>
-                  <th className="table-head-cell text-left">
+                  <th className="table-head-cell-floating text-left px-6 py-4">
                     {t("PRODUCT_SETUP.SPECIFICATION_TYPES.TABLE.NAME")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("COMMON.CREATED_AT")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("COMMON.STATUS")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("COMMON.UPDATE_STATUS")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>
@@ -403,8 +455,8 @@ const SpecificationTypeList = ({ setSubmitting }) => {
               <tbody className="table-body">
                 {/* Create row */}
                 {editForm.open && editForm.mode === FORM_MODES.CREATE && (
-                  <tr className="table-row bg-blue-50">
-                    <td className="table-cell text-left align-middle">
+                  <tr className="table-row bg-blue-50 hover:bg-blue-100">
+                    <td className="table-cell text-left align-middle px-6 py-4">
                       <input
                         type="text"
                         name="name"
@@ -417,18 +469,20 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                         required
                       />
                     </td>
-                    <td className="table-cell text-center align-middle table-cell-text">
+                    <td className="table-cell text-center align-middle table-cell-text px-6 py-4">
                       -
                     </td>
-                    <td className="table-cell text-center align-middle">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-active">
+                    <td className="table-cell text-center align-middle px-6 py-4">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
                         {t("COMMON.ACTIVE")}
                       </span>
                     </td>
-                    <td className="table-cell text-center align-middle table-cell-text">
-                      <Switch checked={true} disabled={true} />
+                    <td className="table-cell text-center align-middle table-cell-text px-6 py-4">
+                      <div className="flex justify-center">
+                        <Switch checked={true} disabled={true} />
+                      </div>
                     </td>
-                    <td className="table-cell text-center align-middle">
+                    <td className="table-cell text-center align-middle px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={handleFormSubmit}
@@ -458,11 +512,13 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                   return (
                     <tr
                       key={specType.SpecificationTypeID}
-                      className={`table-row ${editing ? "bg-blue-50" : ""}`}
+                      className={`table-row items-center hover:bg-gray-50 ${
+                        editing ? "bg-blue-50" : ""
+                      } ${isInactive && !editing ? "bg-gray-50" : ""}`}
                     >
                       {/* Name column */}
                       <td
-                        className={`table-cell text-left align-middle ${
+                        className={`table-cell text-left align-middle px-6 py-4 ${
                           isInactive && !editing ? "text-gray-500" : ""
                         }`}
                       >
@@ -480,7 +536,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                           />
                         ) : (
                           <div
-                            className={`block truncate max-w-[180px] ${
+                            className={`block truncate max-w-[180px] font-medium ${
                               isInactive ? "cursor-not-allowed" : ""
                             }`}
                             title={
@@ -498,8 +554,8 @@ const SpecificationTypeList = ({ setSubmitting }) => {
 
                       {/* Created At column */}
                       <td
-                        className={`table-cell text-center align-middle table-cell-text ${
-                          isInactive && !editing ? "text-gray-400" : ""
+                        className={`table-cell text-center align-middle table-cell-text px-6 py-4 ${
+                          isInactive && !editing ? "text-gray-400" : "text-gray-600"
                         }`}
                       >
                         {specType.CreatedAt
@@ -511,10 +567,12 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                       </td>
 
                       {/* Status */}
-                      <td className="table-cell text-center align-middle">
+                      <td className="table-cell text-center align-middle px-6 py-4">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            currentStatus ? "status-active" : "status-inactive"
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                            currentStatus 
+                              ? "bg-green-100 text-green-800 border border-green-200" 
+                              : "bg-red-100 text-red-800 border border-red-200"
                           }`}
                         >
                           {t(`COMMON.${currentStatus ? "ACTIVE" : "INACTIVE"}`)}
@@ -522,21 +580,23 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                       </td>
 
                       {/* Toggle status */}
-                      <td className="table-cell text-center align-middle table-cell-text">
-                        <Switch
-                          checked={Boolean(currentStatus)}
-                          onChange={() =>
-                            handleStatusChange(
-                              specType.SpecificationTypeID,
-                              currentStatus
-                            )
-                          }
-                          disabled={editing}
-                        />
+                      <td className="table-cell text-center align-middle table-cell-text px-6 py-4">
+                        <div className="flex justify-center">
+                          <Switch
+                            checked={Boolean(currentStatus)}
+                            onChange={() =>
+                              handleStatusChange(
+                                specType.SpecificationTypeID,
+                                currentStatus
+                              )
+                            }
+                            disabled={editing}
+                          />
+                        </div>
                       </td>
 
                       {/* Actions */}
-                      <td className="table-cell text-center align-middle">
+                      <td className="table-cell text-center align-middle px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           {editing ? (
                             <>
@@ -576,14 +636,14 @@ const SpecificationTypeList = ({ setSubmitting }) => {
         !sError &&
         aSpecificationTypes.length === 0 &&
         !editForm.open && (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
             <div className="text-gray-500">
               {t("PRODUCT_SETUP.SPECIFICATION_TYPES.EMPTY.MESSAGE")}
             </div>
             {sSearchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="mt-2 text-[#5B45E0] hover:text-[#4c39c7]"
+                className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
               >
                 {t("COMMON.CLEAR_SEARCH")}
               </button>
@@ -591,17 +651,17 @@ const SpecificationTypeList = ({ setSubmitting }) => {
           </div>
         )}
 
-      {/* Pagination */}
+      {/* Pagination - Fixed at bottom */}
       {iTotalItems > 0 && (
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-          totalItems={iTotalItems}
-          itemsPerPage={iItemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+            totalItems={iTotalItems}
+            itemsPerPage={iItemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
       )}
 
       {/* Confirmation popup for status change */}

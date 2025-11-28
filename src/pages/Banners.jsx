@@ -10,11 +10,17 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { ITEMS_PER_PAGE, STATUS, STATUS_VALUE_NAMES } from "../contants/constants";
+import {
+  ITEMS_PER_PAGE,
+  STATUS,
+  STATUS_VALUE_NAMES,
+} from "../contants/constants";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import noImage from "../../assets/images/missing-pictur.jpg";
 import Switch from "../components/Switch";
+import Pagination from "../components/Pagination"; // Import the Pagination component
+
 
 const Banners = () => {
   const [aBanners, setBanners] = useState([]);
@@ -54,7 +60,9 @@ const Banners = () => {
         const bannerData = oResponse.data.data.map((banner) => ({
           BannerID: banner.BannerId,
           BannerName: banner.BannerName,
-          Status: banner.IsActive ? STATUS_VALUE_NAMES.ACTIVE :STATUS_VALUE_NAMES.INACTIVE,
+          Status: banner.IsActive
+            ? STATUS_VALUE_NAMES.ACTIVE
+            : STATUS_VALUE_NAMES.INACTIVE,
           BannerImages:
             banner.BannerImage?.map((img) => ({
               BannerImage: img.documentUrl,
@@ -173,10 +181,27 @@ const Banners = () => {
     navigate("/activeBanners");
   };
 
+  // Pagination handlers
+  const handlePrevPage = () => {
+    if (nPage > 1) {
+      setPage(nPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (nPage < totalPages) {
+      setPage(nPage + 1);
+    }
+  };
+
+  const handlePageClick = (page) => {
+    setPage(page);
+  };
+
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen">
       <ToastContainer />
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-50 py-3 shadow">
         <div className="flex-1" />
         <button
           type="button"
@@ -205,7 +230,7 @@ const Banners = () => {
             {t("BANNER_FORM.NO_BANNERS_FOUND")}
           </div>
         ) : (
-          <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+         <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto scrollbar-hide">
             {paginatedBanners.map((project) => (
               <div
                 key={project.BannerID}
@@ -290,26 +315,21 @@ const Banners = () => {
             ))}
           </div>
         )}
-        <div className="flex justify-between mt-8">
-          <button
-            disabled={nPage === 1}
-            onClick={() => setPage(nPage - 1)}
-            className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-custom-bg font-semibold shadow hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {t("COMMON.PREVIOUS")}
-          </button>
-          <span className="text-caption flex items-center">
-            {t("BANNER_FORM.PAGE")} {nPage} {t("BANNER_FORM.OF")} {totalPages} (
-            {totalRecords} {t("VIEW_ORDER.TABLE.TOTAL")})
-          </span>
-          <button
-            disabled={nPage === totalPages}
-            onClick={() => setPage(nPage + 1)}
-            className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-custom-bg font-semibold shadow hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {t("COMMON.NEXT")}
-          </button>
-        </div>
+
+        {/* Replace the existing pagination with the Pagination component */}
+        {paginatedBanners.length > 0 && (
+          <div className="sticky bottom-0 bg-white py-3 shadow z-50">
+            <Pagination
+              currentPage={nPage}
+              totalPages={totalPages}
+              totalItems={totalRecords}
+              itemsPerPage={rowsPerPage}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handlePageClick={handlePageClick}
+            />
+          </div>
+        )}
       </div>
       {statusPopup.open && (
         <FullscreenErrorPopup

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Toolbar from "../../../components/Toolbar";
 import { useTranslation } from "react-i18next";
@@ -26,6 +26,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
   const [sSearchQuery, setSearchQuery] = useState("");
   const [bShowFilter, setShowFilter] = useState(false);
   const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
@@ -45,6 +46,16 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
     newStatus: null,
   });
 
+  // Hide body scrollbar when component mounts
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    
+    // Re-enable scrollbar when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   useEffect(() => {
     const params = {
       pageNumber: iCurrentPage,
@@ -63,6 +74,11 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
       dispatch(clearResourceError("attributeTypes"));
     };
   }, [dispatch]);
+
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
 
   const handleStatusChange = (AttributeTypeID, currentIsActive) => {
     setStatusPopup({
@@ -146,12 +162,39 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
   }));
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-medium text-gray-900">
-          {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.LIST_TITLE")}
-        </h2>
-      </div>
+    <div 
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
+      style={{
+        // Hide scrollbar for all browsers
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+      }}
+    >
+      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
+      <style>
+        {`
+          .max-w-8xl::-webkit-scrollbar {
+            display: none;
+          }
+          
+          /* Custom scrollbar for table */
+          .table-scroll-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+          .table-scroll-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+          }
+          .table-scroll-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+          }
+          .table-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+          }
+        `}
+      </style>
       <div className="mb-6">
         <Toolbar
           searchTerm={sSearchQuery}
@@ -182,36 +225,44 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
         />
       </div>
       {bLoading && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-8 text-gray-500">
           {t("COMMON.LOADING")}
         </div>
       )}
 
       {sError && !bLoading && (
-        <div className="text-center py-12 text-red-500">
+        <div className="text-center py-8 text-red-500">
           {t("COMMON.ERROR")}: {sError}
         </div>
       )}
 
       {!bLoading && !sError && (
-        <div className="table-container">
-          <div className="table-wrapper">
-            <table className="table-base">
-              <thead className="table-head">
+        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+          <div
+            className="table-scroll-container overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)]"
+            onScroll={handleTableScroll}
+          >
+            <table className="table-base w-full">
+              {/* Floating Header */}
+              <thead
+                className={`table-head-floating sticky top-0 z-10 ${
+                  tableScrollTop > 10 ? "shadow-sm" : ""
+                }`}
+              >
                 <tr>
-                  <th className="table-head-cell text-left">
+                  <th className="table-head-cell-floating text-left px-6 py-4">
                     {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.NAME")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.DESCRIPTION_LABEL")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.ATTRIBUTES")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("COMMON.STATUS")}
                   </th>
-                  <th className="table-head-cell text-center">
+                  <th className="table-head-cell-floating text-center px-6 py-4">
                     {t("COMMON.UPDATE_STATUS")}
                   </th>
                 </tr>
@@ -221,12 +272,12 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                 {aAttributeTypes.map((type) => (
                   <tr
                     key={type.AttributeTypeID}
-                    className={`table-row ${
+                    className={`table-row items-center hover:bg-gray-50 ${
                       !type.IsActive ? "bg-gray-50" : ""
                     }`}
                   >
                     {/* Name */}
-                    <td className="table-cell text-left align-middle">
+                    <td className="table-cell text-left align-middle px-6 py-4">
                       {type.IsActive ? (
                         <Link
                           to={`/browse/editattributetype/${type.AttributeTypeID}`}
@@ -249,7 +300,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
 
                     {/* Description */}
                     <td
-                      className={`table-cell text-center align-middle ${
+                      className={`table-cell text-center align-middle px-6 py-4 ${
                         !type.IsActive ? "text-gray-400" : ""
                       }`}
                     >
@@ -262,10 +313,10 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                     </td>
 
                     {/* Total Attributes */}
-                    <td className="table-cell text-center align-middle">
+                    <td className="table-cell text-center align-middle px-6 py-4">
                       <div
-                        className={`text-sm ${
-                          !type.IsActive ? "text-gray-400" : ""
+                        className={`text-sm font-medium ${
+                          !type.IsActive ? "text-gray-400" : "text-gray-700"
                         }`}
                       >
                         {type.TotalAttributes}
@@ -273,10 +324,12 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                     </td>
 
                     {/* Status */}
-                    <td className="table-cell text-center align-middle">
+                    <td className="table-cell text-center align-middle px-6 py-4">
                       <span
-                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          type.IsActive ? "status-active" : "status-inactive"
+                        className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                          type.IsActive 
+                            ? "bg-green-100 text-green-800 border border-green-200" 
+                            : "bg-red-100 text-red-800 border border-red-200"
                         }`}
                       >
                         {t(`COMMON.${type.IsActive ? "ACTIVE" : "INACTIVE"}`)}
@@ -284,16 +337,18 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                     </td>
 
                     {/* Switch */}
-                    <td className="table-cell text-center align-middle">
-                      <Switch
-                        checked={type.IsActive}
-                        onChange={() =>
-                          handleStatusChange(
-                            type.AttributeTypeID,
-                            type.IsActive
-                          )
-                        }
-                      />
+                    <td className="table-cell text-center align-middle px-6 py-4">
+                      <div className="flex justify-center">
+                        <Switch
+                          checked={type.IsActive}
+                          onChange={() =>
+                            handleStatusChange(
+                              type.AttributeTypeID,
+                              type.IsActive
+                            )
+                          }
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -304,14 +359,14 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
       )}
 
       {!bLoading && !sError && aAttributeTypes.length === 0 && (
-        <div className="text-center py-12">
+        <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="text-gray-500">
             {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.EMPTY_MESSAGE")}
           </div>
           {sSearchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="mt-2 text-[#5B45E0] hover:text-[#4c39c7]"
+              className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
             >
               {t("COMMON.CLEAR_SEARCH")}
             </button>
@@ -319,16 +374,17 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
         </div>
       )}
 
+      {/* Pagination Controls - Fixed at bottom */}
       {iTotalItems > 0 && !bLoading && (
-        <Pagination
-          currentPage={iCurrentPage}
-          totalPages={iTotalPages}
-          totalItems={iTotalItems}
-          itemsPerPage={iItemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+          <Pagination
+            currentPage={iCurrentPage}
+            totalPages={iTotalPages}
+            totalItems={iTotalItems}
+            itemsPerPage={iItemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
       )}
 
       {statusPopup.open && (

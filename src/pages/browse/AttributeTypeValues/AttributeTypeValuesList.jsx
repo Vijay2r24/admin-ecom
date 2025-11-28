@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import CreateAttribute from "./CreateAttributeTypeValuesList";
 import Toolbar from "../../../components/Toolbar";
@@ -29,6 +29,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
   const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
   const [bShowFilter, setShowFilter] = useState(false);
   const [bShowCreate, setShowCreate] = useState(false);
+  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
@@ -54,6 +55,16 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
 
   const iTotalPages = Math.ceil(iTotalItems / iItemsPerPage);
 
+  // Hide body scrollbar when component mounts
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    
+    // Re-enable scrollbar when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   useEffect(() => {
     const params = {
       pageNumber: iCurrentPage,
@@ -72,6 +83,11 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
       dispatch(clearResourceError("attributes"));
     };
   }, [dispatch]);
+
+  // Handle table scroll for floating header
+  const handleTableScroll = useCallback((e) => {
+    setTableScrollTop(e.target.scrollTop);
+  }, []);
 
   const handleStatusChange = (attributeId, currentIsActive) => {
     setStatusPopup({ open: true, attributeId, newStatus: !currentIsActive });
@@ -144,13 +160,41 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
   }
 
   return (
-    <>
+    <div 
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
+      style={{
+        // Hide scrollbar for all browsers
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+      }}
+    >
+      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
+      <style>
+        {`
+          .max-w-8xl::-webkit-scrollbar {
+            display: none;
+          }
+          
+          /* Custom scrollbar for table */
+          .table-scroll-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+          .table-scroll-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+          }
+          .table-scroll-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+          }
+          .table-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+          }
+        `}
+      </style>
+
       <div className="relative">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-medium text-gray-900">
-            {t("PRODUCT_SETUP.ATTRIBUTES.TITLE")}
-          </h2>
-        </div>
         <div className="mb-6">
           <Toolbar
             searchTerm={sSearchQuery}
@@ -180,31 +224,39 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
         </div>
         {/* Table */}
         {bLoading && (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-8 text-gray-500">
             {t("COMMON.LOADING")}
           </div>
         )}
 
         {sError && !bLoading && (
-          <div className="text-center py-12 text-red-500">{sError}</div>
+          <div className="text-center py-8 text-red-500">{sError}</div>
         )}
 
         {!bLoading && !sError && (
-          <div className="table-container">
-            <div className="table-wrapper">
-              <table className="table-base">
-                <thead className="table-head">
+          <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+            <div
+              className="table-scroll-container overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)]"
+              onScroll={handleTableScroll}
+            >
+              <table className="table-base w-full">
+                {/* Floating Header */}
+                <thead
+                  className={`table-head-floating sticky top-0 z-10 ${
+                    tableScrollTop > 10 ? "shadow-sm" : ""
+                  }`}
+                >
                   <tr>
-                    <th className="table-head-cell text-left">
+                    <th className="table-head-cell-floating text-left px-6 py-4">
                       {t("PRODUCT_SETUP.ATTRIBUTES.TABLE.NAME")}
                     </th>
-                    <th className="table-head-cell text-left">
+                    <th className="table-head-cell-floating text-left px-6 py-4">
                       {t("COMMON.UNIT")}
                     </th>
-                    <th className="table-head-cell text-center">
+                    <th className="table-head-cell-floating text-center px-6 py-4">
                       {t("COMMON.STATUS")}
                     </th>
-                    <th className="table-head-cell text-center">
+                    <th className="table-head-cell-floating text-center px-6 py-4">
                       {t("COMMON.UPDATE_STATUS")}
                     </th>
                   </tr>
@@ -214,23 +266,23 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                   {aAttributes.map((attribute) => (
                     <tr
                       key={attribute.AttributeValueID}
-                      className={`table-row ${
+                      className={`table-row items-center hover:bg-gray-50 ${
                         !attribute.IsActive ? "bg-gray-50" : ""
                       }`}
                     >
                       {/* Name */}
-                      <td className="table-cell table-cell-text text-left align-middle">
+                      <td className="table-cell table-cell-text text-left align-middle px-6 py-4">
                         {attribute.IsActive ? (
                           <Link
                             to={`/browse/editattribute/${attribute.AttributeValueID}`}
-                            className="text-blue-600 hover:underline block truncate max-w-[180px]"
+                            className="text-blue-600 hover:underline block truncate max-w-[180px] font-medium"
                             title={attribute.Value}
                           >
                             {attribute.Value}
                           </Link>
                         ) : (
                           <span
-                            className="text-gray-500 block truncate max-w-[180px] cursor-not-allowed"
+                            className="text-gray-500 block truncate max-w-[180px] cursor-not-allowed font-medium"
                             title={t(
                               "PRODUCT_SETUP.ATTRIBUTES.EDIT_DISABLED_TOOLTIP"
                             )}
@@ -242,7 +294,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
 
                       {/* Unit */}
                       <td
-                        className={`table-cell table-cell-text text-left align-middle ${
+                        className={`table-cell table-cell-text text-left align-middle px-6 py-4 ${
                           !attribute.IsActive ? "text-gray-400" : ""
                         }`}
                       >
@@ -255,12 +307,12 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                       </td>
 
                       {/* Status */}
-                      <td className="table-cell text-center">
+                      <td className="table-cell text-center align-middle px-6 py-4">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                             attribute.IsActive
-                              ? "status-active"
-                              : "status-inactive"
+                              ? "bg-green-100 text-green-800 border border-green-200"
+                              : "bg-red-100 text-red-800 border border-red-200"
                           }`}
                         >
                           {t(
@@ -272,16 +324,18 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                       </td>
 
                       {/* Update Status (Switch) */}
-                      <td className="table-cell text-center">
-                        <Switch
-                          checked={attribute.IsActive}
-                          onChange={() =>
-                            handleStatusChange(
-                              attribute.AttributeValueID,
-                              attribute.IsActive
-                            )
-                          }
-                        />
+                      <td className="table-cell text-center align-middle px-6 py-4">
+                        <div className="flex justify-center">
+                          <Switch
+                            checked={attribute.IsActive}
+                            onChange={() =>
+                              handleStatusChange(
+                                attribute.AttributeValueID,
+                                attribute.IsActive
+                              )
+                            }
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -291,7 +345,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
           </div>
         )}
         {!bLoading && !sError && aAttributes.length === 0 && (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
             <div className="text-gray-500">
               {t("PRODUCT_SETUP.ATTRIBUTES.EMPTY_MESSAGE")}
             </div>
@@ -301,23 +355,25 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                   setSearchQuery("");
                   setFilters({ status: STATUS_VALUES.ALL });
                 }}
-                className="mt-2 text-[#5B45E0] hover:text-[#4c39c7]"
+                className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
               >
                 {t("PRODUCT_SETUP.ATTRIBUTES.CLEAR_FILTERS_BTN")}
               </button>
             )}
           </div>
         )}
+        
+        {/* Pagination Controls - Fixed at bottom */}
         {!bLoading && !sError && iTotalItems > 0 && (
-          <Pagination
-            itemsPerPage={iItemsPerPage}
-            totalItems={iTotalItems}
-            currentPage={iCurrentPage}
-            totalPages={iTotalPages}
-            handlePageClick={handlePageClick}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-          />
+            <Pagination
+              itemsPerPage={iItemsPerPage}
+              totalItems={iTotalItems}
+              currentPage={iCurrentPage}
+              totalPages={iTotalPages}
+              handlePageClick={handlePageClick}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+            />
         )}
       </div>
       {bShowErrorPopup && (
@@ -337,7 +393,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
           onConfirm={handleStatusConfirm}
         />
       )}
-    </>
+    </div>
   );
 };
 

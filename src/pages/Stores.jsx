@@ -95,6 +95,16 @@ const Stores = () => {
   // FIX: Sync currentPage with API response or use local state
   const [currentPage, setCurrentPage] = useState(currentPageFromAPI);
 
+  // Hide body scrollbar when component mounts
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    
+    // Re-enable scrollbar when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   const handleEdit = (StoreID) => {
     navigate(`/editStore/${StoreID}`);
   };
@@ -337,7 +347,26 @@ const Stores = () => {
   };
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+    <div 
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
+      style={{
+        // Hide scrollbar for all browsers
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+      }}
+    >
+      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
+      <style>
+        {`
+          .max-w-8xl::-webkit-scrollbar {
+            display: none;
+          }
+          body {
+            overflow: hidden;
+          }
+        `}
+      </style>
+      
       <ToastContainer />
       {bSubmitting && (
         <div className="global-loader-overlay">
@@ -364,7 +393,7 @@ const Stores = () => {
       {viewMode === "table" ? (
         <div className="table-container-floating">
           <div
-            className="table-wrapper-floating scrollbar-hide"
+            className="table-wrapper-floating"
             onScroll={handleTableScroll}
           >
             <table className="table-base">
@@ -580,6 +609,7 @@ const Stores = () => {
       )}
 
       {/* FIX: Pass correct pagination props */}
+       <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -589,6 +619,7 @@ const Stores = () => {
         handleNextPage={handleNextPage}
         handlePageClick={handlePageClick}
       />
+      </div>
     </div>
   );
 };

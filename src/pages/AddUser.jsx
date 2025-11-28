@@ -353,7 +353,7 @@ const AddUser = () => {
   /**
    * Live validation for a specific field
    */
-  const validateField = useCallback((name, value) => {
+  const validateField = useCallback((name, value, forceShowError = false) => {
     let error = "";
     
     switch (name) {
@@ -407,16 +407,65 @@ const AddUser = () => {
         break;
     }
 
+    // Only show error if field is touched or we're forcing the error display
+    const shouldShowError = forceShowError || oFieldTouched[name];
+
     setErrors(prev => ({
       ...prev,
-      [name]: error
+      [name]: shouldShowError ? error : ""
     }));
 
     setFieldValid(prev => ({
       ...prev,
       [name]: !error && (value !== "" && value !== null && value !== undefined)
     }));
-  }, [oFormData.password, oFormData.confirmPassword, t, id, shouldShowAccountSecuritySection, isAccountSecurityEditable]);
+
+    return error;
+  }, [oFormData.password, oFormData.confirmPassword, t, id, shouldShowAccountSecuritySection, isAccountSecurityEditable, oFieldTouched]);
+
+  /**
+   * Mark field as touched
+   */
+  const markFieldTouched = useCallback((fieldName) => {
+    setFieldTouched(prev => ({
+      ...prev,
+      [fieldName]: true
+    }));
+    // Validate the field when it's touched (force error display)
+    validateField(fieldName, oFormData[fieldName], true);
+  }, [oFormData, validateField]);
+
+  /**
+   * Handle field blur for additional validation
+   */
+  const handleBlur = useCallback((e) => {
+    const { name, value } = e.target;
+    markFieldTouched(name);
+    validateField(name, value, true);
+  }, [markFieldTouched, validateField]);
+
+  /**
+   * Handle select field changes
+   */
+  const handleSelectChange = useCallback((e) => {
+    const { name, value } = e.target;
+    
+    let processedValue = value;
+    if (Array.isArray(value)) {
+      processedValue = value.filter(Boolean);
+    }
+    
+    setFormData((prev) => ({ ...prev, [name]: processedValue }));
+    validateField(name, processedValue, true); // Force validation on select change
+  }, [validateField]);
+
+  /**
+   * Handle select blur - specifically for dropdowns
+   */
+  const handleSelectBlur = useCallback((fieldName) => {
+    markFieldTouched(fieldName);
+    validateField(fieldName, oFormData[fieldName], true);
+  }, [markFieldTouched, validateField, oFormData]);
 
   useEffect(() => {
     setTitle(id ? t("USERS.EDIT_USER") : t("USERS.ADD_NEW_USER"));
@@ -629,9 +678,9 @@ const AddUser = () => {
         PhoneNumber: phoneNumber,
       }));
 
-      validateField("phone", formatted);
+      validateField("phone", formatted, oFieldTouched.phone);
     },
-    [validateField]
+    [validateField, oFieldTouched.phone]
   );
 
   // Optimized fetchUser function - FIXED to handle phone number binding properly
@@ -686,17 +735,29 @@ const AddUser = () => {
           gender: user.Gender || "",
         }));
 
-        // Validate initial data
+        // Mark all fields as touched for edit mode to show validation immediately
         setTimeout(() => {
-          validateField("firstName", user.FirstName || "");
-          validateField("lastName", user.LastName || "");
-          validateField("email", user.Email || "");
-          validateField("phone", formattedPhone);
-          validateField("gender", user.Gender || "");
-          validateField("role", user.RoleID || "");
-          validateField("stores", user.Stores ? user.Stores.map((store) => store.StoreId) : []);
-          validateField("streetAddress", user.AddressLine || "");
-          validateField("pincode", user.Zipcode || "");
+          const fieldsToValidate = [
+            "firstName", "lastName", "email", "phone", "gender", 
+            "role", "stores", "streetAddress", "pincode", 
+            "country", "state", "city"
+          ];
+          fieldsToValidate.forEach(field => {
+            markFieldTouched(field);
+            validateField(field, 
+              field === "firstName" ? user.FirstName || "" :
+              field === "lastName" ? user.LastName || "" :
+              field === "email" ? user.Email || "" :
+              field === "phone" ? formattedPhone :
+              field === "gender" ? user.Gender || "" :
+              field === "role" ? user.RoleID || "" :
+              field === "stores" ? (user.Stores ? user.Stores.map((store) => store.StoreId) : []) :
+              field === "streetAddress" ? user.AddressLine || "" :
+              field === "pincode" ? user.Zipcode || "" :
+              "", 
+              true
+            );
+          });
         }, 100);
 
         // For the profile image
@@ -727,7 +788,8 @@ const AddUser = () => {
               ...prev,
               country: foundCountry.CountryID,
             }));
-            validateField("country", foundCountry.CountryID);
+            markFieldTouched("country");
+            validateField("country", foundCountry.CountryID, true);
           }
         } else {
           // If countries aren't loaded yet, store the names for later
@@ -750,7 +812,7 @@ const AddUser = () => {
       const backendMessage = error?.response?.data?.message;
       setFetchUserError(backendMessage || t("COMMON.ERROR_MESSAGE"));
     }
-  }, [id, t, countries, validateField]);
+  }, [id, t, countries, validateField, markFieldTouched]);
 
   useEffect(() => {
     const populateStateAndCity = async () => {
@@ -773,7 +835,8 @@ const AddUser = () => {
             ...prev,
             state: foundState.StateID,
           }));
-          validateField("state", foundState.StateID);
+          markFieldTouched("state");
+          validateField("state", foundState.StateID, true);
         }
       } catch (error) {}
     };
@@ -786,6 +849,7 @@ const AddUser = () => {
     oFormData.countryName,
     states,
     validateField,
+    markFieldTouched,
   ]);
 
   useEffect(() => {
@@ -803,13 +867,14 @@ const AddUser = () => {
             ...prev,
             city: foundCity.CityID,
           }));
-          validateField("city", foundCity.CityID);
+          markFieldTouched("city");
+          validateField("city", foundCity.CityID, true);
         }
       } catch (error) {}
     };
 
     populateCity();
-  }, [id, oFormData.state, oFormData.cityName, cities, validateField]);
+  }, [id, oFormData.state, oFormData.cityName, cities, validateField, markFieldTouched]);
 
   useEffect(() => {
     if (id && !hasFetchedUser.current && countries.length > 0) {
@@ -834,9 +899,9 @@ const AddUser = () => {
           stateName: "",
           cityName: "",
         }));
-        validateField(name, value);
-        validateField("state", "");
-        validateField("city", "");
+        validateField(name, value, oFieldTouched[name]);
+        validateField("state", "", oFieldTouched.state);
+        validateField("city", "", oFieldTouched.city);
       } else if (name === "state") {
         setFormData((prev) => ({
           ...prev,
@@ -844,8 +909,8 @@ const AddUser = () => {
           city: "",
           cityName: "",
         }));
-        validateField(name, value);
-        validateField("city", "");
+        validateField(name, value, oFieldTouched[name]);
+        validateField("city", "", oFieldTouched.city);
       }
       // For all other fields
       else {
@@ -853,29 +918,14 @@ const AddUser = () => {
           ...prev,
           [name]: value,
         }));
-        validateField(name, value);
+        validateField(name, value, oFieldTouched[name]);
       }
 
       // Mark field as touched
-      setFieldTouched(prev => ({
-        ...prev,
-        [name]: true
-      }));
+      markFieldTouched(name);
     },
-    [validateField]
+    [validateField, markFieldTouched, oFieldTouched]
   );
-
-  /**
-   * Handle field blur for additional validation
-   */
-  const handleBlur = useCallback((e) => {
-    const { name, value } = e.target;
-    setFieldTouched(prev => ({
-      ...prev,
-      [name]: true
-    }));
-    validateField(name, value);
-  }, [validateField]);
 
   const handleImageChange = useCallback((e) => {
     const file = e.target.files[0];
@@ -914,6 +964,17 @@ const AddUser = () => {
 
   // Function to handle section update
   const handleSectionUpdate = async (section) => {
+    // Mark all fields in the section as touched before validation
+    const sectionFields = {
+      personal: ['firstName', 'lastName', 'email', 'phone', 'gender'],
+      account: ['role', 'stores', 'password', 'confirmPassword'],
+      address: ['streetAddress', 'country', 'state', 'city', 'pincode']
+    };
+    
+    sectionFields[section].forEach(field => {
+      markFieldTouched(field);
+    });
+
     const validationErrors = validate();
 
     // Filter errors only for the current section
@@ -955,17 +1016,6 @@ const AddUser = () => {
 
     if (Object.keys(sectionErrors).length > 0) {
       setErrors(sectionErrors);
-      // Mark all fields in the section as touched
-      const sectionFields = {
-        personal: ['firstName', 'lastName', 'email', 'phone', 'gender'],
-        account: ['role', 'stores', 'password', 'confirmPassword'],
-        address: ['streetAddress', 'country', 'state', 'city', 'pincode']
-      };
-      const touchedFields = {};
-      sectionFields[section].forEach(field => {
-        touchedFields[field] = true;
-      });
-      setFieldTouched(prev => ({ ...prev, ...touchedFields }));
       return;
     }
 
@@ -976,20 +1026,16 @@ const AddUser = () => {
   const handleSubmit = useCallback(
     async (e) => {
       e?.preventDefault();
+      
+      // Mark all required fields as touched before validation
+      Object.keys(requiredFields).forEach(field => {
+        if (requiredFields[field]) {
+          markFieldTouched(field);
+        }
+      });
+
       const validationErrors = validate();
       setErrors(validationErrors);
-      
-      // Mark all fields as touched on submit
-      const allFields = [
-        'firstName', 'lastName', 'email', 'phone', 'gender', 
-        'role', 'stores', 'password', 'confirmPassword', 
-        'streetAddress', 'country', 'state', 'city', 'pincode'
-      ];
-      const touchedFields = {};
-      allFields.forEach(field => {
-        touchedFields[field] = true;
-      });
-      setFieldTouched(touchedFields);
 
       if (Object.keys(validationErrors).length > 0) return;
 
@@ -1108,6 +1154,8 @@ const AddUser = () => {
       removedDocumentIds,
       t,
       navigate,
+      markFieldTouched,
+      requiredFields,
     ]
   );
 
@@ -1390,8 +1438,8 @@ const AddUser = () => {
                     id="gender"
                     name="gender"
                     value={oFormData.gender}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
+                    onChange={handleSelectChange}
+                    onBlur={() => handleSelectBlur("gender")}
                     options={genderOptions}
                     Icon={Users}
                     error={oErrors.gender}
@@ -1482,8 +1530,8 @@ const AddUser = () => {
                         id="role"
                         name="role"
                         value={oFormData.role}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
+                        onChange={handleSelectChange}
+                        onBlur={() => handleSelectBlur("role")}
                         options={roles.map((r) => ({
                           value: r.RoleID,
                           label: r.RoleName,
@@ -1543,8 +1591,8 @@ const AddUser = () => {
                         id="stores"
                         name="stores"
                         value={oFormData.stores}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
+                        onChange={handleSelectChange}
+                        onBlur={() => handleSelectBlur("stores")}
                         options={stores.map((s) => ({
                           value: s.StoreID,
                           label: s.StoreName,
@@ -1772,8 +1820,8 @@ const AddUser = () => {
                     id="country"
                     name="country"
                     value={oFormData.country}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
+                    onChange={handleSelectChange}
+                    onBlur={() => handleSelectBlur("country")}
                     options={countries.map((c) => ({
                       value: c.CountryID,
                       label: c.CountryName,
@@ -1808,8 +1856,8 @@ const AddUser = () => {
                     id="state"
                     name="state"
                     value={oFormData.state}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
+                    onChange={handleSelectChange}
+                    onBlur={() => handleSelectBlur("state")}
                     options={states.map((s) => ({
                       value: s.StateID,
                       label: s.StateName,
@@ -1844,8 +1892,8 @@ const AddUser = () => {
                     id="city"
                     name="city"
                     value={oFormData.city}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
+                    onChange={handleSelectChange}
+                    onBlur={() => handleSelectBlur("city")}
                     options={cities.map((c) => ({
                       value: c.CityID,
                       label: c.CityName,

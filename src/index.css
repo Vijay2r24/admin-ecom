@@ -62,19 +62,20 @@ code {
   }
 
   .btn-primary {
-    @apply w-full md:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-custom-bg hover:bg-bg-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-bg transition;
+    @apply w-full md:w-auto inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-custom-bg hover:bg-bg-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-bg transition;
   }
 
   .btn-secondary {
-    @apply px-4 py-2.5 inline-flex justify-center items-center border border-custom-bg text-custom-bg bg-transparent rounded-lg font-medium hover:bg-custom-bg/20 transition-colors duration-150;
+    @apply px-3 py-1.5 inline-flex justify-center items-center border border-custom-bg text-custom-bg bg-transparent rounded-lg font-medium hover:bg-custom-bg/20 transition-colors duration-150;
   }
 
   .btn-cancel {
-    @apply px-4 py-2.5 border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-bg transition-all duration-200;
+    @apply px-3 py-1.5 border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-bg transition-all duration-200;
   }
 
   .btn-toggle-view {
-    @apply inline-flex items-center px-3 py-2 border rounded-lg text-sm font-medium;
+    @apply inline-flex items-center px-2.5 py-1.5 border rounded-md text-xs font-semibold;
+    line-height:1.4;
   }
 
   .btn-highlighted {
@@ -85,9 +86,12 @@ code {
     @apply border-gray-300 text-gray-700 hover:bg-gray-50;
   }
 
-  .pagination-btn {
-    @apply px-3 py-1 border border-gray-200 rounded-md text-sm font-medium text-gray-700 hover:bg-custom-bg/20 hover:text-custom-bg transition-colors duration-150 disabled:opacity-50;
+   .pagination-btn {
+    @apply px-2.5 py-1 border border-gray-200 rounded-md text-xs font-semibold text-gray-700 hover:bg-custom-bg/20 hover:text-custom-bg transition-colors duration-150 disabled:opacity-50;
+    line-height: 1.4;
+    min-width: 32px;
   }
+ 
 
   .pagination-btn-active {
     @apply bg-custom-bg text-white border-custom-bg;
@@ -126,8 +130,10 @@ code {
     @apply sticky top-0 z-0 transition-all duration-200 bg-gray-100 shadow-sm;
   }
 
-  .table-head-cell {
-    @apply px-3 py-3 text-center text-sm font-medium text-gray-500 capitalize tracking-wider whitespace-nowrap;
+   .table-head-cell {
+    @apply px-3 py-2.5 text-center text-sm font-semibold text-gray-700 capitalize tracking-wide whitespace-nowrap;
+    line-height: 1.4;
+    letter-spacing: 0.025em;
   }
 
   .table-body {
@@ -139,19 +145,23 @@ code {
   }
 
   .table-cell {
-    @apply px-3 py-4 whitespace-nowrap;
+    @apply px-3 py-2.5 whitespace-nowrap;
+    line-height:1.4;
   }
 
   .table-cell-wrap {
-    @apply px-6 py-4 whitespace-normal;
+    @apply px-4 py-2.5 whitespace-normal;
+    line-height:1.4;
   }
 
   .table-cell-text {
-    @apply text-sm text-gray-900;
+    @apply text-xs text-gray-900;
+    line-height:1.4;
   }
 
   .table-cell-subtext {
-    @apply text-sm text-gray-500;
+    @apply text-sm text-gray-600;
+    line-height:1.4;
   }
 
   .ellipsis-text {
@@ -160,7 +170,8 @@ code {
   }
 
   .status-badge {
-    @apply px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border;
+       @apply px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full border;
+    line-height: 1.3;
   }
 
   .action-button {
@@ -189,7 +200,7 @@ code {
   }
 
   .table-wrapper-floating {
-    @apply overflow-x-auto max-h-[calc(100vh-200px)] relative;
+    @apply overflow-x-auto max-h-[calc(100vh-170px)] relative;
   }
 
   .table-head-floating {
@@ -200,8 +211,10 @@ code {
     @apply shadow-sm;
   }
 
-  .table-head-cell-floating {
-    @apply px-6 py-4 text-center text-sm font-medium text-gray-500 capitalize tracking-wider bg-gray-50 border-b border-gray-200;
+ .table-head-cell-floating {
+    @apply px-4 py-2.5 text-center text-sm font-semibold text-gray-700 capitalize tracking-wide bg-gray-50 border-b border-gray-200;
+    line-height: 1.4;
+    letter-spacing: 0.025em;
   }
 
   .table-base {
@@ -242,17 +255,37 @@ code {
 @media (max-width: 1024px) {
   .table-head-cell {
     @apply text-xs;
+    line-height: 1.5;
   }
   
   .table-head-cell-floating {
     @apply text-xs;
+  }
+  table-head-cell {
+    @apply text-xs;
+    line-height: 1.4;
+  }
+ 
+  .table-head-cell-floating {
+    @apply text-xs;
+    line-height: 1.4;
+  }
+ 
+  .table-cell-text {
+    @apply text-xs;
+    line-height: 1.4;
+  }
+ 
+  .table-cell-subtext {
+    @apply text-xs;
+    line-height: 1.3;
   }
 }
 
 /* Lower z-index for carousel arrows so popup menus appear above */
 .react-multiple-carousel__arrow {
   z-index: 10 !important;
-}
+} 
 
 .global-loader-overlay {
   position: fixed;
@@ -305,21 +338,3 @@ code {
   @apply truncate;
 }
 /* Hide scrollbar for Chrome, Safari and Opera */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for IE, Edge and Firefox */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-/* Alternative with better browser support */
-.no-scrollbar {
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  scrollbar-width: none; /* Firefox */
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
-}

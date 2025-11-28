@@ -71,8 +71,12 @@ const AddStore = () => {
 
   const [oErrors, setErrors] = useState({});
   const [oFieldValid, setFieldValid] = useState({}); // Track field validation state
+  const [oFieldTouched, setFieldTouched] = useState({}); // Track touched fields
   const [bSubmitting, setbSubmitting] = useState(false);
   const [isFetchingStore, setIsFetchingStore] = useState(false);
+  
+  // NEW: Form data loading state for edit mode
+  const [isFormDataLoading, setIsFormDataLoading] = useState(!!id);
 
   // Refs to track what has been loaded
   const hasFetchedStore = useRef(false);
@@ -90,40 +94,7 @@ const AddStore = () => {
     email: true,
   };
 
-  // Fetch countries on component mount - only once
-  useEffect(() => {
-    if (!hasFetchedCountries.current && !countriesData.data.length) {
-      dispatch(fetchResource({ key: "countries" }));
-      hasFetchedCountries.current = true;
-    }
-  }, [dispatch, countriesData.data.length]);
-
-  // Fetch states when country changes
-  useEffect(() => {
-    if (oFormData.country && oFormData.country !== "") {
-      dispatch(fetchStatesByCountryId(oFormData.country));
-    } else {
-      dispatch(clearStates());
-    }
-  }, [dispatch, oFormData.country]);
-
-  // Fetch cities when state changes
-  useEffect(() => {
-    if (oFormData.state && oFormData.state !== "") {
-      dispatch(fetchCitiesByStateId(oFormData.state));
-    } else {
-      dispatch(clearCities());
-    }
-  }, [dispatch, oFormData.state]);
-
-  // Extract country code from phone number - FIXED WITH TYPE CHECKING
-  const extractCountryCode = (phoneNumber) => {
-    if (!phoneNumber || typeof phoneNumber !== "string") return "";
-    const match = phoneNumber.match(/^\+(.+?)(?=\d)/);
-    return match ? match[1] : "";
-  };
-
-  // Live validation functions
+  // Live validation functions - UPDATED to handle loading states
   const validateName = (name) => {
     if (!name.trim()) {
       return t("STORES.VALIDATION.STORE_NAME");
@@ -196,29 +167,46 @@ const AddStore = () => {
     return "";
   };
 
+  // UPDATED: Country validation with loading state handling
   const validateCountry = (country) => {
+    // Don't validate country if form data is still loading in edit mode
+    if (isFormDataLoading && id && !country) {
+      return "";
+    }
     if (!country) {
       return t("STORES.VALIDATION.COUNTRY");
     }
     return "";
   };
 
+  // UPDATED: State validation with loading state handling
   const validateState = (state) => {
+    // Don't validate state if form data is still loading in edit mode
+    if (isFormDataLoading && id && !state) {
+      return "";
+    }
     if (!state) {
       return t("STORES.VALIDATION.STATE");
     }
     return "";
   };
 
+  // UPDATED: City validation with loading state handling
   const validateCity = (city) => {
+    // Don't validate city if form data is still loading in edit mode
+    if (isFormDataLoading && id && !city) {
+      return "";
+    }
     if (!city) {
       return t("STORES.VALIDATION.CITY");
     }
     return "";
   };
 
-  // Live validation for a specific field
-  const validateField = useCallback((name, value) => {
+  /**
+   * Live validation for a specific field - UPDATED with loading state dependency
+   */
+  const validateField = useCallback((name, value, forceShowError = false) => {
     let error = "";
 
     switch (name) {
@@ -250,102 +238,195 @@ const AddStore = () => {
         break;
     }
 
+    // Only show error if field is touched or we're forcing the error display
+    const shouldShowError = forceShowError || oFieldTouched[name];
+
     setErrors((prev) => ({
       ...prev,
-      [name]: error,
+      [name]: shouldShowError ? error : "",
     }));
 
     setFieldValid((prev) => ({
       ...prev,
       [name]: !error && value !== "" && value !== null && value !== undefined,
     }));
-  }, []);
+
+    return error;
+  }, [oFieldTouched, isFormDataLoading, id, t]);
+
+  /**
+   * Mark field as touched
+   */
+  const markFieldTouched = useCallback((fieldName) => {
+    setFieldTouched(prev => ({
+      ...prev,
+      [fieldName]: true
+    }));
+    // Validate the field when it's touched (force error display)
+    validateField(fieldName, oFormData[fieldName], true);
+  }, [oFormData, validateField]);
+
+  /**
+   * Handle field blur for additional validation
+   */
+  const handleBlur = useCallback((e) => {
+    const { name, value } = e.target;
+    markFieldTouched(name);
+    validateField(name, value, true);
+  }, [markFieldTouched, validateField]);
+
+  /**
+   * Handle select field changes
+   */
+  const handleSelectChange = useCallback((e) => {
+    const { name, value } = e.target;
+    
+    // When country changes, reset state and city
+    if (name === "country") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+        state: "",
+        city: "",
+        stateName: "",
+        cityName: "",
+      }));
+      // Validate the changed field and reset dependent fields
+      validateField(name, value, true);
+      validateField("state", "", true);
+      validateField("city", "", true);
+    }
+    // When state changes, reset city
+    else if (name === "state") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+        city: "",
+        cityName: "",
+      }));
+      validateField(name, value, true);
+      validateField("city", "", true);
+    }
+    // For all other select fields
+    else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+      validateField(name, value, true);
+    }
+  }, [validateField]);
+
+  /**
+   * Handle select blur - specifically for dropdowns
+   */
+  const handleSelectBlur = useCallback((fieldName) => {
+    markFieldTouched(fieldName);
+    validateField(fieldName, oFormData[fieldName], true);
+  }, [markFieldTouched, validateField, oFormData]);
 
   // Updated handleChange with live validation
   const handleChange = useCallback(
     (e) => {
       const { name, value } = e.target;
-
-      // When country changes, reset state and city
-      if (name === "country") {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: value,
-          state: "",
-          city: "",
-          stateName: "",
-          cityName: "",
-        }));
-        // Validate the changed field and reset dependent fields
-        validateField(name, value);
-        validateField("state", "");
-        validateField("city", "");
-      }
-      // When state changes, reset city
-      else if (name === "state") {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: value,
-          city: "",
-          cityName: "",
-        }));
-        validateField(name, value);
-        validateField("city", "");
-      }
-      // For all other fields
-      else {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
-        validateField(name, value);
-      }
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+      validateField(name, value, oFieldTouched[name]);
+      markFieldTouched(name);
     },
-    [validateField]
+    [validateField, markFieldTouched, oFieldTouched]
   );
 
   // Updated handlePhoneChange with live validation - FIXED to store both formatted and raw numbers
   const handlePhoneChange = useCallback((data) => {
-  if (!data) {
+    if (!data) {
+      setFormData((prev) => ({
+        ...prev,
+        phone: "",
+        CountryCode: "",
+        PhoneNumber: "",
+      }));
+      validateField("phone", "", oFieldTouched.phone);
+      markFieldTouched("phone");
+      return;
+    }
+
+    const formattedPhone = data.formatted || data.phone || "";
+    const countryCode = data.countryCode || "";
+    const rawPhoneNumber = data.phoneNumber || "";
+
     setFormData((prev) => ({
       ...prev,
-      phone: "",
-      CountryCode: "",
-      PhoneNumber: "",
+      phone: formattedPhone,
+      CountryCode: countryCode,
+      PhoneNumber: rawPhoneNumber,
     }));
-    validateField("phone", "");
-    return;
-  }
 
-  const formattedPhone = data.formatted || data.phone || "";
-  const countryCode = data.countryCode || "";
-  const rawPhoneNumber = data.phoneNumber || "";
+    validateField("phone", formattedPhone, oFieldTouched.phone);
+    markFieldTouched("phone");
+  }, [validateField, markFieldTouched, oFieldTouched.phone]);
 
-  setFormData((prev) => ({
-    ...prev,
-    phone: formattedPhone,
-    CountryCode: countryCode,
-    PhoneNumber: rawPhoneNumber,
-  }));
+  // Extract country code from phone number - FIXED WITH TYPE CHECKING
+  const extractCountryCode = (phoneNumber) => {
+    if (!phoneNumber || typeof phoneNumber !== "string") return "";
+    const match = phoneNumber.match(/^\+(.+?)(?=\d)/);
+    return match ? match[1] : "";
+  };
 
-  validateField("phone", formattedPhone);
-}, [validateField]);
+  // Fetch countries on component mount - only once
+  useEffect(() => {
+    if (!hasFetchedCountries.current && !countriesData.data.length) {
+      dispatch(fetchResource({ key: "countries" }));
+      hasFetchedCountries.current = true;
+    }
+  }, [dispatch, countriesData.data.length]);
 
+  // Fetch states when country changes
+  useEffect(() => {
+    if (oFormData.country && oFormData.country !== "") {
+      dispatch(fetchStatesByCountryId(oFormData.country));
+    } else {
+      dispatch(clearStates());
+    }
+  }, [dispatch, oFormData.country]);
 
-  // Validate field on blur
-  const handleBlur = useCallback(
-    (e) => {
-      const { name, value } = e.target;
-      validateField(name, value);
-    },
-    [validateField]
-  );
+  // Fetch cities when state changes
+  useEffect(() => {
+    if (oFormData.state && oFormData.state !== "") {
+      dispatch(fetchCitiesByStateId(oFormData.state));
+    } else {
+      dispatch(clearCities());
+    }
+  }, [dispatch, oFormData.state]);
+
+  // NEW: Effect to validate country when countries data loads
+  useEffect(() => {
+    if (id && oFormData.countryName && countriesData.data.length > 0 && !oFormData.country) {
+      // Find country by name when countries data loads
+      const foundCountry = countriesData.data.find(
+        (c) => c.CountryName === oFormData.countryName
+      );
+      if (foundCountry) {
+        setFormData((prev) => ({
+          ...prev,
+          country: foundCountry.CountryID,
+        }));
+        // Validate the country field after setting it
+        setTimeout(() => {
+          validateField("country", foundCountry.CountryID, true);
+        }, 100);
+      }
+    }
+  }, [countriesData.data, oFormData.countryName, id, oFormData.country, validateField]);
 
   // Optimized fetchStore function - FIXED to handle phone number binding properly
   const fetchStore = useCallback(async () => {
     if (!id || isFetchingStore || hasFetchedStore.current) return;
 
     setIsFetchingStore(true);
+    setIsFormDataLoading(true); // Start loading
     hasFetchedStore.current = true;
 
     try {
@@ -396,13 +477,24 @@ const AddStore = () => {
         }));
         setStatus(store.IsActive);
 
-        // Validate initial data
+        // Mark all fields as touched for edit mode to show validation immediately
         setTimeout(() => {
-          validateField("name", store.StoreName || "");
-          validateField("address", store.AddressLine1 || "");
-          validateField("zipCode", store.Zipcode || "");
-          validateField("email", store.Email || "");
-          validateField("phone", formattedPhone);
+          const fieldsToValidate = [
+            "name", "address", "zipCode", "email", "phone", 
+            "country", "state", "city"
+          ];
+          fieldsToValidate.forEach(field => {
+            markFieldTouched(field);
+            validateField(field, 
+              field === "name" ? store.StoreName || "" :
+              field === "address" ? store.AddressLine1 || "" :
+              field === "zipCode" ? store.Zipcode || "" :
+              field === "email" ? store.Email || "" :
+              field === "phone" ? formattedPhone :
+              "", 
+              true
+            );
+          });
         }, 100);
 
         const countriesArray = getArray(countriesData.data);
@@ -415,24 +507,32 @@ const AddStore = () => {
               ...prev,
               country: foundCountry.CountryID,
             }));
-            validateField("country", foundCountry.CountryID);
+            markFieldTouched("country");
+            validateField("country", foundCountry.CountryID, true);
           }
         }
+        
+        // Set loading to false after a short delay to ensure all data is processed
+        setTimeout(() => {
+          setIsFormDataLoading(false);
+        }, 500);
       } else {
         showEmsg(
           oResponse.data?.MESSAGE || t("COMMON.ERROR_MESSAGE"),
           STATUS.ERROR
         );
+        setIsFormDataLoading(false);
       }
     } catch (error) {
       showEmsg(
         error?.response?.data?.MESSAGE || t("COMMON.ERROR_MESSAGE"),
         STATUS.ERROR
       );
+      setIsFormDataLoading(false);
     } finally {
       setIsFetchingStore(false);
     }
-  }, [id, isFetchingStore, countriesData.data, t, validateField]);
+  }, [id, isFetchingStore, countriesData.data, t, validateField, markFieldTouched]);
 
   // Effect to populate state when states are loaded
   useEffect(() => {
@@ -450,7 +550,8 @@ const AddStore = () => {
           ...prev,
           state: foundState.StateID,
         }));
-        validateField("state", foundState.StateID);
+        markFieldTouched("state");
+        validateField("state", foundState.StateID, true);
       }
     }
   }, [
@@ -460,6 +561,7 @@ const AddStore = () => {
     oFormData.state,
     statesData.data,
     validateField,
+    markFieldTouched,
   ]);
 
   // Effect to populate city when cities are loaded
@@ -478,7 +580,8 @@ const AddStore = () => {
           ...prev,
           city: foundCity.CityID,
         }));
-        validateField("city", foundCity.CityID);
+        markFieldTouched("city");
+        validateField("city", foundCity.CityID, true);
       }
     }
   }, [
@@ -488,6 +591,7 @@ const AddStore = () => {
     oFormData.city,
     citiesData.data,
     validateField,
+    markFieldTouched,
   ]);
 
   // Fetch store only once when component mounts with ID and countries are loaded
@@ -506,19 +610,31 @@ const AddStore = () => {
     };
   }, [setTitle, setBackButton, t, id]);
 
+  // UPDATED: validateForm function with loading state consideration
   const validateForm = useCallback(() => {
+    // Mark all required fields as touched before validation
+    Object.keys(requiredFields).forEach(field => {
+      if (requiredFields[field]) {
+        markFieldTouched(field);
+      }
+    });
+
     const newErrors = {};
     let isValid = true;
 
     // Validate all fields
     newErrors.name = validateName(oFormData.name);
     newErrors.address = validateAddress(oFormData.address);
-    newErrors.country = validateCountry(oFormData.country);
-    newErrors.state = validateState(oFormData.state);
-    newErrors.city = validateCity(oFormData.city);
     newErrors.zipCode = validateZipCode(oFormData.zipCode);
     newErrors.phone = validatePhone(oFormData.phone);
     newErrors.email = validateEmail(oFormData.email);
+
+    // Only validate location fields if form data is not loading
+    if (!isFormDataLoading) {
+      newErrors.country = validateCountry(oFormData.country);
+      newErrors.state = validateState(oFormData.state);
+      newErrors.city = validateCity(oFormData.city);
+    }
 
     // Check if any errors exist
     Object.values(newErrors).forEach((error) => {
@@ -540,7 +656,7 @@ const AddStore = () => {
     });
 
     return isValid;
-  }, [oFormData]);
+  }, [oFormData, markFieldTouched, requiredFields, isFormDataLoading]);
 
   const handleClose = useCallback(() => {
     navigate("/stores");
@@ -549,6 +665,14 @@ const AddStore = () => {
   const handleSubmit = useCallback(
     async (e) => {
       e?.preventDefault();
+      
+      // Mark all required fields as touched before validation
+      Object.keys(requiredFields).forEach(field => {
+        if (requiredFields[field]) {
+          markFieldTouched(field);
+        }
+      });
+
       if (!validateForm()) return;
 
       setbSubmitting(true);
@@ -647,6 +771,8 @@ const AddStore = () => {
       countriesData.data,
       statesData.data,
       citiesData.data,
+      markFieldTouched,
+      requiredFields,
     ]
   );
 
@@ -719,14 +845,14 @@ const AddStore = () => {
                     id="country"
                     name="country"
                     value={oFormData.country}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
+                    onChange={handleSelectChange}
+                    onBlur={() => handleSelectBlur("country")}
                     options={getArray(countriesData.data).map((c) => ({
                       value: c.CountryID,
                       label: c.CountryName,
                     }))}
                     Icon={Building}
-                    error={oErrors.country}
+                    error={isFormDataLoading ? "" : oErrors.country} // Don't show error while loading
                     isValid={oFieldValid.country}
                     loading={countriesData.loading}
                     required={requiredFields.country}
@@ -738,14 +864,14 @@ const AddStore = () => {
                     id="state"
                     name="state"
                     value={oFormData.state}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
+                    onChange={handleSelectChange}
+                    onBlur={() => handleSelectBlur("state")}
                     options={getArray(statesData.data).map((s) => ({
                       value: s.StateID,
                       label: s.StateName,
                     }))}
                     Icon={Building}
-                    error={oErrors.state}
+                    error={isFormDataLoading ? "" : oErrors.state} // Don't show error while loading
                     isValid={oFieldValid.state}
                     disabled={!oFormData.country || statesData.loading}
                     loading={statesData.loading}
@@ -758,14 +884,14 @@ const AddStore = () => {
                     id="city"
                     name="city"
                     value={oFormData.city}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
+                    onChange={handleSelectChange}
+                    onBlur={() => handleSelectBlur("city")}
                     options={getArray(citiesData.data).map((c) => ({
                       value: c.CityID,
                       label: c.CityName,
                     }))}
                     Icon={Building}
-                    error={oErrors.city}
+                    error={isFormDataLoading ? "" : oErrors.city} // Don't show error while loading
                     isValid={oFieldValid.city}
                     disabled={!oFormData.state || citiesData.loading}
                     loading={citiesData.loading}

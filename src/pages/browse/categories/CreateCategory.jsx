@@ -14,7 +14,7 @@ import {
 } from "../../../contants/apiRoutes";
 import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
-import { FILETYPE, SCROLL_CONSTANTS, STATUS, TOOLTIPSTATUS } from "../../../contants/constants";
+import { FILETYPE, STATUS, TOOLTIPSTATUS } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 
 import TextInputWithIcon from "../../../components/TextInputWithIcon";
