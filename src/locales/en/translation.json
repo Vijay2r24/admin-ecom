@@ -97,7 +97,8 @@
     "BANNERS": "Banners",
     "NOTIFICATIONS": "Notifications",
     "SETTINGS": "Settings",
-    "PAGES": "Profile"
+    "PAGES": "Profile",
+    "THEMES":"Theme Settings"
   },
   "DASHBOARD": {
     "TITLE": "Dashboard",

@@ -312,6 +312,7 @@ const CreateColor = () => {
               options={statusOptions}
               Icon={Tag}
               error={oErrors.IsActive}
+              //  disabled={!isEditing}
             />
           </div>
           <div className="w-full md:w-1/2 mt-4 md:mt-0">

@@ -18,6 +18,7 @@ const SelectWithIcon = forwardRef(
       loading,
       multiple = false,
       maxVisibleItems = 3,
+      disabled = false, 
       ...rest
     },
     ref
@@ -47,26 +48,12 @@ const SelectWithIcon = forwardRef(
         option.label.toLowerCase().includes(sSearchTerm.toLowerCase())
     );
 
-    const shouldShowSelectAll = multiple && filteredOptions.length > 2;
-    const allSelected =
-      multiple &&
-      Array.isArray(value) &&
-      filteredOptions.length > 0 &&
-      filteredOptions.every((option) => value.includes(option.value));
-
     const visibleItems =
       multiple && Array.isArray(value) ? value.slice(0, maxVisibleItems) : [];
     const remainingCount =
       multiple && Array.isArray(value)
         ? Math.max(0, value.length - maxVisibleItems)
         : 0;
-
-    const handleSelectAll = () => {
-      if (!multiple) return;
-      const allValues = filteredOptions.map((option) => option.value);
-      const newValue = allSelected ? [] : allValues;
-      onChange({ target: { name, value: newValue } });
-    };
 
     useEffect(() => {
       if (isOpen && selectRef.current) {
@@ -91,7 +78,6 @@ const SelectWithIcon = forwardRef(
         newValue = optionValue;
         setIsOpen(false);
       }
-
       
       const scrollY = window.scrollY;
       onChange({ target: { name, value: newValue } });
@@ -101,6 +87,7 @@ const SelectWithIcon = forwardRef(
 
     const handleRemoveSelectedItem = (itemValue, e) => {
       e.stopPropagation();
+      if (disabled) return; 
       if (!multiple || !Array.isArray(value)) return;
       const newValue = value.filter((val) => val !== itemValue);
       onChange({ target: { name, value: newValue } });
@@ -124,7 +111,6 @@ const SelectWithIcon = forwardRef(
       };
     }, []);
 
-    // ✅ FIX HERE: prevent focus from causing scroll jump
     useEffect(() => {
       if (isOpen && inputRef.current) {
         inputRef.current.focus({ preventScroll: true });
@@ -140,27 +126,37 @@ const SelectWithIcon = forwardRef(
         <div className="relative group" ref={selectRef}>
           <div
             ref={ref}
-            className={`relative w-full pl-12 pr-4 py-3 border ${
+            className={`relative w-full pl-9 pr-2 py-5 text-sm border ${
               error ? "border-red-300" : "border-gray-200"
-            } rounded-xl focus:ring-2 focus:ring-custom-bg focus:border-custom-bg transition-all duration-200 group-hover:border-custom-bg bg-white shadow-sm cursor-pointer flex items-center justify-between ${
-              multiple && value.length > 0 ? "h-auto min-h-[46px]" : "h-[46px]"
-            }`}
+            } rounded-lg transition-all duration-200 flex items-center justify-between 
+            ${
+              disabled
+                ? "bg-gray-100 cursor-not-allowed opacity-75"
+                : "bg-white cursor-pointer group-hover:border-custom-bg focus:ring-2 focus:ring-custom-bg focus:border-custom-bg placeholder:text-sm" 
+            }
+            ${multiple && value.length > 0 ? "h-auto min-h-9" : "h-9"}`}
+            
             onClick={(e) => {
               e.stopPropagation();
-              setIsOpen((prev) => !prev);
+              if (!disabled) {
+                setIsOpen((prev) => !prev);
+              }
             }}
-            tabIndex="0"
+            tabIndex={disabled ? -1 : 0} 
             {...rest}
           >
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none top-1">
+         
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               {Icon && (
-                <Icon className="h-5 w-5 text-gray-400 group-hover:text-custom-bg transition-colors duration-200" />
+                <Icon className={`h-5 w-5 transition-colors duration-200 ${
+                    disabled ? "text-gray-400" : "text-gray-400 group-hover:text-custom-bg"
+                }`} />
               )}
             </div>
 
             <div
               ref={selectedItemsRef}
-              className={`flex flex-wrap gap-2 w-full pr-8 overflow-hidden ${
+              className={`flex flex-wrap gap-2 w-full pr-6 overflow-hidden ${
                 multiple && value.length > maxVisibleItems ? "max-h-12 overflow-y-auto" : ""
               }`}
             >
@@ -171,16 +167,18 @@ const SelectWithIcon = forwardRef(
                     return itemLabel ? (
                       <span
                         key={itemValue}
-                        className="flex items-center bg-custom-bg text-white text-xs font-medium px-2.5 py-0.5 rounded-full flex-shrink-0"
+                        className={`flex items-center text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${
+                            disabled ? "bg-gray-300 text-gray-600" : "bg-custom-bg text-white"
+                        }`}
                         onClick={(e) => handleRemoveSelectedItem(itemValue, e)}
                       >
                         {itemLabel}
-                        <X className="ml-1 h-3 w-3 cursor-pointer" />
+                        {!disabled && <X className="ml-1 h-3 w-3 cursor-pointer" />}
                       </span>
                     ) : null;
                   })}
                   {remainingCount > 0 && (
-                    <span className="flex items-center bg-gray-300 text-gray-700 text-xs font-medium px-2.5 py-0.5 rounded-full flex-shrink-0">
+                    <span className="flex items-center bg-gray-300 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0">
                       +{remainingCount} more
                     </span>
                   )}
@@ -196,11 +194,13 @@ const SelectWithIcon = forwardRef(
               )}
             </div>
 
-            <ChevronDown
-              className={`absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 transform transition-transform duration-200 ${
-                isOpen ? "rotate-180" : "rotate-0"
-              }`}
-            />
+            {!disabled && (
+                <ChevronDown
+                className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 transform transition-transform duration-200 ${
+                    isOpen ? "rotate-180" : "rotate-0"
+                }`}
+                />
+            )}
           </div>
 
           {error && (
@@ -210,7 +210,7 @@ const SelectWithIcon = forwardRef(
             </p>
           )}
 
-          {isOpen &&
+          {isOpen && !disabled && 
             createPortal(
               <div
                 className="dropdown-portal-container absolute z-[99999] bg-white border border-gray-200 rounded-lg shadow-lg"
@@ -272,7 +272,7 @@ const SelectWithIcon = forwardRef(
                       return (
                         <li
                           key={opt.value}
-                          className={`cursor-pointer select-none relative py-2 px-3 ${
+                          className={`cursor-pointer select-none relative py-2 px-3 text-sm ${
                             isHighlighted
                               ? "bg-custom-bg text-white"
                               : "text-gray-900 hover:bg-gray-100"

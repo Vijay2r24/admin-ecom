@@ -1288,7 +1288,7 @@ const AddUser = () => {
     icon: Icon = Lock,
   }) => (
     <div className="flex flex-col">
-      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+      <label className="blocktext-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
         <Icon size={16} className="text-gray-500" />
         {label}
       </label>

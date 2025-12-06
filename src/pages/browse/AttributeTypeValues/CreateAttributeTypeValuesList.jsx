@@ -474,6 +474,7 @@ const CreateAttribute = () => {
               onBlur={() => handleSelectBlur("IsActive")}
               options={statusOptions}
               Icon={Tag}
+               disabled={!isEditing}
             />
           </div>
         </div>

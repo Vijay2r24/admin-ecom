@@ -26,21 +26,23 @@ import {
   GET_ALL_PERMISSIONS,
   GET_USER_BY_ID,
 } from "../contants/apiRoutes";
+
 import { showEmsg } from "../utils/ShowEmsg";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { STATUS, TOAST_DURATION } from "../contants/constants";
+import { STATUS } from "../contants/constants";
 import { useUserDetails } from "../../src/context/AllDataContext";
 import { useDispatch } from "react-redux";
-import { 
-  passwordRules, 
-  validatePassword, 
-  validateNewPassword, 
-  validateConfirmPassword 
+import {
+  passwordRules,
+  validatePassword,
+  validateNewPassword,
+  validateConfirmPassword
 } from "../utils/passwordUtils";
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { loginSuccess } from "../store/slices/authSlice";
+
 const Login = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -68,8 +70,12 @@ const Login = () => {
   const [bShowNewPassword, setShowNewPassword] = useState(false);
   const [bShowConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
+
   const { fetchUserDetails } = useUserDetails();
+
+  // CONSTANTS FOR ISOLATION
+  const LOGIN_CONTAINER_ID = "login_page_container";
+  const LOGIN_TOAST_ID = "login_error_id";
 
   const validateEmail = (email) => {
     if (!email.trim()) return t("LOGIN.ERRORS.EMAIL_REQUIRED");
@@ -81,7 +87,7 @@ const Login = () => {
   const handleChange = (field, value) => {
     let fieldError = "";
     let updatedFormData = { ...oFormData };
-    
+
     if (field === "phone") {
       value = value.replace(/\D/g, "");
     }
@@ -117,7 +123,7 @@ const Login = () => {
   const fetchUserDetailsDirectly = async (userId, token) => {
     try {
       const response = await apiGet(`${GET_USER_BY_ID}/${userId}`, {}, token);
-    
+
       if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
         const userData = response.data.data;
         localStorage.setItem("userDetails", JSON.stringify(userData));
@@ -131,7 +137,30 @@ const Login = () => {
     }
   };
 
+
+  const showToastMessage = (message, type = "error") => {
+    const options = {
+      containerId: LOGIN_CONTAINER_ID,
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    };
+
+    if (type === "error") {
+
+      toast.error(message, { ...options, toastId: LOGIN_TOAST_ID });
+    } else {
+
+      toast.success(message, options);
+    }
+  };
+
   const loginUser = async () => {
+    if (submitting) return;
+
     const emailError = validateEmail(oFormData.email);
     const passwordError = validatePassword(oFormData.password, t);
 
@@ -141,6 +170,7 @@ const Login = () => {
         email: emailError,
         password: passwordError,
       }));
+      showToastMessage(t("LOGIN.ERRORS.INVALID_INPUT") || "Invalid credentials", "error");
       return;
     }
 
@@ -169,56 +199,67 @@ const Login = () => {
         data?.UserID &&
         status === STATUS.SUCCESS.toUpperCase()
       ) {
-        showEmsg(message, STATUS.SUCCESS, TOAST_DURATION.SHORT, async () => {
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("userId", data.UserID);
-          localStorage.setItem("tenantID", data.TenantID);
-          localStorage.setItem(
-            "PermissionIDs",
-            JSON.stringify(data.PermissionIDs || [])
-          );
-          dispatch(
-             loginSuccess({
-             token: data.token,
-             user: {
-             id: data.UserID,
-             email: oFormData.email,
-             tenantID: data.TenantID,
-             permissionIDs: data.PermissionIDs || [],},
-             })
-            );
-          try {
-            const token = data.token;
-            const permResponse = await apiGet(GET_ALL_PERMISSIONS, {}, token);
-            if (permResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
-              localStorage.setItem(
-                "AllPermissions",
-                JSON.stringify(permResponse.data.data)
-              );
-            }
-          } catch (e) {
-          }
 
-          try {
-            if (fetchUserDetails) {
-              await fetchUserDetails(data.UserID, data.token);
-            } else {
-              await fetchUserDetailsDirectly(data.UserID, data.token);
-            }
-          } catch (error) {
+
+        showToastMessage(message || "Login Successful", "success");
+
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.UserID);
+        localStorage.setItem("tenantID", data.TenantID);
+        localStorage.setItem(
+          "PermissionIDs",
+          JSON.stringify(data.PermissionIDs || [])
+        );
+
+        dispatch(
+          loginSuccess({
+            token: data.token,
+            user: {
+              id: data.UserID,
+              email: oFormData.email,
+              tenantID: data.TenantID,
+              permissionIDs: data.PermissionIDs || [],
+            },
+          })
+        );
+
+        try {
+          const permResponse = await apiGet(GET_ALL_PERMISSIONS, {}, data.token);
+          if (permResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+            localStorage.setItem(
+              "AllPermissions",
+              JSON.stringify(permResponse.data.data)
+            );
           }
+        } catch (e) {
+          console.error("Permissions fetch failed", e);
+        }
+
+        try {
+          if (fetchUserDetails) {
+            await fetchUserDetails(data.UserID, data.token);
+          } else {
+            await fetchUserDetailsDirectly(data.UserID, data.token);
+          }
+        } catch (error) {
+          console.error("User details fetch failed", error);
+        }
+
+        setTimeout(() => {
           navigate("/dashboard");
-        });
+        }, 1500);
+
       } else {
         const fallbackMessage = t("LOGIN.ERRORS.INVALID_CREDENTIALS");
         setError((prev) => ({ ...prev, submit: fallbackMessage }));
-        showEmsg(message || fallbackMessage, STATUS.WARNING);
+        showToastMessage(message || fallbackMessage, "error");
       }
     } catch (error) {
       const errorMessage =
         error?.response?.data?.message || t("LOGIN.ERRORS.INVALID_CREDENTIALS");
       setError((prev) => ({ ...prev, submit: errorMessage }));
-      showEmsg(errorMessage, STATUS.ERROR);
+      showToastMessage(errorMessage, "error");
     } finally {
       hideLoaderWithDelay(setSubmitting);
     }
@@ -237,6 +278,7 @@ const Login = () => {
   };
 
   const handleSendOtp = async () => {
+    if (submitting) return;
     const emailError = validateEmail(sForgotPasswordEmail);
     if (emailError) {
       setError((prev) => ({ ...prev, email: emailError }));
@@ -253,7 +295,7 @@ const Login = () => {
       );
       const message = oResponse?.data?.message;
       if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
-        showEmsg(message, STATUS.SUCCESS);
+        showToastMessage(message, "success");
         setbShowOtpDialog(true);
         setTimerCount(60);
         setTimerActive(true);
@@ -261,17 +303,18 @@ const Login = () => {
         setOtp("");
         setError({ email: "", password: "", submit: "" });
       } else {
-        showEmsg(message, STATUS.WARNING);
+        showToastMessage(message || t("OTP.ERROR"), "error");
       }
     } catch (error) {
       const errMsg = error?.response?.data?.message;
-      showEmsg(errMsg || t("OTP.ERROR"), STATUS.ERROR);
+      showToastMessage(errMsg || t("OTP.ERROR"), "error");
     } finally {
       hideLoaderWithDelay(setSubmitting);
     }
   };
 
   const handleVerifyOtp = async () => {
+    if (submitting) return;
     if (!sOtp.trim()) {
       setError((prev) => ({ ...prev, otp: t("LOGIN.ERRORS.OTP_REQUIRED") }));
       return;
@@ -297,7 +340,7 @@ const Login = () => {
         oResponse.data &&
         oResponse.data.status === STATUS.SUCCESS.toUpperCase()
       ) {
-        showEmsg(message, STATUS.SUCCESS);
+        showToastMessage(message, "success");
         setbShowOtpDialog(false);
         setTimerActive(false);
         setOtp("");
@@ -312,13 +355,13 @@ const Login = () => {
         });
       } else {
         const errMsg = message || t("LOGIN.ERRORS.OTP_INVALID");
-        showEmsg(message || errMsg, STATUS.WARNING);
+        showToastMessage(errMsg, "error");
         setError((prev) => ({ ...prev, otp: message }));
         setOtp("");
       }
     } catch (error) {
       const errMsg = error?.response?.data?.MESSAGE;
-      showEmsg(errMsg, STATUS.ERROR);
+      showToastMessage(errMsg, "error");
       setError((prev) => ({ ...prev, otp: errMsg }));
       setOtp("");
     } finally {
@@ -349,6 +392,7 @@ const Login = () => {
   };
 
   const handlePasswordReset = async () => {
+    if (submitting) return;
     const newPasswordError = validateNewPassword(sNewPassword, t);
     const confirmPasswordError = validateConfirmPassword(
       sConfirmPassword,
@@ -383,7 +427,7 @@ const Login = () => {
         oResponse.data &&
         oResponse.data.status === STATUS.SUCCESS.toUpperCase()
       ) {
-        showEmsg(message, STATUS.SUCCESS);
+        showToastMessage(message, "success");
         setCurrentView("login");
         setForgotPasswordEmail("");
         setNewPassword("");
@@ -397,14 +441,11 @@ const Login = () => {
           confirmPassword: "",
         });
       } else {
-        showEmsg(
-          message || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"),
-          STATUS.WARNING
-        );
+        showToastMessage(message || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"), "error");
       }
     } catch (error) {
       const errMsg = error?.response?.data?.message;
-      showEmsg(errMsg || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"), STATUS.ERROR);
+      showToastMessage(errMsg || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"), "error");
     } finally {
       hideLoaderWithDelay(setSubmitting);
     }
@@ -425,6 +466,7 @@ const Login = () => {
 
   const renderLogin = () => {
     const isLoginDisabled =
+      submitting ||
       !oFormData.email ||
       !oFormData.password ||
       !!sError.email ||
@@ -495,11 +537,10 @@ const Login = () => {
           <button
             type="button"
             onClick={loginUser}
-            className={`w-full py-2 px-4 rounded-md transition-colors duration-200 bg-custom-bg text-white ${
-              isLoginDisabled
+            className={`w-full py-2 px-4 rounded-md transition-colors duration-200 bg-custom-bg text-white ${isLoginDisabled
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:bg-custom-bg-dark"
-            }`}
+              }`}
             disabled={isLoginDisabled}
           >
             {t("LOGIN.LOGIN_BUTTON")}
@@ -510,7 +551,7 @@ const Login = () => {
   };
 
   const renderForgotPassword = () => {
-    const isSendOtpDisabled = !sForgotPasswordEmail || !!sError.email;
+    const isSendOtpDisabled = submitting || !sForgotPasswordEmail || !!sError.email;
     return (
       <>
         <div className="text-center mb-6">
@@ -545,11 +586,10 @@ const Login = () => {
             <button
               type="button"
               onClick={handleSendOtp}
-              className={`w-1/2 bg-custom-bg text-white py-2 px-4 rounded-md transition-colors duration-200 ${
-                isSendOtpDisabled
+              className={`w-1/2 bg-custom-bg text-white py-2 px-4 rounded-md transition-colors duration-200 ${isSendOtpDisabled
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-custom-bg-dark"
-              }`}
+                }`}
               disabled={isSendOtpDisabled}
             >
               {t("LOGIN.SEND_OTP_BUTTON")}
@@ -569,6 +609,7 @@ const Login = () => {
 
   const renderResetPassword = () => {
     const isResetDisabled =
+      submitting ||
       !sNewPassword ||
       !sConfirmPassword ||
       !!sError.newPassword ||
@@ -666,11 +707,10 @@ const Login = () => {
             <button
               type="button"
               onClick={handlePasswordReset}
-              className={`w-1/2 bg-custom-bg text-white py-2 px-4 rounded-md transition-colors duration-200 ${
-                isResetDisabled
+              className={`w-1/2 bg-custom-bg text-white py-2 px-4 rounded-md transition-colors duration-200 ${isResetDisabled
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-custom-bg-dark"
-              }`}
+                }`}
               disabled={isResetDisabled}
             >
               {t("RESET_PASSWORD.RESET_BUTTON")}
@@ -690,7 +730,12 @@ const Login = () => {
 
   return (
     <>
-      <ToastContainer />
+      <ToastContainer
+        enableMultiContainer
+        containerId={LOGIN_CONTAINER_ID}
+        autoClose={3000}
+      />
+
       {submitting && (
         <div className="global-loader-overlay">
           <Loader />
@@ -802,11 +847,10 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={handleVerifyOtp}
-                  className={`w-1/2 bg-custom-bg text-white py-2 rounded-md transition-colors duration-200 ${
-                    !sOtp || sOtp.length !== 6
+                  className={`w-1/2 bg-custom-bg text-white py-2 rounded-md transition-colors duration-200 ${!sOtp || sOtp.length !== 6
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:bg-custom-bg-dark"
-                  }`}
+                    }`}
                   disabled={!sOtp || sOtp.length !== 6}
                 >
                   {t("OTP_DIALOG.VERIFY_BUTTON")}
@@ -835,9 +879,8 @@ const Login = () => {
                     type="button"
                     onClick={handleSendOtp}
                     disabled={!bResendEnabled}
-                    className={`text-custom-bg hover:underline ${
-                      !bResendEnabled ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                    className={`text-custom-bg hover:underline ${!bResendEnabled ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                   >
                     {t("OTP_DIALOG.RESEND")}
                   </button>

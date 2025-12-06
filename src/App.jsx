@@ -41,6 +41,7 @@ import Payments from './pages/payments/Payments';
 import PaymentDetailsWrapper from './pages/payments/PaymentDetails';
 import NotFound from "./components/NotFound";
 import ScrollToTop from './components/ScrollToTop';
+import ThemeSettings from './pages/ThemeSettings';
 
 const dashboardPermission = getPermissionCode(MODULES.DASHBOARD, PERMISSIONS.VIEW_DASHBOARD);
 
@@ -284,6 +285,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <ProfileDetails />
+                  </ProtectedRoute>
+                }
+              />
+                 <Route
+                path="/theme"
+                element={
+                  <ProtectedRoute>
+                    <ThemeSettings />
                   </ProtectedRoute>
                 }
               />
