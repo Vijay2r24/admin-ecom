@@ -773,7 +773,7 @@ const CreateCategory = () => {
                               type="button"
                               onClick={handleRemoveImage}
                               className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all duration-200"
-                              title="Remove image"
+                               title={FILE_CONSTANTS.IMAGE_TITLE_TEXT}
                             >
                               <X className="h-3 w-3" />
                             </button>

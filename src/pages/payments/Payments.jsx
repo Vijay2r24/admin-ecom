@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS } from "../../contants/constants";
+import { EXPORT_TYPES, ITEMS_PER_PAGE, STATUS } from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
 import {
@@ -106,11 +106,12 @@ const Payments = () => {
 
  
   const handleDropdownInputChange = (inputValue, filterName) => {
-    if (filterName === "store") {
-      dispatch(
-        fetchResource({ key: "stores", params: { searchText: inputValue } })
-      );
-    }
+   if (filterName === EXPORT_TYPES.STORE) {
+  dispatch(
+    fetchResource({ key: "stores", params: { searchText: inputValue } })
+  );
+}
+
   };
 
 

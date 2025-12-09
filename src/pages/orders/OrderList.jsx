@@ -215,9 +215,9 @@ const OrderList = () => {
       name: "store",
       value: oFilters.store,
       options: storeOptions,
-      placeholder: t("USERS.FILTERS.STORE") || "Select Store",
+      placeholder: t("USERS.FILTERS.STORE") ,
       searchable: true,
-      searchPlaceholder: t("COMMON.SEARCH_STORE") || "Search store",
+      searchPlaceholder: t("COMMON.SEARCH_STORE") ,
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "store"),
     },

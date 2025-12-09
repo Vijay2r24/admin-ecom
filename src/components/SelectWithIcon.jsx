@@ -18,7 +18,7 @@ const SelectWithIcon = forwardRef(
       loading,
       multiple = false,
       maxVisibleItems = 3,
-      disabled = false, 
+      disabled = false,
       ...rest
     },
     ref
@@ -34,7 +34,9 @@ const SelectWithIcon = forwardRef(
     const selectedItemsRef = useRef(null);
 
     const selectedOptionLabels = Array.isArray(value)
-      ? options.filter((option) => value.includes(option.value)).map((option) => option.label)
+      ? options
+        .filter((option) => value.includes(option.value))
+        .map((option) => option.label)
       : [options.find((option) => option.value === value)?.label || placeholder];
 
     const displayLabel =
@@ -47,6 +49,23 @@ const SelectWithIcon = forwardRef(
         typeof option.label === "string" &&
         option.label.toLowerCase().includes(sSearchTerm.toLowerCase())
     );
+    const shouldShowSelectAll = multiple && filteredOptions.length > 2;
+
+    const allSelected =
+      multiple &&
+      Array.isArray(value) &&
+      filteredOptions.length > 0 &&
+      filteredOptions.every((option) => value.includes(option.value));
+
+    const handleSelectAll = () => {
+      if (disabled) return;
+      if (!multiple) return;
+      const allValues = filteredOptions.map((option) => option.value);
+      const newValue = allSelected ? [] : allValues;
+
+      onChange({ target: { name, value: newValue } });
+    };
+
 
     const visibleItems =
       multiple && Array.isArray(value) ? value.slice(0, maxVisibleItems) : [];
@@ -78,16 +97,16 @@ const SelectWithIcon = forwardRef(
         newValue = optionValue;
         setIsOpen(false);
       }
-      
+
       const scrollY = window.scrollY;
       onChange({ target: { name, value: newValue } });
       setSearchTerm("");
-      requestAnimationFrame(() => window.scrollTo(0, scrollY)); 
+      requestAnimationFrame(() => window.scrollTo(0, scrollY));
     };
 
     const handleRemoveSelectedItem = (itemValue, e) => {
       e.stopPropagation();
-      if (disabled) return; 
+      if (disabled) return;
       if (!multiple || !Array.isArray(value)) return;
       const newValue = value.filter((val) => val !== itemValue);
       onChange({ target: { name, value: newValue } });
@@ -119,61 +138,69 @@ const SelectWithIcon = forwardRef(
 
     return (
       <div className="w-full mt-4 md:mt-0">
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor={id}
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
           {label}
         </label>
 
         <div className="relative group" ref={selectRef}>
           <div
             ref={ref}
-            className={`relative w-full pl-9 pr-2 py-5 text-sm border ${
-              error ? "border-red-300" : "border-gray-200"
-            } rounded-lg transition-all duration-200 flex items-center justify-between 
-            ${
-              disabled
+            className={`relative w-full pl-9 pr-2 py-5 text-sm border ${error ? "border-red-300" : "border-gray-200"
+              } rounded-lg transition-all duration-200 flex items-center justify-between 
+            ${disabled
                 ? "bg-gray-100 cursor-not-allowed opacity-75"
-                : "bg-white cursor-pointer group-hover:border-custom-bg focus:ring-2 focus:ring-custom-bg focus:border-custom-bg placeholder:text-sm" 
-            }
+                : "bg-white cursor-pointer group-hover:border-custom-bg focus:ring-2 focus:ring-custom-bg focus:border-custom-bg placeholder:text-sm"
+              }
             ${multiple && value.length > 0 ? "h-auto min-h-9" : "h-9"}`}
-            
             onClick={(e) => {
               e.stopPropagation();
               if (!disabled) {
                 setIsOpen((prev) => !prev);
               }
             }}
-            tabIndex={disabled ? -1 : 0} 
+            tabIndex={disabled ? -1 : 0}
             {...rest}
           >
-         
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               {Icon && (
-                <Icon className={`h-5 w-5 transition-colors duration-200 ${
-                    disabled ? "text-gray-400" : "text-gray-400 group-hover:text-custom-bg"
-                }`} />
+                <Icon
+                  className={`h-5 w-5 transition-colors duration-200 ${disabled
+                      ? "text-gray-400"
+                      : "text-gray-400 group-hover:text-custom-bg"
+                    }`}
+                />
               )}
             </div>
 
             <div
               ref={selectedItemsRef}
-              className={`flex flex-wrap gap-2 w-full pr-6 overflow-hidden ${
-                multiple && value.length > maxVisibleItems ? "max-h-12 overflow-y-auto" : ""
-              }`}
+              className={`flex flex-wrap gap-2 w-full pr-6 overflow-hidden ${multiple && value.length > maxVisibleItems
+                  ? "max-h-12 overflow-y-auto"
+                  : ""
+                }`}
             >
               {multiple && Array.isArray(value) && value.length > 0 ? (
                 <>
                   {visibleItems.map((itemValue) => {
-                    const itemLabel = options.find((opt) => opt.value === itemValue)?.label;
+                    const itemLabel = options.find(
+                      (opt) => opt.value === itemValue
+                    )?.label;
                     return itemLabel ? (
                       <span
                         key={itemValue}
-                        className={`flex items-center text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${
-                            disabled ? "bg-gray-300 text-gray-600" : "bg-custom-bg text-white"
-                        }`}
+                        className={`flex items-center text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${disabled
+                            ? "bg-gray-300 text-gray-600"
+                            : "bg-custom-bg text-white"
+                          }`}
                         onClick={(e) => handleRemoveSelectedItem(itemValue, e)}
                       >
                         {itemLabel}
-                        {!disabled && <X className="ml-1 h-3 w-3 cursor-pointer" />}
+                        {!disabled && (
+                          <X className="ml-1 h-3 w-3 cursor-pointer" />
+                        )}
                       </span>
                     ) : null;
                   })}
@@ -185,9 +212,10 @@ const SelectWithIcon = forwardRef(
                 </>
               ) : (
                 <span
-                  className={`block truncate w-full text-left ${
-                    displayLabel === placeholder ? "text-gray-500" : "text-gray-900"
-                  }`}
+                  className={`block truncate w-full text-left ${displayLabel === placeholder
+                      ? "text-gray-500"
+                      : "text-gray-900"
+                    }`}
                 >
                   {displayLabel}
                 </span>
@@ -195,11 +223,10 @@ const SelectWithIcon = forwardRef(
             </div>
 
             {!disabled && (
-                <ChevronDown
-                className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 transform transition-transform duration-200 ${
-                    isOpen ? "rotate-180" : "rotate-0"
-                }`}
-                />
+              <ChevronDown
+                className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 transform transition-transform duration-200 ${isOpen ? "rotate-180" : "rotate-0"
+                  }`}
+              />
             )}
           </div>
 
@@ -210,7 +237,8 @@ const SelectWithIcon = forwardRef(
             </p>
           )}
 
-          {isOpen && !disabled && 
+          {isOpen &&
+            !disabled &&
             createPortal(
               <div
                 className="dropdown-portal-container absolute z-[99999] bg-white border border-gray-200 rounded-lg shadow-lg"
@@ -258,37 +286,100 @@ const SelectWithIcon = forwardRef(
                   className="py-1 bg-white max-h-[250px] overflow-y-auto"
                   ref={optionsRef}
                 >
-                  {filteredOptions.length === 0 ? (
+                  {loading ? (
+                    <div className="text-center py-4 text-gray-500">
+                      {t("COMMON.LOADING_SIMPLE")}
+                    </div>
+                  ) : filteredOptions.length === 0 ? (
                     <li className="text-center py-2 text-gray-500 text-sm">
                       {t("COMMON.NO_OPTIONS_FOUND")}
                     </li>
                   ) : (
-                    filteredOptions.map((opt, index) => {
-                      const isSelected = multiple
-                        ? Array.isArray(value) && value.includes(opt.value)
-                        : value === opt.value;
-                      const isHighlighted = index === nHighlightedIndex;
-
-                      return (
+                    <>
+                      {/* --- Select All Option --- */}
+                      {shouldShowSelectAll && (
                         <li
-                          key={opt.value}
-                          className={`cursor-pointer select-none relative py-2 px-3 text-sm ${
-                            isHighlighted
+                          className={`cursor-pointer select-none relative py-2 pl-4 pr-4 border-b border-gray-100 ${nHighlightedIndex === -1
                               ? "bg-custom-bg text-white"
                               : "text-gray-900 hover:bg-gray-100"
-                          }`}
+                            }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSelect(opt.value);
+                            handleSelectAll();
                           }}
-                          onMouseEnter={() => setHighlightedIndex(index)}
+                          onMouseEnter={() => setHighlightedIndex(-1)}
                           role="option"
-                          aria-selected={isSelected}
+                          aria-selected={allSelected}
                         >
-                          {opt.label}
+                          <div className="flex items-center">
+                            <span className="block truncate font-medium">
+                              {allSelected
+                                ? t("COMMON.DESELECT_ALL")
+                                : t("COMMON.SELECT_ALL")}
+                            </span>
+                          </div>
                         </li>
-                      );
-                    })
+                      )}
+
+
+                      {filteredOptions.map((opt, index) => {
+                        const isSelected = multiple
+                          ? Array.isArray(value) && value.includes(opt.value)
+                          : value === opt.value;
+                        const isHighlighted = index === nHighlightedIndex;
+
+                        return (
+                          <li
+                            key={opt.value}
+                            className={`cursor-pointer select-none relative py-2 text-sm 
+                            ${multiple ? "pl-12 pr-4" : "pl-4 pr-4"} 
+                            ${isHighlighted
+                                ? "bg-custom-bg text-white"
+                                : "text-gray-900 hover:bg-gray-100"
+                              } 
+                            ${isSelected && !isHighlighted ? "bg-blue-50" : ""}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelect(opt.value);
+                            }}
+                            onMouseEnter={() => setHighlightedIndex(index)}
+                            role="option"
+                            aria-selected={isSelected}
+                          >
+                            <div className="flex items-center">
+
+                              {multiple && (
+                                <div className="absolute left-0 flex items-center pl-3">
+                                  <div
+                                    className={`flex items-center justify-center w-4 h-4 border rounded ${isSelected
+                                        ? "bg-custom-bg border-custom-bg"
+                                        : "border-gray-300"
+                                      }`}
+                                  >
+                                    {isSelected && (
+                                      <svg
+                                        className="w-3 h-3 text-white"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={3}
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                              <span className="block truncate">{opt.label}</span>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </>
                   )}
                 </ul>
               </div>,

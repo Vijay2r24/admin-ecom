@@ -5,6 +5,10 @@ export const STATUS = {
   ERROR: "error",
   WARNING: "warning",
   FAILURE: "failure",
+  DELIVERED:"Delivered",
+  PROCESSING:"processing",
+  SHIPPED:"shipped",
+  CANCELLED:"cancelled",
 };
 export const DEFAULT_COLOR = "#000000";
 export const COLORS = {
@@ -213,6 +217,9 @@ export const FILE_CONSTANTS = {
   BRAND_LOGO_PREFIX: "brand-logo",
   CATEGORY_IMAGE_PREFIX: "category-image",
   FILE_TYPE: "image/jpeg",
+  IMAGE_SIZE_TEXT:" PNG, JPG, JPEG up to 10MB",
+  IMAGE_TITLE_TEXT:"Remove image",
+  UPLOAD_LOGO:"Upload Logo"
 };
 
 export const TOOLTIPSTATUS = { ACTIVE: "active", INACTIVE: "inactive" };

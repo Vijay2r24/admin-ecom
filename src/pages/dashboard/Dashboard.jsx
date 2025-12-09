@@ -729,10 +729,10 @@ const generateComparisonText = (startDate, endDate) => {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-lg font-medium text-gray-500">
+                  <p className="text-sm font-medium text-gray-500">
                     {metric.title}
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-gray-900">
+                  <p className="mt-2 text-3xl font-semibold text-gray-900">
                     {metric.value}
                   </p>
                 </div>
@@ -927,27 +927,27 @@ const generateComparisonText = (startDate, endDate) => {
                             className={`px-2 py-0.5 rounded-full text-sm font-semibold
                       ${
                         order.status === ORDER_STATUS.DELIVERED
-                          ? "status-delivered"
+                          ? STATUS.DELIVERED
                           : ""
                       } 
                       ${
                         order.status === ORDER_STATUS.PROCESSING
-                          ? "status-processing"
+                          ? STATUS.PROCESSING
                           : ""
                       }
                       ${
                         order.status === ORDER_STATUS.SHIPPED
-                          ? "status-shipped"
+                          ? STATUS.SHIPPED
                           : ""
                       }
                       ${
                         order.status === ORDER_STATUS.CANCELLED
-                          ? "status-cancelled"
+                          ? STATUS.CANCELLED
                           : ""
                       }
                        ${
                          order.status === ORDER_STATUS.PENDING
-                           ? "status-pending"
+                           ? STATUS.PENDING
                            : ""
                        }
                     `}

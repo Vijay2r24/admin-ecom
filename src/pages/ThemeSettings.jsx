@@ -1,4 +1,4 @@
-import React, { useState, useRef ,useEffect} from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { PaintBucket, UploadCloud } from "lucide-react";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import electronics from "../../assets/images/electronics.jpg";
@@ -10,9 +10,12 @@ import accessories from "../../assets/images/accessories.jpg";
 import banner1 from "../../assets/images/banner1.jpg";
 import mobile from "../../assets/images/mobile.jpg";
 import { useTitle } from "../context/TitleContext";
+import { useTranslation } from "react-i18next";
+import { CUSTOM_COLORS, FILE_CONSTANTS } from "../contants/constants";
 
 const ThemeSettings = () => {
-  const defaultColor = "#FF5A5F";
+  const { t } = useTranslation()
+  const defaultColor = t(CUSTOM_COLORS.primary);
   const [primaryColor, setPrimaryColor] = useState(defaultColor);
   const [logo, setLogo] = useState(null);
   const { setTitle } = useTitle();
@@ -31,21 +34,17 @@ const ThemeSettings = () => {
   const handleReset = () => {
     setPrimaryColor(defaultColor);
     setLogo(null);
-    if (fileInputRef.current) fileInputRef.current.value = ""; 
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const categories = [women, beauty, kids, men, accessories, mobile];
-    useEffect(() => {
-      setTitle("Theme Settings");
-    }, [setTitle]);
+  useEffect(() => {
+    setTitle(t("THEMESETTINGS.TITLE"));
+  }, [setTitle, t]);
 
   return (
     <div className="flex gap-10 p-6">
-
-      {/* LEFT PANEL */}
       <div className="w-[55%] space-y-6">
-
-        {/* PRIMARY COLOR */}
         <TextInputWithIcon
           label="Primary Color"
           value={primaryColor}
@@ -61,10 +60,8 @@ const ThemeSettings = () => {
             />
           }
         />
-
-        {/* UPLOAD LOGO */}
         <div className="space-y-2">
-          <label className="block text-sm font-semibold">Upload Logo</label>
+          <label className="block text-sm font-semibold">{FILE_CONSTANTS.UPLOAD_LOGO}</label>
 
           <div className="relative">
             <input
@@ -79,7 +76,7 @@ const ThemeSettings = () => {
               {logo ? (
                 <img src={logo} alt="Logo" className="h-8 object-contain" />
               ) : (
-                <span className="text-gray-500">Upload Logo</span>
+                <span className="text-gray-500">{FILE_CONSTANTS.UPLOAD_LOGO}</span>
               )}
             </div>
 
@@ -91,8 +88,6 @@ const ThemeSettings = () => {
             )}
           </div>
         </div>
-
-        {/* RESET BUTTON */}
         <button
           onClick={handleReset}
           className="w-fit px-4 py-2 mt-2 bg-custom-bg rounded-lg text-sm text-white font-semibold"
@@ -103,11 +98,10 @@ const ThemeSettings = () => {
 
       {/* WEB PREVIEW */}
       <div className="w-[70%] flex flex-col items-center -mt-6 ml-auto pr-5">
-        <h2 className="text-xl font-semibold mb-3">Web Preview</h2>
+        <h2 className="text-xl font-semibold mb-3">{t("THEMESETTINGS.PREVIEW_TITLE")}</h2>
+
 
         <div className="origin-top-right scale-[0.85] w-[750px] h-[720px] overflow-y-auto bg-white shadow-xl rounded-2xl border border-gray-200 p-0">
-          
-          {/* HEADER */}
           <div
             className="w-full px-6 py-4 flex items-center justify-between shadow-sm"
             style={{ backgroundColor: primaryColor }}

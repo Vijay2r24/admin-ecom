@@ -155,6 +155,7 @@ const CreateBrand = () => {
 
   /**
    * Fetch brand details if editing
+   * FIX APPLIED HERE: Removed validateField from dependency array
    */
   useEffect(() => {
     if (isEditing && brandId) {
@@ -198,11 +199,13 @@ const CreateBrand = () => {
             }, 100);
           }
         } catch (error) {
+          console.error("Error fetching brand:", error);
         }
       };
       fetchBrandDetails();
     }
-  }, [brandId, isEditing, t, token, validateField]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brandId, isEditing, t, token]); // <--- Removed validateField from here
 
   /**
    * Cleanup blob URLs on unmount
@@ -352,6 +355,7 @@ const CreateBrand = () => {
     ) {
       URL.revokeObjectURL(sImagePreview);
     }
+    
     setFormData((prev) => ({
       ...prev,
       BrandLogo: null,
@@ -359,8 +363,12 @@ const CreateBrand = () => {
     }));
     setImagePreview(null);
     
-    // Validate the logo field after removal
-    validateField("BrandLogo", null);
+    // Explicitly update validation state since we know it's null now
+    // We do this manually because validateField inside the hook might 
+    // access stale state due to batching
+    const error = validateBrandLogo(null);
+    setErrors(prev => ({ ...prev, BrandLogo: error }));
+    setFieldValid(prev => ({ ...prev, BrandLogo: false }));
 
     // Reset file input
     if (fileInputRef.current) {
@@ -689,7 +697,7 @@ const CreateBrand = () => {
                                 <p className="pl-1">{t("COMMON.DRAG_DROP_TEXT")}</p>
                               </div>
                               <p className="text-xs text-gray-500">
-                                PNG, JPG, JPEG up to 10MB
+                               {FILE_CONSTANTS.IMAGE_SIZE_TEXT}
                               </p>
                             </>
                           ) : (
@@ -705,7 +713,7 @@ const CreateBrand = () => {
                                   type="button"
                                   onClick={handleRemoveImage}
                                   className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all duration-200"
-                                  title="Remove image"
+                                  title={FILE_CONSTANTS.IMAGE_TITLE_TEXT}
                                 >
                                   <X className="h-3 w-3" />
                                 </button>

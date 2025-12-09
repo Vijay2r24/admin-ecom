@@ -25,6 +25,7 @@ import {
   VALIDATE_OTP,
   GET_ALL_PERMISSIONS,
   GET_USER_BY_ID,
+
 } from "../contants/apiRoutes";
 
 import { showEmsg } from "../utils/ShowEmsg";
@@ -73,9 +74,12 @@ const Login = () => {
 
   const { fetchUserDetails } = useUserDetails();
 
-  // CONSTANTS FOR ISOLATION
-  const LOGIN_CONTAINER_ID = "login_page_container";
-  const LOGIN_TOAST_ID = "login_error_id";
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
 
   const validateEmail = (email) => {
     if (!email.trim()) return t("LOGIN.ERRORS.EMAIL_REQUIRED");
@@ -138,9 +142,9 @@ const Login = () => {
   };
 
 
-  const showToastMessage = (message, type = "error") => {
+  const showToastMessage = (message, type = STATUS.ERROR) => {
     const options = {
-      containerId: LOGIN_CONTAINER_ID,
+      containerId: t("LOGIN_CONTAINER_ID"),
       position: "top-right",
       autoClose: 2000,
       hideProgressBar: false,
@@ -149,9 +153,9 @@ const Login = () => {
       draggable: true,
     };
 
-    if (type === "error") {
+    if (type === STATUS.ERROR) {
 
-      toast.error(message, { ...options, toastId: LOGIN_TOAST_ID });
+      toast.error(message, { ...options, toastId: LOGIN.LOGIN_TOAST_ID });
     } else {
 
       toast.success(message, options);
@@ -170,7 +174,7 @@ const Login = () => {
         email: emailError,
         password: passwordError,
       }));
-      showToastMessage(t("LOGIN.ERRORS.INVALID_INPUT") || "Invalid credentials", "error");
+      showToastMessage(t("LOGIN.ERRORS.INVALID_INPUT") || "Invalid credentials", STATUS.ERROR);
       return;
     }
 
@@ -243,23 +247,23 @@ const Login = () => {
             await fetchUserDetailsDirectly(data.UserID, data.token);
           }
         } catch (error) {
-          console.error("User details fetch failed", error);
+          console.error("User details fetch failed",STATUS.ERROR);
         }
 
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/dashboard", { replace: true });
         }, 1500);
 
       } else {
         const fallbackMessage = t("LOGIN.ERRORS.INVALID_CREDENTIALS");
         setError((prev) => ({ ...prev, submit: fallbackMessage }));
-        showToastMessage(message || fallbackMessage, "error");
+        showToastMessage(message || fallbackMessage, STATUS.ERROR);
       }
     } catch (error) {
       const errorMessage =
         error?.response?.data?.message || t("LOGIN.ERRORS.INVALID_CREDENTIALS");
       setError((prev) => ({ ...prev, submit: errorMessage }));
-      showToastMessage(errorMessage, "error");
+      showToastMessage(errorMessage, STATUS.ERROR);
     } finally {
       hideLoaderWithDelay(setSubmitting);
     }
@@ -303,11 +307,11 @@ const Login = () => {
         setOtp("");
         setError({ email: "", password: "", submit: "" });
       } else {
-        showToastMessage(message || t("OTP.ERROR"), "error");
+        showToastMessage(message || t("OTP.ERROR"), STATUS.ERROR);
       }
     } catch (error) {
       const errMsg = error?.response?.data?.message;
-      showToastMessage(errMsg || t("OTP.ERROR"), "error");
+      showToastMessage(errMsg || t("OTP.ERROR"), STATUS.ERROR);
     } finally {
       hideLoaderWithDelay(setSubmitting);
     }
@@ -355,13 +359,13 @@ const Login = () => {
         });
       } else {
         const errMsg = message || t("LOGIN.ERRORS.OTP_INVALID");
-        showToastMessage(errMsg, "error");
+        showToastMessage(errMsg, STATUS.ERROR);
         setError((prev) => ({ ...prev, otp: message }));
         setOtp("");
       }
     } catch (error) {
       const errMsg = error?.response?.data?.MESSAGE;
-      showToastMessage(errMsg, "error");
+      showToastMessage(errMsg, STATUS.ERROR);
       setError((prev) => ({ ...prev, otp: errMsg }));
       setOtp("");
     } finally {
@@ -441,11 +445,11 @@ const Login = () => {
           confirmPassword: "",
         });
       } else {
-        showToastMessage(message || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"), "error");
+        showToastMessage(message || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"), STATUS.ERROR);
       }
     } catch (error) {
       const errMsg = error?.response?.data?.message;
-      showToastMessage(errMsg || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"), "error");
+      showToastMessage(errMsg || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"), STATUS.ERROR);
     } finally {
       hideLoaderWithDelay(setSubmitting);
     }
@@ -538,8 +542,8 @@ const Login = () => {
             type="button"
             onClick={loginUser}
             className={`w-full py-2 px-4 rounded-md transition-colors duration-200 bg-custom-bg text-white ${isLoginDisabled
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-custom-bg-dark"
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:bg-custom-bg-dark"
               }`}
             disabled={isLoginDisabled}
           >
@@ -587,8 +591,8 @@ const Login = () => {
               type="button"
               onClick={handleSendOtp}
               className={`w-1/2 bg-custom-bg text-white py-2 px-4 rounded-md transition-colors duration-200 ${isSendOtpDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-custom-bg-dark"
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-custom-bg-dark"
                 }`}
               disabled={isSendOtpDisabled}
             >
@@ -708,8 +712,8 @@ const Login = () => {
               type="button"
               onClick={handlePasswordReset}
               className={`w-1/2 bg-custom-bg text-white py-2 px-4 rounded-md transition-colors duration-200 ${isResetDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-custom-bg-dark"
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-custom-bg-dark"
                 }`}
               disabled={isResetDisabled}
             >
@@ -732,9 +736,10 @@ const Login = () => {
     <>
       <ToastContainer
         enableMultiContainer
-        containerId={LOGIN_CONTAINER_ID}
+        containerId={t("LOGIN_CONTAINER_ID")}
         autoClose={3000}
       />
+
 
       {submitting && (
         <div className="global-loader-overlay">
@@ -848,8 +853,8 @@ const Login = () => {
                   type="button"
                   onClick={handleVerifyOtp}
                   className={`w-1/2 bg-custom-bg text-white py-2 rounded-md transition-colors duration-200 ${!sOtp || sOtp.length !== 6
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-custom-bg-dark"
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-custom-bg-dark"
                     }`}
                   disabled={!sOtp || sOtp.length !== 6}
                 >
