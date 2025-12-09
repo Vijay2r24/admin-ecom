@@ -29,6 +29,7 @@ const OrderToolbar = ({
   showFilterButton = true,
   onClearFilters,
   onCreate,
+  onAddVariants, 
   createLabel,
   onExport,
   exportLabel = "Export",
@@ -178,6 +179,16 @@ const OrderToolbar = ({
             {createLabel || t("PRODUCTS.ADD_BTN")}
           </button>
         )}
+
+            {onAddVariants && (
+    <button
+      onClick={onAddVariants}
+      className="btn-primary flex items-center gap-2"
+    >
+      <Plus className="h-5 w-5" />
+      {createLabel || t("PRODUCTS.ADD_VARIANTS_BTN")}
+    </button>
+  )}
       </div>
  
       {showFilterDropdown && otherFilters.length > 0 && (

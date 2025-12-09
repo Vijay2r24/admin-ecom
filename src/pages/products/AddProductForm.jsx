@@ -1,21 +1,20 @@
 
-
-import { useState, useCallback, useEffect, useRef } from "react";
+// AddProductForm.jsx
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Plus, X, Upload, Tag, Hash, ShoppingBag, Layers } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import TextInputWithIcon from "../../components/TextInputWithIcon";
 import SelectWithIcon from "../../components/SelectWithIcon";
 import { useTranslation } from "react-i18next";
 import { STATUS } from "../../contants/constants.jsx";
-import { Tab } from "@headlessui/react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchResource } from "../../store/slices/allDataSlice.jsx";
-import { apiPost, apiGet, apiPut } from "../../utils/ApiUtils.jsx";
+import { apiPost, apiGet } from "../../utils/ApiUtils.jsx";
 import {
   CREATE_OR_UPDATE_PRODUCT,
-  CREATE_PRODUCT,
-  GET_PRODUCT_BY_ID,
+    CREATE_PRODUCT,
   UPDATE_PRODUCT,
+  GET_PRODUCT_BY_ID,
 } from "../../contants/apiRoutes";
 import { showEmsg } from "../../utils/ShowEmsg";
 import ReactQuill from "react-quill";
@@ -39,16 +38,29 @@ import {
   rectSortingStrategy,
   useSortable,
   arrayMove,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import VariantPreviewCard from "../../pages/products/VariantPreviewCard.jsx";
+import Accordion from "../../components/products/Accordion.jsx";
+import ImageManagement from "../../components/products/ImagesManager.jsx";
+import VariantTabs from "../../components/products/VariantTabs.jsx";
+
+/* ------------------------- AddProductForm — patched ------------------------- */
 
 const AddProductForm = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { setTitle, setBackButton } = useTitle();
+  const { t } = useTranslation();
+  const [showPreview, setShowPreview] = useState(false);
+
+  // -------------------------
+  // Main states
+  // -------------------------
   const [aVariants, setVariants] = useState([
     {
+      id: crypto?.randomUUID?.() || Math.random().toString(36).slice(2),
       attributes: [],
       Quantity: "",
       MRP: "",
@@ -58,7 +70,9 @@ const AddProductForm = () => {
       images: [],
     },
   ]);
-  const [nSelectedVariantIndex, setSelectedVariantIndex] = useState(0);
+
+  const [aAttributes, setAAttributes] = useState([]);
+
   const [oFormData, setFormData] = useState({
     ProductName: "",
     ProductDescription: "",
@@ -77,30 +91,59 @@ const AddProductForm = () => {
   ]);
   const [oValidationErrors, setValidationErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [groupingAttributeTypeID, setGroupingAttributeTypeID] = useState("");
+  const [showReorderModal, setShowReorderModal] = useState(false);
+  const [reorderVariantIndex, setReorderVariantIndex] = useState(null);
+  const [tempImages, setTempImages] = useState([]);
+
+  // Global images map: { [groupKey]: [images...] }
+  const [groupGlobalImages, setGroupGlobalImages] = useState({});
+
+  // ---------- UNIFIED MULTI-CROP QUEUE STATE ----------
+  // cropQueue items: { file, url, type: 'variant'|'global', variantIndex?, groupKey?, id }
+  const [cropQueue, setCropQueue] = useState([]);
+  // cropperModal keeps current item details for rendering modal
   const [cropperModal, setCropperModal] = useState({
     isOpen: false,
     image: "",
     variantIndex: null,
     originalFile: null,
+    type: "variant",
+    groupKey: null,
   });
+
+  // track active object URLs so we can revoke them reliably
+  const activeUrlsRef = useRef(new Set());
+
+  // cleanup on unmount: revoke any remaining object URLs
+  useEffect(() => {
+    return () => {
+      activeUrlsRef.current.forEach((u) => {
+        try {
+          URL.revokeObjectURL(u);
+        } catch (e) {
+          // ignore
+        }
+      });
+      activeUrlsRef.current.clear();
+    };
+  }, []);
+
+  // Sensors for dnd-kit
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
     })
   );
+
+  // Refs
   const productNameRef = useRef(null);
   const brandRef = useRef(null);
   const categoryRef = useRef(null);
   const productDescriptionRef = useRef(null);
   const variantRefs = useRef(new Map());
-  const addVariantRef = (id, el) => {
-    if (el) {
-      variantRefs.current.set(id, el);
-    } else {
-      variantRefs.current.delete(id);
-    }
-  };
-  const { t } = useTranslation();
+
+  // Select lists from store
   const attributeTypes = useSelector(
     (state) => state.allData.resources.attributeTypes?.data || []
   );
@@ -128,26 +171,22 @@ const AddProductForm = () => {
     dispatch(fetchResource({ key: "specificationType" }));
   }, [dispatch]);
 
-  // Calculate SellingPrice based on MRP and DiscountPercentage for a specific variant
+  // -------------------------
+  // Price helpers
+  // -------------------------
   const calculateSellingPrice = (mrp, discount) => {
     const mrpValue = parseFloat(mrp) || 0;
     const discountValue = parseFloat(discount) || 0;
     if (mrpValue <= 0 || discountValue < 0) return "";
     return (mrpValue - (mrpValue * discountValue) / 100).toFixed(2);
   };
+  const selectedBrandName = brands.find(
+    (b) => b.BrandID === oFormData.BrandID
+  )?.BrandName;
 
-  // Update SellingPrice when MRP or DiscountPercentage changes for a specific variant
-  const updateVariantSellingPrice = (variantIndex, mrp, discountPercentage) => {
-    setVariants((prevVariants) => {
-      const newVariants = [...prevVariants];
-      newVariants[variantIndex] = {
-        ...newVariants[variantIndex],
-        SellingPrice: calculateSellingPrice(mrp, discountPercentage),
-      };
-      return newVariants;
-    });
-  };
-
+  // -------------------------
+  // Fetch existing product (keep original logic - adapted)
+  // -------------------------
   useEffect(() => {
     if (productId) {
       const fetchProduct = async () => {
@@ -162,32 +201,7 @@ const AddProductForm = () => {
           if (response.data.status === STATUS.SUCCESS.toUpperCase()) {
             const product = response.data?.data;
 
-            // Collect all unique attribute types and their values across all variants
-            const attributeMap = {};
-            product.Variants.forEach((variant) => {
-              variant.Attributes?.forEach((attr) => {
-                const attrTypeId = attr.AttributeTypeID;
-                const valueId = attr.AttributeValueID;
-                if (!attributeMap[attrTypeId]) {
-                  attributeMap[attrTypeId] = {
-                    AttributeTypeID: attrTypeId,
-                    AttributeValueIDs: new Set(),
-                  };
-                }
-                if (valueId) {
-                  attributeMap[attrTypeId].AttributeValueIDs.add(valueId);
-                }
-              });
-            });
-
-            const transformedAttributes = Object.values(attributeMap).map(
-              (attr) => ({
-                ...attr,
-                AttributeValueIDs: Array.from(attr.AttributeValueIDs),
-              })
-            );
-
-            // Set basic product information in oFormData
+            // basic form data
             setFormData({
               ProductName: product.ProductName || "",
               ProductDescription: product.ProductDescription || "",
@@ -197,79 +211,99 @@ const AddProductForm = () => {
               CreatedBy: product.CreatedBy || "Admin",
               TenantID: localStorage.getItem("tenantID") || "",
               SpecificationTypeID:
-                product.ProductSpecification[0]?.SpecificatiobnTypeID || "",
+                product.ProductSpecification?.[0]?.SpecificatiobnTypeID || "",
             });
 
-            // Set attributes
+            // attributes from backend -> transform to aAttributes shape
+            const attributeMap = {};
+            product.Variants.forEach((variant) => {
+              variant.Attributes?.forEach((attr) => {
+                const typeId = attr.AttributeTypeID;
+                const valId = attr.AttributeValueID;
+                if (!attributeMap[typeId]) attributeMap[typeId] = new Set();
+                attributeMap[typeId].add(valId);
+              });
+            });
+
+            const transformedAttributes = Object.keys(attributeMap).map(
+              (typeId) => {
+                const type = attributeTypes.find(
+                  (t) => String(t.AttributeTypeID) === String(typeId)
+                );
+                const vals = Array.from(attributeMap[typeId]).map((vid) => {
+                  const a = attributes.find(
+                    (x) =>
+                      String(x.AttributeValueID || x.attributeValueID) ===
+                      String(vid)
+                  );
+                  return {
+                    id: vid,
+                    label: a ? a.Value || a.value : String(vid),
+                  };
+                });
+                return {
+                  AttributeTypeID: typeId,
+                  AttributeValueIDs: vals.map((v) => v.id),
+                  typeName: type ? type.Name || type.name : "",
+                  valueLabels: vals.map((v) => v.label),
+                };
+              }
+            );
+
             setAAttributes(
               transformedAttributes.length > 0
                 ? transformedAttributes
-                : [{ AttributeTypeID: "", AttributeValueIDs: [] }]
+                : [
+                    {
+                      AttributeTypeID: "",
+                      AttributeValueIDs: [],
+                      typeName: "",
+                      valueLabels: [],
+                    },
+                  ]
             );
 
-            // Set specifications
-            const specifications = product.ProductSpecification.map((spec) => ({
-              SpecificationTypeID: spec.SpecificatiobnTypeID || "",
-              Value: spec.Value || "",
-            }));
-
-            setSpecifications(
-              specifications.length > 0
-                ? specifications
-                : [{ SpecificationTypeID: "", Value: "" }]
-            );
-
-            // Set variants with MRP, SellingPrice, DiscountPercentage, Inventory, and Images
-            const variants = product.Variants.map((variant, idx) => ({
-              VariantID: variant.VariantID,
-              attributes:
-                variant.Attributes.map((attr) => ({
-                  AttributeTypeID: attr.AttributeTypeID,
-                  AttributeValueIDs: [attr.AttributeValueID],
-                })) || [],
-              Quantity: variant.Inventory[0]?.Quantity?.toString() || "",
-              MRP: variant.MRP || "",
-              SellingPrice: variant.Inventory[0]?.SellingPrice || "",
-              DiscountPercentage:
-                variant.Inventory[0]?.DiscountPercentage || "",
-              StoreID: variant.Inventory[0]?.StoreID || "",
-              images: variant.ProductVariantImages.map((image, imgIdx) => ({
-                id: `${image.documentId}-${imgIdx}`,
-                file: null,
-                preview: image.documentUrl,
-                sortOrder: image.sortOrder || imgIdx + 1,
-                documentId: image.documentId,
-              })),
-            }));
+            // Keep original variants logic (simple)
+            const variants =
+              product.Variants?.map((v) => ({
+                id:
+                  v.VariantID ||
+                  crypto?.randomUUID?.() ||
+                  Math.random().toString(36).slice(2),
+                VariantID: v.VariantID,
+                attributes: v.Attributes || [],
+                Quantity: v.Quantity || "",
+                MRP: v.MRP || "",
+                DiscountPercentage: v.DiscountPercentage || "",
+                SellingPrice: v.SellingPrice || "",
+                StoreID: v.StoreID || oFormData.StoreID,
+                images:
+                  v.Images?.map((img, idx) => ({
+                    // adapt to your API shape if necessary
+                    documentId: img.DocumentID,
+                    preview: img.Url || img.url || "",
+                    sortOrder: img.SortOrder || idx + 1,
+                  })) || [],
+                removedImages: [],
+              })) || [];
 
             setVariants(
               variants.length > 0
                 ? variants
                 : [
-                  {
-                    attributes: [],
-                    Quantity: "",
-                    MRP: "",
-                    SellingPrice: "",
-                    DiscountPercentage: "",
-                    StoreID: "",
-                    images: [],
-                  },
-                ]
+                    {
+                      id:
+                        crypto?.randomUUID?.() ||
+                        Math.random().toString(36).slice(2),
+                      attributes: [],
+                      Quantity: "",
+                      MRP: "",
+                      SellingPrice: "",
+                      StoreID: "",
+                      images: [],
+                    },
+                  ]
             );
-
-            // Fetch attributes for each unique AttributeTypeID after setting attributes
-            const uniqueTypeIDs = new Set(
-              transformedAttributes.map((attr) => attr.AttributeTypeID)
-            );
-            uniqueTypeIDs.forEach((typeID) => {
-              dispatch(
-                fetchResource({
-                  key: "attributes",
-                  params: { AttributeTypeID: typeID },
-                })
-              );
-            });
           }
         } catch (error) {
           showEmsg(t("PRODUCT_CREATION.FETCH_PRODUCT_FAILED"), STATUS.ERROR);
@@ -278,7 +312,8 @@ const AddProductForm = () => {
 
       fetchProduct();
     }
-  }, [productId, t, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId, t, dispatch, attributes, attributeTypes]);
 
   useEffect(() => {
     setTitle(
@@ -288,51 +323,114 @@ const AddProductForm = () => {
     return () => setBackButton(null);
   }, [setTitle, setBackButton, t, productId]);
 
-  const [aAttributes, setAAttributes] = useState([
-    { AttributeTypeID: "", AttributeValueIDs: [] },
-  ]);
-
+  // -------------------------
+  // Attribute row helpers
+  // -------------------------
   const addAttributeRow = () => {
     setAAttributes((prev) => [
       ...prev,
-      { AttributeTypeID: "", AttributeValueIDs: [] },
+      {
+        AttributeTypeID: "",
+        AttributeValueIDs: [],
+        typeName: "",
+        valueLabels: [],
+      },
     ]);
   };
 
   const removeAttributeRow = (index) => {
-    setAAttributes((prev) => prev.filter((_, i) => i !== index));
+    setAAttributes((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      regenerateVariants(next);
+      return next;
+    });
   };
 
-  const handleAttributeChange = (index, field, value) => {
+  const handleAttributeTypeChange = (index, typeId) => {
     setAAttributes((prev) =>
-      prev.map((attr, i) => (i === index ? { ...attr, [field]: value } : attr))
+      prev.map((attr, i) =>
+        i === index
+          ? {
+              ...attr,
+              AttributeTypeID: typeId,
+              AttributeValueIDs: [],
+              valueLabels: [],
+              typeName:
+                attributeTypes.find(
+                  (t) => String(t.AttributeTypeID) === String(typeId)
+                )?.Name || "",
+            }
+          : attr
+      )
     );
-    if (field === "AttributeTypeID") {
-      setAAttributes((prev) =>
-        prev.map((attr, i) =>
-          i === index ? { ...attr, AttributeValueIDs: [] } : attr
-        )
-      );
+    if (typeId) {
       dispatch(
         fetchResource({
           key: "attributes",
-          params: { AttributeTypeID: value },
+          params: { AttributeTypeID: typeId },
         })
       );
     }
-    setValidationErrors((prev) => ({
-      ...prev,
-      [`attr_${index}_${field}`]: undefined,
-    }));
   };
 
-  const generateVariants = (attributes) => {
-    const filteredAttributes = attributes.filter(
-      (attr) => attr.AttributeTypeID && attr.AttributeValueIDs.length > 0
+  const handleAttributeValuesChange = (index, selectedValueIDs) => {
+    setAAttributes((prev) =>
+      prev.map((attr, i) => {
+        if (i !== index) return attr;
+        const valueLabels = (selectedValueIDs || [])
+          .map((vid) => {
+            const valObj =
+              attributes.find(
+                (a) =>
+                  String(a.AttributeValueID || a.attributeValueID) ===
+                  String(vid)
+              ) || {};
+            return valObj.Value || valObj.value || String(vid);
+          })
+          .filter(Boolean);
+        return {
+          ...attr,
+          AttributeValueIDs: selectedValueIDs,
+          valueLabels,
+        };
+      })
     );
-    if (filteredAttributes.length === 0) {
-      return [
+
+    setTimeout(() => {
+      regenerateVariants(
+        aAttributes.map((attr, i) =>
+          i === index
+            ? {
+                ...attr,
+                AttributeValueIDs: selectedValueIDs,
+                valueLabels: selectedValueIDs.map((vid) => {
+                  const valObj =
+                    attributes.find(
+                      (a) =>
+                        String(a.AttributeValueID || a.attributeValueID) ===
+                        String(vid)
+                    ) || {};
+                  return valObj.Value || valObj.value || String(vid);
+                }),
+              }
+            : attr
+        )
+      );
+    }, 0);
+  };
+
+  // -------------------------
+  // Variant generation (Shopify-like)
+  // -------------------------
+  const regenerateVariants = (attributesInput) => {
+    const attrs = (attributesInput || aAttributes).filter(
+      (a) => a.AttributeTypeID && a.AttributeValueIDs?.length
+    );
+
+    if (attrs.length === 0) {
+      setVariants([
         {
+          id: crypto?.randomUUID?.() || Math.random().toString(36).slice(2),
           attributes: [],
           Quantity: "",
           MRP: "",
@@ -341,8 +439,10 @@ const AddProductForm = () => {
           StoreID: oFormData.StoreID,
           images: [],
         },
-      ];
+      ]);
+      return;
     }
+
     const combine = ([first, ...rest]) => {
       if (!first) return [[]];
       const restCombs = combine(rest);
@@ -353,16 +453,53 @@ const AddProductForm = () => {
         ])
       );
     };
-    const combos = combine(filteredAttributes);
-    return combos.map((combo) => ({
-      attributes: combo,
-      Quantity: "",
-      MRP: "",
-      DiscountPercentage: "",
-      SellingPrice: "",
-      StoreID: oFormData.StoreID,
-      images: [],
-    }));
+
+    const combos = combine(attrs);
+
+    const newVariants = combos.map((combo) => {
+      // try to preserve matching variant data/images
+      const match = aVariants.find((v) => {
+        if (!v.attributes || v.attributes.length !== combo.length) return false;
+        return combo.every((c) =>
+          v.attributes.some(
+            (va) =>
+              String(va.AttributeTypeID) === String(c.AttributeTypeID) &&
+              String(va.AttributeValueIDs?.[0]) ===
+                String(c.AttributeValueIDs?.[0])
+          )
+        );
+      });
+
+      return {
+        id:
+          (match && match.id) ||
+          crypto?.randomUUID?.() ||
+          Math.random().toString(36).slice(2),
+        VariantID: match?.VariantID || undefined,
+        attributes: combo,
+        Quantity: match?.Quantity || "",
+        MRP: match?.MRP || "",
+        DiscountPercentage: match?.DiscountPercentage || "",
+        SellingPrice: match?.SellingPrice || "",
+        StoreID: match?.StoreID || oFormData.StoreID,
+        images: match?.images?.length ? match.images : [],
+        removedImages: match?.removedImages || [],
+      };
+    });
+
+    setVariants(newVariants);
+  };
+
+  useEffect(() => {
+    regenerateVariants(aAttributes);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aAttributes, oFormData.StoreID]);
+
+  // -------------------------
+  // Variant helpers
+  // -------------------------
+  const deleteVariant = (variantId) => {
+    setVariants((prev) => prev.filter((v) => v.id !== variantId));
   };
 
   const handleInputChange = (e) => {
@@ -380,13 +517,21 @@ const AddProductForm = () => {
   const handleVariantChange = (index, field, value) => {
     setVariants((prevVariants) => {
       const newVariants = [...prevVariants];
-      newVariants[index][field] = value;
+      newVariants[index] = {
+        ...newVariants[index],
+        [field]: value,
+      };
+
+      // Auto-calc selling price if MRP or discount changes
       if (field === "MRP" || field === "DiscountPercentage") {
-        newVariants[index].SellingPrice = calculateSellingPrice(
-          newVariants[index].MRP,
-          newVariants[index].DiscountPercentage
-        );
+        const mrp = field === "MRP" ? value : newVariants[index].MRP;
+        const discount =
+          field === "DiscountPercentage"
+            ? value
+            : newVariants[index].DiscountPercentage;
+        newVariants[index].SellingPrice = calculateSellingPrice(mrp, discount);
       }
+
       return newVariants;
     });
     setValidationErrors((prev) => ({
@@ -395,197 +540,377 @@ const AddProductForm = () => {
     }));
   };
 
-  const removeVariant = (index) => {
-    setVariants((prevVariants) => {
-      const newVariants = prevVariants.filter((_, i) => i !== index);
-      setValidationErrors((prev) => {
-        const newErrors = { ...prev };
-        Object.keys(newErrors).forEach((key) => {
-          if (key.startsWith(`variant_${index}_`)) {
-            delete newErrors[key];
-          }
-        });
-        for (let i = index + 1; i <= prevVariants.length - 1; i++) {
-          Object.keys(newErrors).forEach((key) => {
-            if (key.startsWith(`variant_${i}_`)) {
-              const newKey = key.replace(`variant_${i}_`, `variant_${i - 1}_`);
-              newErrors[newKey] = newErrors[key];
-              delete newErrors[key];
-            }
-          });
-        }
-        return newErrors;
-      });
-      return newVariants;
-    });
-    if (nSelectedVariantIndex >= aVariants.length - 1) {
-      setSelectedVariantIndex(Math.max(0, aVariants.length - 2));
-    }
-  };
+  // -------------------------
+  // ENQUEUE FILES FOR CROPPER (used by VariantImageUpload and GlobalImageUpload)
+  // meta: number (variantIndex) or { type: 'global', groupKey }
+  // -------------------------
+  const enqueueFilesForCrop = useCallback((acceptedFiles, meta) => {
+    if (!acceptedFiles || acceptedFiles.length === 0) return;
 
-  const onDrop = useCallback((acceptedFiles, variantIndex) => {
-    if (acceptedFiles && acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      const imageUrl = URL.createObjectURL(file);
-      setCropperModal({
-        isOpen: true,
-        image: imageUrl,
-        variantIndex,
-        originalFile: file,
-      });
-    }
+    const items = acceptedFiles.map((file) => {
+      const url = URL.createObjectURL(file);
+      activeUrlsRef.current.add(url);
+
+      return {
+        file,
+        url,
+        type:
+          meta && meta.type
+            ? meta.type
+            : typeof meta === "number"
+            ? "variant"
+            : "variant",
+        variantIndex:
+          typeof meta === "number" ? meta : meta?.variantIndex ?? null,
+        groupKey: meta?.groupKey ?? null,
+        id: `crop-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      };
+    });
+
+    setCropQueue((prev) => [...prev, ...items]);
   }, []);
 
-  const handleCropComplete = (blob, variantIndex) => {
+  // -------------------------
+  // Cropper queue: open modal for first queued item (if closed)
+  // -------------------------
+  useEffect(() => {
+    if (cropperModal.isOpen) return; // already open
+    if (cropQueue.length === 0) return;
+
+    const next = cropQueue[0];
+    if (!next) return;
+
+    setCropperModal({
+      isOpen: true,
+      image: next.url,
+      variantIndex: next.variantIndex,
+      originalFile: next.file,
+      type: next.type,
+      groupKey: next.groupKey,
+    });
+  }, [cropQueue, cropperModal.isOpen]);
+
+  const addSpecificationRow = () => {
+    setSpecifications((prev) => [
+      ...prev,
+      {
+        SpecificationTypeID: "",
+        Value: "",
+      },
+    ]);
+  };
+
+  const handleSpecificationChange = (index, field, value) => {
+    setSpecifications((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s))
+    );
+    setValidationErrors((prev) => ({
+      ...prev,
+      [`spec_${index}_${field}`]: undefined,
+    }));
+  };
+
+  const removeSpecificationRow = (index) => {
+    setSpecifications((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // -------------------------
+  // Apply global images to variants in a groupKey
+  // -------------------------
+  const applyGlobalImagesToGroupVariants = (groupKey, globalImages) => {
+    // globalImages: array of { id, file, preview, isGlobal, sortOrder }
+    setVariants((prev) =>
+      prev.map((variant) => {
+        const belongs = variant.attributes?.some(
+          (a) =>
+            String(a.AttributeTypeID) === String(groupingAttributeTypeID) &&
+            a.AttributeValueIDs?.includes(String(groupKey))
+        );
+        if (!belongs) return variant;
+
+        const localOnly = (variant.images || []).filter((i) => !i.isGlobal);
+
+        const newImages = [
+          ...(globalImages || []).map((g, i) => ({
+            ...g,
+            isGlobal: true,
+            sortOrder: i + 1,
+          })),
+          ...localOnly.map((l, idx) => ({
+            ...l,
+            sortOrder: (globalImages?.length || 0) + idx + 1,
+          })),
+        ];
+
+        return {
+          ...variant,
+          images: newImages,
+        };
+      })
+    );
+  };
+
+  // -------------------------
+  // Handle crop completion (add file, pop queue, revoke original URL)
+  // -------------------------
+  const handleCropComplete = (
+    blob,
+    variantIndexFromModal,
+    typeFromModal,
+    groupKeyFromModal
+  ) => {
+    const modal = { ...cropperModal };
+    const type = modal.type || typeFromModal || "variant";
+    const groupKey = modal.groupKey ?? groupKeyFromModal;
+    const variantIndex =
+      typeof modal.variantIndex === "number"
+        ? modal.variantIndex
+        : typeof variantIndexFromModal === "number"
+        ? variantIndexFromModal
+        : 0;
+
     if (blob) {
       const croppedUrl = URL.createObjectURL(blob);
-      setVariants((prevVariants) => {
-        const newVariants = [...prevVariants];
-        const currentImages = newVariants[variantIndex].images;
-        const newSortOrder =
-          currentImages.length > 0
-            ? Math.max(...currentImages.map((img) => img.sortOrder)) + 1
-            : 1;
-        newVariants[variantIndex].images = [
-          ...currentImages,
+      activeUrlsRef.current.add(croppedUrl);
+
+      if (type === "global") {
+        const croppedFile = new File(
+          [blob],
+          modal.originalFile?.name || `global-${Date.now()}.jpg`,
           {
-            file: new File([blob], `cropped-image-${Date.now()}.jpg`, {
-              type: "image/jpeg",
-            }),
-            preview: croppedUrl,
-            sortOrder: newSortOrder,
-          },
-        ];
-        return newVariants;
-      });
-      setValidationErrors((prev) => ({
-        ...prev,
-        [`variant_${variantIndex}_images`]: undefined,
-      }));
+            type: "image/jpeg",
+          }
+        );
+
+        setGroupGlobalImages((prev) => {
+          const existing = prev?.[groupKey] || [];
+          const updated = [
+            ...existing,
+            {
+              id: `g-${groupKey}-${Date.now()}-${Math.random()
+                .toString(36)
+                .slice(2)}`,
+              file: croppedFile,
+              preview: croppedUrl,
+              isGlobal: true,
+              sortOrder: existing.length + 1,
+            },
+          ];
+
+          // keep variants updated
+          applyGlobalImagesToGroupVariants(groupKey, updated);
+
+          return { ...(prev || {}), [groupKey]: updated };
+        });
+      } else {
+        // Variant-level image
+        const croppedFile = new File(
+          [blob],
+          modal.originalFile?.name || `cropped-image-${Date.now()}.jpg`,
+          {
+            type: "image/jpeg",
+          }
+        );
+
+        setVariants((prevVariants) => {
+          const newVariants = [...prevVariants];
+          const idx = typeof variantIndex === "number" ? variantIndex : 0;
+          const currentImages = newVariants[idx]?.images || [];
+          const newSortOrder =
+            currentImages.length > 0
+              ? Math.max(...currentImages.map((img) => img.sortOrder || 0)) + 1
+              : 1;
+
+          newVariants[idx] = {
+            ...newVariants[idx],
+            images: [
+              ...currentImages,
+              {
+                file: croppedFile,
+                preview: croppedUrl,
+                sortOrder: newSortOrder,
+                id: `local-${Date.now()}-${Math.random()
+                  .toString(36)
+                  .slice(2)}`,
+              },
+            ],
+          };
+
+          return newVariants;
+        });
+      }
     }
-    if (cropperModal.image) {
-      URL.revokeObjectURL(cropperModal.image);
-    }
+
+    // Remove processed item from queue and revoke its original URL (use functional update)
+    setCropQueue((prev) => {
+      if (!prev || prev.length === 0) return [];
+      const [, ...rest] = prev;
+
+      // schedule revoke of original URL (the one currently in modal)
+      try {
+        const urlToRevoke = modal.image;
+        setTimeout(() => {
+          try {
+            if (urlToRevoke) {
+              URL.revokeObjectURL(urlToRevoke);
+              activeUrlsRef.current.delete(urlToRevoke);
+            }
+          } catch (err) {
+            // ignore
+          }
+        }, 150);
+      } catch (err) {
+        // ignore
+      }
+
+      return rest;
+    });
+
+    // Close modal state — next queued item will re-open modal via useEffect above
     setCropperModal({
       isOpen: false,
       image: "",
       variantIndex: null,
       originalFile: null,
+      type: "variant",
+      groupKey: null,
+    });
+
+    // clear any validation error for that variant's images
+    setValidationErrors((prev) => ({
+      ...prev,
+      [`variant_${variantIndex}_images`]: undefined,
+    }));
+  };
+
+  // -------------------------
+  // Handle user cancelling cropper (drop the queued item)
+  // -------------------------
+  const handleCropperCancel = () => {
+    const modal = { ...cropperModal };
+
+    setCropQueue((prev) => {
+      if (!prev || prev.length === 0) return [];
+      const [, ...rest] = prev;
+      try {
+        const urlToRevoke = modal.image;
+        setTimeout(() => {
+          try {
+            if (urlToRevoke) {
+              URL.revokeObjectURL(urlToRevoke);
+              activeUrlsRef.current.delete(urlToRevoke);
+            }
+          } catch (err) {}
+        }, 100);
+      } catch (err) {}
+      return rest;
+    });
+
+    setCropperModal({
+      isOpen: false,
+      image: "",
+      variantIndex: null,
+      originalFile: null,
+      type: "variant",
+      groupKey: null,
     });
   };
 
+  // -------------------------
+  // Remove image helper (revoking blobs)
+  // -------------------------
   const removeImage = (variantIndex, imageIndex) => {
-    setVariants((prevVariants) => {
-      const newVariants = [...prevVariants];
-      const image = newVariants[variantIndex].images[imageIndex];
+    setVariants((prev) => {
+      const copy = [...prev];
+      const imgs = [...(copy[variantIndex].images || [])];
+      const removed = imgs[imageIndex];
 
-      if (
-        typeof image.preview === "string" &&
-        image.preview.startsWith("blob:")
-      ) {
-        URL.revokeObjectURL(image.preview);
-      }
-
-      if (image.documentId) {
-        if (!newVariants[variantIndex].removedImages) {
-          newVariants[variantIndex].removedImages = [];
+      try {
+        if (
+          removed?.preview?.startsWith("blob:") &&
+          removed.isGlobal !== true
+        ) {
+          URL.revokeObjectURL(removed.preview);
+          activeUrlsRef.current.delete(removed.preview);
         }
-        newVariants[variantIndex].removedImages.push(image);
+      } catch (err) {}
+
+      if (removed?.documentId) {
+        if (!copy[variantIndex].removedImages)
+          copy[variantIndex].removedImages = [];
+        copy[variantIndex].removedImages.push(removed);
       }
 
-      newVariants[variantIndex].images.splice(imageIndex, 1);
+      imgs.splice(imageIndex, 1);
+      copy[variantIndex].images = imgs;
 
-      const hasImages = newVariants[variantIndex].images.length > 0;
-      setValidationErrors((prev) => ({
-        ...prev,
-        [`variant_${variantIndex}_images`]: hasImages
-          ? undefined
-          : t("PRODUCT_CREATION.IMAGE_REQUIRED"),
-      }));
-
-      return newVariants;
+      return copy;
     });
   };
 
-  const SortableImage = ({ id, image, variantIndex, imageIndex }) => {
-    const { attributes, listeners, setNodeRef, transform, transition } =
-      useSortable({ id });
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-    };
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className="relative group"
-        {...attributes}
-        {...listeners}
-      >
-        <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 shadow-md">
-          <img
-            src={image.preview}
-            alt={`Variant ${variantIndex + 1} - Image ${imageIndex + 1}`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => removeImage(variantIndex, imageIndex)}
-          className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 shadow-lg transform hover:scale-110"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-    );
+  // -------------------------
+  // GLOBAL image helpers (remove / reorder)
+  // -------------------------
+  const removeGlobalImage = (groupKey, indexToRemove) => {
+    setGroupGlobalImages((prev) => {
+      const oldList = prev?.[groupKey] || [];
+      const updated = oldList.filter((_, i) => i !== indexToRemove);
+
+      // update variants in group
+      applyGlobalImagesToGroupVariants(groupKey, updated);
+
+      return { ...(prev || {}), [groupKey]: updated };
+    });
   };
 
-  const getVariantName = (variant) => {
-    if (variant.attributes.length === 0) {
-      return t("PRODUCT_CREATION.VARIANT");
-    }
-    return variant.attributes
-      .map((attr) => {
-        const valID = attr.AttributeValueIDs[0];
-        const att = attributes.find(
-          (a) =>
-            (a.AttributeValueID || a.attributeValueID) === valID &&
-            (a.AttributeTypeID || a.attributeTypeID) === attr.AttributeTypeID
-        );
-        return att
-          ? `${att.Value || att.value}${att.Unit || att.unit ? ` (${att.Unit || att.unit})` : ""
-          }`
-          : "Unknown";
-      })
-      .join(" - ");
+  const sortGlobalImages = (groupKey, newList) => {
+    const fixed = newList.map((img, idx) => ({
+      ...img,
+      sortOrder: idx + 1,
+      isGlobal: true,
+    }));
+
+    setGroupGlobalImages((prev) => ({ ...(prev || {}), [groupKey]: fixed }));
+    // apply to variants
+    applyGlobalImagesToGroupVariants(groupKey, fixed);
   };
 
+  // -------------------------
+  // Submit
+  // -------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
-    // Basic validation
     const errors = {};
+
     if (!oFormData.ProductName)
       errors.ProductName = t("PRODUCT_CREATION.PRODUCT_NAME_REQUIRED");
+
     if (!oFormData.BrandID)
       errors.BrandID = t("PRODUCT_CREATION.BRAND_ID_REQUIRED");
+
     if (!oFormData.CategoryID)
       errors.CategoryID = t("PRODUCT_CREATION.CATEGORY_ID_REQUIRED");
+
     if (!oFormData.StoreID)
       errors.StoreID = t("PRODUCT_CREATION.STORE_ID_REQUIRED");
+
     aVariants.forEach((variant, index) => {
       if (!variant.Quantity)
         errors[`variant_${index}_Quantity`] = t(
           "PRODUCT_CREATION.QUANTITY_REQUIRED"
         );
+
       if (!variant.MRP)
         errors[`variant_${index}_MRP`] = t("PRODUCT_CREATION.MRP_REQUIRED");
+
       if (!variant.SellingPrice)
         errors[`variant_${index}_SellingPrice`] = t(
           "PRODUCT_CREATION.SELLING_PRICE_REQUIRED"
         );
-      if (variant.images.length === 0)
+
+      if (!variant.images || !variant.images.length)
         errors[`variant_${index}_images`] = t(
           "PRODUCT_CREATION.IMAGE_REQUIRED"
         );
@@ -597,119 +922,118 @@ const AddProductForm = () => {
       return;
     }
 
-    const specificationsData = aSpecifications
-      .filter((spec) => spec.SpecificationTypeID && spec.Value)
-      .map((spec) => ({
-        SpecificationTypeID: spec.SpecificationTypeID,
-        Value: spec.Value,
+    const Specifications = aSpecifications
+      .filter((s) => s.SpecificationTypeID && s.Value)
+      .map((s) => ({
+        SpecificationTypeID: s.SpecificationTypeID,
+        Value: s.Value,
       }));
 
-    const variantsData = aVariants.map((variant, variantIndex) => ({
-      ...(productId &&
-        variant.VariantID && { ProductVariantID: variant.VariantID }),
-      MRP: parseFloat(variant.MRP) || 0,
-      DiscountPercentage: parseFloat(variant.DiscountPercentage) || 0,
-      SellingPrice: parseFloat(variant.SellingPrice) || 0,
-      StoreID: variant.StoreID || oFormData.StoreID,
-      Quantity: parseInt(variant.Quantity) || 0,
-      IsActive: true,
-      Attributes: variant.attributes,
+    const Variants = aVariants.map((variant, vIndex) => {
+      const attributesForPayload = Array.isArray(variant.attributes)
+        ? variant.attributes
+        : [];
 
-      documentMetadata: [
-        // New or kept images
-        ...variant.images
-          .map((img, imgIndex) => {
-            if (img.file) {
-              return {
-                sortOrder: img.sortOrder || imgIndex + 1,
-                image: `images_${variantIndex}_${img.sortOrder}`,
-              };
-            }
-            return null;
-          })
-          .filter(Boolean),
+      const images = Array.isArray(variant.images) ? variant.images : [];
+      const removedImages = Array.isArray(variant.removedImages)
+        ? variant.removedImages
+        : [];
 
-        // Removed images
-        ...(variant.removedImages || []).map((img) => ({
-          DocumentID: img.documentId,
-          IsDeleted: true,
-        })),
-      ],
-    }));
+      return {
+        ...(productId &&
+          variant.VariantID && { ProductVariantID: variant.VariantID }),
 
-    const userId = localStorage.getItem("userId");
+        Attributes: attributesForPayload,
+
+        Quantity: Number(variant.Quantity) || 0,
+        MRP: Number(variant.MRP) || 0,
+        DiscountPercentage: Number(variant.DiscountPercentage) || 0,
+        SellingPrice: Number(variant.SellingPrice) || 0,
+        StoreIDs: variant.StoreID || oFormData.StoreID,
+        // IsActive: true,
+
+        documentMetadata: [
+          ...images.map((img, idx) =>
+            img.file
+              ? {
+                  image: `images_${vIndex}_${idx + 1}`,
+                  sortOrder: idx + 1,
+                }
+              : {
+                  DocumentID: img.documentId,
+                  sortOrder: idx + 1,
+                }
+          ),
+
+          ...removedImages.map((img) => ({
+            DocumentID: img.documentId,
+            IsDeleted: true,
+          })),
+        ],
+      };
+    });
+
     const payload = {
       TenantID: oFormData.TenantID,
+      ...(productId && { ProductID: productId }),
       ProductName: oFormData.ProductName,
       ProductDescription: oFormData.ProductDescription,
       BrandID: oFormData.BrandID,
       CategoryID: oFormData.CategoryID,
       IsActive: true,
-      Specifications: specificationsData,
-      Variants: variantsData,
-      ...(productId
-        ? {
-          ProductID: productId,
-          UpdatedBy: userId,
-
-        }
-        : {
-          CreatedBy: userId,
-        }),
+      Specifications,
+      Variants,
     };
 
-    const data = new FormData();
-    data.append("data", JSON.stringify(payload));
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(payload));
 
-    aVariants.forEach((variant, variantIndex) => {
-      variant.images.forEach((img) => {
+    aVariants.forEach((variant, vIndex) => {
+      variant.images.forEach((img, index) => {
         if (img.file) {
-          data.append(`images_${variantIndex}_${img.sortOrder}`, img.file);
+          formData.append(`images_${vIndex}_${index + 1}`, img.file);
         }
       });
     });
 
     try {
       const token = localStorage.getItem("token");
-      let response;
+    let response;
 
-      if (productId) {
-        // Use PUT for update with updateProduct endpoint
-        response = await apiPut(
-          UPDATE_PRODUCT,
-          data,
-          token,
-          true // multipart/form-data
-        );
-      } else {
-        // Use POST for create with createProduct endpoint
-        response = await apiPost(
-          CREATE_PRODUCT,
-          data,
-          token,
-          true // multipart/form-data
-        );
-      }
+if (productId) {
+  // ✅ UPDATE PRODUCT
+  response = await apiPut(
+    UPDATE_PRODUCT,
+    formData,
+    token,
+    true // multipart/form-data
+  );
+} else {
+  // ✅ CREATE PRODUCT
+  response = await apiPost(
+    CREATE_PRODUCT,
+    formData,
+    token,
+    true // multipart/form-data
+  );
+}
+
 
       const resData = response?.data;
+
       if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(
           resData.MESSAGE ||
-          (productId
-            ? t("PRODUCT_CREATION.PRODUCT_UPDATED_SUCCESS")
-            : t("PRODUCT_CREATION.PRODUCT_CREATED_SUCCESS")),
+            (productId
+              ? t("PRODUCT_CREATION.PRODUCT_UPDATED_SUCCESS")
+              : t("PRODUCT_CREATION.PRODUCT_CREATED_SUCCESS")),
           STATUS.SUCCESS,
           3000,
-          () => {
-            navigate("/productList");
-          }
+          () => navigate("/productList")
         );
       } else {
         showEmsg(
-          resData?.MESSAGE ||
-          (productId
-            ? t("PRODUCT_CREATION.PRODUCT_UPDATE_FAILED")
-            : t("PRODUCT_CREATION.PRODUCT_CREATE_FAILED")),
+          resData?.MESSAGE || t("PRODUCT_CREATION.PRODUCT_CREATE_FAILED"),
           STATUS.ERROR
         );
       }
@@ -724,158 +1048,61 @@ const AddProductForm = () => {
     }
   };
 
-  const VariantImageUpload = ({ variantIndex }) => {
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-      onDrop: (files) => onDrop(files, variantIndex),
-      accept: {
-        "image/*": [".jpeg", ".jpg", ".png", ".webp"],
-      },
-      maxSize: 5242880,
-      multiple: false,
-    });
-    return (
-      <div className="mt-4">
-        <div
-          {...getRootProps()}
-          className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300
-            ${isDragActive
-              ? "border-blue-500 bg-blue-50 scale-[1.02] shadow-lg"
-              : "border-gray-300 hover:border-blue-400 hover:bg-gray-50 hover:shadow-md"
-            }`}
-        >
-          <input {...getInputProps()} />
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <div className="p-4 bg-blue-50 rounded-2xl">
-              <Upload className="h-8 w-8 text-blue-500" />
-            </div>
-            <div className="text-sm text-caption">
-              {isDragActive ? (
-                <p className="font-medium text-blue-600 text-base">
-                  {t("PRODUCT_CREATION.DROP_IMAGES_HERE")}
-                </p>
-              ) : (
-                <p className="text-base">
-                  {t("PRODUCT_CREATION.DRAG_DROP_OR_CLICK")}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-        {aVariants[variantIndex].images.length > 0 && (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={({ active, over }) => {
-              if (!over || active.id === over.id) return;
-              setVariants((prevVariants) => {
-                const newVariants = [...prevVariants];
-                const images = newVariants[variantIndex].images;
-                const oldIndex = images.findIndex(
-                  (img) => img.id === active.id
-                );
-                const newIndex = images.findIndex((img) => img.id === over.id);
-                const movedImages = arrayMove(images, oldIndex, newIndex);
-                movedImages.forEach((img, idx) => {
-                  img.sortOrder = idx + 1;
-                });
-                newVariants[variantIndex].images = movedImages;
-                return newVariants;
-              });
-            }}
-          >
-            <SortableContext
-              items={aVariants[variantIndex].images.map((img) => img.id)}
-              strategy={rectSortingStrategy}
-            >
-              <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {aVariants[variantIndex].images.map((image, imageIndex) => (
-                  <SortableImage
-                    key={image.id}
-                    id={image.id}
-                    image={image}
-                    variantIndex={variantIndex}
-                    imageIndex={imageIndex}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        )}
-      </div>
-    );
-  };
-
-  const addSpecificationRow = () => {
-    setSpecifications((prev) => [
-      ...prev,
-      {
-        SpecificationTypeID: "",
-        Value: "",
-      },
-    ]);
-  };
-
-  const removeSpecificationRow = (index) => {
-    setSpecifications((prev) => prev.filter((_, i) => i !== index));
-    setValidationErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors[`spec_${index}_SpecificationTypeID`];
-      delete newErrors[`spec_${index}_Value`];
-      return newErrors;
-    });
-  };
-
-  const handleSpecificationChange = (index, field, value) => {
-    setSpecifications((prev) => {
-      const newSpecs = [...prev];
-      newSpecs[index][field] = value;
-      return newSpecs;
-    });
-    setValidationErrors((prev) => ({
-      ...prev,
-      [`spec_${index}_${field}`]: undefined,
-    }));
-  };
-
   const loaderOverlay = submitting ? (
     <div className="global-loader-overlay">
       <Loader />
     </div>
   ) : null;
 
+  // Auto-set grouping attribute to first selected attribute type
+  useEffect(() => {
+    const firstAttr = aAttributes.find((a) => a.AttributeTypeID);
+    if (firstAttr) {
+      setGroupingAttributeTypeID(firstAttr.AttributeTypeID);
+    } else {
+      setGroupingAttributeTypeID("");
+    }
+  }, [aAttributes]);
+
+  // -------------------------
+  // Render
+  // -------------------------
   return (
     <div className="min-h-screen">
       {loaderOverlay}
       <ToastContainer />
+
+      {/* Shared cropper modal (unified) */}
       {cropperModal.isOpen && (
         <ImageCropperModal
-          key={cropperModal.image}
-          image={cropperModal.image}
+          queue={cropQueue}
+          onQueueUpdate={setCropQueue} 
+          image={[
+            cropperModal.image,
+            cropperModal.type === "global"
+              ? cropperModal.groupKey
+              : cropperModal.variantIndex,
+          ]}
           onCropComplete={(blob) =>
-            handleCropComplete(blob, cropperModal.variantIndex)
+            handleCropComplete(
+              blob,
+              cropperModal.variantIndex,
+              cropperModal.type,
+              cropperModal.groupKey
+            )
           }
-          onClose={() => {
-            if (cropperModal.image?.startsWith("blob:")) {
-              URL.revokeObjectURL(cropperModal.image);
-            }
-            setCropperModal({
-              isOpen: false,
-              image: "",
-              variantIndex: null,
-              originalFile: null,
-            });
-          }}
+          onClose={handleCropperCancel}
           aspectRatio={1}
           minWidth={500}
           minHeight={500}
-          title={t("COMMON.CROP_IMAGE")}
-          cancelText={t("COMMON.CANCEL")}
-          saveText={t("COMMON.OK")}
+          title={`Crop Images (${cropQueue.length} pending)`}
         />
       )}
+
       <div className="max-w-8xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-10">
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden transform transition-all duration-300 hover:shadow-xl">
+          {/* Basic Info */}
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-visible relative">
             <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center">
                 <ShoppingBag className="h-6 w-6 mr-3 text-custom-bg" />
@@ -904,12 +1131,10 @@ const AddProductForm = () => {
                     name="BrandID"
                     value={oFormData.BrandID}
                     onChange={handleInputChange}
-                    options={brands
-                      .filter(brand => brand.IsActive) 
-                      .map((brand) => ({
-                        value: brand.BrandID,
-                        label: brand.BrandName,
-                      }))}
+                    options={brands.map((brand) => ({
+                      value: brand.BrandID,
+                      label: brand.BrandName,
+                    }))}
                     Icon={Tag}
                     error={oValidationErrors.BrandID}
                     placeholder={t("PRODUCT_CREATION.BRAND_ID_PLACEHOLDER")}
@@ -917,6 +1142,7 @@ const AddProductForm = () => {
                   />
                 </div>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <SelectWithIcon
@@ -926,10 +1152,10 @@ const AddProductForm = () => {
                     value={oFormData.CategoryID}
                     onChange={handleInputChange}
                     options={categories
-                      .filter(category => 
-                        category.ParentCategoryID !== null && 
-                        category.ParentCategoryID !== undefined &&
-                        category.IsActive // Add IsActive check
+                      .filter(
+                        (category) =>
+                          category.ParentCategoryID !== null &&
+                          category.ParentCategoryID !== undefined
                       )
                       .map((category) => ({
                         value: category.CategoryID,
@@ -948,14 +1174,13 @@ const AddProductForm = () => {
                     name="StoreID"
                     value={oFormData.StoreID}
                     onChange={handleInputChange}
-                    options={stores
-                      .filter(store => store.IsActive) // Add IsActive check
-                      .map((store) => ({
-                        value: store.StoreID,
-                        label: store.StoreName,
-                      }))}
+                    options={stores.map((store) => ({
+                      value: store.StoreID,
+                      label: store.StoreName,
+                    }))}
                     Icon={Tag}
                     error={oValidationErrors.StoreID}
+                    multiple
                     placeholder={
                       t("PRODUCT_CREATION.STORE_ID_PLACEHOLDER") ||
                       "Select store"
@@ -963,407 +1188,501 @@ const AddProductForm = () => {
                   />
                 </div>
               </div>
-              <div>
-                <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                    <Layers className="h-6 w-6 mr-3 text-custom-bg" />
-                    {t("PRODUCT_SETUP.ATTRIBUTES.TITLE")}
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={addAttributeRow}
-                    className="btn-secondry inline-flex items-center space-x-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>{t("PRODUCT_CREATION.ADD_ATTRIBUTE")}</span>
-                  </button>
-                </div>
-                <div className="p-8 space-y-6">
-                  {aAttributes.map((attr, index) => (
-                    <div
-                      key={index}
-                      id={`attr-container-${index}`}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"
-                    >
-                      <div>
-                        <SelectWithIcon
-                          label={t("PRODUCT_CREATION.ATTRIBUTE_ID")}
-                          id={`AttributeTypeID-${index}`}
-                          name={`AttributeTypeID-${index}`}
-                          value={attr.AttributeTypeID}
-                          onChange={(e) => {
-                            handleAttributeChange(
-                              index,
-                              "AttributeTypeID",
-                              e.target.value
-                            );
-                          }}
-                          options={attributeTypes
-                            ?.filter((type) => type.IsActive)
-                            .map((type) => ({
-                              value:
-                                type.AttributeTypeID || type.attributeTypeID,
-                              label: type.Name || type.name,
-                            }))}
-                          Icon={Hash}
-                          error={
-                            oValidationErrors[`attr_${index}_AttributeTypeID`]
-                          }
-                          placeholder={t(
-                            "PRODUCT_CREATION.ATTRIBUTE_ID_PLACEHOLDER"
-                          )}
-                        />
-                      </div>
-                      <div className="flex items-end gap-4">
-                        <SelectWithIcon
-                          label={t("PRODUCT_CREATION.ATTRIBUTE_VALUES")}
-                          id={`AttributeValueIDs-${index}`}
-                          name={`AttributeValueIDs-${index}`}
-                          value={attr.AttributeValueIDs || []}
-                          onChange={(e) => {
-                            const selectedValues = Array.isArray(e.target.value)
-                              ? e.target.value
-                              : [e.target.value].filter(Boolean);
-                            handleAttributeChange(
-                              index,
-                              "AttributeValueIDs",
-                              selectedValues
-                            );
-                          }}
-                          options={attributes
-                            .filter((attribute) => {
-                              const typeId =
-                                attribute.AttributeTypeID ||
-                                attribute.attributeTypeID;
-                              return (
-                                attribute.IsActive &&
-                                String(typeId) === String(attr.AttributeTypeID)
-                              );
-                            })
-                            .map((attribute) => ({
-                              value:
-                                attribute.AttributeValueID ||
-                                attribute.attributeValueID,
-                              label: `${attribute.Value || attribute.value}${attribute.Unit || attribute.unit
-                                  ? ` (${attribute.Unit || attribute.unit})`
-                                  : ""
-                                }`,
-                            }))}
-                          Icon={Layers}
-                          error={
-                            oValidationErrors[`attr_${index}_AttributeValueIDs`]
-                          }
-                          placeholder={t(
-                            "PRODUCT_CREATION.ATTRIBUTE_VALUES_PLACEHOLDER"
-                          )}
-                          multiple
-                          isDisabled={!attr.AttributeTypeID}
-                        />
-                        {aAttributes.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeAttributeRow(index)}
-                            className="btn-cancel p-3 mb-1"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => setVariants(generateVariants(aAttributes))}
-                    className="btn-primary inline-flex items-center space-x-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>{t("PRODUCT_CREATION.GENERATE_VARIANTS")}</span>
-                  </button>
-                </div>
-              </div>
-              <div>
-                <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                    <Tag className="h-6 w-6 mr-3 text-custom-bg" />
-                    {t("PRODUCT_CREATION.SPECIFICATIONS")}
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={addSpecificationRow}
-                    className="btn-secondry inline-flex items-center space-x-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>{t("PRODUCT_CREATION.ADD_SPECIFICATION")}</span>
-                  </button>
-                </div>
-                <div className="p-8 space-y-6">
-                  {aSpecifications.map((spec, index) => (
-                    <div
-                      key={index}
-                      id={`spec-container-${index}`}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"
-                    >
-                      <div>
-                        <SelectWithIcon
-                          label={t("PRODUCT_SETUP.TABS.SPECIFICATION_TYPE")}
-                          id={`SpecificationTypeID-${index}`}
-                          name={`SpecificationTypeID-${index}`}
-                          value={spec.SpecificationTypeID}
-                          onChange={(e) =>
-                            handleSpecificationChange(
-                              index,
-                              "SpecificationTypeID",
-                              e.target.value
-                            )
-                          }
-                          options={specificationTypes
-                            .filter(specType => specType.IsActive) // Add IsActive check
-                            .map((specType) => ({
-                              value: specType.SpecificationTypeID,
-                              label: specType.Name,
-                            }))}
-                          Icon={Tag}
-                          error={
-                            oValidationErrors[
-                            `spec_${index}_SpecificationTypeID`
-                            ]
-                          }
-                          placeholder={t(
-                            "PRODUCT_CREATION.SPECIFICATION_TYPE_PLACEHOLDER"
-                          )}
-                        />
-                      </div>
-                      <div className="flex items-end gap-4">
-                        <div className="flex-1">
-                          <TextInputWithIcon
-                            label={t("PRODUCT_CREATION.SPECIFICATION_VALUE")}
-                            id={`SpecificationValue-${index}`}
-                            name={`SpecificationValue-${index}`}
-                            value={spec.Value}
-                            onChange={(e) =>
-                              handleSpecificationChange(
-                                index,
-                                "Value",
-                                e.target.value
-                              )
-                            }
-                            placeholder={t(
-                              "PRODUCT_CREATION.SPECIFICATION_VALUE_PLACEHOLDER"
-                            )}
-                            Icon={Tag}
-                            error={oValidationErrors[`spec_${index}_Value`]}
-                          />
-                        </div>
-                        {aSpecifications.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeSpecificationRow(index)}
-                            className="btn-cancel p-3 mb-1"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label
-                  htmlFor="ProductDescription"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  {t("PRODUCT_CREATION.PRODUCT_DESCRIPTION")}
-                </label>
-                <ReactQuill
-                  theme="snow"
-                  value={oFormData.ProductDescription}
-                  onChange={(value) =>
-                    handleInputChange({
-                      target: { name: "ProductDescription", value },
-                    })
-                  }
-                  placeholder={t(
-                    "PRODUCT_CREATION.PRODUCT_DESCRIPTION_PLACEHOLDER"
-                  )}
-                  className={`h-32 mb-10 ${oValidationErrors.ProductDescription ? "border-red-500" : ""
-                    }`}
-                  ref={productDescriptionRef}
-                />
-                {oValidationErrors.ProductDescription && (
-                  <p className="text-red-500 text-sm mt-1 mb-2">
-                    {oValidationErrors.ProductDescription}
-                  </p>
-                )}
-              </div>
             </div>
           </div>
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden transform transition-all duration-300 hover:shadow-xl">
+
+          {/* Specifications */}
+          <div>
+            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                <Tag className="h-6 w-6 mr-3 text-custom-bg" />
+                {t("PRODUCT_CREATION.SPECIFICATIONS")}
+              </h2>
+              <button
+                type="button"
+                onClick={addSpecificationRow}
+                className="btn-secondary inline-flex items-center space-x-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>{t("PRODUCT_CREATION.ADD_SPECIFICATION")}</span>
+              </button>
+            </div>
+            <div className="p-8 space-y-6">
+              {aSpecifications.map((spec, index) => (
+                <div
+                  key={index}
+                  id={`spec-container-${index}`}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"
+                >
+                  <div>
+                    <SelectWithIcon
+                      label={t("PRODUCT_SETUP.TABS.SPECIFICATION_TYPE")}
+                      id={`SpecificationTypeID-${index}`}
+                      name={`SpecificationTypeID-${index}`}
+                      value={spec.SpecificationTypeID}
+                      onChange={(e) =>
+                        handleSpecificationChange(
+                          index,
+                          "SpecificationTypeID",
+                          e.target.value
+                        )
+                      }
+                      options={specificationTypes.map((specType) => ({
+                        value: specType.SpecificationTypeID,
+                        label: specType.Name,
+                      }))}
+                      Icon={Tag}
+                      error={
+                        oValidationErrors[`spec_${index}_SpecificationTypeID`]
+                      }
+                      placeholder={t(
+                        "PRODUCT_CREATION.SPECIFICATION_TYPE_PLACEHOLDER"
+                      )}
+                    />
+                  </div>
+                  <div className="flex items-end gap-4">
+                    <div className="flex-1">
+                      <TextInputWithIcon
+                        label={t("PRODUCT_CREATION.SPECIFICATION_VALUE")}
+                        id={`SpecificationValue-${index}`}
+                        name={`SpecificationValue-${index}`}
+                        value={spec.Value}
+                        onChange={(e) =>
+                          handleSpecificationChange(
+                            index,
+                            "Value",
+                            e.target.value
+                          )
+                        }
+                        placeholder={t(
+                          "PRODUCT_CREATION.SPECIFICATION_VALUE_PLACEHOLDER"
+                        )}
+                        Icon={Tag}
+                        error={oValidationErrors[`spec_${index}_Value`]}
+                      />
+                    </div>
+                    {aSpecifications.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeSpecificationRow(index)}
+                        className="btn-cancel p-3 mb-1"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Product description */}
+          <div>
+            <label
+              htmlFor="ProductDescription"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              {t("PRODUCT_CREATION.PRODUCT_DESCRIPTION")}
+            </label>
+            <div className="mb-10">
+              <ReactQuill
+                theme="snow"
+                value={oFormData.ProductDescription}
+                onChange={(value) =>
+                  handleInputChange({
+                    target: { name: "ProductDescription", value },
+                  })
+                }
+                placeholder={t(
+                  "PRODUCT_CREATION.PRODUCT_DESCRIPTION_PLACEHOLDER"
+                )}
+                className={`h-32 mb-10 ${
+                  oValidationErrors.ProductDescription ? "border-red-500" : ""
+                }`}
+                ref={productDescriptionRef}
+              />
+            </div>
+            {oValidationErrors.ProductDescription && (
+              <p className="text-red-500 text-sm mt-1 mb-2">
+                {oValidationErrors.ProductDescription}
+              </p>
+            )}
+          </div>
+
+          {/* Attributes section */}
+          <div className="mt-8 pt-6">
+            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                <Layers className="h-6 w-6 mr-3 text-custom-bg" />
+                {t("PRODUCT_SETUP.ATTRIBUTES.TITLE")}
+              </h2>
+              <button
+                type="button"
+                onClick={addAttributeRow}
+                className="btn-secondary inline-flex items-center space-x-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>{t("PRODUCT_CREATION.ADD_ATTRIBUTE")}</span>
+              </button>
+            </div>
+            {aAttributes.length > 0 && (
+              <div className="p-8 space-y-6">
+                {aAttributes.map((attr, index) => (
+                  <div
+                    key={index}
+                    id={`attr-container-${index}`}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"
+                  >
+                    <div>
+                      <SelectWithIcon
+                        label={t("PRODUCT_CREATION.ATTRIBUTE_ID")}
+                        id={`AttributeTypeID-${index}`}
+                        name={`AttributeTypeID-${index}`}
+                        value={attr.AttributeTypeID}
+                        onChange={(e) =>
+                          handleAttributeTypeChange(index, e.target.value)
+                        }
+                        options={attributeTypes
+                          ?.filter((type) => type.IsActive)
+                          .map((type) => ({
+                            value: type.AttributeTypeID || type.attributeTypeID,
+                            label: type.Name || type.name,
+                          }))}
+                        Icon={Hash}
+                        error={
+                          oValidationErrors[`attr_${index}_AttributeTypeID`]
+                        }
+                        placeholder={t(
+                          "PRODUCT_CREATION.ATTRIBUTE_ID_PLACEHOLDER"
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex items-end gap-4">
+                      <SelectWithIcon
+                        label={t("PRODUCT_CREATION.ATTRIBUTE_VALUES")}
+                        id={`AttributeValueIDs-${index}`}
+                        name={`AttributeValueIDs-${index}`}
+                        value={attr.AttributeValueIDs || []}
+                        onChange={(e) => {
+                          const selectedValues = Array.isArray(e.target.value)
+                            ? e.target.value
+                            : [e.target.value].filter(Boolean);
+                          handleAttributeValuesChange(index, selectedValues);
+                        }}
+                        options={attributes
+                          .filter((attribute) => {
+                            const typeId =
+                              attribute.AttributeTypeID ||
+                              attribute.attributeTypeID;
+                            return (
+                              attribute.IsActive &&
+                              String(typeId) === String(attr.AttributeTypeID)
+                            );
+                          })
+                          .map((attribute) => ({
+                            value:
+                              attribute.AttributeValueID ||
+                              attribute.attributeValueID,
+                            label: `${attribute.Value || attribute.value}${
+                              attribute.Unit || attribute.unit
+                                ? ` (${attribute.Unit || attribute.unit})`
+                                : ""
+                            }`,
+                          }))}
+                        Icon={Layers}
+                        error={
+                          oValidationErrors[`attr_${index}_AttributeValueIDs`]
+                        }
+                        placeholder={t(
+                          "PRODUCT_CREATION.ATTRIBUTE_VALUES_PLACEHOLDER"
+                        )}
+                        multiple
+                        isDisabled={!attr.AttributeTypeID}
+                      />
+
+                      <div className="flex items-end justify-end">
+                        <button
+                          type="button"
+                          onClick={() => removeAttributeRow(index)}
+                          className="btn-cancel px-3 py-3 flex items-center justify-center"
+                          title="Remove option"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Variants display */}
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center">
                 <Layers className="h-6 w-6 mr-3 text-custom-bg" />
                 {t("PRODUCT_CREATION.VARIANT_INFORMATION")}
               </h2>
+
+              {aAttributes.some((a) => a.AttributeTypeID) && (
+                <div className="w-1/2">
+                  <SelectWithIcon
+                    label="Group by"
+                    value={groupingAttributeTypeID}
+                    onChange={(e) => setGroupingAttributeTypeID(e.target.value)}
+                    options={[
+                      { value: "", label: "Don't group variants" },
+                      ...aAttributes
+                        .filter((attr) => attr.AttributeTypeID)
+                        .map((attr) => {
+                          const tAttr = attributeTypes.find(
+                            (at) =>
+                              String(at.AttributeTypeID) ===
+                              String(attr.AttributeTypeID)
+                          );
+                          return {
+                            value: attr.AttributeTypeID,
+                            label: tAttr
+                              ? tAttr.Name || tAttr.name
+                              : `Attribute ${attr.AttributeTypeID}`,
+                          };
+                        }),
+                    ]}
+                    Icon={Layers}
+                    placeholder="Select attribute to group by"
+                  />
+                </div>
+              )}
             </div>
-            <Tab.Group
-              selectedIndex={nSelectedVariantIndex}
-              onChange={setSelectedVariantIndex}
-            >
-              <Tab.List className="flex border-b border-gray-200 bg-gray-50 p-4 space-x-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
-                {aVariants.map((variant, index) => (
-                  <Tab
-                    key={index}
-                    className={({ selected }) =>
-                      `px-6 py-3 text-sm font-medium leading-5 border-b-2 outline-none
-                      ${selected
-                        ? "border-custom-bg text-custom-bg"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      }`
-                    }
-                  >
-                    {getVariantName(variant)} {index + 1}
-                    {aVariants.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeVariant(index);
-                        }}
-                        className="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
-                      >
-                        <X className="h-4 w-4 inline-block align-middle" />
-                      </button>
-                    )}
-                  </Tab>
-                ))}
-              </Tab.List>
-              <Tab.Panels className="p-8">
-                {aVariants.map((variant, index) => (
-                  <Tab.Panel key={index}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div>
-                        <TextInputWithIcon
-                          label={t("PRODUCT_CREATION.QUANTITY")}
-                          id={`Quantity-${index}`}
-                          name="Quantity"
-                          value={variant.Quantity}
-                          onChange={(e) =>
-                            handleVariantChange(
-                              index,
-                              "Quantity",
-                              e.target.value
-                            )
-                          }
-                          placeholder={
-                            t("PRODUCT_CREATION.QUANTITY_PLACEHOLDER") ||
-                            "Enter quantity"
-                          }
-                          Icon={Hash}
-                          error={oValidationErrors[`variant_${index}_Quantity`]}
-                          ref={(el) => addVariantRef(`Quantity-${index}`, el)}
-                        />
+
+            <div className="p-6">
+              {/* If no attributes -> default variant editor */}
+              {!aAttributes.some(
+                (a) => a.AttributeTypeID && a.AttributeValueIDs?.length
+              ) ? (
+                <div className="border rounded-xl bg-white shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6">
+                    {aVariants.length === 1
+                      ? "Default Variant"
+                      : "Generated Variants"}
+                  </h3>
+
+                  {aVariants.map((variant, index) => (
+                    <div
+                      key={variant.id}
+                      className="border-b border-gray-100 pb-6 last:border-none mb-6"
+                    >
+                      <div className="flex justify-between items-center mb-4">
+                        {aVariants.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => deleteVariant(variant.id)}
+                            className="btn-cancel flex items-center space-x-1 px-2 py-1"
+                            title="Delete this variant"
+                          >
+                            <X className="h-4 w-4" />
+                            <span>Delete</span>
+                          </button>
+                        )}
                       </div>
-                      <div>
-                        <TextInputWithIcon
-                          label={t("PRODUCT_CREATION.MRP")}
-                          id={`MRP-${index}`}
-                          name="MRP"
-                          value={variant.MRP}
-                          onChange={(e) =>
-                            handleVariantChange(index, "MRP", e.target.value)
-                          }
-                          placeholder={
-                            t("PRODUCT_CREATION.MRP_PLACEHOLDER") || "Enter MRP"
-                          }
-                          Icon={() => (
-                            <span
-                              className="text-lg font-bold text-gray-400"
-                              style={{ fontFamily: "inherit" }}
-                            >
-                              ₹
-                            </span>
-                          )}
-                          error={oValidationErrors[`variant_${index}_MRP`]}
-                          ref={(el) => addVariantRef(`MRP-${index}`, el)}
-                        />
+
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                        <div className="md:col-span-2">
+                          <h4 className="text-md font-semibold text-gray-800 mb-3">
+                            Upload Images for{" "}
+                            {variant.attributes?.length
+                              ? variant.attributes
+                                  .map((a) => a.AttributeValueIDs?.[0])
+                                  .join(" - ")
+                              : t("PRODUCT_CREATION.VARIANT")}
+                          </h4>
+                          <ImageManagement
+                            type="variant"
+                            images={variant.images || []}
+                            sensors={sensors}
+                            label={`Upload images`}
+                            onFilesDrop={(files) =>
+                              enqueueFilesForCrop(files, {
+                                variantIndex: index,
+                              })
+                            }
+                            onRemoveImage={(i) => removeImage(index, i)}
+                            onSortChange={(newList) =>
+                              setVariants((prev) => {
+                                const copy = [...prev];
+                                copy[index].images = newList.map((img, idx) => ({
+                                  ...img,
+                                  sortOrder: idx + 1,
+                                }));
+                                return copy;
+                              })
+                            }
+                          />
+                        </div>
+
+                        <div className="md:col-span-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <TextInputWithIcon
+                              label={t("PRODUCT_CREATION.QUANTITY")}
+                              name="Quantity"
+                              value={variant.Quantity}
+                              onChange={(e) =>
+                                handleVariantChange(
+                                  index,
+                                  "Quantity",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Enter quantity"
+                              Icon={Hash}
+                              error={
+                                oValidationErrors[`variant_${index}_Quantity`]
+                              }
+                            />
+
+                            <TextInputWithIcon
+                              label={t("PRODUCT_CREATION.MRP")}
+                              name="MRP"
+                              value={variant.MRP}
+                              onChange={(e) =>
+                                handleVariantChange(
+                                  index,
+                                  "MRP",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Enter MRP"
+                              Icon={() => (
+                                <span className="text-xl font-bold text-gray-400">
+                                  ₹
+                                </span>
+                              )}
+                              error={oValidationErrors[`variant_${index}_MRP`]}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                            <TextInputWithIcon
+                              label={t("PRODUCT_CREATION.PRODUCT_DISCOUNT")}
+                              name="DiscountPercentage"
+                              value={variant.DiscountPercentage}
+                              onChange={(e) =>
+                                handleVariantChange(
+                                  index,
+                                  "DiscountPercentage",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Enter discount %"
+                              Icon={() => (
+                                <span className="text-lg font-bold text-gray-400">
+                                  %
+                                </span>
+                              )}
+                              error={
+                                oValidationErrors[
+                                  `variant_${index}_DiscountPercentage`
+                                ]
+                              }
+                            />
+
+                            <TextInputWithIcon
+                              label={t("PRODUCT_CREATION.SELLING_PRICE")}
+                              name="SellingPrice"
+                              value={
+                                Math.round(Number(variant.SellingPrice)) || ""
+                              }
+                              onChange={(e) =>
+                                handleVariantChange(
+                                  index,
+                                  "SellingPrice",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Selling price"
+                              Icon={() => (
+                                <span className="text-xl font-bold text-gray-400">
+                                  ₹
+                                </span>
+                              )}
+                              error={
+                                oValidationErrors[
+                                  `variant_${index}_SellingPrice`
+                                ]
+                              }
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-                      <div>
-                        <TextInputWithIcon
-                          label={t("PRODUCT_CREATION.PRODUCT_DISCOUNT")}
-                          id={`DiscountPercentage-${index}`}
-                          name="DiscountPercentage"
-                          value={variant.DiscountPercentage}
-                          onChange={(e) =>
-                            handleVariantChange(
-                              index,
-                              "DiscountPercentage",
-                              e.target.value
-                            )
-                          }
-                          placeholder={
-                            t(
-                              "PRODUCT_CREATION.PRODUCT_DISCOUNT_PLACEHOLDER"
-                            ) || "Enter discount"
-                          }
-                          Icon={Tag}
-                          error={
-                            oValidationErrors[
-                            `variant_${index}_DiscountPercentage`
-                            ]
-                          }
-                          ref={(el) =>
-                            addVariantRef(`DiscountPercentage-${index}`, el)
-                          }
-                        />
-                      </div>
-                      <div>
-                        <TextInputWithIcon
-                          label={t("PRODUCT_CREATION.SELLING_PRICE")}
-                          id={`SellingPrice-${index}`}
-                          name="SellingPrice"
-                          value={variant.SellingPrice}
-                          onChange={(e) =>
-                            handleVariantChange(
-                              index,
-                              "SellingPrice",
-                              e.target.value
-                            )
-                          }
-                          placeholder={
-                            t("PRODUCT_CREATION.SELLING_PRICE_PLACEHOLDER") ||
-                            "Enter selling price"
-                          }
-                          Icon={() => (
-                            <span
-                              className="text-lg font-bold text-gray-400"
-                              style={{ fontFamily: "inherit" }}
-                            >
-                              ₹
-                            </span>
-                          )}
-                          error={
-                            oValidationErrors[`variant_${index}_SellingPrice`]
-                          }
-                          ref={(el) =>
-                            addVariantRef(`SellingPrice-${index}`, el)
-                          }
-                        />
-                      </div>
-                    </div>
-                    <VariantImageUpload variantIndex={index} />
-                    {oValidationErrors[`variant_${index}_images`] && (
-                      <p className="text-red-500 text-sm mt-1 mb-2">
-                        {oValidationErrors[`variant_${index}_images`]}
-                      </p>
-                    )}
-                  </Tab.Panel>
-                ))}
-              </Tab.Panels>
-            </Tab.Group>
-            <div id={`variant-image-upload-${nSelectedVariantIndex}`} />
+                  ))}
+                </div>
+              ) : (
+                // IF attributes exist → show VariantTabs (patched)
+                <VariantTabs
+                  aAttributes={aAttributes.map((a) => ({
+                    ...a,
+                    NewAttributeValueIDs: a.AttributeValueIDs || [],
+                  }))}
+                  attributes={attributes}
+                  aVariants={aVariants}
+                  groupingAttributeTypeID={groupingAttributeTypeID}
+                  getVariantName={(variant) =>
+                    variant.attributes
+                      ?.map((attr) => {
+                        const valueId = attr.AttributeValueIDs?.[0];
+                        const valObj = attributes.find(
+                          (a) =>
+                            String(a.AttributeValueID || a.attributeValueID) ===
+                            String(valueId)
+                        );
+                        if (!valObj) return valueId;
+                        return `${valObj.Value || valObj.value}${
+                          valObj.Unit || valObj.unit
+                            ? ` (${valObj.Unit || valObj.unit})`
+                            : ""
+                        }`;
+                      })
+                      .join(" - ")
+                  }
+                  deleteVariant={deleteVariant}
+                  handleVariantChange={handleVariantChange}
+                  GlobalImageUpload={({ groupKey }) => (
+                    <ImageManagement
+                      type="global"
+                      images={groupGlobalImages[groupKey] || []}
+                      sensors={sensors}
+                      label="Upload common images for this group"
+                      onFilesDrop={(files) =>
+                        enqueueFilesForCrop(files, { type: "global", groupKey })
+                      }
+                      onRemoveImage={(index) => {
+                        removeGlobalImage(groupKey, index);
+                      }}
+                      onSortChange={(newList) => sortGlobalImages(groupKey, newList)}
+                    />
+                  )}
+                  TextInputWithIcon={TextInputWithIcon}
+                  t={t}
+                  oFormData={oFormData}
+                  brands={brands}
+                  aSpecifications={aSpecifications}
+                  specificationTypes={specificationTypes}
+                  attributeTypes={attributeTypes}
+
+                  // New props required by patched VariantTabs
+                  sensors={sensors}
+                  enqueueFilesForCrop={enqueueFilesForCrop}
+                  removeImage={removeImage}
+                  setVariants={setVariants}
+                />
+              )}
+            </div>
           </div>
+
+          {/* Save / Cancel */}
           <div className="flex justify-end space-x-4 mb-8">
             <button
               type="button"
@@ -1372,14 +1691,132 @@ const AddProductForm = () => {
             >
               {t("PRODUCT_CREATION.CANCEL")}
             </button>
-            <button type="submit" className="btn-primary">
-              {productId
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setShowPreview(true)}
+            >
+              Preview Product
+            </button>
+
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting
+                ? t("COMMON.SAVING")
+                : productId
                 ? t("PRODUCT_CREATION.SAVE_CHANGES")
                 : t("PRODUCT_CREATION.SAVE_PRODUCT")}
             </button>
           </div>
         </form>
       </div>
+
+      {/* Reorder Modal */}
+      {showReorderModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              Reorder Images
+            </h2>
+
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragEnd={(event) => {
+                const { active, over } = event;
+
+                if (!over || active.id === over.id) return;
+
+                const oldIndex = tempImages.findIndex(
+                  (i) => i.id === active.id
+                );
+                const newIndex = tempImages.findIndex((i) => i.id === over.id);
+
+                setTempImages(arrayMove(tempImages, oldIndex, newIndex));
+              }}
+            >
+              <SortableContext
+                items={tempImages.map((i) => i.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+                  {tempImages.map((img, index) => (
+                    <div key={img.id} className="relative group">
+                      <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 shadow-md">
+                        <img
+                          src={img.preview}
+                          alt={`Reorder ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTempImages((prev) =>
+                            prev.filter((x) => x.id !== img.id)
+                          )
+                        }
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 shadow-lg transform hover:scale-110"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                onClick={() => setShowReorderModal(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="px-4 py-2 bg-custom-bg text-white rounded-lg"
+                onClick={() => {
+                  setVariants((prev) => {
+                    const copy = [...prev];
+                    copy[reorderVariantIndex].images = tempImages;
+                    return copy;
+                  });
+                  setShowReorderModal(false);
+                }}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview modal */}
+      {showPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-semibold">Product Preview</h2>
+              <button
+                className="p-2 rounded-full hover:bg-gray-100"
+                onClick={() => setShowPreview(false)}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <VariantPreviewCard
+              oFormData={oFormData}
+              brands={brands}
+              specificationTypes={specificationTypes}
+              aSpecifications={aSpecifications}
+              aVariants={aVariants}
+              attributeTypes={attributeTypes}
+              attributes={attributes}
+              groupingAttributeTypeID={groupingAttributeTypeID}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

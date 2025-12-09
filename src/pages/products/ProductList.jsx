@@ -462,6 +462,7 @@ const ProductList = () => {
         searchPlaceholder={t("PRODUCTS.SEARCH_PLACEHOLDER")}
         onClearFilters={handleClearFilters}
         onCreate={() => navigate("/Addproduct")}
+        onAddVariants={() => navigate("/AddVariants")}
         onExport={handleExportProducts}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />

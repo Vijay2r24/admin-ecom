@@ -1,0 +1,197 @@
+import { useState } from "react";
+
+export const SingleStoreInventoryTable = ({
+  product,
+  getVariantAttributes,
+  handleStoreStatusToggle,
+}) => {
+  const store = product.Variants[0].Inventory[0];
+
+  // Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editData, setEditData] = useState(null); // variant+inventory details
+
+  const openInventoryEditModal = (variant, inv) => {
+    setEditData({
+      VariantID: variant.VariantID,
+      Quantity: inv.Quantity,
+      SellingPrice: inv.SellingPrice,
+      DiscountPercentage: inv.DiscountPercentage,
+      IsActive: inv.IsActive,
+    });
+
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditData(null);
+  };
+
+  const handleEditChange = (e) => {
+    setEditData({ ...editData, [e.target.name]: e.target.value });
+  };
+
+  const handleSave = () => {
+    console.log("Updated Inventory Data:", editData);
+    // TODO: Send API update call here
+    closeModal();
+  };
+
+  return (
+    <>
+      <div className="bg-white border rounded-lg shadow-sm">
+
+        {/* Store Name Header */}
+        <div className="px-6 py-4 border-b bg-gray-50">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Store: {store.StoreName}
+          </h3>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-6 py-3 text-left">Variant</th>
+                <th className="px-6 py-3 text-left">Qty</th>
+                <th className="px-6 py-3 text-left">Price</th>
+                <th className="px-6 py-3 text-left">Discount</th>
+                <th className="px-6 py-3 text-center">Active</th>
+                <th className="px-6 py-3 text-center">Edit</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y">
+              {product.Variants.map((variant) => {
+                const attrs = getVariantAttributes(variant);
+                const inv = variant.Inventory[0];
+
+                return (
+                  <tr key={variant.VariantID}>
+                    <td className="px-6 py-3">
+                      {attrs.Size?.value || "N/A"} / {attrs.Color?.value || "N/A"}
+                    </td>
+
+                    <td className="px-6 py-3">{inv.Quantity}</td>
+
+                    <td className="px-6 py-3">₹{inv.SellingPrice}</td>
+
+                    <td className="px-6 py-3">{inv.DiscountPercentage}%</td>
+
+                    <td className="px-6 py-3 text-center">
+                      <label className="inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={inv.IsActive}
+                          onChange={(e) =>
+                            handleStoreStatusToggle(
+                              variant,
+                              inv,
+                              e.target.checked
+                            )
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-10 h-5 bg-gray-300 rounded-full peer-checked:bg-green-600 relative">
+                          <span className="absolute left-1 top-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-all"></span>
+                        </div>
+                      </label>
+                    </td>
+
+                    <td className="px-6 py-3 text-center">
+                      <button
+                        className="text-blue-600 hover:underline"
+                        onClick={() => openInventoryEditModal(variant, inv)}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+      {/* ---------------------- MODAL ---------------------- */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-4">
+
+            <h2 className="text-lg font-semibold">Edit Inventory</h2>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium">Quantity</label>
+                <input
+                  type="number"
+                  name="Quantity"
+                  value={editData.Quantity}
+                  onChange={handleEditChange}
+                  className="mt-1 w-full border rounded-md px-3 py-2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Selling Price</label>
+                <input
+                  type="number"
+                  name="SellingPrice"
+                  value={editData.SellingPrice}
+                  onChange={handleEditChange}
+                  className="mt-1 w-full border rounded-md px-3 py-2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Discount (%)</label>
+                <input
+                  type="number"
+                  name="DiscountPercentage"
+                  value={editData.DiscountPercentage}
+                  onChange={handleEditChange}
+                  className="mt-1 w-full border rounded-md px-3 py-2"
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium">Active</label>
+                <input
+                  type="checkbox"
+                  name="IsActive"
+                  checked={editData.IsActive}
+                  onChange={(e) =>
+                    setEditData({ ...editData, IsActive: e.target.checked })
+                  }
+                  className="h-4 w-4"
+                />
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                className="px-4 py-2 border rounded-md"
+                onClick={closeModal}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="px-4 py-2 bg-custom-bg text-white rounded-md"
+                onClick={handleSave}
+              >
+                Save
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
