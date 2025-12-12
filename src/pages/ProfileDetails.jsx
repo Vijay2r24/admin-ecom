@@ -370,19 +370,10 @@ const ProfileDetails = () => {
     </div>
   ) : null;
 
-  // Since we handled the error in the useEffect with a Toast, 
-  // we return null here to avoid rendering broken UI, 
-  // but we keep ToastContainer active.
-  if (userDetailsError) {
-    return <ToastContainer />;
-  }
+   if (userDetailsError) return <div>Error: {userDetailsError}</div>;
+  if (!user) return <div>No user data found</div>;
   
-  if (!user) return (
-    <>
-      <ToastContainer />
-      {/* Optional: Add a 'No Data' placeholder here */}
-    </>
-  );
+  
 
   return (
     <div className="max-w-8xl mx-auto mt-2">

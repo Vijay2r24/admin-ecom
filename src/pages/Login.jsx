@@ -25,7 +25,6 @@ import {
   VALIDATE_OTP,
   GET_ALL_PERMISSIONS,
   GET_USER_BY_ID,
-
 } from "../contants/apiRoutes";
 
 import { showEmsg } from "../utils/ShowEmsg";
@@ -38,7 +37,7 @@ import {
   passwordRules,
   validatePassword,
   validateNewPassword,
-  validateConfirmPassword
+  validateConfirmPassword,
 } from "../utils/passwordUtils";
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
@@ -124,23 +123,44 @@ const Login = () => {
     setError((prev) => ({ ...prev, [field]: fieldError, submit: "" }));
   };
 
+  // --- LOGIC CHANGE 1: Helper function to determine image visibility ---
+  const determineAdminImageVisibility = (userData) => {
+    // Check if the role is Product Manager (Adjust 'RoleName' based on your actual API response key)
+    const isProductManager = userData?.RoleName === "Product Manager" || userData?.Role === "Product Manager";
+    
+    if (isProductManager) {
+      // Flag to HIDE image in Admin Layout (Navbar/Sidebar)
+      localStorage.setItem("hideAdminProfileImage", "true");
+    } else {
+      // Show image for everyone else
+      localStorage.removeItem("hideAdminProfileImage");
+    }
+  };
+
   const fetchUserDetailsDirectly = async (userId, token) => {
     try {
       const response = await apiGet(`${GET_USER_BY_ID}/${userId}`, {}, token);
 
       if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
         const userData = response.data.data;
+        
+        // Save full details (including image) for the User Profile Page
         localStorage.setItem("userDetails", JSON.stringify(userData));
+
+        // --- LOGIC CHANGE 2: Call visibility helper ---
+        determineAdminImageVisibility(userData);
+
         return userData;
       } else {
-        throw new Error(response?.data?.message || "Failed to fetch user details");
+        throw new Error(
+          response?.data?.message || "Failed to fetch user details"
+        );
       }
     } catch (err) {
       localStorage.removeItem("userDetails");
       throw err;
     }
   };
-
 
   const showToastMessage = (message, type = STATUS.ERROR) => {
     const options = {
@@ -154,10 +174,8 @@ const Login = () => {
     };
 
     if (type === STATUS.ERROR) {
-
       toast.error(message, { ...options, toastId: LOGIN.LOGIN_TOAST_ID });
     } else {
-
       toast.success(message, options);
     }
   };
@@ -174,7 +192,10 @@ const Login = () => {
         email: emailError,
         password: passwordError,
       }));
-      showToastMessage(t("LOGIN.ERRORS.INVALID_INPUT") || "Invalid credentials", STATUS.ERROR);
+      showToastMessage(
+        t("LOGIN.ERRORS.INVALID_INPUT") || "Invalid credentials",
+        STATUS.ERROR
+      );
       return;
     }
 
@@ -203,10 +224,7 @@ const Login = () => {
         data?.UserID &&
         status === STATUS.SUCCESS.toUpperCase()
       ) {
-
-
         showToastMessage(message || "Login Successful", "success");
-
 
         localStorage.setItem("token", data.token);
         localStorage.setItem("userId", data.UserID);
@@ -229,7 +247,11 @@ const Login = () => {
         );
 
         try {
-          const permResponse = await apiGet(GET_ALL_PERMISSIONS, {}, data.token);
+          const permResponse = await apiGet(
+            GET_ALL_PERMISSIONS,
+            {},
+            data.token
+          );
           if (permResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
             localStorage.setItem(
               "AllPermissions",
@@ -241,19 +263,29 @@ const Login = () => {
         }
 
         try {
+          let userData = null;
           if (fetchUserDetails) {
-            await fetchUserDetails(data.UserID, data.token);
+             // If using context, ensure the context function returns the data 
+             // or we handle the visibility logic if we can access the state here.
+             // Assuming fetchUserDetails returns the data promise:
+            userData = await fetchUserDetails(data.UserID, data.token);
           } else {
-            await fetchUserDetailsDirectly(data.UserID, data.token);
+            userData = await fetchUserDetailsDirectly(data.UserID, data.token);
           }
+
+          // --- LOGIC CHANGE 3: Fallback check if using Context ---
+          // If fetchUserDetails (Context) was used, we still need to set the flag
+          if (userData) {
+              determineAdminImageVisibility(userData);
+          }
+
         } catch (error) {
-          console.error("User details fetch failed",STATUS.ERROR);
+          console.error("User details fetch failed", STATUS.ERROR);
         }
 
         setTimeout(() => {
           navigate("/dashboard", { replace: true });
         }, 1500);
-
       } else {
         const fallbackMessage = t("LOGIN.ERRORS.INVALID_CREDENTIALS");
         setError((prev) => ({ ...prev, submit: fallbackMessage }));
@@ -268,6 +300,8 @@ const Login = () => {
       hideLoaderWithDelay(setSubmitting);
     }
   };
+
+  // ... (Rest of the component: handleForgotPasswordClick, handleSendOtp, handleVerifyOtp, etc. - NO CHANGES NEEDED BELOW) ...
 
   const handleForgotPasswordClick = () => {
     setCurrentView("forgotPassword");
@@ -299,7 +333,7 @@ const Login = () => {
       );
       const message = oResponse?.data?.message;
       if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
-        showToastMessage(message, "success");
+        showToastMessage(message, "STATUS.SUCCESS");
         setbShowOtpDialog(true);
         setTimerCount(60);
         setTimerActive(true);
