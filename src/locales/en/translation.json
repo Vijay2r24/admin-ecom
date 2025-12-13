@@ -24,7 +24,8 @@
       "OTP_VALIDATION_ERROR": "An error occurred during OTP validation.",
       "PASSWORD_RESET_FAILED": "Failed to reset password.",
       "LOGIN_CONTAINER_ID ":"login_page_container",
-      "LOGIN_TOAST_ID" : "login_error_id"
+      "LOGIN_TOAST_ID" : "login_error_id",
+      "LOGIN_SUCCESS_MESSAGE": "Login Successfully"
     }
   },
   "OTP": {
@@ -1247,7 +1248,16 @@
   },
  "THEMESETTINGS":{
    "PREVIEW_TITLE":"Web Preview",
-      "TITLE": "ThemeSettings"
+      "TITLE": "ThemeSettings",
+      "RESET_AS_DEFAULT": "Reset as Default",
+      "WEB_TEXT":"ShopNow",
+      "DESCRIPTION":"What are you looking for today!",
+      "CATEGORIES":"Categories",
+      "CATEGORY":"Category",
+      "TRENDING_NOW":"Trending Now",
+      "PRODUCT":"Product",
+      "COST":"999"
+
 
   
 }}

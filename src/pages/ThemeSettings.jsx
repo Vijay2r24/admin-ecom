@@ -92,7 +92,7 @@ const ThemeSettings = () => {
           onClick={handleReset}
           className="w-fit px-4 py-2 mt-2 bg-custom-bg rounded-lg text-sm text-white font-semibold"
         >
-          Reset As Default
+         {t("THEMESETTINGS.RESET_AS_DEFAULT")}
         </button>
       </div>
 
@@ -110,7 +110,7 @@ const ThemeSettings = () => {
 
             <div className="flex items-center gap-2">
               {logo && <img src={logo} alt="Logo" className="h-10 object-contain" />}
-              <h2 className="text-3xl font-bold text-white">ShopNow</h2>
+              <h2 className="text-3xl font-bold text-white">{t("THEMESETTINGS.WEB_TEXT")}</h2>
             </div>
 
             <div className="flex items-center gap-4 text-white text-xl">
@@ -123,7 +123,7 @@ const ThemeSettings = () => {
           <div className="p-6">
             <div className="flex justify-between items-center px-2">
               <h1 className="text-xl font-bold" style={{ color: primaryColor }}>
-                "What are you looking for today!"
+               {(t("THEMESETTINGS.DESCRIPTION"))}
               </h1>
 
               <div
@@ -143,14 +143,14 @@ const ThemeSettings = () => {
 
             {/* Categories */}
             <div className="mt-10">
-              <h3 className="text-xl font-bold mb-4">Categories</h3>
+              <h3 className="text-xl font-bold mb-4">{t("THEMESETTINGS.CATEGORIES")}</h3>
               <div className="flex gap-5 flex-wrap">
                 {categories.map((cat, i) => (
                   <div key={i} className="flex flex-col items-center w-24">
                     <div className="w-full aspect-square overflow-hidden rounded-xl shadow-md">
                       <img src={cat} alt={`Category ${i + 1}`} className="w-full h-full object-cover" />
                     </div>
-                    <p className="text-sm mt-2 font-semibold">Category {i + 1}</p>
+                    <p className="text-sm mt-2 font-semibold">{t("THEMESETTINGS.CATEGORY")} {i + 1}</p>
                   </div>
                 ))}
               </div>
@@ -158,7 +158,7 @@ const ThemeSettings = () => {
 
             {/* Trending */}
             <div className="mt-10">
-              <h3 className="text-xl font-bold mb-4">Trending Now</h3>
+              <h3 className="text-xl font-bold mb-4">{t("THEMESETTINGS.TRENDING_NOW")}</h3>
               <div className="grid grid-cols-3 gap-5">
                 {[women, accessories, kids, men, mobile, electronics].map((img, i) => (
                   <div key={i} className="bg-white rounded-xl shadow-md border">
@@ -166,9 +166,9 @@ const ThemeSettings = () => {
                       <img src={img} alt="product" className="w-full h-full object-cover" />
                     </div>
                     <div className="p-3">
-                      <p className="text-sm font-semibold">Product {i + 1}</p>
+                      <p className="text-sm font-semibold">{t("THEMESETTINGS.PRODUCT")} {i + 1}</p>
                       <p className="text-sm font-semibold" style={{ color: primaryColor }}>
-                        ₹999
+                       {t("THEMESETTINGS.COST")}
                       </p>
                     </div>
                   </div>

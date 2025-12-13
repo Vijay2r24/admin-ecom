@@ -8,12 +8,14 @@ import {
   Edit,
   Camera,
   Shield,
+  Bell,
+  Globe,
+  Lock,
   Key,
   CheckCircle,
   XCircle,
   X,
-  Store,
-  Lock
+  Store
 } from "lucide-react";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import cheGuevaraImg from "../../assets/images/che-guevara.jpg";
@@ -60,10 +62,8 @@ const ProfileDetails = () => {
     confirm: false
   });
   
-  // Local state for password change success/error
   const [error, setError] = useState("");
   const [Ssuccess, setSuccess] = useState("");
-  
   const { setBackButton, setTitle } = useTitle();
   const [loading, setLoading] = useState(true);
 
@@ -75,42 +75,25 @@ const ProfileDetails = () => {
   const userId = localStorage.getItem("userId");
 
   useEffect(() => {
-    setTitle(t("HEADER.YOUR_PROFILE"));
-  }, [setTitle, t]);
-
-  useEffect(() => {
     const fetchData = async () => {
-      if (userId) {
-        try {
-          setLoading(true);
-          // Clear any previous errors before fetching
-          dispatch(clearUserDetailsError());
-          await dispatch(fetchUserDetails(userId)).unwrap();
-        } catch (err) {
-          // The error is handled in the Redux state, 
-          // but we catch here to prevent unhandled promise rejection errors in console
-          console.error("Fetch failed", err);
-        } finally {
-          setLoading(false);
-        }
+      try {
+        setLoading(true);
+        // Clear any previous errors
+        dispatch(clearUserDetailsError());
+        
+        // Fetch user details using Redux thunk
+        await dispatch(fetchUserDetails(userId)).unwrap();
+      } catch (err) {
+        console.error("Failed to fetch user details:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
   }, [dispatch, userId]);
 
-  // --- ERROR HANDLING EFFECT ---
-  // This listens for the specific backend message (e.g., "User does not have permission")
-  useEffect(() => {
-    if (userDetailsError) {
-      // Show the specific message from backend
-      showEmsg(userDetailsError, STATUS.ERROR);
-      // Clear it so it doesn't loop
-      dispatch(clearUserDetailsError());
-    }
-  }, [userDetailsError, dispatch]);
-
-  // Map the user data
+  // Map the user data to match your component's expected structure
   const user = userDetails
     ? {
         name: `${userDetails.FirstName} ${userDetails.LastName}`,
@@ -132,12 +115,17 @@ const ProfileDetails = () => {
       }
     : null;
 
+  useEffect(() => {
+    setTitle(t("HEADER.YOUR_PROFILE"));
+  }, [setTitle, t]);
+
   const handlePasswordFieldChange = (field, value) => {
     setPasswordForm(prev => ({
       ...prev,
       [field]: value
     }));
 
+    // Clear error for this field when user starts typing
     if (passwordErrors[field]) {
       setPasswordErrors(prev => ({
         ...prev,
@@ -151,12 +139,14 @@ const ProfileDetails = () => {
     setError("");
     setSuccess("");
     
+    // Reset errors
     setPasswordErrors({
       currentPassword: "",
       newPassword: "",
       confirmNewPassword: "",
     });
 
+    // Validate all fields
     const currentPasswordError = validatePassword(passwordForm.currentPassword, t);
     const newPasswordError = validateNewPassword(passwordForm.newPassword, t);
     const confirmPasswordError = validateConfirmPassword(
@@ -165,6 +155,7 @@ const ProfileDetails = () => {
       t
     );
 
+    // Check if there are any validation errors
     if (currentPasswordError || newPasswordError || confirmPasswordError) {
       setPasswordErrors({
         currentPassword: currentPasswordError,
@@ -199,6 +190,7 @@ const ProfileDetails = () => {
         showEmsg(response.data.message, STATUS.SUCCESS);
         setSuccess(response.data.message);
         setModalType(null);
+        // Reset form
         setPasswordForm({
           currentPassword: "",
           newPassword: "",
@@ -224,6 +216,7 @@ const ProfileDetails = () => {
     hideLoaderWithDelay(setSubmitting);
   };
 
+  // Check if password form is valid
   const isPasswordFormValid = 
     passwordForm.currentPassword &&
     passwordForm.newPassword &&
@@ -237,6 +230,7 @@ const ProfileDetails = () => {
       title: t("PROFILE.CHANGE_PASSWORD"),
       content: (
         <form className="space-y-4" onSubmit={handleChangePassword}>
+          {/* Current Password */}
           <div className="space-y-1">
             <TextInputWithIcon
               label={t("PROFILE.CURRENT_PASSWORD")}
@@ -262,6 +256,7 @@ const ProfileDetails = () => {
             )}
           </div>
 
+          {/* New Password */}
           <div className="space-y-1">
             <TextInputWithIcon
               label={t("PROFILE.NEW_PASSWORD")}
@@ -286,6 +281,7 @@ const ProfileDetails = () => {
               <p className="text-sm text-red-500 mt-1">{passwordErrors.newPassword}</p>
             )}
             
+            {/* Password Rules */}
             <ul className="text-xs mt-2 space-y-1">
               {passwordRules(t).map((rule, idx) => {
                 const passed = rule.test(passwordForm.newPassword);
@@ -305,6 +301,7 @@ const ProfileDetails = () => {
             </ul>
           </div>
 
+          {/* Confirm New Password */}
           <div className="space-y-1">
             <TextInputWithIcon
               label={t("PROFILE.CONFIRM_NEW_PASSWORD")}
@@ -349,6 +346,7 @@ const ProfileDetails = () => {
   const handleOpenModal = (type) => setModalType(type);
   const handleCloseModal = () => {
     setModalType(null);
+    // Reset password form when closing modal
     setPasswordForm({
       currentPassword: "",
       newPassword: "",
@@ -370,10 +368,8 @@ const ProfileDetails = () => {
     </div>
   ) : null;
 
-   if (userDetailsError) return <div>Error: {userDetailsError}</div>;
+  if (userDetailsError) return <div>Error: {userDetailsError}</div>;
   if (!user) return <div>No user data found</div>;
-  
-  
 
   return (
     <div className="max-w-8xl mx-auto mt-2">
@@ -591,6 +587,7 @@ const ProfileDetails = () => {
                       : ''
                   }`}
                 >
+                  {/* Custom scrollbar styling */}
                   <style jsx>{`
                     .max-h-80::-webkit-scrollbar {
                       width: 6px;

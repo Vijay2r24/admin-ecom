@@ -87,6 +87,14 @@ const updateAttributePermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS
 const viewProductGroupPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCT_GROUPS);
 const updateProductGroupPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_PRODUCT_GROUP);
 
+
+const PublicRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+};
 const App = () => {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -96,6 +104,7 @@ const App = () => {
     const timer = setTimeout(() => setLoading(false), 600);
     return () => clearTimeout(timer);
   }, [location]);
+  
 
   return (
     <Provider store={store}>

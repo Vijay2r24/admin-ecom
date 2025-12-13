@@ -71,14 +71,7 @@ const Login = () => {
   const [bShowConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const { fetchUserDetails } = useUserDetails();
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [navigate]);
+  const { fetchUserDetails } = useUserDetails()
 
   const validateEmail = (email) => {
     if (!email.trim()) return t("LOGIN.ERRORS.EMAIL_REQUIRED");
@@ -123,11 +116,11 @@ const Login = () => {
     setError((prev) => ({ ...prev, [field]: fieldError, submit: "" }));
   };
 
-  // --- LOGIC CHANGE 1: Helper function to determine image visibility ---
+
   const determineAdminImageVisibility = (userData) => {
     // Check if the role is Product Manager (Adjust 'RoleName' based on your actual API response key)
     const isProductManager = userData?.RoleName === "Product Manager" || userData?.Role === "Product Manager";
-    
+
     if (isProductManager) {
       // Flag to HIDE image in Admin Layout (Navbar/Sidebar)
       localStorage.setItem("hideAdminProfileImage", "true");
@@ -143,11 +136,8 @@ const Login = () => {
 
       if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
         const userData = response.data.data;
-        
-        // Save full details (including image) for the User Profile Page
         localStorage.setItem("userDetails", JSON.stringify(userData));
 
-        // --- LOGIC CHANGE 2: Call visibility helper ---
         determineAdminImageVisibility(userData);
 
         return userData;
@@ -163,21 +153,7 @@ const Login = () => {
   };
 
   const showToastMessage = (message, type = STATUS.ERROR) => {
-    const options = {
-      containerId: t("LOGIN_CONTAINER_ID"),
-      position: "top-right",
-      autoClose: 2000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    };
-
-    if (type === STATUS.ERROR) {
-      toast.error(message, { ...options, toastId: LOGIN.LOGIN_TOAST_ID });
-    } else {
-      toast.success(message, options);
-    }
+    showEmsg(message, type.toLowerCase());
   };
 
   const loginUser = async () => {
@@ -224,7 +200,10 @@ const Login = () => {
         data?.UserID &&
         status === STATUS.SUCCESS.toUpperCase()
       ) {
-        showToastMessage(message || "Login Successful", "success");
+        toast.success(message || t("LOGIN.SUCCESS"),  {
+          containerId: t("LOGIN_CONTAINER_ID")
+        });
+
 
         localStorage.setItem("token", data.token);
         localStorage.setItem("userId", data.UserID);
@@ -265,18 +244,13 @@ const Login = () => {
         try {
           let userData = null;
           if (fetchUserDetails) {
-             // If using context, ensure the context function returns the data 
-             // or we handle the visibility logic if we can access the state here.
-             // Assuming fetchUserDetails returns the data promise:
             userData = await fetchUserDetails(data.UserID, data.token);
           } else {
             userData = await fetchUserDetailsDirectly(data.UserID, data.token);
           }
 
-          // --- LOGIC CHANGE 3: Fallback check if using Context ---
-          // If fetchUserDetails (Context) was used, we still need to set the flag
           if (userData) {
-              determineAdminImageVisibility(userData);
+            determineAdminImageVisibility(userData);
           }
 
         } catch (error) {
@@ -285,7 +259,7 @@ const Login = () => {
 
         setTimeout(() => {
           navigate("/dashboard", { replace: true });
-        }, 1500);
+        }, 2000);
       } else {
         const fallbackMessage = t("LOGIN.ERRORS.INVALID_CREDENTIALS");
         setError((prev) => ({ ...prev, submit: fallbackMessage }));
@@ -301,7 +275,6 @@ const Login = () => {
     }
   };
 
-  // ... (Rest of the component: handleForgotPasswordClick, handleSendOtp, handleVerifyOtp, etc. - NO CHANGES NEEDED BELOW) ...
 
   const handleForgotPasswordClick = () => {
     setCurrentView("forgotPassword");
@@ -333,7 +306,7 @@ const Login = () => {
       );
       const message = oResponse?.data?.message;
       if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
-        showToastMessage(message, "STATUS.SUCCESS");
+        showToastMessage(message, STATUS.SUCCESS);
         setbShowOtpDialog(true);
         setTimerCount(60);
         setTimerActive(true);
@@ -378,7 +351,7 @@ const Login = () => {
         oResponse.data &&
         oResponse.data.status === STATUS.SUCCESS.toUpperCase()
       ) {
-        showToastMessage(message, "success");
+        showToastMessage(message, STATUS.SUCCESS);
         setbShowOtpDialog(false);
         setTimerActive(false);
         setOtp("");
@@ -465,7 +438,7 @@ const Login = () => {
         oResponse.data &&
         oResponse.data.status === STATUS.SUCCESS.toUpperCase()
       ) {
-        showToastMessage(message, "success");
+        showToastMessage(message, STATUS.SUCCESS);
         setCurrentView("login");
         setForgotPasswordEmail("");
         setNewPassword("");
