@@ -172,22 +172,13 @@ const CreateAttributeType = () => {
 
   useEffect(() => {
     if (isEditing && AttributeTypeID) {
-
-      const params = {
-        AttributeTypeID: AttributeTypeID,
-        AttributeTypeId: AttributeTypeID,
-        attributeTypeId: AttributeTypeID,
-        typeId: AttributeTypeID,
-        pageSize: 1000,
-        pageNumber: 1
-      };
-
-      dispatch(fetchResource({ key: "attributes", params }));
+    const params = {attributeTypeId: AttributeTypeID,};
+    dispatch(fetchResource({ key: "attributes", params }));
       fetchAttributeTypeDetails();
     }
   }, [isEditing, AttributeTypeID, fetchAttributeTypeDetails, dispatch]);
 
-  // LOGIC: Prefer Local values (from details API) if available.
+  // Prefering  Local values (from details API) if available.
   // Otherwise, use Redux values (from list API), assuming params filtered them.
   const displayValues = localAttributeValues || allAttributes;
 
