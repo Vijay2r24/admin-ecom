@@ -46,7 +46,7 @@ const OrderList = () => {
 
   // Redux hooks
   const dispatch = useDispatch();
-  
+
   // --- 1. Select Stores from Redux ---
   const storesState = useSelector(
     (state) => state.allData.resources.stores || {}
@@ -62,7 +62,7 @@ const OrderList = () => {
   // --- 2. Update Default Filters ---
   const defaultFilters = {
     paymentStatus: "all",
-    store: "all", // Added store
+    store: "all",
     startDate: null,
     endDate: null,
   };
@@ -71,7 +71,7 @@ const OrderList = () => {
   const [oFilters, setFilters] = useState({
     ...defaultFilters,
     paymentStatus: searchParams.get("paymentStatus") || "all",
-    store: searchParams.get("store") || "all", // Added store from URL
+    store: searchParams.get("store") || "all",
   });
 
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ const OrderList = () => {
       params.paymentStatus = oFilters.paymentStatus;
     // --- 3. Sync Store to URL ---
     if (oFilters.store !== "all") params.store = oFilters.store;
-    
+
     if (nCurrentPage > 1) params.page = nCurrentPage.toString();
 
     // Handle date filters - convert to ISO string for URL
@@ -172,9 +172,9 @@ const OrderList = () => {
     { value: "all", label: t("COMMON.ALL") },
     ...(Array.isArray(aStores)
       ? aStores.map((store) => ({
-          value: store.StoreName,
-          label: store.StoreName,
-        }))
+        value: store.StoreID,
+        label: store.StoreName,
+      }))
       : []),
   ];
 
@@ -203,21 +203,21 @@ const OrderList = () => {
 
 
   const additionalFilters = [
-  
+
     {
       label: t("ORDERS.FILTERS.PAYMENT_STATUS"),
       name: "paymentStatus",
       value: oFilters.paymentStatus,
       options: getPaymentStatusOptions(),
     },
-      {
+    {
       label: t("COMMON.STORE"),
       name: "store",
       value: oFilters.store,
       options: storeOptions,
-      placeholder: t("USERS.FILTERS.STORE") ,
+      placeholder: t("USERS.FILTERS.STORE"),
       searchable: true,
-      searchPlaceholder: t("COMMON.SEARCH_STORE") ,
+      searchPlaceholder: t("COMMON.SEARCH_STORE"),
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "store"),
     },
@@ -300,8 +300,8 @@ const OrderList = () => {
         searchText: sSearchTerm,
         pageNumber: nCurrentPage,
         pageSize: nProductsPerPage,
-        // --- 7. Pass Store Name to API ---
-        storeName: oFilters.store !== "all" ? oFilters.store : undefined,
+        //  Passing Storeid to API ---
+        storeId: oFilters.store !== "all" ? oFilters.store : undefined,
         paymentStatus:
           oFilters.paymentStatus !== "all" ? oFilters.paymentStatus : undefined,
         startDate: startDate,
@@ -366,7 +366,7 @@ const OrderList = () => {
     nCurrentPage,
     nProductsPerPage,
     sSearchTerm,
-    oFilters, 
+    oFilters,
     initialLoadComplete,
     t,
   ]);
@@ -450,8 +450,8 @@ const OrderList = () => {
       await dispatch(
         exportOrderReport({
           searchText: sSearchTerm,
-          // --- 8. Pass Store Name to Export ---
-          storeName: oFilters.store !== "all" ? oFilters.store : undefined,
+          //  Passing StoreId to Export ---
+          storeId: oFilters.store !== "all" ? oFilters.store : undefined,
           paymentStatus:
             oFilters.paymentStatus !== "all"
               ? oFilters.paymentStatus
@@ -496,9 +496,8 @@ const OrderList = () => {
           >
             <table className="table-base">
               <thead
-                className={`table-head sticky top-0 z-0 transition-all duration-200 ${
-                  tableScrollTop > 10 ? "shadow-sm" : "shadow-sm"
-                }`}
+                className={`table-head sticky top-0 z-0 transition-all duration-200 ${tableScrollTop > 10 ? "shadow-sm" : "shadow-sm"
+                  }`}
               >
                 <tr>
                   <th className="table-head-cell w-8"></th>
@@ -788,3 +787,5 @@ const OrderList = () => {
 };
 
 export default OrderList;
+
+

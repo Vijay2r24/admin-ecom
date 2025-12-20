@@ -21,13 +21,13 @@ import {
   fetchResource,
   updateStatusById,
   clearResourceError,
-} from "../../../store/slices/allDataSlice"; // Adjust path as needed
+} from "../../../store/slices/allDataSlice";
 
 const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
   const [sSearchQuery, setSearchQuery] = useState("");
   const [bShowFilter, setShowFilter] = useState(false);
   const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
-  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+  const [tableScrollTop, setTableScrollTop] = useState(0);
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
@@ -36,7 +36,6 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
     loading: bLoading = false,
     error: sError = null,
     total: iTotalItems = 0,
-    pagination,
   } = useSelector((state) => state.allData.resources.attributeTypes || {});
 
   const [iCurrentPage, setCurrentPage] = useState(DEFAULT_PAGE);
@@ -50,8 +49,6 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
   // Hide body scrollbar when component mounts
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    
-    // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -81,6 +78,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
 
+  // --- Status Update Handler ---
   const handleStatusChange = (AttributeTypeID, currentIsActive) => {
     setStatusPopup({
       open: true,
@@ -102,7 +100,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
           apiRoute: UPDATE_ATTRIBUTE_TYPE_STATUS,
           idField: "AttributeTypeID",
         })
-      ).unwrap(); // Use unwrap to get the payload or throw error
+      ).unwrap();
 
       showEmsg(result.message, result.status || STATUS.SUCCESS);
     } catch (err) {
@@ -156,20 +154,14 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
     }
   };
 
-  // Map STATUS_OPTIONS to the format
   const statusFilterOptions = STATUS_OPTIONS.map((option) => ({
     value: option.value,
     label: t(option.labelKey),
   }));
 
   return (
-    <div 
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-    >
-      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
-      <style>
-       {customScrollbarStyles}
-      </style>
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+      <style>{customScrollbarStyles}</style>
       <div className="mb-6">
         <Toolbar
           searchTerm={sSearchQuery}
@@ -184,6 +176,8 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
           showFilterButton={true}
           onCreate={onCreate}
           createLabel={t("PRODUCT_SETUP.CREATE")}
+          disableCreate={false}
+          
           additionalFilters={
             bShowFilter
               ? [
@@ -251,7 +245,6 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                       !type.IsActive ? "bg-gray-50" : ""
                     }`}
                   >
-                    {/* Name */}
                     <td className="table-cell text-left align-middle px-6 py-4">
                       {type.IsActive ? (
                         <Link
@@ -263,10 +256,8 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                         </Link>
                       ) : (
                         <span
-                          className="text-sm font-medium text-gray-500 block truncate max-w-[180px] cursor-not-allowed"
-                          title={t(
-                            "PRODUCT_SETUP.ATTRIBUTE_TYPE.EDIT_DISABLED_TOOLTIP"
-                          )}
+                          className="text-sm font-medium block truncate max-w-[180px] text-gray-500 cursor-not-allowed"
+                          title={t("PRODUCT_SETUP.ATTRIBUTE_TYPE.EDIT_DISABLED_TOOLTIP")}
                         >
                           {type.Name}
                         </span>
@@ -298,12 +289,12 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                       </div>
                     </td>
 
-                    {/* Status */}
+                    {/* Status Badge */}
                     <td className="table-cell text-center align-middle px-6 py-4">
                       <span
                         className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                          type.IsActive 
-                            ? "bg-green-100 text-green-800 border border-green-200" 
+                          type.IsActive
+                            ? "bg-green-100 text-green-800 border border-green-200"
                             : "bg-red-100 text-red-800 border border-red-200"
                         }`}
                       >
@@ -311,7 +302,6 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                       </span>
                     </td>
 
-                    {/* Switch */}
                     <td className="table-cell text-center align-middle px-6 py-4">
                       <div className="flex justify-center">
                         <Switch
@@ -322,6 +312,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                               type.IsActive
                             )
                           }
+                          
                         />
                       </div>
                     </td>
@@ -349,17 +340,17 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
         </div>
       )}
 
-      {/* Pagination Controls - Fixed at bottom */}
+      {/* Pagination Controls */}
       {iTotalItems > 0 && !bLoading && (
-          <Pagination
-            currentPage={iCurrentPage}
-            totalPages={iTotalPages}
-            totalItems={iTotalItems}
-            itemsPerPage={iItemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
+        <Pagination
+          currentPage={iCurrentPage}
+          totalPages={iTotalPages}
+          totalItems={iTotalItems}
+          itemsPerPage={iItemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
       )}
 
       {statusPopup.open && (

@@ -27,6 +27,7 @@
       "LOGIN_TOAST_ID" : "login_error_id",
       "LOGIN_SUCCESS_MESSAGE": "Login Successfully"
     }
+
   },
   "OTP": {
     "SUCCESS": "OTP sent successfully.",
@@ -101,7 +102,7 @@
     "NOTIFICATIONS": "Notifications",
     "SETTINGS": "Settings",
     "PAGES": "Profile",
-    "THEMES":"Theme Settings"
+    "THEMES":"Application Settings"
   },
   "DASHBOARD": {
     "TITLE": "Dashboard",
@@ -1083,6 +1084,7 @@
     "PINCODE": "Pincode",
     "ZIP_CODE": "ZIP Code",
     "NO_DELETE_PERMISSION": "You do not have permission to delete.",
+     "NO_EDIT_PERMISSION": "You do not have permission to edit.",
     "ROLE": "Role",
     "USER": "User",
     "ADMIN": "Admin",
@@ -1248,7 +1250,7 @@
   },
  "THEMESETTINGS":{
    "PREVIEW_TITLE":"Web Preview",
-      "TITLE": "ThemeSettings",
+      "TITLE": "Application Settings",
       "RESET_AS_DEFAULT": "Reset as Default",
       "WEB_TEXT":"ShopNow",
       "DESCRIPTION":"What are you looking for today!",
@@ -1256,7 +1258,10 @@
       "CATEGORY":"Category",
       "TRENDING_NOW":"Trending Now",
       "PRODUCT":"Product",
-      "COST":"999"
+      "COST":"999",
+      "STORE_LOGO":"Store Logo",
+      "NO_LOGO":"No Logo",
+      "UPLOAD_LOGO":"Upload Logo"
 
 
   

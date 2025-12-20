@@ -32,6 +32,7 @@ const OrderToolbar = ({
   createLabel,
   onExport,
   exportLabel = "Export",
+   disableCreate = false
 }) => {
   const { t } = useTranslation();
  
@@ -171,7 +172,9 @@ const OrderToolbar = ({
  
         {onCreate && (
          <button
-            onClick={onCreate}
+            // onClick={onCreate}
+            onClick={disableCreate ? undefined : onCreate}
+    disabled={disableCreate}
             className="inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold text-white bg-custom-bg hover:bg-bg-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-bg transition gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" />

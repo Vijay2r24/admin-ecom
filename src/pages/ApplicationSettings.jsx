@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { PaintBucket, UploadCloud } from "lucide-react";
+import { PaintBucket, UploadCloud,Heart,ShoppingCart } from "lucide-react";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import electronics from "../../assets/images/electronics.jpg";
 import women from "../../assets/images/women.jpg";
@@ -44,7 +44,8 @@ const ThemeSettings = () => {
 
   return (
     <div className="flex gap-10 p-6">
-      <div className="w-[55%] space-y-6">
+     
+           <div className="w-[600px] h-[300px] bg-white p-6 rounded-2xl shadow-lg border">
         <TextInputWithIcon
           label="Primary Color"
           value={primaryColor}
@@ -61,7 +62,7 @@ const ThemeSettings = () => {
           }
         />
         <div className="space-y-2">
-          <label className="block text-sm font-semibold">{FILE_CONSTANTS.UPLOAD_LOGO}</label>
+        
 
           <div className="relative">
             <input
@@ -72,20 +73,42 @@ const ThemeSettings = () => {
               className="absolute w-full h-full opacity-0 cursor-pointer z-10"
             />
 
-            <div className="w-full border p-3 pl-12 rounded-lg bg-white text-gray-700 flex items-center h-[48px]">
-              {logo ? (
-                <img src={logo} alt="Logo" className="h-8 object-contain" />
-              ) : (
-                <span className="text-gray-500">{FILE_CONSTANTS.UPLOAD_LOGO}</span>
-              )}
-            </div>
 
-            {!logo && (
-              <UploadCloud
-                size={22}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
-              />
-            )}
+           <div className="mt-6">
+              <p className="text-sm text-gray-600 mb-2">{t("THEMESETTINGS.STORE_LOGO")}</p>
+
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-xl border flex items-center justify-center overflow-hidden bg-gray-50">
+                  {logo ? (
+                    <img
+                      src={logo}
+                      alt="Logo"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-xs">{t("THEMESETTINGS.NO_LOGO")}</span>
+                  )}
+                </div>
+
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                  />
+
+                  <button
+                    onClick={() => fileInputRef.current.click()}
+                    className="px-4 py-2 border rounded-lg flex items-center gap-2 hover:bg-gray-50"
+                  >
+                    <UploadCloud size={18} />
+                    {t("THEMESETTINGS.UPLOAD_LOGO")}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <button
@@ -95,29 +118,40 @@ const ThemeSettings = () => {
          {t("THEMESETTINGS.RESET_AS_DEFAULT")}
         </button>
       </div>
+    
 
       {/* WEB PREVIEW */}
-      <div className="w-[70%] flex flex-col items-center -mt-6 ml-auto pr-5">
-        <h2 className="text-xl font-semibold mb-3">{t("THEMESETTINGS.PREVIEW_TITLE")}</h2>
+      <div className="w-[70%] flex flex-col items-center mt-1 ml-auto pr-5">
+      
 
 
         <div className="origin-top-right scale-[0.85] w-[750px] h-[720px] overflow-y-auto bg-white shadow-xl rounded-2xl border border-gray-200 p-0">
-          <div
-            className="w-full px-6 py-4 flex items-center justify-between shadow-sm"
-            style={{ backgroundColor: primaryColor }}
-          >
-            <div className="text-white text-2xl cursor-pointer">☰</div>
+       <div
+  className="w-full px-6 py-4 flex items-center justify-between shadow-sm"
+  style={{ backgroundColor: primaryColor }}
+>
+  {/* LEFT: Logo + ShopNow */}
+  <div className="flex items-center gap-2">
+    {logo && (
+      <img
+        src={logo}
+        alt="Logo"
+        className="h-10 w-10 object-contain rounded-md bg-white/20 p-1"
+      />
+    )}
+    <h2 className="text-3xl font-bold text-white">
+      {t("THEMESETTINGS.WEB_TEXT")}
+    </h2>
+  </div>
 
-            <div className="flex items-center gap-2">
-              {logo && <img src={logo} alt="Logo" className="h-10 object-contain" />}
-              <h2 className="text-3xl font-bold text-white">{t("THEMESETTINGS.WEB_TEXT")}</h2>
-            </div>
+  {/* RIGHT: Icons */}
+  <div className="flex items-center gap-4 text-white text-xl">
+   <Heart size={18} className="text-red-500 cursor-pointer" />
+<ShoppingCart size={18} className="text-gray-700 cursor-pointer" />
 
-            <div className="flex items-center gap-4 text-white text-xl">
-              <span>❤️</span>
-              <span>🛒</span>
-            </div>
-          </div>
+  </div>
+</div>
+
 
           {/* BODY */}
           <div className="p-6">

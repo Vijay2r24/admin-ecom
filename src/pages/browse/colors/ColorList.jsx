@@ -15,6 +15,7 @@ import {
   STATUS_OPTIONS,
   customScrollbarStyles,
 } from "../../../contants/constants";
+import { getPermissionCode,hasPermissionId } from "../../../utils/permissionUtils";
 
 const ColorList = ({ onCreate, onBack, setSubmitting }) => {
   const [sSearchQuery, setSearchQuery] = useState("");
@@ -36,6 +37,9 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
 
   // Local state for optimistic UI updates (just keeping data in sync)
   const [localColors, setLocalColors] = useState(aColors || []);
+    const permissionIdForAdd = getPermissionCode("Product Setup", "Add Colour");
+  const hasAddPermission = hasPermissionId(permissionIdForAdd);
+  
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
@@ -117,8 +121,10 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
           showSearch={true}
           showViewToggle={false}
           showFilterButton={false}
-          onCreate={onCreate}
+          onCreate={hasAddPermission ? onCreate : undefined}
           createLabel={t("PRODUCT_SETUP.CREATE")}
+          disableCreate={!hasAddPermission}
+          
           handleFilterChange={bShowFilters ? handleFilterChange : undefined}
         />
       </div>

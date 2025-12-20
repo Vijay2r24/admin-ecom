@@ -15,7 +15,9 @@ import {
   LayoutDashboard,
   UserRound,
   CreditCard ,
-  Palette,// Add CreditCard icon for Payments
+  Palette,
+  Sliders,
+  Cog,// Add CreditCard icon for Payments
 } from 'lucide-react';
 import { getPermissionCode } from '../utils/permissionUtils';
  
@@ -87,7 +89,7 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
       section: 'Settings',
       subItems: [
         { name: t('SIDEBAR.PAGES'), href: '/profile', icon: UserRound },
-         { name: t('SIDEBAR.THEMES'), href: '/theme', icon: Palette },
+         { name: t('SIDEBAR.THEMES'), href: '/application', icon: Cog },
       ]
     },
   ], [t]);

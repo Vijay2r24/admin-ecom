@@ -222,7 +222,7 @@ export const FILE_CONSTANTS = {
   UPLOAD_LOGO:"Upload Logo"
 };
 
-export const TOOLTIPSTATUS = { ACTIVE: "active", INACTIVE: "inactive" };
+export const TOOLTIPSTATUS = { ACTIVE: "active", INACTIVE: "inactive" , NO_PERMISSION: "You don’t have permission to change status"};
 
 export const MODULES = {
   DASHBOARD: "Dashboard Management",

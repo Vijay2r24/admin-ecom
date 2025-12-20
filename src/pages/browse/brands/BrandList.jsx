@@ -28,16 +28,15 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
 
-  const [bShowCreate, setShowCreate] = useState(false); // Toggle between list and create view
-  const [sSearchQuery, setSearchQuery] = useState(""); // Search term for filtering brands
-  const [bShowFilters, setShowFilters] = useState(false); // Show/hide filters dropdown
-  const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL }); // Active filters (status filter here)
+  const [bShowCreate, setShowCreate] = useState(false);
+  const [sSearchQuery, setSearchQuery] = useState("");
+  const [bShowFilters, setShowFilters] = useState(false);
+  const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
 
-  const [nCurrentPage, setCurrentPage] = useState(DEFAULT_PAGE); // Current pagination page
-  const [iItemsPerPage] = useState(ITEMS_PER_PAGE); // Number of items per page (constant)
-  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+  const [nCurrentPage, setCurrentPage] = useState(DEFAULT_PAGE);
+  const [iItemsPerPage] = useState(ITEMS_PER_PAGE);
+  const [tableScrollTop, setTableScrollTop] = useState(0);
 
-  // Popup state for brand status confirmation
   const [statusPopup, setStatusPopup] = useState({
     open: false,
     brandId: null,
@@ -46,24 +45,18 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
 
   // --- Redux Selectors ---
   const brandsState = useSelector((state) => state.allData.resources.brands);
-  const aBrands = brandsState?.data || []; // Brand list
-  const bLoading = brandsState?.loading || false; // Loading state
-  const sError = brandsState?.error || null; // Error message
-  const iTotalItems = brandsState?.total || 0; // Total number of brands
+  const aBrands = brandsState?.data || [];
+  const bLoading = brandsState?.loading || false;
+  const sError = brandsState?.error || null;
+  const iTotalItems = brandsState?.total || 0;
 
-  // Hide body scrollbar when component mounts
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    
-    // Re-enable scrollbar when component unmounts
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, []);
 
-  /**
-   * Fetch brands whenever filters, search query, or page changes
-   */
   useEffect(() => {
     const params = {
       pageNumber: nCurrentPage,
@@ -71,14 +64,11 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       searchText: sSearchQuery,
     };
     if (oFilters.status !== STATUS_VALUES.ALL) {
-      params.IsActive = oFilters.status; // Apply status filter if not "all"
+      params.IsActive = oFilters.status;
     }
     dispatch(fetchResource({ key: "brands", params }));
   }, [dispatch, nCurrentPage, iItemsPerPage, sSearchQuery, oFilters.status]);
 
-  /**
-   * Clear error when component unmounts or when search query changes
-   */
   useEffect(() => {
     return () => {
       if (sError) {
@@ -87,12 +77,10 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
     };
   }, [sError, dispatch]);
 
-  // Handle table scroll for floating header
   const handleTableScroll = useCallback((e) => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
 
-  // --- Pagination Handlers ---
   const handlePageClick = (pageNumber) => setCurrentPage(pageNumber);
 
   const handleNextPage = () => {
@@ -107,9 +95,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
     }
   };
 
-  // --- Status Update Handlers ---
   const handleStatusChange = (brandId, currentIsActive) => {
-    // Open confirmation popup before updating status
     setStatusPopup({ open: true, brandId, newStatus: !currentIsActive });
   };
 
@@ -118,7 +104,6 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
     const { brandId, newStatus } = statusPopup;
 
     try {
-      // Dispatch async status update request
       const result = await dispatch(
         updateStatusById({
           key: "brands",
@@ -131,7 +116,6 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
 
       showEmsg(result.message, STATUS.SUCCESS);
 
-      // Refetch updated list after successful status change
       const params = {
         pageNumber: nCurrentPage,
         pageSize: iItemsPerPage,
@@ -144,7 +128,6 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
     } catch (err) {
       showEmsg(err?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
-      // Reset popup state and stop loader
       setStatusPopup({ open: false, brandId: null, newStatus: null });
       hideLoaderWithDelay(setSubmitting);
     }
@@ -154,33 +137,26 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
     setStatusPopup({ open: false, brandId: null, newStatus: null });
   };
 
-  // --- Filters Handler ---
   const handleFilterChange = (e, filterName) => {
     setFilters({
       ...oFilters,
       [filterName]: e.target.value,
     });
-    setCurrentPage(DEFAULT_PAGE); // Reset to first page when filters change
+    setCurrentPage(DEFAULT_PAGE);
   };
 
-  // Map STATUS_OPTIONS to the format expected by Toolbar component
   const statusFilterOptions = STATUS_OPTIONS.map((option) => ({
     value: option.value,
     label: t(option.labelKey),
   }));
 
   if (bShowCreate) {
-    // If "Create Brand" is triggered, show create form instead of list
     return <CreateBrand onBack={() => setShowCreate(false)} />;
   }
 
   return (
-    <div 
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-    >
-      <style>
-        {customScrollbarStyles}
-      </style>
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+      <style>{customScrollbarStyles}</style>
 
       {/* Toolbar with Search & Filters */}
       <div className="mb-6">
@@ -192,8 +168,12 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
           searchPlaceholder={t("PRODUCT_SETUP.BRANDS.SEARCH_PLACEHOLDER")}
           showSearch={true}
           showViewToggle={false}
+          
+          // --- Permissions removed ---
           onCreate={onCreate}
           createLabel={t("PRODUCT_SETUP.CREATE")}
+          disableCreate={false}
+
           showFilterButton={true}
           additionalFilters={
             bShowFilters
@@ -296,7 +276,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                           )}
                         </div>
 
-                        {/* Brand Name */}
+                        {/* Brand Name - Conditional Link based only on Status */}
                         {brand.IsActive ? (
                           <Link
                             to={`/browse/editbrand/${brand.BrandID}`}
@@ -306,10 +286,8 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                           </Link>
                         ) : (
                           <span
-                            className="text-gray-500 block truncate max-w-[200px] cursor-not-allowed font-medium"
-                            title={t(
-                              "PRODUCT_SETUP.BRANDS.EDIT_DISABLED_TOOLTIP"
-                            )}
+                            className="block truncate max-w-[200px] font-medium text-gray-500 cursor-not-allowed"
+                            title={t("PRODUCT_SETUP.BRANDS.EDIT_DISABLED_TOOLTIP")}
                           >
                             {brand.BrandName}
                           </span>
@@ -321,8 +299,8 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                     <td className="table-cell text-center align-middle px-6 py-4">
                       <span
                         className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                          brand.IsActive 
-                            ? "bg-green-100 text-green-800 border border-green-200" 
+                          brand.IsActive
+                            ? "bg-green-100 text-green-800 border border-green-200"
                             : "bg-red-100 text-red-800 border border-red-200"
                         }`}
                       >
@@ -356,6 +334,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                           onChange={() =>
                             handleStatusChange(brand.BrandID, brand.IsActive)
                           }
+                          // disabled prop removed
                         />
                       </div>
                     </td>
@@ -370,7 +349,9 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       {/* No Results Message */}
       {bLoading === false && aBrands.length === 0 && (
         <div className="text-center py-12 text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100">
-          <p className="text-lg mb-4">{t("PRODUCT_SETUP.BRANDS.NO_BRANDS_FOUND")}</p>
+          <p className="text-lg mb-4">
+            {t("PRODUCT_SETUP.BRANDS.NO_BRANDS_FOUND")}
+          </p>
           {sSearchQuery && (
             <div>
               <button
@@ -384,20 +365,20 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
         </div>
       )}
 
-      {/* Pagination Controls - Fixed at bottom */}
+      {/* Pagination Controls */}
       {iTotalItems > 0 && (
-          <Pagination
-            currentPage={nCurrentPage}
-            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-            totalItems={iTotalItems}
-            itemsPerPage={iItemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
+        <Pagination
+          currentPage={nCurrentPage}
+          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+          totalItems={iTotalItems}
+          itemsPerPage={iItemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
       )}
 
-      {/* Confirmation Popup for Status Change */}
+      {/* Confirmation Popup */}
       {statusPopup.open && (
         <FullscreenErrorPopup
           message={
