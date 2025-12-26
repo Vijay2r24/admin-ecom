@@ -8,6 +8,7 @@ import {
   ATTRIBUTE_TYPE,
   GET_ALL_ROLES_API,
   GET_ALL_STORES,
+  GET_ALL_STORES_API,
   GET_ALL_USERS,
   ORDER_STATUS_API,
   GET_ALL_PRODUCT_GROUPS,
@@ -31,6 +32,7 @@ const aResourceConfigs = [
   { key: "attributeTypes", api: ATTRIBUTE_TYPE, idField: "AttributeTypeID" },
   { key: "roles", api: GET_ALL_ROLES_API, rolesPagination: true },
   { key: "stores", api: GET_ALL_STORES },
+  { key: "allStores", api: GET_ALL_STORES_API },
   { key: "brands", api: GETALL_BRANDS, idField: "BrandID" },
   { key: "categories", api: GETALL_CATEGORY, idField: "CategoryID" },
   { key: "users", api: GET_ALL_USERS, idField: "UserID" },
@@ -72,10 +74,10 @@ const aResourceConfigs = [
     idField: "CityID"
   },
   {
-    key:"specificationType",
-    api:GET_ALL_SPECIFICATIONS,
-    totalKey:"totalRecords",
-    idField:"SpecificationTypeID",
+    key: "specificationType",
+    api: GET_ALL_SPECIFICATIONS,
+    totalKey: "totalRecords",
+    idField: "SpecificationTypeID",
   }
 ];
 
@@ -84,35 +86,35 @@ const aResourceConfigs = [
  */
 export const fetchResource = createAsyncThunk(
   "allData/fetchResource",
- async ({ key, params = {} }, { rejectWithValue }) => {
-  try {
-    const config = aResourceConfigs.find((c) => c.key === key);
-    if (!config) throw new Error(`Unknown resource: ${key}`);
+  async ({ key, params = {} }, { rejectWithValue }) => {
+    try {
+      const config = aResourceConfigs.find((c) => c.key === key);
+      if (!config) throw new Error(`Unknown resource: ${key}`);
 
-    const token = localStorage.getItem("token");
-    const response = await apiGet(config.api, params, token);
+      const token = localStorage.getItem("token");
+      const response = await apiGet(config.api, params, token);
 
-    let data = [];
-    let total = 0;
-    let pagination = {};
+      let data = [];
+      let total = 0;
+      let pagination = {};
 
-    // Your specific API response structure
-    if (response.data?.status === STATUS.SUCCESS.toUpperCase()) {
-      data = response.data.data || [];
-      pagination = response.data.pagination || {};
-      total = pagination.totalRecords || data.length;
-    } else {
-      // Fallback for other formats
-      data = response.data?.data || [];
-      pagination = response.data?.pagination || {};
-      total = pagination.totalRecords || data.length;
+      // Your specific API response structure
+      if (response.data?.status === STATUS.SUCCESS.toUpperCase()) {
+        data = response.data.data || [];
+        pagination = response.data.pagination || {};
+        total = pagination.totalRecords || data.length;
+      } else {
+        // Fallback for other formats
+        data = response.data?.data || [];
+        pagination = response.data?.pagination || {};
+        total = pagination.totalRecords || data.length;
+      }
+
+      return { key, data, total, pagination };
+    } catch (err) {
+      return rejectWithValue({ key, error: err.message });
     }
-
-    return { key, data, total, pagination };
-  } catch (err) {
-    return rejectWithValue({ key, error: err.message });
   }
-}
 );
 
 /**
@@ -172,7 +174,7 @@ export const fetchStatesByCountryId = createAsyncThunk(
       const response = await apiGet(`${GET_STATES_BY_COUNTRY_ID}/${countryId}`, {}, token);
 
       let data = [];
-      
+
       // Handle the new response format: { status: "SUCCESS", data: [...] }
       if (response.data?.status === STATUS.SUCCESS.toUpperCase()) {
         data = Array.isArray(response.data.data) ? response.data.data : [];
@@ -200,7 +202,7 @@ export const fetchCitiesByStateId = createAsyncThunk(
       const response = await apiGet(`${GET_CITIES_BY_STATE_ID}/${stateId}`, {}, token);
 
       let data = [];
-      
+
       // Handle the new response format: { status: "SUCCESS", data: [...] }
       if (response.data?.status === STATUS.SUCCESS.toUpperCase()) {
         data = Array.isArray(response.data.data) ? response.data.data : [];
@@ -360,12 +362,12 @@ const allDataSlice = createSlice({
   },
 });
 
-export const { 
-  clearResourceError, 
-  clearUserDetailsError, 
-  clearUserDetails, 
-  clearStates, 
-  clearCities 
+export const {
+  clearResourceError,
+  clearUserDetailsError,
+  clearUserDetails,
+  clearStates,
+  clearCities
 } = allDataSlice.actions;
 
 export default allDataSlice.reducer;

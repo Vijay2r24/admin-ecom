@@ -1,4 +1,3 @@
-
 // AddProductForm.jsx
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Plus, X, Upload, Tag, Hash, ShoppingBag, Layers } from "lucide-react";
@@ -9,10 +8,10 @@ import { useTranslation } from "react-i18next";
 import { STATUS } from "../../contants/constants.jsx";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchResource } from "../../store/slices/allDataSlice.jsx";
-import { apiPost, apiGet } from "../../utils/ApiUtils.jsx";
+import { apiPost, apiGet, apiPut } from "../../utils/ApiUtils.jsx";
 import {
   CREATE_OR_UPDATE_PRODUCT,
-    CREATE_PRODUCT,
+  CREATE_PRODUCT,
   UPDATE_PRODUCT,
   GET_PRODUCT_BY_ID,
 } from "../../contants/apiRoutes";
@@ -44,6 +43,7 @@ import VariantPreviewCard from "../../pages/products/VariantPreviewCard.jsx";
 import Accordion from "../../components/products/Accordion.jsx";
 import ImageManagement from "../../components/products/ImagesManager.jsx";
 import VariantTabs from "../../components/products/VariantTabs.jsx";
+import FloatingFooter from "../../components/FloatingFooter.jsx";
 
 /* ------------------------- AddProductForm — patched ------------------------- */
 
@@ -65,6 +65,7 @@ const AddProductForm = () => {
       Quantity: "",
       MRP: "",
       DiscountPercentage: "",
+      ProductDiscount: "",
       SellingPrice: "",
       StoreID: "",
       images: [],
@@ -95,9 +96,14 @@ const AddProductForm = () => {
   const [showReorderModal, setShowReorderModal] = useState(false);
   const [reorderVariantIndex, setReorderVariantIndex] = useState(null);
   const [tempImages, setTempImages] = useState([]);
+  const [hasFetchedProduct, setHasFetchedProduct] = useState(false);
 
   // Global images map: { [groupKey]: [images...] }
   const [groupGlobalImages, setGroupGlobalImages] = useState({});
+  // fallback labels for attribute values from product payload (edit mode)
+  const attributeLabelMapRef = useRef({});
+  // Store attribute map from product fetch for later update
+  const attributeMapForUpdateRef = useRef({});
 
   // ---------- UNIFIED MULTI-CROP QUEUE STATE ----------
   // cropQueue items: { file, url, type: 'variant'|'global', variantIndex?, groupKey?, id }
@@ -180,6 +186,28 @@ const AddProductForm = () => {
     if (mrpValue <= 0 || discountValue < 0) return "";
     return (mrpValue - (mrpValue * discountValue) / 100).toFixed(2);
   };
+  // Resolve a human-readable label for an attribute value (prefer store data, fall back to payload)
+  const getAttributeValueLabel = (attr) => {
+    if (!attr) return "";
+    const valueId = attr.AttributeValueIDs?.[0];
+    if (!valueId) return "";
+
+    const valObj = attributes.find(
+      (a) =>
+        String(a.AttributeValueID || a.attributeValueID) === String(valueId)
+    );
+    const fallbackFromPayload =
+      attributeLabelMapRef.current?.[attr.AttributeTypeID]?.[valueId];
+
+    const valueLabel = valObj
+      ? valObj.Value || valObj.value
+      : attr.Value || attr.value || fallbackFromPayload || valueId;
+    const unitLabel = valObj
+      ? valObj.Unit || valObj.unit
+      : attr.Unit || attr.unit;
+
+    return `${valueLabel}${unitLabel ? ` (${unitLabel})` : ""}`;
+  };
   const selectedBrandName = brands.find(
     (b) => b.BrandID === oFormData.BrandID
   )?.BrandName;
@@ -200,6 +228,36 @@ const AddProductForm = () => {
 
           if (response.data.status === STATUS.SUCCESS.toUpperCase()) {
             const product = response.data?.data;
+            setHasFetchedProduct(true);
+
+            const mappedSpecifications = Array.isArray(
+              product.ProductSpecification
+            )
+              ? product.ProductSpecification.map((spec) => ({
+                SpecificationTypeID:
+                  spec.SpecificationTypeID ||
+                  spec.SpecificatiobnTypeID ||
+                  spec.specificatiobnTypeID ||
+                  "",
+                Value: spec.Value || "",
+                Unit: spec.Unit ?? "",
+              }))
+              : [];
+
+            const attributeTypeIdsToFetch = new Set();
+
+            // Collect all StoreIDs from all variants' Inventory arrays for initial form selection
+            const allStoreIDs = new Set();
+            product.Variants?.forEach((variant) => {
+              if (Array.isArray(variant.Inventory)) {
+                variant.Inventory.forEach((inv) => {
+                  if (inv.StoreID) {
+                    allStoreIDs.add(inv.StoreID);
+                  }
+                });
+              }
+            });
+            const storeIDsArray = Array.from(allStoreIDs);
 
             // basic form data
             setFormData({
@@ -207,23 +265,70 @@ const AddProductForm = () => {
               ProductDescription: product.ProductDescription || "",
               BrandID: product.BrandID || "",
               CategoryID: product.CategoryID || "",
-              StoreID: product.Variants[0]?.Inventory[0]?.StoreID || "",
+              // Initialize with StoreIDs from Inventory, but user can change selection
+              // Only selected StoreIDs will be used in submission
+              StoreID:
+                storeIDsArray.length > 0
+                  ? storeIDsArray.length === 1
+                    ? storeIDsArray[0]
+                    : storeIDsArray
+                  : "",
               CreatedBy: product.CreatedBy || "Admin",
               TenantID: localStorage.getItem("tenantID") || "",
               SpecificationTypeID:
-                product.ProductSpecification?.[0]?.SpecificatiobnTypeID || "",
+                mappedSpecifications?.[0]?.SpecificationTypeID ||
+                product.ProductSpecification?.[0]?.SpecificatiobnTypeID ||
+                "",
             });
+
+            setSpecifications(
+              mappedSpecifications.length
+                ? mappedSpecifications
+                : [
+                  {
+                    SpecificationTypeID: "",
+                    Value: "",
+                  },
+                ]
+            );
 
             // attributes from backend -> transform to aAttributes shape
             const attributeMap = {};
+            const attributeLabelMap = {}; // fallback labels from API payload
             product.Variants.forEach((variant) => {
               variant.Attributes?.forEach((attr) => {
                 const typeId = attr.AttributeTypeID;
-                const valId = attr.AttributeValueID;
+                const valId =
+                  attr.AttributeValueID ||
+                  attr.AttributeValueId ||
+                  attr.attributeValueID;
+                if (!typeId || !valId) return;
+                attributeTypeIdsToFetch.add(typeId);
                 if (!attributeMap[typeId]) attributeMap[typeId] = new Set();
                 attributeMap[typeId].add(valId);
+                // store payload value/unit as a fallback label
+                if (!attributeLabelMap[typeId]) attributeLabelMap[typeId] = {};
+                attributeLabelMap[typeId][valId] =
+                  attr.Value ||
+                  attr.value ||
+                  attr.Name ||
+                  attr.name ||
+                  String(valId);
               });
             });
+
+            attributeTypeIdsToFetch.forEach((typeId) =>
+              dispatch(
+                fetchResource({
+                  key: "attributes", // Pass selected attribute type so API can filter values server-side
+                  params: { AttributeTypeID: typeId, attributeTypeId: typeId },
+                })
+              )
+            );
+            attributeLabelMapRef.current = attributeLabelMap;
+
+            // Store attribute map for later use when attributes are loaded
+            const attributeMapForUpdate = { ...attributeMap };
 
             const transformedAttributes = Object.keys(attributeMap).map(
               (typeId) => {
@@ -238,7 +343,11 @@ const AddProductForm = () => {
                   );
                   return {
                     id: vid,
-                    label: a ? a.Value || a.value : String(vid),
+                    label:
+                      a?.Value ||
+                      a?.value ||
+                      attributeLabelMap?.[typeId]?.[vid] ||
+                      String(vid),
                   };
                 });
                 return {
@@ -254,55 +363,95 @@ const AddProductForm = () => {
               transformedAttributes.length > 0
                 ? transformedAttributes
                 : [
-                    {
-                      AttributeTypeID: "",
-                      AttributeValueIDs: [],
-                      typeName: "",
-                      valueLabels: [],
-                    },
-                  ]
+                  {
+                    AttributeTypeID: "",
+                    AttributeValueIDs: [],
+                    typeName: "",
+                    valueLabels: [],
+                  },
+                ]
             );
 
-            // Keep original variants logic (simple)
+            // Store attribute map in ref for useEffect to use
+            attributeMapForUpdateRef.current = attributeMapForUpdate;
+
             const variants =
-              product.Variants?.map((v) => ({
-                id:
-                  v.VariantID ||
-                  crypto?.randomUUID?.() ||
-                  Math.random().toString(36).slice(2),
-                VariantID: v.VariantID,
-                attributes: v.Attributes || [],
-                Quantity: v.Quantity || "",
-                MRP: v.MRP || "",
-                DiscountPercentage: v.DiscountPercentage || "",
-                SellingPrice: v.SellingPrice || "",
-                StoreID: v.StoreID || oFormData.StoreID,
-                images:
-                  v.Images?.map((img, idx) => ({
-                    // adapt to your API shape if necessary
-                    documentId: img.DocumentID,
-                    preview: img.Url || img.url || "",
-                    sortOrder: img.SortOrder || idx + 1,
-                  })) || [],
-                removedImages: [],
-              })) || [];
+              product.Variants?.map((v) => {
+                // Handle multiple Inventory items (multiple stores per variant)
+                const inventoryArray = Array.isArray(v.Inventory)
+                  ? v.Inventory
+                  : [];
+                const firstInventory = inventoryArray[0] || {};
+
+                // Use first inventory values as defaults, or aggregate if needed
+                const quantity = firstInventory.Quantity || "";
+                const discountPercentage =
+                  firstInventory.DiscountPercentage || "";
+                const sellingPrice = firstInventory.SellingPrice || "";
+
+                return {
+                  id: v.VariantID || crypto?.randomUUID?.(),
+                  VariantID: v.VariantID,
+
+                  // ✅ ATTRIBUTES - handle empty arrays
+                  attributes: Array.isArray(v.Attributes)
+                    ? v.Attributes.map((attr) => {
+                      const attrValueId =
+                        attr.AttributeValueID ||
+                        attr.AttributeValueId ||
+                        attr.attributeValueID;
+                      return {
+                        AttributeTypeID: attr.AttributeTypeID,
+                        AttributeValueIDs: [attrValueId],
+                        Name: attr.Name,
+                        Value: attr.Value,
+                        Unit: attr.Unit,
+                      };
+                    })
+                    : [],
+
+                  // ✅ CORRECT INVENTORY FIELDS (use first inventory entry)
+                  Quantity: quantity,
+                  MRP: v.MRP || "",
+                  // Backend sends DiscountPercentage; UI field uses ProductDiscount as well
+                  DiscountPercentage: discountPercentage,
+                  ProductDiscount: discountPercentage,
+                  SellingPrice: sellingPrice,
+                  StoreID: firstInventory.StoreID || oFormData.StoreID,
+
+                  // ✅ CORRECT IMAGE KEY
+                  images:
+                    v.ProductVariantImages?.sort(
+                      (a, b) => a.sortOrder - b.sortOrder
+                    ).map((img) => ({
+                      id: img.documentId,
+                      documentId: img.documentId,
+                      preview: img.documentUrl, // ✅ IMPORTANT
+                      documentUrl: img.documentUrl,
+                      sortOrder: img.sortOrder,
+                      isExisting: true, // REQUIRED FOR EDIT MODE
+                    })) || [],
+
+                  removedImages: [],
+                };
+              }) || [];
 
             setVariants(
               variants.length > 0
                 ? variants
                 : [
-                    {
-                      id:
-                        crypto?.randomUUID?.() ||
-                        Math.random().toString(36).slice(2),
-                      attributes: [],
-                      Quantity: "",
-                      MRP: "",
-                      SellingPrice: "",
-                      StoreID: "",
-                      images: [],
-                    },
-                  ]
+                  {
+                    id:
+                      crypto?.randomUUID?.() ||
+                      Math.random().toString(36).slice(2),
+                    attributes: [],
+                    Quantity: "",
+                    MRP: "",
+                    SellingPrice: "",
+                    StoreID: "",
+                    images: [],
+                  },
+                ]
             );
           }
         } catch (error) {
@@ -313,7 +462,7 @@ const AddProductForm = () => {
       fetchProduct();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId, t, dispatch, attributes, attributeTypes]);
+  }, [productId]);
 
   useEffect(() => {
     setTitle(
@@ -351,15 +500,15 @@ const AddProductForm = () => {
       prev.map((attr, i) =>
         i === index
           ? {
-              ...attr,
-              AttributeTypeID: typeId,
-              AttributeValueIDs: [],
-              valueLabels: [],
-              typeName:
-                attributeTypes.find(
-                  (t) => String(t.AttributeTypeID) === String(typeId)
-                )?.Name || "",
-            }
+            ...attr,
+            AttributeTypeID: typeId,
+            AttributeValueIDs: [],
+            valueLabels: [],
+            typeName:
+              attributeTypes.find(
+                (t) => String(t.AttributeTypeID) === String(typeId)
+              )?.Name || "",
+          }
           : attr
       )
     );
@@ -367,7 +516,8 @@ const AddProductForm = () => {
       dispatch(
         fetchResource({
           key: "attributes",
-          params: { AttributeTypeID: typeId },
+          // Ensure API receives the selected AttributeTypeID
+          params: { AttributeTypeID: typeId, attributeTypeId: typeId },
         })
       );
     }
@@ -401,18 +551,18 @@ const AddProductForm = () => {
         aAttributes.map((attr, i) =>
           i === index
             ? {
-                ...attr,
-                AttributeValueIDs: selectedValueIDs,
-                valueLabels: selectedValueIDs.map((vid) => {
-                  const valObj =
-                    attributes.find(
-                      (a) =>
-                        String(a.AttributeValueID || a.attributeValueID) ===
-                        String(vid)
-                    ) || {};
-                  return valObj.Value || valObj.value || String(vid);
-                }),
-              }
+              ...attr,
+              AttributeValueIDs: selectedValueIDs,
+              valueLabels: selectedValueIDs.map((vid) => {
+                const valObj =
+                  attributes.find(
+                    (a) =>
+                      String(a.AttributeValueID || a.attributeValueID) ===
+                      String(vid)
+                  ) || {};
+                return valObj.Value || valObj.value || String(vid);
+              }),
+            }
             : attr
         )
       );
@@ -428,13 +578,17 @@ const AddProductForm = () => {
     );
 
     if (attrs.length === 0) {
+      // In edit mode with no attributes, keep existing variants (don't overwrite)
+      if (productId && hasFetchedProduct && aVariants.length > 0) return;
       setVariants([
         {
           id: crypto?.randomUUID?.() || Math.random().toString(36).slice(2),
           attributes: [],
           Quantity: "",
           MRP: "",
+
           DiscountPercentage: "",
+          ProductDiscount: "",
           SellingPrice: "",
           StoreID: oFormData.StoreID,
           images: [],
@@ -465,7 +619,7 @@ const AddProductForm = () => {
             (va) =>
               String(va.AttributeTypeID) === String(c.AttributeTypeID) &&
               String(va.AttributeValueIDs?.[0]) ===
-                String(c.AttributeValueIDs?.[0])
+              String(c.AttributeValueIDs?.[0])
           )
         );
       });
@@ -479,7 +633,10 @@ const AddProductForm = () => {
         attributes: combo,
         Quantity: match?.Quantity || "",
         MRP: match?.MRP || "",
-        DiscountPercentage: match?.DiscountPercentage || "",
+        DiscountPercentage:
+          match?.DiscountPercentage || match?.ProductDiscount || "",
+        ProductDiscount:
+          match?.ProductDiscount || match?.DiscountPercentage || "",
         SellingPrice: match?.SellingPrice || "",
         StoreID: match?.StoreID || oFormData.StoreID,
         images: match?.images?.length ? match.images : [],
@@ -495,6 +652,50 @@ const AddProductForm = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aAttributes, oFormData.StoreID]);
 
+  // Update aAttributes when attributes are loaded from Redux (for edit mode)
+  useEffect(() => {
+    if (
+      hasFetchedProduct &&
+      Object.keys(attributeMapForUpdateRef.current).length > 0 &&
+      attributes.length > 0
+    ) {
+      const attributeMap = attributeMapForUpdateRef.current;
+      const attributeLabelMap = attributeLabelMapRef.current;
+
+      const transformedAttributes = Object.keys(attributeMap).map((typeId) => {
+        const type = attributeTypes.find(
+          (t) => String(t.AttributeTypeID) === String(typeId)
+        );
+        const vals = Array.from(attributeMap[typeId]).map((vid) => {
+          const a = attributes.find(
+            (x) =>
+              String(x.AttributeValueID || x.attributeValueID) === String(vid)
+          );
+          return {
+            id: vid,
+            label:
+              a?.Value ||
+              a?.value ||
+              attributeLabelMap?.[typeId]?.[vid] ||
+              String(vid),
+          };
+        });
+        return {
+          AttributeTypeID: typeId,
+          AttributeValueIDs: vals.map((v) => v.id),
+          typeName: type ? type.Name || type.name : "",
+          valueLabels: vals.map((v) => v.label),
+        };
+      });
+
+      // Only update if we have valid attributes
+      if (transformedAttributes.length > 0) {
+        setAAttributes(transformedAttributes);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attributes, attributeTypes, hasFetchedProduct]);
+
   // -------------------------
   // Variant helpers
   // -------------------------
@@ -504,9 +705,24 @@ const AddProductForm = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Ensure StoreID is always an array when multiple selection is enabled
+    let processedValue = value;
+    if (name === "StoreID") {
+      // If value is an array, use it directly (removal handled by SelectWithIcon)
+      // If it's a single value, convert to array
+      if (Array.isArray(value)) {
+        processedValue = value; // Already an array, removal already handled
+      } else if (value) {
+        processedValue = [value];
+      } else {
+        processedValue = []; // Empty array when no selection
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }));
     setValidationErrors((prev) => ({
       ...prev,
@@ -522,13 +738,28 @@ const AddProductForm = () => {
         [field]: value,
       };
 
+      // Sync both fields to avoid stale data precedence issues
+      // If we update ProductDiscount, also update DiscountPercentage, and vice versa.
+      if (field === "ProductDiscount") {
+        newVariants[index].DiscountPercentage = value;
+      } else if (field === "DiscountPercentage") {
+        newVariants[index].ProductDiscount = value;
+      }
+
       // Auto-calc selling price if MRP or discount changes
-      if (field === "MRP" || field === "DiscountPercentage") {
+      // Handle both DiscountPercentage and ProductDiscount field names
+      if (
+        field === "MRP" ||
+        field === "DiscountPercentage" ||
+        field === "ProductDiscount"
+      ) {
         const mrp = field === "MRP" ? value : newVariants[index].MRP;
         const discount =
-          field === "DiscountPercentage"
+          field === "DiscountPercentage" || field === "ProductDiscount"
             ? value
-            : newVariants[index].DiscountPercentage;
+            : newVariants[index].DiscountPercentage ||
+            newVariants[index].ProductDiscount ||
+            0;
         newVariants[index].SellingPrice = calculateSellingPrice(mrp, discount);
       }
 
@@ -558,8 +789,8 @@ const AddProductForm = () => {
           meta && meta.type
             ? meta.type
             : typeof meta === "number"
-            ? "variant"
-            : "variant",
+              ? "variant"
+              : "variant",
         variantIndex:
           typeof meta === "number" ? meta : meta?.variantIndex ?? null,
         groupKey: meta?.groupKey ?? null,
@@ -666,8 +897,8 @@ const AddProductForm = () => {
       typeof modal.variantIndex === "number"
         ? modal.variantIndex
         : typeof variantIndexFromModal === "number"
-        ? variantIndexFromModal
-        : 0;
+          ? variantIndexFromModal
+          : 0;
 
     if (blob) {
       const croppedUrl = URL.createObjectURL(blob);
@@ -800,9 +1031,9 @@ const AddProductForm = () => {
               URL.revokeObjectURL(urlToRevoke);
               activeUrlsRef.current.delete(urlToRevoke);
             }
-          } catch (err) {}
+          } catch (err) { }
         }, 100);
-      } catch (err) {}
+      } catch (err) { }
       return rest;
     });
 
@@ -833,7 +1064,7 @@ const AddProductForm = () => {
           URL.revokeObjectURL(removed.preview);
           activeUrlsRef.current.delete(removed.preview);
         }
-      } catch (err) {}
+      } catch (err) { }
 
       if (removed?.documentId) {
         if (!copy[variantIndex].removedImages)
@@ -939,7 +1170,82 @@ const AddProductForm = () => {
         ? variant.removedImages
         : [];
 
-      return {
+      // Check if images have been modified (new images, updated existing images, removed images)
+      const hasNewOrUpdatedImages = images.some((img) => img.file);
+      const hasRemovedImages = removedImages.length > 0;
+      const hasImageChanges = hasNewOrUpdatedImages || hasRemovedImages;
+
+      // Build documentMetadata only if there are image changes
+      // Rules:
+      // 1) Delete existing image:
+      //    [{ DocumentID: "123" }]
+      // 2) Update existing image:
+      //    [{ DocumentID: "123", image: "product-image", sortOrder: 1 }]
+      //    sortOrder = existing image sortOrder
+      // 3) Upload new image:
+      //    [{ image: "product-image", sortOrder: 2 }]
+      //    sortOrder = subsequent sortOrder after existing images
+      let documentMetadata;
+
+      if (hasImageChanges) {
+        const metadata = [];
+
+        // 1) deletions: only DocumentID, no image or sortOrder
+        removedImages.forEach((img) => {
+          if (img.documentId) {
+            metadata.push({
+              DocumentID: img.documentId,
+            });
+          }
+        });
+
+        // Determine the maximum existing sortOrder from images that are *not* removed
+        const removedIds = new Set(
+          removedImages.filter((ri) => ri.documentId).map((ri) => ri.documentId)
+        );
+
+        const existingSortOrders = images
+          .filter(
+            (img) =>
+              img.isExisting &&
+              img.documentId &&
+              !removedIds.has(img.documentId)
+          )
+          .map((img) => Number(img.sortOrder) || 0);
+
+        let nextSortOrder =
+          existingSortOrders.length > 0 ? Math.max(...existingSortOrders) : 0;
+
+        // 2) updates & 3) new uploads
+        images.forEach((img, index) => {
+          if (!img.file) return; // unchanged existing image
+
+          const imageKey = `images_${vIndex}_${index + 1}`;
+
+          if (img.isExisting && img.documentId) {
+            // 2) update existing image - keep existing sortOrder
+            const sortOrder = Number(img.sortOrder) || 0;
+            metadata.push({
+              DocumentID: img.documentId,
+              image: imageKey,
+              sortOrder,
+            });
+          } else {
+            // 3) new image - assign subsequent sortOrder
+            nextSortOrder += 1;
+            metadata.push({
+              image: imageKey,
+              sortOrder: nextSortOrder,
+            });
+          }
+        });
+
+        documentMetadata = metadata;
+      } else {
+        documentMetadata = undefined; // Don't send documentMetadata if no changes
+      }
+
+      const variantPayload = {
         ...(productId &&
           variant.VariantID && { ProductVariantID: variant.VariantID }),
 
@@ -947,30 +1253,24 @@ const AddProductForm = () => {
 
         Quantity: Number(variant.Quantity) || 0,
         MRP: Number(variant.MRP) || 0,
-        DiscountPercentage: Number(variant.DiscountPercentage) || 0,
+        DiscountPercentage:
+          Number(variant.DiscountPercentage || variant.ProductDiscount) || 0,
         SellingPrice: Number(variant.SellingPrice) || 0,
-        StoreIDs: variant.StoreID || oFormData.StoreID,
+        // Only use selected StoreIDs from form, not from Inventory
+        StoreIDs: Array.isArray(oFormData.StoreID)
+          ? oFormData.StoreID
+          : oFormData.StoreID
+            ? [oFormData.StoreID]
+            : [],
         // IsActive: true,
-
-        documentMetadata: [
-          ...images.map((img, idx) =>
-            img.file
-              ? {
-                  image: `images_${vIndex}_${idx + 1}`,
-                  sortOrder: idx + 1,
-                }
-              : {
-                  DocumentID: img.documentId,
-                  sortOrder: idx + 1,
-                }
-          ),
-
-          ...removedImages.map((img) => ({
-            DocumentID: img.documentId,
-            IsDeleted: true,
-          })),
-        ],
       };
+
+      // Only include documentMetadata if there are image changes
+      if (documentMetadata !== undefined) {
+        variantPayload.documentMetadata = documentMetadata;
+      }
+
+      return variantPayload;
     });
 
     const payload = {
@@ -998,35 +1298,34 @@ const AddProductForm = () => {
 
     try {
       const token = localStorage.getItem("token");
-    let response;
+      let response;
 
-if (productId) {
-  // ✅ UPDATE PRODUCT
-  response = await apiPut(
-    UPDATE_PRODUCT,
-    formData,
-    token,
-    true // multipart/form-data
-  );
-} else {
-  // ✅ CREATE PRODUCT
-  response = await apiPost(
-    CREATE_PRODUCT,
-    formData,
-    token,
-    true // multipart/form-data
-  );
-}
-
+      if (productId) {
+        // ✅ UPDATE PRODUCT
+        response = await apiPut(
+          UPDATE_PRODUCT,
+          formData,
+          token,
+          true // multipart/form-data
+        );
+      } else {
+        // ✅ CREATE PRODUCT
+        response = await apiPost(
+          CREATE_PRODUCT,
+          formData,
+          token,
+          true // multipart/form-data
+        );
+      }
 
       const resData = response?.data;
 
       if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(
           resData.MESSAGE ||
-            (productId
-              ? t("PRODUCT_CREATION.PRODUCT_UPDATED_SUCCESS")
-              : t("PRODUCT_CREATION.PRODUCT_CREATED_SUCCESS")),
+          (productId
+            ? t("PRODUCT_CREATION.PRODUCT_UPDATED_SUCCESS")
+            : t("PRODUCT_CREATION.PRODUCT_CREATED_SUCCESS")),
           STATUS.SUCCESS,
           3000,
           () => navigate("/productList")
@@ -1076,7 +1375,7 @@ if (productId) {
       {cropperModal.isOpen && (
         <ImageCropperModal
           queue={cropQueue}
-          onQueueUpdate={setCropQueue} 
+          onQueueUpdate={setCropQueue}
           image={[
             cropperModal.image,
             cropperModal.type === "global"
@@ -1131,6 +1430,14 @@ if (productId) {
                     name="BrandID"
                     value={oFormData.BrandID}
                     onChange={handleInputChange}
+                    onInputChange={(val) =>
+                      dispatch(
+                        fetchResource({
+                          key: "brands",
+                          params: { searchText: val || "" },
+                        })
+                      )
+                    }
                     options={brands.map((brand) => ({
                       value: brand.BrandID,
                       label: brand.BrandName,
@@ -1151,16 +1458,18 @@ if (productId) {
                     name="CategoryID"
                     value={oFormData.CategoryID}
                     onChange={handleInputChange}
-                    options={categories
-                      .filter(
-                        (category) =>
-                          category.ParentCategoryID !== null &&
-                          category.ParentCategoryID !== undefined
+                    onInputChange={(val) =>
+                      dispatch(
+                        fetchResource({
+                          key: "categories",
+                          params: { searchText: val || "" },
+                        })
                       )
-                      .map((category) => ({
-                        value: category.CategoryID,
-                        label: category.CategoryName,
-                      }))}
+                    }
+                    options={(categories || []).map((category) => ({
+                      value: category.CategoryID,
+                      label: category.CategoryName,
+                    }))}
                     Icon={Tag}
                     error={oValidationErrors.CategoryID}
                     placeholder={t("PRODUCT_CREATION.CATEGORY_ID_PLACEHOLDER")}
@@ -1174,6 +1483,14 @@ if (productId) {
                     name="StoreID"
                     value={oFormData.StoreID}
                     onChange={handleInputChange}
+                    onInputChange={(val) =>
+                      dispatch(
+                        fetchResource({
+                          key: "stores",
+                          params: { searchText: val || "" },
+                        })
+                      )
+                    }
                     options={stores.map((store) => ({
                       value: store.StoreID,
                       label: store.StoreName,
@@ -1296,9 +1613,8 @@ if (productId) {
                 placeholder={t(
                   "PRODUCT_CREATION.PRODUCT_DESCRIPTION_PLACEHOLDER"
                 )}
-                className={`h-32 mb-10 ${
-                  oValidationErrors.ProductDescription ? "border-red-500" : ""
-                }`}
+                className={`h-32 mb-10 ${oValidationErrors.ProductDescription ? "border-red-500" : ""
+                  }`}
                 ref={productDescriptionRef}
               />
             </div>
@@ -1316,14 +1632,16 @@ if (productId) {
                 <Layers className="h-6 w-6 mr-3 text-custom-bg" />
                 {t("PRODUCT_SETUP.ATTRIBUTES.TITLE")}
               </h2>
-              <button
-                type="button"
-                onClick={addAttributeRow}
-                className="btn-secondary inline-flex items-center space-x-2"
-              >
-                <Plus className="h-4 w-4" />
-                <span>{t("PRODUCT_CREATION.ADD_ATTRIBUTE")}</span>
-              </button>
+              {!productId && (
+                <button
+                  type="button"
+                  onClick={addAttributeRow}
+                  className="btn-secondary inline-flex items-center space-x-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>{t("PRODUCT_CREATION.ADD_ATTRIBUTE")}</span>
+                </button>
+              )}
             </div>
             {aAttributes.length > 0 && (
               <div className="p-8 space-y-6">
@@ -1342,6 +1660,14 @@ if (productId) {
                         onChange={(e) =>
                           handleAttributeTypeChange(index, e.target.value)
                         }
+                        onInputChange={(val) =>
+                          dispatch(
+                            fetchResource({
+                              key: "attributeTypes",
+                              params: { searchText: val || "" },
+                            })
+                          )
+                        }
                         options={attributeTypes
                           ?.filter((type) => type.IsActive)
                           .map((type) => ({
@@ -1355,6 +1681,7 @@ if (productId) {
                         placeholder={t(
                           "PRODUCT_CREATION.ATTRIBUTE_ID_PLACEHOLDER"
                         )}
+                        disabled={!!productId}
                       />
                     </div>
 
@@ -1370,26 +1697,52 @@ if (productId) {
                             : [e.target.value].filter(Boolean);
                           handleAttributeValuesChange(index, selectedValues);
                         }}
-                        options={attributes
-                          .filter((attribute) => {
-                            const typeId =
-                              attribute.AttributeTypeID ||
-                              attribute.attributeTypeID;
-                            return (
-                              attribute.IsActive &&
-                              String(typeId) === String(attr.AttributeTypeID)
-                            );
-                          })
-                          .map((attribute) => ({
-                            value:
-                              attribute.AttributeValueID ||
-                              attribute.attributeValueID,
-                            label: `${attribute.Value || attribute.value}${
-                              attribute.Unit || attribute.unit
+                        options={(() => {
+                          const baseOptions = (attributes || [])
+                            .filter((attribute) => {
+                              const typeId =
+                                attribute.AttributeTypeID ||
+                                attribute.attributeTypeID ||
+                                attribute.attributeTypeId;
+                              // If API doesn't return AttributeTypeID (new response), allow through because call was already scoped by typeId
+                              return (
+                                attribute.IsActive &&
+                                (!typeId ||
+                                  String(typeId) ===
+                                  String(attr.AttributeTypeID))
+                              );
+                            })
+                            .map((attribute) => ({
+                              value:
+                                attribute.AttributeValueID ||
+                                attribute.attributeValueID ||
+                                attribute.attributeValueId,
+                              label: `${attribute.Value || attribute.value}${attribute.Unit || attribute.unit
                                 ? ` (${attribute.Unit || attribute.unit})`
                                 : ""
-                            }`,
-                          }))}
+                                }`,
+                            }));
+
+                          // add fallback options from payload if not present in attributes list
+                          const fallback =
+                            attributeLabelMapRef.current?.[
+                            attr.AttributeTypeID
+                            ];
+                          if (!fallback) return baseOptions;
+                          const merged = [...baseOptions];
+                          Object.entries(fallback).forEach(([vid, label]) => {
+                            const exists = merged.some(
+                              (opt) => String(opt.value) === String(vid)
+                            );
+                            if (!exists) {
+                              merged.push({
+                                value: vid,
+                                label: String(label),
+                              });
+                            }
+                          });
+                          return merged;
+                        })()}
                         Icon={Layers}
                         error={
                           oValidationErrors[`attr_${index}_AttributeValueIDs`]
@@ -1398,19 +1751,21 @@ if (productId) {
                           "PRODUCT_CREATION.ATTRIBUTE_VALUES_PLACEHOLDER"
                         )}
                         multiple
-                        isDisabled={!attr.AttributeTypeID}
+                        disabled={!attr.AttributeTypeID || !!productId}
                       />
 
-                      <div className="flex items-end justify-end">
-                        <button
-                          type="button"
-                          onClick={() => removeAttributeRow(index)}
-                          className="btn-cancel px-3 py-3 flex items-center justify-center"
-                          title="Remove option"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
+                      {!productId && (
+                        <div className="flex items-end justify-end">
+                          <button
+                            type="button"
+                            onClick={() => removeAttributeRow(index)}
+                            className="btn-cancel px-3 py-3 flex items-center justify-center"
+                            title="Remove option"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1494,8 +1849,9 @@ if (productId) {
                             Upload Images for{" "}
                             {variant.attributes?.length
                               ? variant.attributes
-                                  .map((a) => a.AttributeValueIDs?.[0])
-                                  .join(" - ")
+                                .map((a) => getAttributeValueLabel(a))
+                                .filter(Boolean)
+                                .join(" - ")
                               : t("PRODUCT_CREATION.VARIANT")}
                           </h4>
                           <ImageManagement
@@ -1512,10 +1868,12 @@ if (productId) {
                             onSortChange={(newList) =>
                               setVariants((prev) => {
                                 const copy = [...prev];
-                                copy[index].images = newList.map((img, idx) => ({
-                                  ...img,
-                                  sortOrder: idx + 1,
-                                }));
+                                copy[index].images = newList.map(
+                                  (img, idx) => ({
+                                    ...img,
+                                    sortOrder: idx + 1,
+                                  })
+                                );
                                 return copy;
                               })
                             }
@@ -1583,7 +1941,7 @@ if (productId) {
                               )}
                               error={
                                 oValidationErrors[
-                                  `variant_${index}_DiscountPercentage`
+                                `variant_${index}_DiscountPercentage`
                                 ]
                               }
                             />
@@ -1609,7 +1967,7 @@ if (productId) {
                               )}
                               error={
                                 oValidationErrors[
-                                  `variant_${index}_SellingPrice`
+                                `variant_${index}_SellingPrice`
                                 ]
                               }
                             />
@@ -1630,21 +1988,36 @@ if (productId) {
                   aVariants={aVariants}
                   groupingAttributeTypeID={groupingAttributeTypeID}
                   getVariantName={(variant) =>
-                    variant.attributes
-                      ?.map((attr) => {
+                    (variant.attributes || [])
+                      .map((attr) => {
                         const valueId = attr.AttributeValueIDs?.[0];
+
                         const valObj = attributes.find(
                           (a) =>
                             String(a.AttributeValueID || a.attributeValueID) ===
                             String(valueId)
                         );
-                        if (!valObj) return valueId;
-                        return `${valObj.Value || valObj.value}${
-                          valObj.Unit || valObj.unit
-                            ? ` (${valObj.Unit || valObj.unit})`
-                            : ""
-                        }`;
+
+                        // Only use readable labels (NO ID fallback)
+                        const valueLabel =
+                          valObj?.Value ||
+                          valObj?.value ||
+                          attr.Value ||
+                          attr.value;
+
+                        const unitLabel =
+                          valObj?.Unit ||
+                          valObj?.unit ||
+                          attr.Unit ||
+                          attr.unit;
+
+                        // If no label found, skip this attribute
+                        if (!valueLabel) return null;
+
+                        return `${valueLabel}${unitLabel ? ` (${unitLabel})` : ""
+                          }`;
                       })
+                      .filter(Boolean) // removes null values
                       .join(" - ")
                   }
                   deleteVariant={deleteVariant}
@@ -1661,7 +2034,9 @@ if (productId) {
                       onRemoveImage={(index) => {
                         removeGlobalImage(groupKey, index);
                       }}
-                      onSortChange={(newList) => sortGlobalImages(groupKey, newList)}
+                      onSortChange={(newList) =>
+                        sortGlobalImages(groupKey, newList)
+                      }
                     />
                   )}
                   TextInputWithIcon={TextInputWithIcon}
@@ -1671,7 +2046,6 @@ if (productId) {
                   aSpecifications={aSpecifications}
                   specificationTypes={specificationTypes}
                   attributeTypes={attributeTypes}
-
                   // New props required by patched VariantTabs
                   sensors={sensors}
                   enqueueFilesForCrop={enqueueFilesForCrop}
@@ -1682,31 +2056,23 @@ if (productId) {
             </div>
           </div>
 
-          {/* Save / Cancel */}
-          <div className="flex justify-end space-x-4 mb-8">
-            <button
-              type="button"
-              className="btn-cancel"
-              onClick={() => navigate("/productList")}
-            >
-              {t("PRODUCT_CREATION.CANCEL")}
-            </button>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => setShowPreview(true)}
-            >
-              Preview Product
-            </button>
-
-            <button type="submit" className="btn-primary" disabled={submitting}>
-              {submitting
-                ? t("COMMON.SAVING")
-                : productId
-                ? t("PRODUCT_CREATION.SAVE_CHANGES")
-                : t("PRODUCT_CREATION.SAVE_PRODUCT")}
-            </button>
-          </div>
+          {/* Floating Footer */}
+          <FloatingFooter
+            onCancel={() => navigate("/productList")}
+            onSubmit={handleSubmit}
+            isSubmitting={submitting}
+            isEditMode={!!productId}
+            className="z-0"
+            customButtons={
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setShowPreview(true)}
+              >
+                Preview Product
+              </button>
+            }
+          />
         </form>
       </div>
 

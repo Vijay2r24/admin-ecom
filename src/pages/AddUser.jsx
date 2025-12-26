@@ -62,8 +62,8 @@ const getArray = (data) =>
   Array.isArray(data)
     ? data
     : data && Array.isArray(data.data)
-    ? data.data
-    : [];
+      ? data.data
+      : [];
 
 const AddUser = () => {
   const [oFormData, setFormData] = useState({
@@ -355,7 +355,7 @@ const AddUser = () => {
    */
   const validateField = useCallback((name, value, forceShowError = false) => {
     let error = "";
-    
+
     switch (name) {
       case "firstName":
         error = validateFirstName(value);
@@ -449,12 +449,12 @@ const AddUser = () => {
    */
   const handleSelectChange = useCallback((e) => {
     const { name, value } = e.target;
-    
+
     let processedValue = value;
     if (Array.isArray(value)) {
       processedValue = value.filter(Boolean);
     }
-    
+
     setFormData((prev) => ({ ...prev, [name]: processedValue }));
     validateField(name, processedValue, true); // Force validation on select change
   }, [validateField]);
@@ -480,51 +480,54 @@ const AddUser = () => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!oFormData.firstName?.trim()) {
-      errors.firstName = t("ADD_USER.VALIDATION.FIRST_NAME_REQUIRED");
-    }
-
-    if (!oFormData.lastName?.trim()) {
-      errors.lastName = t("ADD_USER.VALIDATION.LAST_NAME_REQUIRED");
-    }
-
-    if (!oFormData.email?.trim()) {
-      errors.email = t("ADD_USER.VALIDATION.EMAIL_REQUIRED");
-    } else if (!emailRegex.test(oFormData.email)) {
-      errors.email = t("ADD_USER.VALIDATION.EMAIL_INVALID");
-    }
-
-    // Enhanced Phone validation with country code check
-    if (!oFormData.phone?.trim()) {
-      errors.phone = t("ADD_USER.PHONE_REQUIRED");
-    } else {
-      // Validate phone number format using react-phone-number-input
-      if (!isValidPhoneNumber(oFormData.phone)) {
-        errors.phone = t("ADD_USER.VALIDATION.PHONE_INVALID");
+    // Personal Info validation
+    if (isPersonalInfoEditable) {
+      if (!oFormData.firstName?.trim()) {
+        errors.firstName = t("ADD_USER.VALIDATION.FIRST_NAME_REQUIRED");
       }
 
-      if (!oFormData.phone.startsWith("+")) {
-        errors.phone = t("ADD_USER.VALIDATION.COUNTRY_CODE_REQUIRED");
+      if (!oFormData.lastName?.trim()) {
+        errors.lastName = t("ADD_USER.VALIDATION.LAST_NAME_REQUIRED");
       }
 
-      // Validate minimum phone number length (country code + number)
-      // Most countries have at least 8 digits after country code
-      const phoneWithoutSpaces = oFormData.phone.replace(/\s/g, "");
-      const digitsAfterPlus = phoneWithoutSpaces.substring(1); // Remove the +
-      if (digitsAfterPlus.length < 8) {
-        errors.phone = t("ADD_USER.VALIDATION.PHONE_TOO_SHORT");
+      if (!oFormData.email?.trim()) {
+        errors.email = t("ADD_USER.VALIDATION.EMAIL_REQUIRED");
+      } else if (!emailRegex.test(oFormData.email)) {
+        errors.email = t("ADD_USER.VALIDATION.EMAIL_INVALID");
       }
 
-      // Validate country code length (typically 1-3 digits)
-      const countryCodeMatch = oFormData.phone.match(/^\+\d{1,3}/);
-      if (!countryCodeMatch) {
-        errors.phone = t("ADD_USER.VALIDATION.INVALID_COUNTRY_CODE");
-      }
-    }
+      // Enhanced Phone validation with country code check
+      if (!oFormData.phone?.trim()) {
+        errors.phone = t("ADD_USER.PHONE_REQUIRED");
+      } else {
+        // Validate phone number format using react-phone-number-input
+        if (!isValidPhoneNumber(oFormData.phone)) {
+          errors.phone = t("ADD_USER.VALIDATION.PHONE_INVALID");
+        }
 
-    // Gender validation
-    if (!oFormData.gender) {
-      errors.gender = t("ADD_USER.VALIDATION.GENDER_REQUIRED");
+        if (!oFormData.phone.startsWith("+")) {
+          errors.phone = t("ADD_USER.VALIDATION.COUNTRY_CODE_REQUIRED");
+        }
+
+        // Validate minimum phone number length (country code + number)
+        // Most countries have at least 8 digits after country code
+        const phoneWithoutSpaces = oFormData.phone.replace(/\s/g, "");
+        const digitsAfterPlus = phoneWithoutSpaces.substring(1); // Remove the +
+        if (digitsAfterPlus.length < 8) {
+          errors.phone = t("ADD_USER.VALIDATION.PHONE_TOO_SHORT");
+        }
+
+        // Validate country code length (typically 1-3 digits)
+        const countryCodeMatch = oFormData.phone.match(/^\+\d{1,3}/);
+        if (!countryCodeMatch) {
+          errors.phone = t("ADD_USER.VALIDATION.INVALID_COUNTRY_CODE");
+        }
+      }
+
+      // Gender validation
+      if (!oFormData.gender) {
+        errors.gender = t("ADD_USER.VALIDATION.GENDER_REQUIRED");
+      }
     }
 
     // Only validate role and stores if they are visible and editable
@@ -549,24 +552,27 @@ const AddUser = () => {
       Object.assign(errors, passwordErrors);
     }
 
-    if (!oFormData.streetAddress?.trim()) {
-      errors.streetAddress = t("ADD_USER.VALIDATION.ADDRESS_REQUIRED");
-    }
+    // Address Info validation
+    if (isAddressInfoEditable) {
+      if (!oFormData.streetAddress?.trim()) {
+        errors.streetAddress = t("ADD_USER.VALIDATION.ADDRESS_REQUIRED");
+      }
 
-    if (!oFormData.country) {
-      errors.country = t("ADD_USER.VALIDATION.COUNTRY_REQUIRED");
-    }
+      if (!oFormData.country) {
+        errors.country = t("ADD_USER.VALIDATION.COUNTRY_REQUIRED");
+      }
 
-    if (!oFormData.state) {
-      errors.state = t("ADD_USER.VALIDATION.STATE_REQUIRED");
-    }
+      if (!oFormData.state) {
+        errors.state = t("ADD_USER.VALIDATION.STATE_REQUIRED");
+      }
 
-    if (!oFormData.city) {
-      errors.city = t("ADD_USER.VALIDATION.CITY_REQUIRED");
-    }
+      if (!oFormData.city) {
+        errors.city = t("ADD_USER.VALIDATION.CITY_REQUIRED");
+      }
 
-    if (!oFormData.pincode?.trim()) {
-      errors.pincode = t("ADD_USER.VALIDATION.PINCODE_REQUIRED");
+      if (!oFormData.pincode?.trim()) {
+        errors.pincode = t("ADD_USER.VALIDATION.PINCODE_REQUIRED");
+      }
     }
 
     return errors;
@@ -632,7 +638,7 @@ const AddUser = () => {
         .then((result) => {
           // States loaded successfully
         })
-        .catch((error) => {});
+        .catch((error) => { });
     } else {
       dispatch(clearStates());
       setFormData((prev) => ({ ...prev, state: "", city: "" }));
@@ -646,7 +652,7 @@ const AddUser = () => {
         .then((result) => {
           // Cities loaded successfully
         })
-        .catch((error) => {});
+        .catch((error) => { });
     } else {
       dispatch(clearCities());
       setFormData((prev) => ({ ...prev, city: "" }));
@@ -738,23 +744,23 @@ const AddUser = () => {
         // Mark all fields as touched for edit mode to show validation immediately
         setTimeout(() => {
           const fieldsToValidate = [
-            "firstName", "lastName", "email", "phone", "gender", 
-            "role", "stores", "streetAddress", "pincode", 
+            "firstName", "lastName", "email", "phone", "gender",
+            "role", "stores", "streetAddress", "pincode",
             "country", "state", "city"
           ];
           fieldsToValidate.forEach(field => {
             markFieldTouched(field);
-            validateField(field, 
+            validateField(field,
               field === "firstName" ? user.FirstName || "" :
-              field === "lastName" ? user.LastName || "" :
-              field === "email" ? user.Email || "" :
-              field === "phone" ? formattedPhone :
-              field === "gender" ? user.Gender || "" :
-              field === "role" ? user.RoleID || "" :
-              field === "stores" ? (user.Stores ? user.Stores.map((store) => store.StoreId) : []) :
-              field === "streetAddress" ? user.AddressLine || "" :
-              field === "pincode" ? user.Zipcode || "" :
-              "", 
+                field === "lastName" ? user.LastName || "" :
+                  field === "email" ? user.Email || "" :
+                    field === "phone" ? formattedPhone :
+                      field === "gender" ? user.Gender || "" :
+                        field === "role" ? user.RoleID || "" :
+                          field === "stores" ? (user.Stores ? user.Stores.map((store) => store.StoreId) : []) :
+                            field === "streetAddress" ? user.AddressLine || "" :
+                              field === "pincode" ? user.Zipcode || "" :
+                                "",
               true
             );
           });
@@ -838,7 +844,7 @@ const AddUser = () => {
           markFieldTouched("state");
           validateField("state", foundState.StateID, true);
         }
-      } catch (error) {}
+      } catch (error) { }
     };
 
     populateStateAndCity();
@@ -870,7 +876,7 @@ const AddUser = () => {
           markFieldTouched("city");
           validateField("city", foundCity.CityID, true);
         }
-      } catch (error) {}
+      } catch (error) { }
     };
 
     populateCity();
@@ -970,7 +976,7 @@ const AddUser = () => {
       account: ['role', 'stores', 'password', 'confirmPassword'],
       address: ['streetAddress', 'country', 'state', 'city', 'pincode']
     };
-    
+
     sectionFields[section].forEach(field => {
       markFieldTouched(field);
     });
@@ -1026,7 +1032,7 @@ const AddUser = () => {
   const handleSubmit = useCallback(
     async (e) => {
       e?.preventDefault();
-      
+
       // Mark all required fields as touched before validation
       Object.keys(requiredFields).forEach(field => {
         if (requiredFields[field]) {
@@ -1326,16 +1332,15 @@ const AddUser = () => {
           <img
             src={
               !bImgError &&
-              (nProfileImagePreview ||
-                (existingDocuments.length > 0 &&
-                  existingDocuments[0].documentUrl))
+                (nProfileImagePreview ||
+                  (existingDocuments.length > 0 &&
+                    existingDocuments[0].documentUrl))
                 ? nProfileImagePreview || existingDocuments[0].documentUrl
                 : userProfile
             }
             alt={t("ADD_USER.PROFILE_PREVIEW")}
-            className={`h-20 w-20 rounded-full object-cover border-2 border-gray-200 shadow-sm ${
-              bImgLoading ? "hidden" : ""
-            }`}
+            className={`h-20 w-20 rounded-full object-cover border-2 border-gray-200 shadow-sm ${bImgLoading ? "hidden" : ""
+              }`}
             style={{ display: bImgLoading ? "none" : "block" }}
             onLoad={() => setImgLoading(false)}
             onError={() => {
@@ -1358,11 +1363,10 @@ const AddUser = () => {
           />
           <label
             htmlFor="profile-image-upload"
-            className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors ${
-              !isPersonalInfoEditable && id
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300"
-                : "text-white bg-blue-600 hover:bg-blue-700 border border-blue-600"
-            }`}
+            className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors ${!isPersonalInfoEditable && id
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300"
+              : "text-white bg-blue-600 hover:bg-blue-700 border border-blue-600"
+              }`}
           >
             <FaCamera className="text-sm" />
             {t("COMMON.UPLOAD")}
@@ -1483,7 +1487,7 @@ const AddUser = () => {
 
                 {/* Phone Input with International Support */}
                 {isPersonalInfoEditable ? (
-                   <PhoneInputWithIcon
+                  <PhoneInputWithIcon
                     label={t("COMMON.PHONE_NUMBER")}
                     id="phone"
                     name="phone"
@@ -1547,8 +1551,8 @@ const AddUser = () => {
                           rolesLoading
                             ? t("COMMON.LOADING")
                             : id && !hasEditRolePermission
-                            ? t("COMMON.NO_PERMISSION")
-                            : t("ADD_USER.SELECT_ROLE")
+                              ? t("COMMON.NO_PERMISSION")
+                              : t("ADD_USER.SELECT_ROLE")
                         }
                         searchable
                         searchPlaceholder={
@@ -1608,8 +1612,8 @@ const AddUser = () => {
                           storesLoading
                             ? t("COMMON.LOADING")
                             : id && !hasEditStorePermission
-                            ? t("COMMON.NO_PERMISSION")
-                            : t("ADD_USER.SELECT_STORES")
+                              ? t("COMMON.NO_PERMISSION")
+                              : t("ADD_USER.SELECT_STORES")
                         }
                         multiple={true}
                         searchable
@@ -1710,8 +1714,8 @@ const AddUser = () => {
                                   passwordStrength === "strong"
                                     ? "#16a34a"
                                     : passwordStrength === "medium"
-                                    ? "#f59e42"
-                                    : "#dc2626",
+                                      ? "#f59e42"
+                                      : "#dc2626",
                                 fontWeight: 600,
                                 fontSize: 13,
                               }}

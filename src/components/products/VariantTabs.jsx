@@ -28,6 +28,8 @@ export default function VariantTabs({
   enqueueFilesForCrop,
   removeImage,
   setVariants,
+  localAttributeOptions,
+  hideUpload,
 }) {
   const [previewVariant, setPreviewVariant] = useState(null);
   const [mrpEditedMap, setMrpEditedMap] = useState({});
@@ -71,18 +73,32 @@ export default function VariantTabs({
               const valObj = attributes.find(
                 (a) => String(a.AttributeValueID) === String(valueId)
               );
-              const label = valObj
-                ? `${valObj.Value}${valObj.Unit ? ` (${valObj.Unit})` : ""}`
-                : valueId;
+              // fallback: use valueLabels provided in aAttributes for this grouping attribute
+              const groupingAttr = aAttributes.find(
+                (a) => String(a.AttributeTypeID) === String(groupingAttributeTypeID)
+              );
+              const fallbackLabel =
+                groupingAttr?.valueLabels?.[
+                (groupingAttr?.NewAttributeValueIDs || []).findIndex(
+                  (id) => String(id) === String(valueId)
+                )
+                ];
+              const options = localAttributeOptions?.[groupingAttributeTypeID] || [];
+              const foundOption = options.find((o) => String(o.id) === String(valueId));
+
+              const label = foundOption
+                ? foundOption.label
+                : valObj
+                  ? `${valObj.Value}${valObj.Unit ? ` (${valObj.Unit})` : ""}`
+                  : fallbackLabel || valueId;
 
               return (
                 <Tab
                   key={valueId}
                   className={({ selected }) =>
-                    `px-6 py-3 text-sm font-medium border-b-2 ${
-                      selected
-                        ? "border-custom-bg text-custom-bg"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    `px-6 py-3 text-sm font-medium border-b-2 ${selected
+                      ? "border-custom-bg text-custom-bg"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
                     }`
                   }
                 >
@@ -100,15 +116,25 @@ export default function VariantTabs({
               (a) => String(a.AttributeValueID) === String(valueId)
             );
 
+            // fallback: use valueLabels provided in aAttributes for this grouping attribute
+            const groupingAttr = aAttributes.find(
+              (a) => String(a.AttributeTypeID) === String(groupingAttributeTypeID)
+            );
+            const fallbackLabel =
+              groupingAttr?.valueLabels?.[
+              (groupingAttr?.NewAttributeValueIDs || []).findIndex(
+                (id) => String(id) === String(valueId)
+              )
+              ];
             const groupLabel = valObj
               ? `${valObj.Value}${valObj.Unit ? ` (${valObj.Unit})` : ""}`
-              : valueId;
+              : fallbackLabel || valueId;
 
             const groupVariants = aVariants.filter((variant) =>
               variant.attributes.some(
                 (a) =>
                   String(a.AttributeTypeID) ===
-                    String(groupingAttributeTypeID) &&
+                  String(groupingAttributeTypeID) &&
                   a.AttributeValueIDs?.includes(String(valueId))
               )
             );
@@ -116,7 +142,7 @@ export default function VariantTabs({
             return (
               <Tab.Panel key={valueId} unmount={false}>
                 {/* GLOBAL IMAGE UPLOAD */}
-                <div className="flex justify-end mb-3">
+                <div className="flex justify-center mb-3">
                   <div className="w-1/2">
                     <GlobalImageUpload groupKey={valueId} />
                   </div>
@@ -163,15 +189,18 @@ export default function VariantTabs({
                             <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                               {/* ----- VARIANT IMAGE UPLOAD ----- */}
                               <div className="md:col-span-2">
-                                <h4 className="text-sm font-medium text-gray-700 mb-2">
-                                  Upload Images
-                                </h4>
+                                {!hideUpload && (
+                                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                                    Upload Images
+                                  </h4>
+                                )}
 
                                 <ImageManagement
                                   type="variant"
                                   images={variant.images || []}
                                   sensors={sensors}
                                   label={`Upload images`}
+                                  hideUpload={hideUpload}
                                   onFilesDrop={(files) =>
                                     enqueueFilesForCrop(files, {
                                       variantIndex: originalIndex,

@@ -390,25 +390,25 @@ const Stores = () => {
                 <tr>
                   <th
                     scope="col"
-                    className="table-head-cell-floating text-left"
+                    className="table-head-cell-floating text-left w-2/5"
                   >
                     {t("STORES.STORE_DETAILS")}
                   </th>
                   <th
                     scope="col"
-                    className="table-head-cell-floating text-center"
+                    className="table-head-cell-floating text-center w-1/5"
                   >
                     {t("STORES.CONTACT")}
                   </th>
                   <th
                     scope="col"
-                    className="table-head-cell-floating text-center"
+                    className="table-head-cell-floating text-center w-1/5"
                   >
                     {t("COMMON.STATUS")}
                   </th>
                   <th
                     scope="col"
-                    className="table-head-cell-floating text-center"
+                    className="table-head-cell-floating text-center w-1/5"
                   >
                     {t("COMMON.ACTIONS")}
                   </th>
@@ -433,16 +433,18 @@ const Stores = () => {
                 ) : (
                   aStores.map((store) => (
                     <tr key={store.StoreID} className="table-row">
-                      {/* Store Details */}
-                      <td className="table-cell text-left">
+                      {/* Store Details - Highlighted main text */}
+                      <td className="table-cell w-2/5 text-left">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10 bg-custom-bg/10 rounded-lg flex items-center justify-center">
                             <Building className="h-5 w-5 text-custom-bg" />
                           </div>
                           <div className="ml-4">
-                            <div className="table-cell-text ellipsis-text">
+                            {/* Highlighted main text for Store Name */}
+                            <div className="table-cell-text ellipsis-text font-medium text-gray-900">
                               {store.StoreName}
                             </div>
+                            {/* Subtext for Address */}
                             <div className="table-cell-subtext flex items-center">
                               <MapPin className="h-4 w-4 mr-1" />
                               <span className="ellipsis-text">
@@ -457,38 +459,40 @@ const Stores = () => {
                         </div>
                       </td>
 
-                      {/* Contact */}
-                      <td className="table-cell text-center">
-                        <div className="flex flex-col items-center space-y-1">
-                          <div className="flex flex-col items-start space-y-1 w-full max-w-[150px]">
-                            {" "}
-                            {/* adjust max-w as needed */}
-                            <div className="table-cell-text flex items-center">
-                              <Phone className="h-4 w-4 mr-1 text-gray-400" />
-                             {store.CountryCode ? `${store.CountryCode} ${store.PhoneNumber}` : store.PhoneNumber}
-                            </div>
-                            <div className="table-cell-subtext flex items-center">
-                              <Mail className="h-4 w-4 mr-1 text-gray-400" />
-                              <span className="ellipsis-text">
-                                {store.Email}
-                              </span>
-                            </div>
+                      {/* Contact - Highlighted main text */}
+                      <td className="table-cell w-1/5 text-left">
+                        <div className="flex flex-col items-start space-y-1 w-full">
+                          {/* Highlighted main text for Phone */}
+                          <div className="table-cell-text flex items-center font-medium text-gray-900">
+                            <Phone className="h-4 w-4 mr-1 text-gray-400" />
+                            <span className="ellipsis-text">
+                              {store.CountryCode ? `${store.CountryCode} ${store.PhoneNumber}` : store.PhoneNumber}
+                            </span>
+                          </div>
+                          {/* Subtext for Email */}
+                          <div className="table-cell-subtext flex items-center">
+                            <Mail className="h-4 w-4 mr-1 text-gray-400" />
+                            <span className="ellipsis-text">
+                              {store.Email}
+                            </span>
                           </div>
                         </div>
                       </td>
 
                       {/* Status */}
-                      <td className="table-cell text-center">
-                        <Switch
-                          checked={store.IsActive}
-                          onChange={() =>
-                            handleStatusChange(store.StoreID, store.IsActive)
-                          }
-                        />
+                      <td className="table-cell w-1/5 text-center">
+                        <div className="flex justify-center">
+                          <Switch
+                            checked={store.IsActive}
+                            onChange={() =>
+                              handleStatusChange(store.StoreID, store.IsActive)
+                            }
+                          />
+                        </div>
                       </td>
 
                       {/* Actions */}
-                      <td className="table-cell text-center">
+                      <td className="table-cell w-1/5 text-center">
                         <ActionButtons
                           id={store.StoreID}
                           onEdit={handleEdit}
@@ -523,9 +527,11 @@ const Stores = () => {
                     <Building className="h-6 w-6 text-custom-bg" />
                   </div>
                   <div className="flex-1 min-w-0">
+                    {/* Highlighted main text for Store Name */}
                     <div className="text-lg font-bold text-gray-900 ellipsis-text">
                       {store.StoreName}
                     </div>
+                    {/* Subtext for Address */}
                     <div className="text-xs text-gray-500 flex items-center mt-1">
                       <MapPin className="h-4 w-4 mr-1 shrink-0" />
                       <span className="ellipsis-text">
@@ -538,12 +544,16 @@ const Stores = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 text-sm text-caption">
+                <div className="flex flex-col gap-2 text-sm">
+                  {/* Highlighted main text for Phone */}
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-gray-400" />
-                    <span className="ellipsis-text">{store.PhoneNumber}</span>
+                    <span className="font-medium text-gray-900 ellipsis-text">
+                      {store.CountryCode ? `${store.CountryCode} ${store.PhoneNumber}` : store.PhoneNumber}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  {/* Subtext for Email */}
+                  <div className="flex items-center gap-2 text-gray-500">
                     <Mail className="h-4 w-4 text-gray-400" />
                     <span className="ellipsis-text">{store.Email}</span>
                   </div>

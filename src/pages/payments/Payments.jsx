@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
-import {ITEMS_PER_PAGE, STATUS } from "../../contants/constants";
+import { ITEMS_PER_PAGE, STATUS } from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
 import {
@@ -79,11 +79,11 @@ const Payments = () => {
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    
+    document.body.style.overflow = "hidden";
+
     // Re-enable scrollbar when component unmounts
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, []);
 
@@ -383,9 +383,7 @@ const Payments = () => {
   };
 
   return (
-    <div 
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-    > 
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       <ToastContainer />
       {bSubmitting && (
         <div className="global-loader-overlay">
@@ -410,10 +408,7 @@ const Payments = () => {
 
       {viewMode === "table" ? (
         <div className="table-container-floating">
-          <div
-            className="table-wrapper-floating"
-            onScroll={handleTableScroll}
-          >
+          <div className="table-wrapper-floating" onScroll={handleTableScroll}>
             <table className="table-base">
               {/* Floating Header */}
               <thead
@@ -438,7 +433,7 @@ const Payments = () => {
                   </th>
                   <th
                     scope="col"
-                    className="table-head-cell-floating w-1/6 pl-4"
+                    className="table-head-cell-floating w-1/6 text-center"
                   >
                     {t("COMMON.STATUS")}
                   </th>
@@ -471,7 +466,8 @@ const Payments = () => {
                             <CreditCard className="h-5 w-5 text-blue-600" />
                           </div>
                           <div className="ml-4 min-w-0">
-                            <div className="table-cell-text ellipsis-text">
+                            {/* Highlighted main text for Payment Reference */}
+                            <div className="table-cell-text ellipsis-text font-medium text-gray-900">
                               {payment.PaymentRefID}
                             </div>
                             <div className="table-cell-subtext flex items-center">
@@ -484,13 +480,15 @@ const Payments = () => {
                         </div>
                       </td>
                       <td className="table-cell w-1/5">
-                        <div className="table-cell-text flex items-center">
+                        {/* Highlighted main text for Order Info */}
+                        <div className="table-cell-text flex items-center font-medium text-gray-900">
                           <FileText className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
                           <span className="truncate">
                             {payment.Order.OrderRefID}
                           </span>
                         </div>
 
+                        {/* Subtext for Payment Type */}
                         <div className="table-cell-subtext flex items-center">
                           <User className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
                           <span className="truncate">
@@ -498,6 +496,7 @@ const Payments = () => {
                           </span>
                         </div>
 
+                        {/* Subtext for Payment Method */}
                         {payment.PaymentMethod?.PaymentMethodName && (
                           <div className="table-cell-subtext flex items-center">
                             <CreditCard className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
@@ -508,12 +507,13 @@ const Payments = () => {
                         )}
                       </td>
 
-                      <td className="table-cell w-1/6 text-right font-medium text-gray-900 pr-8">
-                        <div className="flex justify-end">
+                      <td className="table-cell w-1/6 text-right pr-8">
+                        {/* Highlighted main text for Amount */}
+                        <div className="table-cell-text font-medium text-gray-900">
                           {formatCurrency(payment.Amount)}
                         </div>
                       </td>
-                      <td className="table-cell w-1/6 pl-4">
+                      <td className="table-cell w-1/6 text-center">
                         <span
                           className={`status-badge ${
                             payment.PaymentStatus?.PaymentStatusID === 1
@@ -526,15 +526,18 @@ const Payments = () => {
                           {payment.PaymentStatus?.PaymentStatusName}
                         </span>
                       </td>
-                      <td className="table-cell w-1/6 text-left font-medium align-middle">
-                        <button
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                          title="View"
-                          onClick={() => handleView(payment.PaymentID)}
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span>View</span>
-                        </button>
+
+                      <td className="table-cell w-1/6 align-middle">
+                        <div className="flex justify-center">
+                          <button
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                            title="View"
+                            onClick={() => handleView(payment.PaymentID)}
+                          >
+                            <Eye className="w-4 h-4" />
+                            <span>View</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

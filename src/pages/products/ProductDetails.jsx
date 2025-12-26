@@ -124,8 +124,6 @@ const ProductDetails = () => {
     }));
   };
   const handleStoreStatusToggle = (variant, store, newState) => {
-    console.log("Toggle Store Status:", { variant, store, newState });
-
     // Update UI instantly
     setProduct((prev) => {
       const updated = { ...prev };
@@ -238,33 +236,30 @@ const ProductDetails = () => {
             <nav className="flex space-x-8 px-8" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab("variants")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === "variants"
-                    ? "border-custom-bg text-custom-bg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "variants"
+                  ? "border-custom-bg text-custom-bg"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 <Grid className="h-4 w-4" />
                 {t("PRODUCTS.VARIANTS")}
               </button>
               <button
                 onClick={() => setActiveTab("inventory")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === "inventory"
-                    ? "border-custom-bg text-custom-bg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "inventory"
+                  ? "border-custom-bg text-custom-bg"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 <Store className="h-4 w-4" />
                 {t("STORES.INVENTORY")}
               </button>
               <button
                 onClick={() => setActiveTab("specs")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === "specs"
-                    ? "border-custom-bg text-custom-bg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "specs"
+                  ? "border-custom-bg text-custom-bg"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 <Info className="h-4 w-4" />
                 {t("PRODUCT_CREATION.SPECIFICATIONS")}
@@ -316,9 +311,18 @@ const ProductDetails = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {product.Variants.map((variant, index) => {
                         const attributes = getVariantAttributes(variant);
+                        // Derive Selling Price from Inventory (lowest price across stores)
+                        const inventory = variant.Inventory || [];
+                        const sellingPrices = inventory
+                          .map((i) => parseFloat(i.SellingPrice))
+                          .filter((p) => !isNaN(p));
+
+                        const minSellingPrice = sellingPrices.length > 0 ? Math.min(...sellingPrices) : 0;
+
+                        // Use derived selling price for discount calculation
                         const discount = calculateDiscount(
                           variant.MRP,
-                          variant.SellingPrice
+                          minSellingPrice
                         );
                         const totalStock = getTotalInventory(variant);
 
@@ -339,7 +343,7 @@ const ProductDetails = () => {
                             </td>
 
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                              ₹{parseFloat(variant.SellingPrice).toFixed(2)}
+                              ₹{minSellingPrice > 0 ? minSellingPrice.toFixed(2) : "0.00"}
                             </td>
 
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
@@ -354,11 +358,10 @@ const ProductDetails = () => {
 
                             <td className="px-6 py-4 whitespace-nowrap text-right">
                               <span
-                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  totalStock > 0
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-red-100 text-red-800"
-                                }`}
+                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${totalStock > 0
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                                  }`}
                               >
                                 {totalStock}
                               </span>
@@ -571,17 +574,20 @@ const ProductDetails = () => {
                       </p>
                       <p className="text-gray-700 text-lg font-medium">
                         ₹
-                        {Math.min(
-                          ...product.Variants.map((v) =>
-                            parseFloat(v.SellingPrice)
-                          )
-                        ).toLocaleString("en-IN")}{" "}
-                        - ₹
-                        {Math.max(
-                          ...product.Variants.map((v) =>
-                            parseFloat(v.SellingPrice)
-                          )
-                        ).toLocaleString("en-IN")}
+                        {(() => {
+                          const allPrices = product.Variants.flatMap((v) =>
+                            (v.Inventory || []).map((i) =>
+                              parseFloat(i.SellingPrice)
+                            )
+                          ).filter((p) => !isNaN(p));
+
+                          if (allPrices.length === 0) return "0";
+                          const min = Math.min(...allPrices);
+                          const max = Math.max(...allPrices);
+
+                          if (min === max) return min.toLocaleString("en-IN");
+                          return `${min.toLocaleString("en-IN")} - ₹${max.toLocaleString("en-IN")}`;
+                        })()}
                       </p>
                     </div>
                   </div>

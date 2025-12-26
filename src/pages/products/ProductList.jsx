@@ -526,9 +526,9 @@ const ProductList = () => {
                       {/* Product Name */}
                       <td className="table-cell text-left align-middle">
                         <div className="flex items-center p-2">
-                          <div className="h-10 w-10 flex-shrink-0">
+                          <div className="h-8 w-8 flex-shrink-0">
                             <img
-                              className="h-10 w-10 rounded object-cover"
+                              className="h-8 w-8 rounded object-cover"
                               src={product.firstImage}
                               alt={product.ProductName}
                               onError={(e) => {
@@ -539,7 +539,7 @@ const ProductList = () => {
                           </div>
                           <div className="ml-3">
                             <div
-                              className="font-medium text-sm text-gray-900 ellipsis-text"
+                              className="font-medium text-xs text-gray-900 ellipsis-text"
                               title={product.ProductName}
                             >
                               {product.ProductName}
@@ -551,7 +551,7 @@ const ProductList = () => {
                       {/* Category */}
                       <td className="table-cell text-center align-middle">
                         <div
-                          className="ellipsis-text"
+                          className="ellipsis-text text-xs text-gray-700"
                           title={product.subCategory}
                         >
                           {product.subCategory}
@@ -561,7 +561,7 @@ const ProductList = () => {
                       {/* Brand */}
                       <td className="table-cell text-center align-middle">
                         <div
-                          className="ellipsis-text"
+                          className="ellipsis-text text-xs text-gray-700"
                           title={product.brandName}
                         >
                           {product.brandName}
@@ -597,7 +597,7 @@ const ProductList = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {bFilterLoading ? (
             <div className="col-span-full flex justify-center py-8">
               <Loader size="medium" />
@@ -610,11 +610,11 @@ const ProductList = () => {
             aProducts.map((product) => (
               <div
                 key={product.ProductID}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-lg transition-shadow duration-200"
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200"
               >
                 <div className="flex items-center justify-between">
                   <span
-                    className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
+                    className={`px-2 py-0.5 inline-flex text-[10px] leading-4 font-semibold rounded-full ${getStatusBadgeClass(
                       product.status
                     )}`}
                   >
@@ -629,8 +629,8 @@ const ProductList = () => {
                     }
                   />
                 </div>
-                <div className="flex items-center gap-4 mt-2">
-                  <div className="flex-shrink-0 h-16 w-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
                     <img
                       src={product.firstImage}
                       alt={product.ProductName}
@@ -645,7 +645,7 @@ const ProductList = () => {
                   </div>
                   <div className="flex-1">
                     <div
-                      className="text-sm font-medium text-gray-900 ellipsis-text"
+                      className="text-xs font-medium text-gray-900 ellipsis-text"
                       title={product.ProductName}
                     >
                       {product.ProductName}
@@ -653,14 +653,14 @@ const ProductList = () => {
                   </div>
                 </div>
                 <div
-                  className="text-sm text-gray-900 mt-2 ellipsis-text"
+                  className="text-xs text-gray-700 mt-2 ellipsis-text"
                   title={product.subCategory}
                 >
                   <span className="font-medium">{t("COMMON.CATEGORY")}</span>{" "}
                   {product.subCategory}
                 </div>
                 <div
-                  className="text-sm text-gray-900 ellipsis-text"
+                  className="text-xs text-gray-700 ellipsis-text"
                   title={product.brandName}
                 >
                   <span className="font-medium">{t("PRODUCTS.BRAND")}</span>{" "}

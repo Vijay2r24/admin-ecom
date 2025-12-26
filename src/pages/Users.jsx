@@ -401,7 +401,7 @@ const Users = () => {
                               {user.FirstName} {user.LastName}
                             </span>
                           </div>
-                          <div className="table-cell-subtext sm:hidden">
+                          <div className="table-cell-subtext sm:hidden text-xs font-semibold text-gray-900">
                             {user.Email}
                           </div>
                           <div className="table-cell-subtext lg:hidden">
@@ -418,8 +418,10 @@ const Users = () => {
                           {" "}
                           {/* adjust max-w as needed */}
                           <div className="table-cell-subtext flex items-center justify-start">
-                            <Mail className="h-4 w-4 mr-2" />
-                            <span className="ellipsis-text">{user.Email}</span>
+                            <Mail className="h-4 w-4 mr-2 text-gray-500" />
+                            <span className="ellipsis-text text-xs font-semibold text-gray-900">
+                              {user.Email}
+                            </span>
                           </div>
                           <div className="table-cell-subtext flex items-center justify-start">
                             <Phone className="h-4 w-4 mr-2" />
@@ -525,7 +527,7 @@ const Users = () => {
                   <div className="flex items-center gap-1">
                     <Mail className="h-4 w-4" />
                     <span
-                      className="truncate max-w-[120px] block"
+                      className="truncate max-w-[120px] block text-xs font-semibold text-gray-900"
                       title={user.Email}
                     >
                       {user.Email}

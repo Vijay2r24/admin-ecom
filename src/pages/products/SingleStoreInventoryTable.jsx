@@ -33,8 +33,6 @@ export const SingleStoreInventoryTable = ({
   };
 
   const handleSave = () => {
-    console.log("Updated Inventory Data:", editData);
-    // TODO: Send API update call here
     closeModal();
   };
 

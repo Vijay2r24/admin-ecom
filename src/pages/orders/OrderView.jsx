@@ -396,28 +396,28 @@ const OrderView = () => {
       <div>
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <p className="text-gray-500">
+            <p className="text-xs text-gray-500">
               {t("VIEW_ORDER.ORDER_NUMBER")}
               {nOrder.orderId || nOrder.id}
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 print:grid-cols-1 print:gap-4">
-          <div className="lg:col-span-1 flex flex-col gap-6 print:gap-4">
-            <div className="rounded-lg p-6 bg-white shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 print:grid-cols-1 print:gap-4">
+          <div className="lg:col-span-1 flex flex-col gap-4 print:gap-4">
+            <div className="rounded-lg p-4 bg-white shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
               <div>
-                <div className="flex items-center space-x-3 mb-4 print:mb-3">
-                  <div className="p-2 bg-blue-100 rounded-lg print:hidden">
-                    <User className="h-5 w-5 text-blue-700" />
+                <div className="flex items-center space-x-3 mb-3 print:mb-3">
+                  <div className="p-1.5 bg-blue-100 rounded-lg print:hidden">
+                    <User className="h-4 w-4 text-blue-700" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 print:text-base">
+                  <h4 className="text-sm font-semibold text-gray-900 print:text-base">
                     {t("VIEW_ORDER.CUSTOMER_DETAILS")}
                   </h4>
                 </div>
-                <div className="space-y-3 text-gray-700 print:space-y-2 print:text-gray-800">
+                <div className="space-y-2 text-gray-700 print:space-y-2 print:text-gray-800">
                   <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center print:h-8 print:w-8 print:bg-gray-100">
-                      <span className="text-sm font-medium text-blue-600 print:text-caption print:text-xs">
+                    <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center print:h-8 print:w-8 print:bg-gray-100">
+                      <span className="text-xs font-medium text-blue-600 print:text-caption print:text-xs">
                         {nOrder.customer?.name
                           ? nOrder.customer.name
                               .split(" ")
@@ -429,23 +429,23 @@ const OrderView = () => {
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900 print:text-xs">
+                      <p className="text-xs font-medium text-gray-900 print:text-xs">
                         {nOrder.customer?.name || "N/A"}
                       </p>
-                      <p className="text-caption print:text-[10px]">
+                      <p className="text-[10px] text-gray-500 print:text-[10px]">
                         {t("VIEW_ORDER.CUSTOMER")}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <Mail className="h-4 w-4 text-gray-500 print:hidden" />
-                    <p className="text-sm print:text-xs">
+                    <Mail className="h-3.5 w-3.5 text-gray-500 print:hidden" />
+                    <p className="text-xs print:text-xs">
                       {nOrder.customer?.email || "N/A"}
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <Phone className="h-4 w-4 text-gray-500 print:hidden" />
-                    <p className="text-sm print:text-xs">
+                    <Phone className="h-3.5 w-3.5 text-gray-500 print:hidden" />
+                    <p className="text-xs print:text-xs">
                       {nOrder.customer?.phone || "N/A"}
                     </p>
                   </div>
@@ -453,32 +453,32 @@ const OrderView = () => {
               </div>
             </div>
 
-            <div className="rounded-lg bg-white p-6 shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
+            <div className="rounded-lg bg-white p-4 shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
               <div>
-                <div className="flex items-center space-x-3 mb-4 print:mb-3">
-                  <div className="p-2 bg-green-100 rounded-lg print:hidden">
-                    <MapPin className="h-5 w-5 text-green-700" />
+                <div className="flex items-center space-x-3 mb-3 print:mb-3">
+                  <div className="p-1.5 bg-green-100 rounded-lg print:hidden">
+                    <MapPin className="h-4 w-4 text-green-700" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 print:text-base">
+                  <h4 className="text-sm font-semibold text-gray-900 print:text-base">
                     {t("VIEW_ORDER.DELIVERY_INFORMATION")}
                   </h4>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <Building className="h-4 w-4 text-gray-500 mt-1 print:hidden" />
+                  <Building className="h-3.5 w-3.5 text-gray-500 mt-1 print:hidden" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900 print:text-xs">
+                    <p className="text-xs font-medium text-gray-900 print:text-xs">
                       {nOrder.delivery?.address}
                     </p>
-                    <p className="text-caption print:text-[10px]">
+                    <p className="text-[10px] text-gray-500 print:text-[10px]">
                       {nOrder.delivery?.city && `${nOrder.delivery.city}, `}
                       {nOrder.delivery?.state && `${nOrder.delivery.state} `}
                       {nOrder.delivery?.zipCode && `${nOrder.delivery.zipCode}`}
                     </p>
-                    <p className="text-caption print:text-[10px]">
+                    <p className="text-[10px] text-gray-500 print:text-[10px]">
                       {nOrder.delivery?.country}
                     </p>
                     {nOrder.delivery?.addressType && (
-                      <p className="text-caption print:text-[10px] text-gray-500">
+                      <p className="text-[10px] text-gray-500 print:text-[10px]">
                         {nOrder.delivery.addressType} Address
                         {nOrder.delivery?.isDefault && " • Default"}
                       </p>
@@ -488,53 +488,53 @@ const OrderView = () => {
               </div>
             </div>
 
-            <div className="rounded-lg p-6 bg-white shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
-              <div className="flex items-center space-x-3 mb-4 print:mb-3">
-                <div className="p-2 bg-yellow-100 rounded-lg print:hidden">
-                  <CreditCard className="h-5 w-5 text-yellow-700" />
+            <div className="rounded-lg p-4 bg-white shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
+              <div className="flex items-center space-x-3 mb-3 print:mb-3">
+                <div className="p-1.5 bg-yellow-100 rounded-lg print:hidden">
+                  <CreditCard className="h-4 w-4 text-yellow-700" />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900 print:text-base">
+                <h4 className="text-sm font-semibold text-gray-900 print:text-base">
                   {t("VIEW_ORDER.PAYMENT_INFORMATION")}
                 </h4>
               </div>
-              <div className="space-y-3 text-gray-700 print:space-y-2 print:text-gray-800">
+              <div className="space-y-2 text-gray-700 print:space-y-2 print:text-gray-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm print:text-xs">
+                  <span className="text-xs print:text-xs">
                     {t("VIEW_ORDER.PAYMENT_STATUS")}
                   </span>
-                  <span className="text-sm font-medium print:text-xs">
+                  <span className="text-xs font-medium print:text-xs">
                     {nOrder?.orderItems?.[0]?.paymentStatus}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm print:text-xs">
+                  <span className="text-xs print:text-xs">
                     {t("VIEW_ORDER.PAYMENT_TYPE")}
                   </span>
-                  <span className="text-sm font-medium print:text-xs">
+                  <span className="text-xs font-medium print:text-xs">
                     {nOrder?.orderItems?.[0]?.PaymentTypeName || "N/A"}
                   </span>
                 </div>
               </div>
             </div>
           </div>
-          <div className="lg:col-span-2 flex flex-col gap-6 print:gap-4">
-            <div className="hidden bg-white lg:block rounded-lg p-6 shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
+          <div className="lg:col-span-2 flex flex-col gap-4 print:gap-4">
+            <div className="hidden bg-white lg:block rounded-lg p-4 shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
               <div>
-                <div className="flex items-center space-x-3 mb-4 print:mb-3">
-                  <div className="p-2 bg-[#5B45E0]/10 rounded-lg print:hidden">
-                    <Package className="h-5 w-5 text-[#5B45E0]" />
+                <div className="flex items-center space-x-3 mb-3 print:mb-3">
+                  <div className="p-1.5 bg-[#5B45E0]/10 rounded-lg print:hidden">
+                    <Package className="h-4 w-4 text-[#5B45E0]" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 print:text-base">
+                  <h4 className="text-sm font-semibold text-gray-900 print:text-base">
                     {t("VIEW_ORDER.ORDER_SUMMARY")}
                   </h4>
                 </div>
-                <div className="space-y-3 bg-white print:space-y-2 text-gray-700 print:text-gray-800">
+                <div className="space-y-2 bg-white print:space-y-2 text-gray-700 print:text-gray-800">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm print:text-xs">
+                    <span className="text-xs print:text-xs">
                       {t("VIEW_ORDER.ORDER_DATE_TIME")}
                     </span>
-                    <div className="flex items-center text-sm text-gray-900 font-medium print:text-xs">
-                      <Clock className="h-4 w-4 mr-1.5 text-gray-500 print:hidden" />
+                    <div className="flex items-center text-xs text-gray-900 font-medium print:text-xs">
+                      <Clock className="h-3.5 w-3.5 mr-1.5 text-gray-500 print:hidden" />
                       {nOrder.orderDate
                         ? `${new Date(
                             nOrder.orderDate
@@ -548,11 +548,11 @@ const OrderView = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between font-medium border-t border-gray-100 pt-3 mt-3 print:border-gray-200 print:pt-2 print:mt-2">
-                    <span className="text-base text-gray-900 print:text-sm">
+                  <div className="flex items-center justify-between font-medium border-t border-gray-100 pt-2 mt-2 print:border-gray-200 print:pt-2 print:mt-2">
+                    <span className="text-sm text-gray-900 print:text-sm">
                       {t("VIEW_ORDER.TOTAL_AMOUNT")}
                     </span>
-                    <span className="text-lg font-bold text-[#5B45E0] print:text-base">
+                    <span className="text-base font-bold text-[#5B45E0] print:text-base">
                       ₹{nOrder.totalAmount || ""}
                     </span>
                   </div>
@@ -561,8 +561,8 @@ const OrderView = () => {
             </div>
 
             <div className="rounded-lg shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
-              <div className="px-6 py-4 border-b border-gray-200 print:px-3 print:py-2 print:border-b print:border-gray-300">
-                <h4 className="text-lg font-semibold text-gray-900 print:text-base">
+              <div className="px-4 py-3 border-b border-gray-200 print:px-3 print:py-2 print:border-b print:border-gray-300">
+                <h4 className="text-sm font-semibold text-gray-900 print:text-base">
                   {t("VIEW_ORDER.ORDER_ITEMS")}
                 </h4>
               </div>
@@ -616,9 +616,9 @@ const OrderView = () => {
                           }
                         }}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap print:px-3 print:py-2">
+                        <td className="px-4 py-3 whitespace-nowrap print:px-3 print:py-2">
                           <div className="flex items-center print:block">
-                            <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 print:hidden">
+                            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 print:hidden">
                               {item.image ? (
                                 <img
                                   src={item.image}
@@ -626,27 +626,27 @@ const OrderView = () => {
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
-                                <div className="h-full w-full flex items-center justify-center text-gray-500 text-sm">
+                                <div className="h-full w-full flex items-center justify-center text-gray-500 text-xs">
                                   {t("VIEW_ORDER.NO_IMAGE")}
                                 </div>
                               )}
                             </div>
-                            <div className="ml-4 print:ml-0">
-                              <div className="text-sm font-medium text-gray-900 print:text-xs">
+                            <div className="ml-3 print:ml-0">
+                              <div className="text-xs font-medium text-gray-900 print:text-xs">
                                 {(item.name?.split(" ").slice(0, 2).join(" ") ||
                                   "N/A") +
                                   (item.name?.split(" ").length > 2
                                     ? "..."
                                     : "")}
                               </div>
-                              <div className="text-xs text-gray-500 print:text-[10px] truncate max-w-[100px]">
+                              <div className="text-[10px] text-gray-500 print:text-[10px] truncate max-w-[100px]">
                                 {t("COMMON.QUANTITY")}: {item.quantity}
                               </div>
 
                               {highlightedItemId === item.id && (
                                 <div className="mt-1">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                    <Check className="h-3 w-3 mr-1" />
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800">
+                                    <Check className="h-2.5 w-2.5 mr-1" />
                                     {t("VIEW_ORDER.HIGHLIGHTED")}
                                   </span>
                                 </div>
@@ -654,28 +654,28 @@ const OrderView = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 print:px-3 print:py-2 print:text-xs">
+                        <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-800 print:px-3 print:py-2 print:text-xs">
                           ₹{item.price?.toFixed(2)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap mt-4 text-sm text-gray-800 print:px-3 print:py-2 print:text-xs text-center flex items-center justify-center">
+                        <td className="px-4 py-3 whitespace-nowrap mt-4 text-xs text-gray-800 print:px-3 print:py-2 print:text-xs text-center flex items-center justify-center">
                           <StatusBadge status={item.status} />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium print:px-3 print:py-2 print:text-xs">
+                        <td className="px-4 py-3 whitespace-nowrap text-center text-xs font-medium print:px-3 print:py-2 print:text-xs">
                           <div className="flex items-center justify-center gap-3 print:gap-1">
                             <button
                               className="text-blue-600 hover:text-blue-800 print:hidden"
                               title="Edit"
                               onClick={() => openEditDialog(item.OrderItemID)} // pass only ID
                             >
-                              <Edit className="w-4 h-4" />
+                              <Edit className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => {
                                 handleOpenHistory(item.OrderItemID);
                               }}
-                              className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg shadow-sm transition"
+                              className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg shadow-sm transition"
                             >
-                              <FaHistory className="text-gray-600 text-lg" />
+                              <FaHistory className="text-gray-600 text-sm" />
                             </button>
                           </div>
                         </td>
@@ -686,13 +686,13 @@ const OrderView = () => {
                     <tr>
                       <td
                         colSpan="3"
-                        className="px-6 py-3 text-left text-base font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-left text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
                       >
                         {t("VIEW_ORDER.SUBTOTAL")}
                       </td>
                       <td
                         colSpan="2"
-                        className="px-6 py-3 text-right text-base font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-right text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
                       >
                         ₹{nOrder.total?.toFixed(2) || ""}
                       </td>
@@ -700,13 +700,13 @@ const OrderView = () => {
                     <tr>
                       <td
                         colSpan="3"
-                        className="px-6 py-3 text-left text-base font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-left text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
                       >
                         {t("VIEW_ORDER.SHIPPING")}
                       </td>
                       <td
                         colSpan="2"
-                        className="px-6 py-3 text-right text-base font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-right text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
                       >
                         ₹0.00
                       </td>
@@ -714,13 +714,13 @@ const OrderView = () => {
                     <tr>
                       <td
                         colSpan="3"
-                        className="px-6 py-3 text-left text-base font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-left text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
                       >
                         {t("VIEW_ORDER.TAX")}
                       </td>
                       <td
                         colSpan="2"
-                        className="px-6 py-3 text-right text-base font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-right text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
                       >
                         ₹0.00
                       </td>
@@ -728,13 +728,13 @@ const OrderView = () => {
                     <tr>
                       <td
                         colSpan="3"
-                        className="px-6 py-3 text-left text-lg font-bold text-gray-900 print:px-3 print:py-2 print:text-base"
+                        className="px-4 py-2 text-left text-base font-bold text-gray-900 print:px-3 print:py-2 print:text-base"
                       >
                         {t("VIEW_ORDER.TOTAL_AMOUNT")}
                       </td>
                       <td
                         colSpan="2"
-                        className="px-6 py-3 text-right text-lg font-bold text-[#5B45E0] print:px-3 print:py-2 print:text-base"
+                        className="px-4 py-2 text-right text-base font-bold text-[#5B45E0] print:px-3 print:py-2 print:text-base"
                       >
                         ₹{nOrder.totalAmount || ""}
                       </td>
@@ -743,34 +743,34 @@ const OrderView = () => {
                 </table>
               </div>
             </div>
-            <div className="lg:hidden rounded-lg p-6 shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
+            <div className="lg:hidden rounded-lg p-4 shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
               <div>
-                <div className="flex items-center space-x-3 mb-4 print:mb-3">
-                  <div className="p-2 bg-[#5B45E0]/10 rounded-lg print:hidden">
-                    <Package className="h-5 w-5 text-[#5B45E0]" />
+                <div className="flex items-center space-x-3 mb-3 print:mb-3">
+                  <div className="p-1.5 bg-[#5B45E0]/10 rounded-lg print:hidden">
+                    <Package className="h-4 w-4 text-[#5B45E0]" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 print:text-base">
+                  <h4 className="text-sm font-semibold text-gray-900 print:text-base">
                     {t("VIEW_ORDER.ORDER_SUMMARY")}
                   </h4>
                 </div>
-                <div className="space-y-3 print:space-y-2 text-gray-700 print:text-gray-800">
+                <div className="space-y-2 print:space-y-2 text-gray-700 print:text-gray-800">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm print:text-xs">
+                    <span className="text-xs print:text-xs">
                       {t("VIEW_ORDER.ORDER_DATE")}
                     </span>
-                    <div className="flex items-center text-sm text-gray-900 font-medium print:text-xs">
-                      <Calendar className="h-4 w-4 mr-1.5 text-gray-500 print:hidden" />
+                    <div className="flex items-center text-xs text-gray-900 font-medium print:text-xs">
+                      <Calendar className="h-3.5 w-3.5 mr-1.5 text-gray-500 print:hidden" />
                       {nOrder.orderDate
                         ? new Date(nOrder.orderDate).toLocaleDateString()
                         : ""}
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm print:text-xs">
+                    <span className="text-xs print:text-xs">
                       {t("VIEW_ORDER.ORDER_TIME")}
                     </span>
-                    <div className="flex items-center text-sm text-gray-900 font-medium print:text-xs">
-                      <Clock className="h-4 w-4 mr-1.5 text-gray-500 print:hidden" />
+                    <div className="flex items-center text-xs text-gray-900 font-medium print:text-xs">
+                      <Clock className="h-3.5 w-3.5 mr-1.5 text-gray-500 print:hidden" />
                       {nOrder.orderDate
                         ? new Date(nOrder.orderDate).toLocaleTimeString([], {
                             hour: "2-digit",
@@ -779,11 +779,11 @@ const OrderView = () => {
                         : ""}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between font-medium border-t border-gray-100 pt-3 mt-3 print:border-gray-200 print:pt-2 print:mt-2">
-                    <span className="text-base text-gray-900 print:text-sm">
+                  <div className="flex items-center justify-between font-medium border-t border-gray-100 pt-2 mt-2 print:border-gray-200 print:pt-2 print:mt-2">
+                    <span className="text-sm text-gray-900 print:text-sm">
                       {t("VIEW_ORDER.TOTAL_AMOUNT")}
                     </span>
-                    <span className="text-lg font-bold text-[#5B45E0] print:text-base">
+                    <span className="text-base font-bold text-[#5B45E0] print:text-base">
                       ₹{nOrder.totalAmount}
                     </span>
                   </div>
@@ -796,21 +796,21 @@ const OrderView = () => {
 
       {bShowEditDialog && oEditingItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
+          <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-md">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-semibold">
                 {t("VIEW_ORDER.EDIT_ORDER_ITEM")}
               </h3>
               <button
                 onClick={closeEditDialog}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
                   {t("COMMON.CURRENT_STATUS")}
                 </label>
                 <div className="p-2 bg-gray-100 rounded-md">
@@ -848,17 +848,17 @@ const OrderView = () => {
                 />
               </div>
             </div>
-            <div className="mt-6 flex justify-end space-x-4">
+            <div className="mt-4 flex justify-end space-x-3">
               <button
                 type="button"
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 onClick={closeEditDialog}
               >
                 {t("COMMON.CANCEL")}
               </button>
               <button
                 type="button"
-                className="btn-primary"
+                className="btn-primary text-xs px-3 py-1.5"
                 onClick={handleSaveChanges}
                 disabled={!sEditedStatusId}
               >

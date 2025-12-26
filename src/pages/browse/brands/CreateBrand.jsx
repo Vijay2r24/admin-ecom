@@ -63,9 +63,8 @@ const CreateBrand = () => {
   // Cropper modal state
   const [bShowCropper, setShowCropper] = useState(false);
   const [oImageToCrop, setImageToCrop] = useState(null);
-  const croppedFileName = `${
-    FILE_CONSTANTS.BRAND_LOGO_PREFIX
-  }-${Date.now()}.jpg`;
+  const croppedFileName = `${FILE_CONSTANTS.BRAND_LOGO_PREFIX
+    }-${Date.now()}.jpg`;
 
   // Required fields configuration
   const requiredFields = {
@@ -127,7 +126,7 @@ const CreateBrand = () => {
    */
   const validateField = useCallback((name, value) => {
     let error = "";
-    
+
     switch (name) {
       case "BrandName":
         error = validateBrandName(value);
@@ -171,6 +170,26 @@ const CreateBrand = () => {
               res?.data?.status === STATUS.SUCCESS.toUpperCase()) &&
             brand
           ) {
+            // Determine existing logo ID and URL from either documentMetadata or BrandLogo
+            let existingLogoId = null;
+            let existingLogoUrl = null;
+            let existingLogoObj = null;
+
+            if (brand.documentMetadata && brand.documentMetadata.length > 0) {
+              const meta = brand.documentMetadata[0];
+              existingLogoId = meta.DocumentID || meta.documentId || meta.id || meta._id;
+              existingLogoUrl = meta.documentUrl;
+              existingLogoObj = meta;
+            }
+
+            if (brand.BrandLogo && brand.BrandLogo.length > 0) {
+              const logo = brand.BrandLogo[0];
+              if (!existingLogoId)
+                existingLogoId = logo.DocumentID || logo.documentId || logo.id || logo._id;
+              if (!existingLogoUrl) existingLogoUrl = logo.documentUrl;
+              if (!existingLogoObj) existingLogoObj = logo;
+            }
+
             setFormData((prev) => ({
               ...prev,
               TenantID: brand.TenantID || localStorage.getItem("tenantID"),
@@ -184,12 +203,12 @@ const CreateBrand = () => {
               description: brand.BrandDescription || "",
               CreatedBy: brand.CreatedBy || t("COMMON.ADMIN"),
               UpdatedBy: t("COMMON.ADMIN"),
-              existingLogo: brand.BrandLogo?.[0] || null,
-              existingLogoDocumentId: brand.BrandLogo?.[0]?.documentId || null,
+              existingLogo: existingLogoObj,
+              existingLogoDocumentId: existingLogoId,
             }));
 
-            if (brand.BrandLogo && brand.BrandLogo.length > 0) {
-              setImagePreview(brand.BrandLogo[0].documentUrl);
+            if (existingLogoUrl) {
+              setImagePreview(existingLogoUrl);
             }
 
             // Validate initial data after setting
@@ -227,7 +246,7 @@ const CreateBrand = () => {
    */
   const handleInputChange = ({ target: { name, value, type, checked } }) => {
     const newValue = type === "checkbox" ? checked : value;
-    
+
     setFormData((prev) => ({
       ...prev,
       [name]: newValue,
@@ -347,7 +366,13 @@ const CreateBrand = () => {
   /**
    * Remove uploaded or existing logo
    */
-  const handleRemoveImage = () => {
+  const handleRemoveImage = (e) => {
+    // Prevent event propagation
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     if (
       sImagePreview &&
       typeof sImagePreview === "string" &&
@@ -355,13 +380,15 @@ const CreateBrand = () => {
     ) {
       URL.revokeObjectURL(sImagePreview);
     }
+
     setFormData((prev) => ({
       ...prev,
       BrandLogo: null,
       existingLogo: null,
+      // existingLogoDocumentId is preserved from ...prev
     }));
     setImagePreview(null);
-    
+
     // Validate the logo field after removal
     validateField("BrandLogo", null);
 
@@ -376,7 +403,7 @@ const CreateBrand = () => {
    */
   const validateForm = () => {
     const errors = {};
-    
+
     errors.BrandName = validateBrandName(oFormData.BrandName);
     errors.BrandCode = validateBrandCode(oFormData.BrandCode);
     errors.BrandLogo = validateBrandLogo(oFormData.BrandLogo || sImagePreview);
@@ -412,8 +439,10 @@ const CreateBrand = () => {
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
         if (element) {
-          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
-         block: SCROLL_CONSTANTS.BLOCK, });
+          element.scrollIntoView({
+            behavior: SCROLL_CONSTANTS.BEHAVIOR,
+            block: SCROLL_CONSTANTS.BLOCK,
+          });
           element.focus();
         }
       }
@@ -433,8 +462,8 @@ const CreateBrand = () => {
         sortOrder: 1,
         ...(isEditing &&
           oFormData.existingLogoDocumentId && {
-            DocumentID: oFormData.existingLogoDocumentId,
-          }),
+          DocumentID: oFormData.existingLogoDocumentId,
+        }),
       });
     } else if (
       isEditing &&
@@ -653,12 +682,11 @@ const CreateBrand = () => {
                 {renderLabel("BrandLogo", "PRODUCT_SETUP.CREATE_BRAND.LOGO_LABEL")}
               </label>
               <div
-                className={`relative group rounded-xl border-2 ${
-                  oErrors.BrandLogo ? "border-red-300" : oFieldValid.BrandLogo ? "border-green-300" : "border-gray-200"
-                } border-dashed transition-all duration-200 hover:border-bg-hover bg-gray-50 hover:bg-gray-50/50`}
+                className={`relative group rounded-xl border-2 ${oErrors.BrandLogo ? "border-red-300" : oFieldValid.BrandLogo ? "border-green-300" : "border-gray-200"
+                  } border-dashed transition-all duration-200 hover:border-bg-hover bg-gray-50 hover:bg-gray-50/50`}
               >
-                <div className="p-6">
-                  <div className="space-y-3 text-center">
+                <div className="p-6 overflow-visible">
+                  <div className="space-y-3 text-center overflow-visible">
                     {/* Upload Icon - Only show when no image */}
                     {!sImagePreview && (
                       <div className="flex justify-center">
@@ -697,7 +725,7 @@ const CreateBrand = () => {
                       ) : (
                         <>
                           {/* Image preview with better styling */}
-                          <div className="relative">
+                          <div className="relative inline-block overflow-visible">
                             <img
                               src={sImagePreview}
                               alt="Brand Logo Preview"
@@ -705,14 +733,15 @@ const CreateBrand = () => {
                             />
                             <button
                               type="button"
-                              onClick={handleRemoveImage}
-                              className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all duration-200"
+                              onClick={(e) => handleRemoveImage(e)}
+                              className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all duration-200 z-10 pointer-events-auto cursor-pointer"
                               title="Remove image"
+                              aria-label="Remove image"
                             >
                               <X className="h-3 w-3" />
                             </button>
                             {oFieldValid.BrandLogo && (
-                              <div className="absolute -top-2 -left-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg">
+                              <div className="absolute -top-2 -left-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg z-10">
                                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -720,7 +749,7 @@ const CreateBrand = () => {
                             )}
                           </div>
                           <p className="text-xs text-gray-500 mt-2">
-                           {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
+                            {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
                           </p>
                         </>
                       )}
@@ -770,8 +799,8 @@ const CreateBrand = () => {
             >
               {t("COMMON.CANCEL")}
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn-primary"
               disabled={bSubmitting}
             >

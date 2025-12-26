@@ -15,7 +15,7 @@ import TextAreaWithIcon from "../components/TextAreaWithIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { apiPost } from "../utils/ApiUtils";
-import { SEND_NOTIFICATIONS } from "../contants/apiRoutes";
+import { SEND_NOTIFICATIONS, SEND_SILENT_NOTIFICATIONS } from "../contants/apiRoutes";
 import { REGEX_CONSTANTS, SCROLL_CONSTANTS, STATUS } from "../contants/constants";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
@@ -34,10 +34,10 @@ const Notifications = () => {
     image: null,
     componentName: "",
     jsonData: "{\n  \"key\": \"value\"\n}",
+    dynamicUi: false,
+    version: "2.0",
   });
   const [nPreviewUrl, setPreviewUrl] = useState(null);
-  const [pushError, setPushError] = useState(null);
-  const [pushSuccess, setPushSuccess] = useState(null);
   const [pushValidationErrors, setPushValidationErrors] = useState({});
   const [fieldValid, setFieldValid] = useState({});
   const [jsonError, setJsonError] = useState("");
@@ -129,6 +129,16 @@ const Notifications = () => {
     return "";
   }, [t]);
 
+  const validateVersion = useCallback((version) => {
+    if (activeTab === "silent" && !version?.trim()) {
+      return t("PUSH_NOTIFICATION.VALIDATION.VERSION_REQUIRED");
+    }
+    if (version?.trim() && version.trim().length > 10) {
+      return t("PUSH_NOTIFICATION.VALIDATION.VERSION_MAX_LENGTH");
+    }
+    return "";
+  }, [t, activeTab]);
+
   /**
    * Live validation for a specific field
    */
@@ -150,6 +160,9 @@ const Notifications = () => {
         break;
       case "image":
         error = validateImage(value, nPreviewUrl);
+        break;
+      case "version":
+        error = validateVersion(value);
         break;
       default:
         break;
@@ -175,6 +188,7 @@ const Notifications = () => {
     validateComponentName,
     validateJsonData,
     validateImage,
+    validateVersion,
     nPreviewUrl
   ]);
 
@@ -187,15 +201,17 @@ const Notifications = () => {
   }, [validateField]);
 
   const handlePushChange = useCallback((e) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    
+    const finalValue = type === "checkbox" ? e.target.checked : value;
     
     setPushFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: finalValue,
     }));
     
     // Validate the field immediately
-    validateField(name, value);
+    validateField(name, finalValue);
   }, [validateField]);
 
   const handleImageChange = useCallback((e) => {
@@ -241,17 +257,6 @@ const Notifications = () => {
     validateField("image", null);
   }, [validateField]);
 
-  const validateJSON = useCallback((jsonString) => {
-    try {
-      if (jsonString.trim()) {
-        JSON.parse(jsonString);
-      }
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }, []);
-
   const validatePushForm = useCallback(() => {
     const errors = {};
     
@@ -263,6 +268,7 @@ const Notifications = () => {
     } else {
       errors.componentName = validateComponentName(oPushFormData.componentName);
       errors.jsonData = validateJsonData(oPushFormData.jsonData);
+      errors.version = validateVersion(oPushFormData.version);
     }
 
     // Update field validation states
@@ -272,6 +278,7 @@ const Notifications = () => {
       componentName: !errors.componentName && oPushFormData.componentName.trim() !== "",
       jsonData: !errors.jsonData && oPushFormData.jsonData.trim() !== "",
       image: !errors.image,
+      version: !errors.version && oPushFormData.version.trim() !== "",
     });
 
     // Return only errors that have messages
@@ -291,7 +298,8 @@ const Notifications = () => {
     validateMessage,
     validateComponentName,
     validateJsonData,
-    validateImage
+    validateImage,
+    validateVersion
   ]);
 
   const handleTabChange = useCallback((tab) => {
@@ -303,10 +311,10 @@ const Notifications = () => {
       image: null,
       componentName: "",
       jsonData: "{\n  \"key\": \"value\"\n}",
+      dynamicUi: false,
+      version: "2.0",
     });
     setPreviewUrl(null);
-    setPushError(null);
-    setPushSuccess(null);
     setPushValidationErrors({});
     setFieldValid({});
     setJsonError("");
@@ -328,10 +336,24 @@ const Notifications = () => {
     }
   }, [oPushFormData.jsonData, t, validateField]);
 
+  const resetForm = useCallback(() => {
+    setPushFormData({
+      title: "",
+      message: "",
+      image: null,
+      componentName: "",
+      jsonData: "{\n  \"key\": \"value\"\n}",
+      dynamicUi: false,
+      version: "2.0",
+    });
+    setPreviewUrl(null);
+    setFieldValid({});
+    setPushValidationErrors({});
+    setJsonError("");
+  }, []);
+
   const handlePushSubmit = async (e) => {
     e.preventDefault();
-    setPushError(null);
-    setPushSuccess(null);
     
     // Run comprehensive validation
     const isValid = validatePushForm();
@@ -341,8 +363,10 @@ const Notifications = () => {
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
         if (element) {
-          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
-          block: SCROLL_CONSTANTS.BLOCK, });
+          element.scrollIntoView({ 
+            behavior: SCROLL_CONSTANTS.BEHAVIOR,
+            block: SCROLL_CONSTANTS.BLOCK,
+          });
           element.focus();
         }
       }
@@ -350,64 +374,77 @@ const Notifications = () => {
     }
     
     const token = localStorage.getItem("token");
-    const data = new FormData();
     
-    if (activeTab === "notification") {
-      data.append("title", oPushFormData.title);
-      data.append("body", oPushFormData.message.trim());
-      if (oPushFormData.image) {
-        data.append("NotificationImage", oPushFormData.image);
-      }
-      data.append("type", "notification");
-    } else {
-      // Silent notification
-      let jsonPayload = {};
-      if (oPushFormData.jsonData.trim()) {
-        try {
-          jsonPayload = JSON.parse(oPushFormData.jsonData);
-        } catch (error) {
-          showEmsg(t("PUSH_NOTIFICATION.VALIDATION.JSON_DATA_INVALID"), STATUS.ERROR);
-          return;
+    try {
+      if (activeTab === "notification") {
+        // Regular notification (FormData)
+        const data = new FormData();
+        data.append("title", oPushFormData.title);
+        data.append("body", oPushFormData.message.trim());
+        if (oPushFormData.image) {
+          data.append("NotificationImage", oPushFormData.image);
+        }
+        data.append("type", "notification");
+        
+        const oResponse = await apiPost(SEND_NOTIFICATIONS, data, token, true);
+        if (oResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+          showEmsg(oResponse?.data?.message, STATUS.SUCCESS);
+          resetForm();
+        } else {
+          showEmsg(oResponse?.data?.message || t("COMMON.SOMETHING_WENT_WRONG"), STATUS.ERROR);
+        }
+      } else {
+        // Silent notification (JSON format matching curl structure)
+        let jsonPayload = {};
+        if (oPushFormData.jsonData.trim()) {
+          try {
+            jsonPayload = JSON.parse(oPushFormData.jsonData);
+          } catch (error) {
+            showEmsg(t("PUSH_NOTIFICATION.VALIDATION.JSON_DATA_INVALID"), STATUS.ERROR);
+            return;
+          }
+        }
+        
+        // Structure matching the curl command
+        const silentNotificationData = {
+          componentName: oPushFormData.componentName.trim(),
+          dataPayload: {
+            dynamicUi: oPushFormData.dynamicUi,
+            version: oPushFormData.version.trim(),
+            component: JSON.stringify(jsonPayload)
+          }
+        };
+        
+        // Use the new silent notification endpoint with JSON format
+        const oResponse = await apiPost(
+          SEND_SILENT_NOTIFICATIONS, 
+          silentNotificationData, 
+          token, 
+          false // Important: false for JSON, not FormData
+        );
+        
+        if (oResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+          showEmsg(oResponse?.data?.message, STATUS.SUCCESS);
+          resetForm();
+        } else {
+          showEmsg(oResponse?.data?.message || t("COMMON.SOMETHING_WENT_WRONG"), STATUS.ERROR);
         }
       }
-      
-      const silentNotificationData = {
-        component: oPushFormData.componentName.trim(),
-        ...jsonPayload
-      };
-      
-      data.append("data", JSON.stringify(silentNotificationData));
-      data.append("type", "silent");
-    }
-
-    try {
-      const oResponse = await apiPost(SEND_NOTIFICATIONS, data, token, true);
-      if (oResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
-        showEmsg(oResponse?.data?.message, STATUS.SUCCESS);
-        setPushFormData({
-          title: "",
-          message: "",
-          image: null,
-          componentName: "",
-          jsonData: "{\n  \"key\": \"value\"\n}",
-        });
-        setPreviewUrl(null);
-        setFieldValid({});
-      } else {
-        showEmsg(oResponse?.data?.message, STATUS.ERROR);
-        setPushError(oResponse?.data?.MESSAGE);
-      }
     } catch (error) {
-      showEmsg(error?.response?.data?.message);
-      setPushError(error?.response?.data?.message);
+      showEmsg(error?.response?.data?.message || t("COMMON.SOMETHING_WENT_WRONG"), STATUS.ERROR);
     }
   };
 
-  // Sample JSON templates
+  // Sample JSON templates matching the new structure
   const jsonTemplates = {
     basic: `{
   "action": "refresh",
   "timestamp": "${new Date().toISOString()}"
+}`,
+    banner: `{
+  "type": "banner",
+  "message": "Special Offer!",
+  "backgroundColor": "#FF5733"
 }`,
     navigation: `{
   "screen": "Profile",
@@ -452,20 +489,6 @@ const Notifications = () => {
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
       <ToastContainer />
       <form onSubmit={handlePushSubmit} className="space-y-8">
-        {/* Error/Success Messages */}
-        <div className="space-y-4">
-          {pushError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {pushError}
-            </div>
-          )}
-          {pushSuccess && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-              {pushSuccess}
-            </div>
-          )}
-        </div>
-
         {/* Notification Type Tabs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="border-b border-gray-200">
@@ -473,7 +496,7 @@ const Notifications = () => {
               <button
                 type="button"
                 onClick={() => handleTabChange("notification")}
-                className={`flex-1 py-4 px-6 text-center font-medium text-sm border-b-2 transition-colors duration-200 flex items-center justify-center gap-2 ${
+                className={`flex-1 py-3 px-4 text-center font-medium text-xs border-b-2 transition-colors duration-200 flex items-center justify-center gap-2 ${
                   activeTab === "notification"
                     ? "border-[#5B45E0] text-[#5B45E0] bg-purple-50"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -485,7 +508,7 @@ const Notifications = () => {
               <button
                 type="button"
                 onClick={() => handleTabChange("silent")}
-                className={`flex-1 py-4 px-6 text-center font-medium text-sm border-b-2 transition-colors duration-200 flex items-center justify-center gap-2 ${
+                className={`flex-1 py-3 px-4 text-center font-medium text-xs border-b-2 transition-colors duration-200 flex items-center justify-center gap-2 ${
                   activeTab === "silent"
                     ? "border-[#5B45E0] text-[#5B45E0] bg-purple-50"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -497,25 +520,25 @@ const Notifications = () => {
             </nav>
           </div>
 
-          <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Send className="h-5 w-5 text-custom-bg" />
+          <div className="px-5 py-3 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Send className="h-4 w-4 text-custom-bg" />
               {activeTab === "notification" 
                 ? t("PUSH_NOTIFICATION.DETAILS_TITLE")
                 : t("PUSH_NOTIFICATION.SILENT_DETAILS_TITLE") || "Silent Notification Details"}
             </h2>
           </div>
 
-          <div className="p-6 space-y-8">
+          <div className="p-4 space-y-6">
             {/* Main Content Grid - Inputs on left, Preview on right */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Form Inputs (2/3 width on large screens) */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-4">
                 {activeTab === "notification" ? (
                   /* Regular Notification Form */
                   <>
                     {/* Title and Message in separate rows */}
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       <TextInputWithIcon
                         label={renderLabel("title", "PUSH_NOTIFICATION.TITLE_LABEL")}
                         id="title"
@@ -618,6 +641,39 @@ const Notifications = () => {
                       required={requiredFields.componentName}
                     />
 
+                    {/* Additional Silent Notification Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <TextInputWithIcon
+                        label="Version"
+                        id="version"
+                        name="version"
+                        value={oPushFormData.version}
+                        onChange={handlePushChange}
+                        onBlur={handleBlur}
+                        placeholder="e.g., 2.0"
+                        Icon={Code}
+                        error={pushValidationErrors.version}
+                        isValid={fieldValid.version}
+                        required={activeTab === "silent"}
+                      />
+                      
+                      <div className="flex items-center space-x-4 pt-6">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="dynamicUi"
+                            name="dynamicUi"
+                            checked={oPushFormData.dynamicUi}
+                            onChange={handlePushChange}
+                            className="h-4 w-4 text-[#5B45E0] focus:ring-[#5B45E0] border-gray-300 rounded"
+                          />
+                          <label htmlFor="dynamicUi" className="ml-2 block text-sm text-gray-700">
+                            Dynamic UI
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* JSON Data */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -647,15 +703,22 @@ const Notifications = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => applyJsonTemplate('navigation')}
+                          onClick={() => applyJsonTemplate('banner')}
                           className="text-xs px-2 py-1 bg-green-50 text-green-600 hover:bg-green-100 rounded border border-green-200 transition-colors duration-200"
+                        >
+                          Banner
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => applyJsonTemplate('navigation')}
+                          className="text-xs px-2 py-1 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded border border-purple-200 transition-colors duration-200"
                         >
                           Navigation
                         </button>
                         <button
                           type="button"
                           onClick={() => applyJsonTemplate('dataUpdate')}
-                          className="text-xs px-2 py-1 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded border border-purple-200 transition-colors duration-200"
+                          className="text-xs px-2 py-1 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded border border-orange-200 transition-colors duration-200"
                         >
                           Data Update
                         </button>
@@ -695,10 +758,22 @@ const Notifications = () => {
                       <h4 className="text-sm font-medium text-blue-800 mb-2">
                         {t("PUSH_NOTIFICATION.SILENT_NOTIFICATION_HELP_TITLE") || "About Silent Notifications"}
                       </h4>
-                      <p className="text-sm text-blue-700">
+                      <p className="text-sm text-blue-700 mb-2">
                         {t("PUSH_NOTIFICATION.SILENT_NOTIFICATION_HELP") || 
                          "Silent notifications don't display a message to users. They're used to send data payloads to the app in the background. The component name specifies which part of your app should handle the data."}
                       </p>
+                      <div className="mt-2 p-3 bg-white rounded border border-blue-300">
+                        <p className="text-xs text-blue-800 font-medium mb-1">Payload Structure:</p>
+                        <pre className="text-xs text-blue-900 overflow-x-auto">
+{`{
+  "componentName": "string",
+  "dataPayload": {
+    "dynamicUi": boolean,
+    "version": "string",
+    "component": "stringified JSON"
+  }
+}`}</pre>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -767,23 +842,26 @@ const Notifications = () => {
                           <h5 className="text-sm font-medium text-gray-700 mb-2">
                             Data to be sent:
                           </h5>
-                          <div className="text-left">
+                          <div className="text-left space-y-2">
                             {oPushFormData.componentName && (
-                              <p className={`text-xs mb-1 ${
-                                fieldValid.componentName ? 'text-green-600' : 'text-gray-600'
-                              }`}>
-                                <span className="font-medium">Component:</span> {oPushFormData.componentName}
+                              <p className={`text-xs ${fieldValid.componentName ? 'text-green-600' : 'text-gray-600'}`}>
+                                <span className="font-medium">Component Name:</span> {oPushFormData.componentName}
                                 {fieldValid.componentName && " ✓"}
                               </p>
                             )}
+                            <p className="text-xs text-gray-600">
+                              <span className="font-medium">Dynamic UI:</span> {oPushFormData.dynamicUi ? 'true' : 'false'}
+                            </p>
+                            <p className={`text-xs ${fieldValid.version ? 'text-green-600' : 'text-gray-600'}`}>
+                              <span className="font-medium">Version:</span> {oPushFormData.version}
+                              {fieldValid.version && " ✓"}
+                            </p>
                             {oPushFormData.jsonData && oPushFormData.jsonData.trim() !== "{\n  \"key\": \"value\"\n}" && (
                               <div className="mt-2">
-                                <p className={`text-xs font-medium mb-1 ${
-                                  fieldValid.jsonData ? 'text-green-600' : 'text-gray-700'
-                                }`}>
-                                  JSON Data: {fieldValid.jsonData && "✓"}
+                                <p className={`text-xs font-medium mb-1 ${fieldValid.jsonData ? 'text-green-600' : 'text-gray-700'}`}>
+                                  Component Data: {fieldValid.jsonData && "✓"}
                                 </p>
-                                <pre className="text-xs text-gray-600 bg-gray-50 p-2 rounded border overflow-x-auto">
+                                <pre className="text-xs text-gray-600 bg-gray-50 p-2 rounded border overflow-x-auto max-h-32">
                                   {oPushFormData.jsonData}
                                 </pre>
                               </div>

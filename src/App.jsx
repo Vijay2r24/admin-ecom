@@ -134,13 +134,13 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-              <Route 
-                path="/payment-details/:id" 
+              <Route
+                path="/payment-details/:id"
                 element={
                   <ProtectedRoute permissionCode={notificationsPermission}>
                     <PaymentDetailsWrapper />
                   </ProtectedRoute>
-                } 
+                }
               />
               <Route
                 path="/activeBanners"
@@ -244,11 +244,11 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-               <Route path="/AddVariants"
-                  element={<ProtectedRoute>
-                  <AddVariants/>
-                  </ProtectedRoute>}
-                />
+              <Route path="/AddVariants"
+                element={<ProtectedRoute>
+                  <AddVariants />
+                </ProtectedRoute>}
+              />
               <Route
                 path="/edit-product/:productId?"
                 element={
