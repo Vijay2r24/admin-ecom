@@ -27,7 +27,7 @@ const OrderList = () => {
   );
   const { t } = useTranslation();
   const [sFilterStatus, setFilterStatus] = useState(
-    searchParams.get("status") || "all"
+    searchParams.get("status") || t("STATUS_VALUES.ALL")
   );
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
   const [sViewMode, setViewMode] = useState("table");
@@ -61,8 +61,8 @@ const OrderList = () => {
 
   // --- 2. Update Default Filters ---
   const defaultFilters = {
-    paymentStatus: "all",
-    store: "all", // Added store
+    paymentStatus: t("STATUS_VALUES.ALL"),
+    store: t("STATUS_VALUES.ALL"), // Added store
     startDate: null,
     endDate: null,
   };
@@ -70,8 +70,8 @@ const OrderList = () => {
   // Initialize filters from URL parameters
   const [oFilters, setFilters] = useState({
     ...defaultFilters,
-    paymentStatus: searchParams.get("paymentStatus") || "all",
-    store: searchParams.get("store") || "all", // Added store from URL
+    paymentStatus: searchParams.get("paymentStatus") || t("STATUS_VALUES.ALL"),
+    store: searchParams.get("store") || t("STATUS_VALUES.ALL"), 
   });
 
   const navigate = useNavigate();
@@ -84,11 +84,11 @@ const OrderList = () => {
     const params = {};
 
     if (sSearchTerm) params.search = sSearchTerm;
-    if (sFilterStatus !== "all") params.status = sFilterStatus;
-    if (oFilters.paymentStatus !== "all")
+    if (sFilterStatus !== t("STATUS_VALUES.ALL")) params.status = sFilterStatus;
+    if (oFilters.paymentStatus !== t("STATUS_VALUES.ALL"))
       params.paymentStatus = oFilters.paymentStatus;
     // --- 3. Sync Store to URL ---
-    if (oFilters.store !== "all") params.store = oFilters.store;
+    if (oFilters.store !== t("STATUS_VALUES.ALL")) params.store = oFilters.store;
     
     if (nCurrentPage > 1) params.page = nCurrentPage.toString();
 
@@ -124,7 +124,7 @@ const OrderList = () => {
 
     // Reset all local state
     setSearchTerm("");
-    setFilterStatus("all");
+    setFilterStatus(t("STATUS_VALUES.ALL"));
     setFilters(defaultFilters);
     setCurrentPage(1);
     setExpandedRows(new Set());
@@ -169,7 +169,7 @@ const OrderList = () => {
 
 
   const storeOptions = [
-    { value: "all", label: t("COMMON.ALL") },
+    { value: t("STATUS_VALUES.ALL"), label: t("COMMON.ALL") },
     ...(Array.isArray(aStores)
       ? aStores.map((store) => ({
           value: store.StoreName,
@@ -189,7 +189,7 @@ const OrderList = () => {
         label: status.PaymentStatusName,
       }));
 
-      return [{ value: "all", label: t("COMMON.ALL") }, ...options];
+      return [{ value: t("STATUS_VALUES.ALL"), label: t("COMMON.ALL") }, ...options];
     }
 
     return [
@@ -301,9 +301,9 @@ const OrderList = () => {
         pageNumber: nCurrentPage,
         pageSize: nProductsPerPage,
         // --- 7. Pass Store Name to API ---
-        storeName: oFilters.store !== "all" ? oFilters.store : undefined,
+        storeName: oFilters.store !== t("STATUS_VALUES.ALL") ? oFilters.store : undefined,
         paymentStatus:
-          oFilters.paymentStatus !== "all" ? oFilters.paymentStatus : undefined,
+          oFilters.paymentStatus !== t("STATUS_VALUES.ALL") ? oFilters.paymentStatus : undefined,
         startDate: startDate,
         endDate: endDate,
       };
@@ -451,9 +451,9 @@ const OrderList = () => {
         exportOrderReport({
           searchText: sSearchTerm,
           // --- 8. Pass Store Name to Export ---
-          storeName: oFilters.store !== "all" ? oFilters.store : undefined,
+          storeName: oFilters.store !== t("STATUS_VALUES.ALL") ? oFilters.store : undefined,
           paymentStatus:
-            oFilters.paymentStatus !== "all"
+            oFilters.paymentStatus !== t("STATUS_VALUES.ALL")
               ? oFilters.paymentStatus
               : undefined,
           startDate: startDate,
