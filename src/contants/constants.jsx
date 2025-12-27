@@ -122,6 +122,11 @@ export const PASSWORD_LABELS = {
   SHOW: "Hide",
   HIDE: "Show",
 };
+export const PASSWORD_ARIA = {
+  SHOW: "Show password",
+  HIDE: "Hide password",
+};
+
 export const LOCALES = {
   ENGLISH_US: "en-US",
   ENGLISH_INDIA: "en-IN",
@@ -387,6 +392,7 @@ export const MESSAGES = {
   INACTIVE_USER_MESSAGE:
     "Your access permissions have been updated. Kindly <br/> log in again to proceed.",
   DEFAULT_ERROR_MESSAGE: "An unexpected error occurred. Please try again.",
+  USER_ERROR_MESSAGE:"Failed to fetch user details"
 };
 // Style constants
 export const STYLES = {

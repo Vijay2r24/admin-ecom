@@ -30,7 +30,7 @@ import {
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { STATUS } from "../contants/constants";
+import { STATUS, PASSWORD_ARIA, PASSWORD_LABELS } from "../contants/constants";
 import { useUserDetails } from "../../src/context/AllDataContext";
 import { useDispatch } from "react-redux";
 import {
@@ -71,7 +71,7 @@ const Login = () => {
     const [bShowConfirmPassword, setShowConfirmPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    const { fetchUserDetails } = useUserDetails()
+    const { fetchUserDetails } = useUserDetails();
 
     const validateEmail = (email) => {
         if (!email.trim()) return t("LOGIN.ERRORS.EMAIL_REQUIRED");
@@ -105,7 +105,11 @@ const Login = () => {
                 fieldError = validateNewPassword(value, t);
                 setError((prev) => ({
                     ...prev,
-                    confirmPassword: validateConfirmPassword(sConfirmPassword, value, t),
+                    confirmPassword: validateConfirmPassword(
+                        sConfirmPassword,
+                        value,
+                        t
+                    ),
                 }));
             } else if (field === "confirmPassword") {
                 setConfirmPassword(value);
@@ -116,9 +120,6 @@ const Login = () => {
         setError((prev) => ({ ...prev, [field]: fieldError, submit: "" }));
     };
 
-
-
-
     const fetchUserDetailsDirectly = async (userId, token) => {
         try {
             const response = await apiGet(`${GET_USER_BY_ID}/${userId}`, {}, token);
@@ -127,11 +128,10 @@ const Login = () => {
                 const userData = response.data.data;
                 localStorage.setItem("userDetails", JSON.stringify(userData));
 
-
                 return userData;
             } else {
                 throw new Error(
-                    response?.data?.message || "Failed to fetch user details"
+                    response?.data?.message || t("messages.USER_ERROR_MESSAGE")
                 );
             }
         } catch (err) {
@@ -162,10 +162,7 @@ const Login = () => {
                 email: emailError,
                 password: passwordError,
             }));
-            showToastMessage(
-                t("LOGIN.ERRORS.INVALID_INPUT"),
-                STATUS.ERROR
-            );
+            showToastMessage(t("LOGIN.ERRORS.INVALID_INPUT"), STATUS.ERROR);
             return;
         }
 
@@ -195,9 +192,8 @@ const Login = () => {
                 status === STATUS.SUCCESS.toUpperCase()
             ) {
                 toast.success(message || t("LOGIN.SUCCESS"), {
-                    containerId: t("LOGIN_CONTAINER_ID")
+                    containerId: t("LOGIN_CONTAINER_ID"),
                 });
-
 
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("userId", data.UserID);
@@ -225,28 +221,31 @@ const Login = () => {
                         {},
                         data.token
                     );
-                    if (permResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+                    if (
+                        permResponse?.data?.status ===
+                        STATUS.SUCCESS.toUpperCase()
+                    ) {
                         localStorage.setItem(
                             "AllPermissions",
                             JSON.stringify(permResponse.data.data)
                         );
                     }
-                } catch (e) {
-                    console.error("Permissions fetch failed", e);
-                }
+                } catch (e) {}
 
                 try {
                     let userData = null;
                     if (fetchUserDetails) {
-                        userData = await fetchUserDetails(data.UserID, data.token);
+                        userData = await fetchUserDetails(
+                            data.UserID,
+                            data.token
+                        );
                     } else {
-                        userData = await fetchUserDetailsDirectly(data.UserID, data.token);
+                        userData = await fetchUserDetailsDirectly(
+                            data.UserID,
+                            data.token
+                        );
                     }
-
-
-                } catch (error) {
-                    console.error("User details fetch failed", STATUS.ERROR);
-                }
+                } catch (error) {}
 
                 setTimeout(() => {
                     navigate("/dashboard", { replace: true });
@@ -258,14 +257,14 @@ const Login = () => {
             }
         } catch (error) {
             const errorMessage =
-                error?.response?.data?.message || t("LOGIN.ERRORS.INVALID_CREDENTIALS");
+                error?.response?.data?.message ||
+                t("LOGIN.ERRORS.INVALID_CREDENTIALS");
             setError((prev) => ({ ...prev, submit: errorMessage }));
             showToastMessage(errorMessage, STATUS.ERROR);
         } finally {
             hideLoaderWithDelay(setSubmitting);
         }
     };
-
 
     const handleForgotPasswordClick = () => {
         setCurrentView("forgotPassword");
@@ -318,7 +317,10 @@ const Login = () => {
     const handleVerifyOtp = async () => {
         if (submitting) return;
         if (!sOtp.trim()) {
-            setError((prev) => ({ ...prev, otp: t("LOGIN.ERRORS.OTP_REQUIRED") }));
+            setError((prev) => ({
+                ...prev,
+                otp: t("LOGIN.ERRORS.OTP_REQUIRED"),
+            }));
             return;
         }
         if (sOtp.length !== 6) {
@@ -373,7 +375,10 @@ const Login = () => {
 
     const handleOtpInputChange = (index, value) => {
         if (value && !/^\d*$/.test(value)) {
-            setError((prev) => ({ ...prev, otp: "OTP must only contain digits." }));
+            setError((prev) => ({
+                ...prev,
+                otp: "OTP must only contain digits.",
+            }));
             return;
         }
         setError((prev) => ({ ...prev, otp: "" }));
@@ -381,7 +386,9 @@ const Login = () => {
         newOtp[index] = value;
         setOtp(newOtp.join(""));
         if (value !== "" && index < 5) {
-            const nextInput = document.getElementById(`otp-input-${index + 1}`);
+            const nextInput = document.getElementById(
+                `otp-input-${index + 1}`
+            );
             if (nextInput) nextInput.focus();
         }
     };
@@ -443,11 +450,17 @@ const Login = () => {
                     confirmPassword: "",
                 });
             } else {
-                showToastMessage(message || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"), STATUS.ERROR);
+                showToastMessage(
+                    message || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"),
+                    STATUS.ERROR
+                );
             }
         } catch (error) {
             const errMsg = error?.response?.data?.message;
-            showToastMessage(errMsg || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"), STATUS.ERROR);
+            showToastMessage(
+                errMsg || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"),
+                STATUS.ERROR
+            );
         } finally {
             hideLoaderWithDelay(setSubmitting);
         }
@@ -482,7 +495,9 @@ const Login = () => {
                     <h2 className="text-2xl font-bold text-gray-800 mt-4">
                         {t("LOGIN.TITLE")}
                     </h2>
-                    <p className="text-sm text-muted">{t("LOGIN.SUBTITLE")}</p>
+                    <p className="text-sm text-muted">
+                        {t("LOGIN.SUBTITLE")}
+                    </p>
                 </div>
                 <div className="space-y-4">
                     <div className="space-y-1">
@@ -493,12 +508,16 @@ const Login = () => {
                             type="email"
                             placeholder={t("LOGIN.EMAIL_PLACEHOLDER")}
                             value={oFormData.email}
-                            onChange={(e) => handleChange("email", e.target.value)}
+                            onChange={(e) =>
+                                handleChange("email", e.target.value)
+                            }
                             Icon={Mail}
                             required
                         />
                         {sError.email && (
-                            <p className="text-sm text-red-500 mt-1">{sError.email}</p>
+                            <p className="text-sm text-red-500 mt-1">
+                                {sError.email}
+                            </p>
                         )}
                     </div>
                     <div className="space-y-1">
@@ -509,22 +528,36 @@ const Login = () => {
                             type={bShowPassword ? "text" : "password"}
                             placeholder={t("LOGIN.PASSWORD_PLACEHOLDER")}
                             value={oFormData.password}
-                            onChange={(e) => handleChange("password", e.target.value)}
+                            onChange={(e) =>
+                                handleChange("password", e.target.value)
+                            }
                             Icon={Lock}
                             required
                             inputSlot={
                                 <button
                                     type="button"
-                                    onClick={() => setShowPassword((v) => !v)}
+                                    onClick={() =>
+                                        setShowPassword((v) => !v)
+                                    }
                                     className="text-gray-500 hover:text-custom-bg"
-                                    aria-label={bShowPassword ? "Hide password" : "Show password"}
+                                    aria-label={
+                                        bShowPassword
+                                            ? PASSWORD_ARIA.HIDE
+                                            : PASSWORD_ARIA.SHOW
+                                    }
                                 >
-                                    {bShowPassword ? "Hide" : "Show"}
+                                    {
+                                        bShowPassword
+                                            ? PASSWORD_LABELS.HIDE
+                                            : PASSWORD_LABELS.SHOW
+                                    }
                                 </button>
                             }
                         />
                         {sError.password && (
-                            <p className="text-sm text-red-500 mt-1">{sError.password}</p>
+                            <p className="text-sm text-red-500 mt-1">
+                                {sError.password}
+                            </p>
                         )}
                     </div>
                     <div className="text-sm text-right">
@@ -539,10 +572,11 @@ const Login = () => {
                     <button
                         type="button"
                         onClick={loginUser}
-                        className={`w-full py-2 px-4 rounded-md transition-colors duration-200 bg-custom-bg text-white ${isLoginDisabled
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-custom-bg-dark"
-                            }`}
+                        className={`w-full py-2 px-4 rounded-md transition-colors duration-200 bg-custom-bg text-white ${
+                            isLoginDisabled
+                                ? "opacity-50 cursor-not-allowed"
+                                : "hover:bg-custom-bg-dark"
+                        }`}
                         disabled={isLoginDisabled}
                     >
                         {t("LOGIN.LOGIN_BUTTON")}
@@ -553,7 +587,8 @@ const Login = () => {
     };
 
     const renderForgotPassword = () => {
-        const isSendOtpDisabled = submitting || !sForgotPasswordEmail || !!sError.email;
+        const isSendOtpDisabled =
+            submitting || !sForgotPasswordEmail || !!sError.email;
         return (
             <>
                 <div className="text-center mb-6">
@@ -576,22 +611,27 @@ const Login = () => {
                             type="email"
                             placeholder={t("LOGIN.EMAIL_PLACEHOLDER")}
                             value={sForgotPasswordEmail}
-                            onChange={(e) => handleChange("email", e.target.value)}
+                            onChange={(e) =>
+                                handleChange("email", e.target.value)
+                            }
                             Icon={Mail}
                             required
                         />
                         {sError.email && (
-                            <p className="text-sm text-red-500 mt-1">{sError.email}</p>
+                            <p className="text-sm text-red-500 mt-1">
+                                {sError.email}
+                            </p>
                         )}
                     </div>
                     <div className="flex gap-2">
                         <button
                             type="button"
                             onClick={handleSendOtp}
-                            className={`w-1/2 bg-custom-bg text-white py-2 px-4 rounded-md transition-colors duration-200 ${isSendOtpDisabled
-                                ? "opacity-50 cursor-not-allowed"
-                                : "hover:bg-custom-bg-dark"
-                                }`}
+                            className={`w-1/2 bg-custom-bg text-white py-2 px-4 rounded-md transition-colors duration-200 ${
+                                isSendOtpDisabled
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "hover:bg-custom-bg-dark"
+                            }`}
                             disabled={isSendOtpDisabled}
                         >
                             {t("LOGIN.SEND_OTP_BUTTON")}
@@ -625,7 +665,9 @@ const Login = () => {
                     <h2 className="text-2xl font-bold text-gray-800 mt-4">
                         {t("RESET_PASSWORD.TITLE")}
                     </h2>
-                    <p className="text-sm text-muted">{t("RESET_PASSWORD.SUBTITLE")}</p>
+                    <p className="text-sm text-muted">
+                        {t("RESET_PASSWORD.SUBTITLE")}
+                    </p>
                 </div>
                 <div className="space-y-4">
                     <div className="space-y-1">
@@ -634,39 +676,53 @@ const Login = () => {
                             id="newPassword"
                             name="newPassword"
                             type={bShowNewPassword ? "text" : "password"}
-                            placeholder={t("RESET_PASSWORD.NEW_PASSWORD_PLACEHOLDER")}
+                            placeholder={t(
+                                "RESET_PASSWORD.NEW_PASSWORD_PLACEHOLDER"
+                            )}
                             value={sNewPassword}
-                            onChange={(e) => handleChange("newPassword", e.target.value)}
+                            onChange={(e) =>
+                                handleChange("newPassword", e.target.value)
+                            }
                             Icon={Lock}
                             required
                             inputSlot={
                                 <button
                                     type="button"
-                                    onClick={() => setShowNewPassword((v) => !v)}
+                                    onClick={() =>
+                                        setShowNewPassword((v) => !v)
+                                    }
                                     className="text-gray-500 hover:text-custom-bg"
-                                    aria-label={
-                                        bShowNewPassword ? "Hide password" : "Show password"
+                                    aria-label={bShowNewPassword? PASSWORD_ARIA.HIDE: PASSWORD_ARIA.SHOW
                                     }
                                 >
-                                    {bShowNewPassword ? "Hide" : "Show"}
+                                    {bShowNewPassword? PASSWORD_LABELS.HIDE: PASSWORD_LABELS.SHOW}
                                 </button>
                             }
                         />
                         {sError.newPassword && (
-                            <p className="text-sm text-red-500 mt-1">{sError.newPassword}</p>
+                            <p className="text-sm text-red-500 mt-1">
+                                {sError.newPassword}
+                            </p>
                         )}
                         <ul className="text-xs mt-2 space-y-1">
                             {passwordRules(t).map((rule, idx) => {
                                 const passed = rule.test(sNewPassword);
                                 return (
-                                    <li key={idx} className="flex items-center gap-2">
+                                    <li
+                                        key={idx}
+                                        className="flex items-center gap-2"
+                                    >
                                         {passed ? (
                                             <CheckCircle className="w-4 h-4 text-green-500" />
                                         ) : (
                                             <XCircle className="w-4 h-4 text-gray-300" />
                                         )}
                                         <span
-                                            className={passed ? "text-green-600" : "text-gray-500"}
+                                            className={
+                                                passed
+                                                    ? "text-green-600"
+                                                    : "text-gray-500"
+                                            }
                                         >
                                             {rule.label}
                                         </span>
@@ -681,21 +737,36 @@ const Login = () => {
                             id="confirmPassword"
                             name="confirmPassword"
                             type={bShowConfirmPassword ? "text" : "password"}
-                            placeholder={t("RESET_PASSWORD.CONFIRM_PASSWORD_PLACEHOLDER")}
+                            placeholder={t(
+                                "RESET_PASSWORD.CONFIRM_PASSWORD_PLACEHOLDER"
+                            )}
                             value={sConfirmPassword}
-                            onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                            onChange={(e) =>
+                                handleChange(
+                                    "confirmPassword",
+                                    e.target.value
+                                )
+                            }
                             Icon={Lock}
                             required
                             inputSlot={
                                 <button
                                     type="button"
-                                    onClick={() => setShowConfirmPassword((v) => !v)}
+                                    onClick={() =>
+                                        setShowConfirmPassword((v) => !v)
+                                    }
                                     className="text-gray-500 hover:text-custom-bg"
                                     aria-label={
-                                        bShowConfirmPassword ? "Hide password" : "Show password"
+                                        bShowConfirmPassword
+                                            ? PASSWORD_ARIA.HIDE
+                                            : PASSWORD_ARIA.SHOW
                                     }
                                 >
-                                    {bShowConfirmPassword ? "Hide" : "Show"}
+                                    {
+                                        bShowConfirmPassword
+                                            ? PASSWORD_LABELS.HIDE
+                                            : PASSWORD_LABELS.SHOW
+                                    }
                                 </button>
                             }
                         />
@@ -709,10 +780,11 @@ const Login = () => {
                         <button
                             type="button"
                             onClick={handlePasswordReset}
-                            className={`w-1/2 bg-custom-bg text-white py-2 px-4 rounded-md transition-colors duration-200 ${isResetDisabled
-                                ? "opacity-50 cursor-not-allowed"
-                                : "hover:bg-custom-bg-dark"
-                                }`}
+                            className={`w-1/2 bg-custom-bg text-white py-2 px-4 rounded-md transition-colors duration-200 ${
+                                isResetDisabled
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "hover:bg-custom-bg-dark"
+                            }`}
                             disabled={isResetDisabled}
                         >
                             {t("RESET_PASSWORD.RESET_BUTTON")}
@@ -738,7 +810,6 @@ const Login = () => {
                 autoClose={2000}
             />
 
-
             {submitting && (
                 <div className="global-loader-overlay">
                     <Loader />
@@ -748,13 +819,18 @@ const Login = () => {
                 <div className="hidden lg:flex flex-col justify-center items-center px-12 bg-custom-bg/50 text-white relative overflow-hidden">
                     <div
                         className="absolute inset-0 bg-repeat opacity-20"
-                        style={{ backgroundImage: 'url("/path/to/subtle-pattern.png")' }}
+                        style={{
+                            backgroundImage:
+                                'url("/path/to/subtle-pattern.png")',
+                        }}
                     ></div>
                     <div className="text-center max-w-md animate-fade-in z-10 relative">
                         <Settings className="w-14 h-14 text-white mb-6 mx-auto drop-shadow-md" />
                         <h1
                             className="text-4xl font-bold mb-5 leading-tight drop-shadow-md"
-                            dangerouslySetInnerHTML={{ __html: t("ADMIN.TITLE") }}
+                            dangerouslySetInnerHTML={{
+                                __html: t("ADMIN.TITLE"),
+                            }}
                         />
                         <p className="text-white/90 text-lg mb-10 drop-shadow-sm">
                             {t("ADMIN.DESCRIPTION")}
@@ -786,8 +862,10 @@ const Login = () => {
                 <div className="flex items-center justify-center p-6 lg:p-12">
                     <div className="w-full max-w-md bg-white/30 backdrop-blur-2xl border border-custom-bg/30 rounded-3xl p-10 shadow-[0_8px_32px_0_rgba(255,90,95,0.35)] transition-all hover:scale-[1.02]">
                         {sCurrentView === "login" && renderLogin()}
-                        {sCurrentView === "forgotPassword" && renderForgotPassword()}
-                        {sCurrentView === "resetPassword" && renderResetPassword()}
+                        {sCurrentView === "forgotPassword" &&
+                            renderForgotPassword()}
+                        {sCurrentView === "resetPassword" &&
+                            renderResetPassword()}
                     </div>
                 </div>
                 {bShowOtpDialog && (
@@ -800,7 +878,9 @@ const Login = () => {
                                 <h4 className="text-lg font-medium text-gray-700 mb-1">
                                     {t("OTP_DIALOG.SUBTITLE")}
                                 </h4>
-                                <p className="text-secondary">{t("OTP_DIALOG.INSTRUCTION")}</p>
+                                <p className="text-secondary">
+                                    {t("OTP_DIALOG.INSTRUCTION")}
+                                </p>
                                 <div className="flex items-center justify-center gap-2 mt-2">
                                     <Mail className="w-4 h-4 text-custom-bg" />
                                     <span className="text-gray-700 text-sm font-medium">
@@ -833,9 +913,17 @@ const Login = () => {
                                             className="w-12 h-12 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all duration-150"
                                             value={sOtp[index] || ""}
                                             onChange={(e) =>
-                                                handleOtpInputChange(index, e.target.value)
+                                                handleOtpInputChange(
+                                                    index,
+                                                    e.target.value
+                                                )
                                             }
-                                            onKeyDown={(e) => handleOtpInputKeyDown(index, e)}
+                                            onKeyDown={(e) =>
+                                                handleOtpInputKeyDown(
+                                                    index,
+                                                    e
+                                                )
+                                            }
                                         />
                                     ))}
                             </div>
@@ -850,10 +938,11 @@ const Login = () => {
                                 <button
                                     type="button"
                                     onClick={handleVerifyOtp}
-                                    className={`w-1/2 bg-custom-bg text-white py-2 rounded-md transition-colors duration-200 ${!sOtp || sOtp.length !== 6
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : "hover:bg-custom-bg-dark"
-                                        }`}
+                                    className={`w-1/2 bg-custom-bg text-white py-2 rounded-md transition-colors duration-200 ${
+                                        !sOtp || sOtp.length !== 6
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : "hover:bg-custom-bg-dark"
+                                    }`}
                                     disabled={!sOtp || sOtp.length !== 6}
                                 >
                                     {t("OTP_DIALOG.VERIFY_BUTTON")}
@@ -882,8 +971,11 @@ const Login = () => {
                                         type="button"
                                         onClick={handleSendOtp}
                                         disabled={!bResendEnabled}
-                                        className={`text-custom-bg hover:underline ${!bResendEnabled ? "opacity-50 cursor-not-allowed" : ""
-                                            }`}
+                                        className={`text-custom-bg hover:underline ${
+                                            !bResendEnabled
+                                                ? "opacity-50 cursor-not-allowed"
+                                                : ""
+                                        }`}
                                     >
                                         {t("OTP_DIALOG.RESEND")}
                                     </button>
