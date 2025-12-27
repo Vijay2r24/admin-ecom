@@ -77,11 +77,8 @@ const ProfileDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
-        // Clear any previous errors
-        dispatch(clearUserDetailsError());
-        
-        // Fetch user details using Redux thunk
+        setLoading(true)
+        dispatch(clearUserDetailsError()); 
         await dispatch(fetchUserDetails(userId)).unwrap();
       } catch (err) {
         console.error("Failed to fetch user details:", err);

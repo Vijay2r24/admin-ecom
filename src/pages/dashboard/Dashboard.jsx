@@ -595,7 +595,7 @@ const generateComparisonText = (startDate, endDate) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fade-in">
           <div className="bg-white rounded-xl shadow-2xl max-w-xs w-full p-0 relative animate-fade-in-up overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-indigo-50 via-white to-gray-50">
-              <h2 className="text-base font-bold text-gray-900">
+              <h2 className="text-sm font-bold text-gray-900">
                 {t("PRODUCTS.PRODUCTS_DETAILS")}
               </h2>
               <button
@@ -615,7 +615,7 @@ const generateComparisonText = (startDate, endDate) => {
                 alt={nSelectedProduct.name}
                 className="h-28 w-28 rounded-lg object-cover border-2 border-indigo-100 shadow mb-2"
               />
-              <h3 className="text-lg font-semibold text-gray-900 mb-0.5 text-center">
+              <h3 className="text-sm font-semibold text-gray-900 mb-0.5 text-center">
                 {nSelectedProduct.name}
               </h3>
               <span className="inline-block mb-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
@@ -737,7 +737,7 @@ const generateComparisonText = (startDate, endDate) => {
                   </p>
                 </div>
                 <div className={`p-3 rounded-lg ${metric.color}`}>
-                  <metric.icon className="h-6 w-6" />
+                  <metric.icon className="h-5 w-5" />
                 </div>
               </div>
             </button>
@@ -800,7 +800,7 @@ const generateComparisonText = (startDate, endDate) => {
                         <span className="text-sm font-semibold text-gray-900 truncate max-w-[10rem]">
                           {product.name}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                        <span className="px-2 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
                           {product.category ||
                             t("DASHBOARD.PRODUCT_MODAL.CATEGORY_DEFAULT")}
                         </span>
@@ -817,7 +817,7 @@ const generateComparisonText = (startDate, endDate) => {
                             fill={product.rating >= star ? "#facc15" : "none"}
                           />
                         ))}
-                        <span className="ml-1 text-xs text-gray-500">
+                        <span className="ml-1 text-sm text-gray-500">
                           {product.rating}
                         </span>
                       </div>
@@ -847,7 +847,7 @@ const generateComparisonText = (startDate, endDate) => {
                     </div>
                     <div className="w-full md:w-auto mt-2 md:mt-0 md:ml-4 flex flex-col items-end gap-2">
                       <button
-                        className="w-full md:w-auto px-3 py-1 rounded bg-custom-bg text-white text-xs font-medium hover:bg-bg-hover transition"
+                        className="w-full md:w-auto px-3 py-1 rounded bg-custom-bg text-white text-sm font-medium hover:bg-bg-hover transition"
                         onClick={() => {
                           setSelectedProduct(product);
                           setShowProductModal(true);
@@ -882,16 +882,16 @@ const generateComparisonText = (startDate, endDate) => {
                 <table className="w-full min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50  top-0 z-10">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider align-middle">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider align-middle">
                         {t("DASHBOARD.RECENT_ORDERS.CUSTOMER")}
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider align-middle">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider align-middle">
                         {t("DASHBOARD.RECENT_ORDERS.ORDER_ID")}
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider align-middle">
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider align-middle">
                         {t("DASHBOARD.RECENT_ORDERS.AMOUNT")}
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider align-middle">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider align-middle">
                         {t("COMMON.STATUS")}
                       </th>
                     </tr>
@@ -924,30 +924,30 @@ const generateComparisonText = (startDate, endDate) => {
                         </td>
                         <td className="px-4 py-3 align-middle whitespace-nowrap">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-semibold
+                            className={`px-2 py-0.5 rounded-full text-sm font-semibold
                       ${
                         order.status === ORDER_STATUS.DELIVERED
-                          ? "status-delivered"
+                          ? STATUS.DELIVERED
                           : ""
                       } 
                       ${
                         order.status === ORDER_STATUS.PROCESSING
-                          ? "status-processing"
+                          ? STATUS.PROCESSING
                           : ""
                       }
                       ${
                         order.status === ORDER_STATUS.SHIPPED
-                          ? "status-shipped"
+                          ? STATUS.SHIPPED
                           : ""
                       }
                       ${
                         order.status === ORDER_STATUS.CANCELLED
-                          ? "status-cancelled"
+                          ? STATUS.CANCELLED
                           : ""
                       }
                        ${
                          order.status === ORDER_STATUS.PENDING
-                           ? "status-pending"
+                           ? STATUS.PENDING
                            : ""
                        }
                     `}

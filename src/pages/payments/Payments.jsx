@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
-import {ITEMS_PER_PAGE, STATUS } from "../../contants/constants";
+import { EXPORT_TYPES, ITEMS_PER_PAGE, STATUS } from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
 import {
@@ -29,15 +29,17 @@ const Payments = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
-  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+  const [tableScrollTop, setTableScrollTop] = useState(0);
 
   const [sSearchTerm, setSearchTerm] = useState("");
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
 
+  // --- 1. Update Default Filters to include store ---
   const defaultFilters = {
     paymentStatus: "",
     paymentType: "",
     paymentMethod: "",
+    store: "all", // Added store filter
     startDate: null,
     endDate: null,
   };
@@ -53,6 +55,13 @@ const Payments = () => {
     "Delete Payment"
   );
   const hasDeletePermission = hasPermissionId(permissionIdForDelete);
+
+  // --- 2. Get Stores from Redux ---
+  const storesState = useSelector(
+    (state) => state.allData.resources.stores || {}
+  );
+  const { data: aStores = [] } = storesState;
+
   const paymentStatusOptions = useSelector(
     (state) =>
       state.allData.resources.paymentStatus?.data?.map((status) => ({
@@ -77,17 +86,37 @@ const Payments = () => {
       })) || []
   );
 
-  // Hide body scrollbar when component mounts
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    
-    // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, []);
 
+  // --- 3. Prepare Store Options ---
+  const storeOptions = [
+    { value: "all", label: t("COMMON.ALL") },
+    ...(Array.isArray(aStores)
+      ? aStores.map((store) => ({
+          value: store.StoreName,
+          label: store.StoreName,
+        }))
+      : []),
+  ];
+
+ 
+  const handleDropdownInputChange = (inputValue, filterName) => {
+   if (filterName === EXPORT_TYPES.STORE) {
+  dispatch(
+    fetchResource({ key: "stores", params: { searchText: inputValue } })
+  );
+}
+
+  };
+
+
   const aAdditionalFilters = [
+  
     {
       label: t("COMMON.STATUS"),
       name: "paymentStatus",
@@ -95,7 +124,7 @@ const Payments = () => {
       options: [
         { value: "", label: t("COMMON.ALL") },
         ...paymentStatusOptions.map((opt) => ({
-          value: opt.label, // Use the name as value
+          value: opt.label,
           label: opt.label,
         })),
       ],
@@ -107,7 +136,7 @@ const Payments = () => {
       options: [
         { value: "", label: t("COMMON.ALL") },
         ...paymentTypeOptions.map((opt) => ({
-          value: opt.label, // Use the name as value
+          value: opt.label,
           label: opt.label,
         })),
       ],
@@ -119,10 +148,21 @@ const Payments = () => {
       options: [
         { value: "", label: t("COMMON.ALL") },
         ...paymentMethodOptions.map((opt) => ({
-          value: opt.label, // Use the name as value
+          value: opt.label,
           label: opt.label,
         })),
       ],
+    },
+      {
+      label: t("COMMON.STORE"), // Or "Store"
+      name: "store",
+      value: oFilters.store,
+      options: storeOptions,
+      placeholder: t("USERS.FILTERS.STORE") || "Select Store",
+      searchable: true,
+      searchPlaceholder: t("COMMON.SEARCH_STORE") || "Search store",
+      onInputChange: (inputValue) =>
+        handleDropdownInputChange(inputValue, "store"),
     },
     {
       label: t("COMMON.DATE_RANGE"),
@@ -141,7 +181,6 @@ const Payments = () => {
   const [viewMode, setViewMode] = useState("table");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Handle table scroll for floating header
   const handleTableScroll = useCallback((e) => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
@@ -163,32 +202,23 @@ const Payments = () => {
     setCurrentPage(1);
   };
 
-  // Helper function to format dates for API
   const formatDateForAPI = (date) => {
     if (!date) return undefined;
-
-    // If it's a dayjs object
     if (date.isValid && date.isValid()) {
       return date.toISOString();
     }
-
-    // If it's already a string
     if (typeof date === "string") {
       return date;
     }
-
-    // If it's a Date object
     if (date instanceof Date) {
       return date.toISOString();
     }
-
     return undefined;
   };
 
   const handleExportPayments = async () => {
     setExportLoading(true);
     try {
-      // Format dates for API
       const startDate = formatDateForAPI(oFilters.startDate);
       const endDate = formatDateForAPI(oFilters.endDate);
 
@@ -198,13 +228,11 @@ const Payments = () => {
           paymentStatus: oFilters.paymentStatus || undefined,
           paymentType: oFilters.paymentType || undefined,
           paymentMethod: oFilters.paymentMethod || undefined,
+          storeName: oFilters.store !== "all" ? oFilters.store : undefined, // Add store to export
           startDate: startDate,
           endDate: endDate,
         })
       ).unwrap();
-
-      // Optional: Show success message
-      // toast.success(t("PAYMENTS.EXPORT_SUCCESS"));
     } catch (error) {
     } finally {
       setExportLoading(false);
@@ -240,14 +268,12 @@ const Payments = () => {
       }
 
       if (filterName === "dateRange") {
-        const dateValue = e.target?.value || e; // handles different structures
+        const dateValue = e.target?.value || e;
         setFilters((prev) => ({
           ...prev,
           startDate: dateValue?.start || null,
           endDate: dateValue?.end || null,
         }));
-
-        // 👇 ensure page resets and re-fetch triggers properly
         setCurrentPage(1);
       } else {
         const { name, value } = e.target;
@@ -255,7 +281,6 @@ const Payments = () => {
           ...prev,
           [filterName || name]: value,
         }));
-
         setCurrentPage(1);
       }
     },
@@ -277,7 +302,6 @@ const Payments = () => {
   const handlePageClick = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      // Scroll to top when page changes
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -287,7 +311,6 @@ const Payments = () => {
       setPaymentsLoading(true);
       const token = localStorage.getItem("token");
 
-      // Format dates for API
       const startDate = formatDateForAPI(oFilters.startDate);
       const endDate = formatDateForAPI(oFilters.endDate);
 
@@ -295,6 +318,8 @@ const Payments = () => {
         pageNumber: currentPage,
         pageSize: itemsPerPage,
         ...(sSearchTerm && { searchText: sSearchTerm }),
+        // --- 6. Pass storeName to API ---
+        ...(oFilters.store !== "all" ? { storeName: oFilters.store } : {}),
         ...(oFilters.paymentStatus && {
           paymentStatus: oFilters.paymentStatus,
         }),
@@ -306,7 +331,6 @@ const Payments = () => {
         ...(endDate && { endDate: endDate }),
       };
 
-      // remove empty keys
       Object.keys(params).forEach((key) => {
         if (params[key] === undefined || params[key] === "") {
           delete params[key];
@@ -331,7 +355,15 @@ const Payments = () => {
     dispatch(fetchResource({ key: "paymentStatus" }));
     dispatch(fetchResource({ key: "paymentTypes" }));
     dispatch(fetchResource({ key: "paymentMethods" }));
+    dispatch(fetchResource({ key: "stores" })); // Fetch stores initially
   }, [dispatch]);
+
+  
+  useEffect(() => {
+    if (bShowFilterDropdown) {
+      dispatch(fetchResource({ key: "stores" }));
+    }
+  }, [bShowFilterDropdown, dispatch]);
 
   useEffect(() => {
     const loadPayments = async () => {
@@ -354,6 +386,7 @@ const Payments = () => {
     currentPage,
     itemsPerPage,
     sSearchTerm,
+    oFilters.store, // Added dependency
     oFilters.paymentStatus,
     oFilters.paymentType,
     oFilters.paymentMethod,
@@ -383,9 +416,9 @@ const Payments = () => {
   };
 
   return (
-    <div 
+    <div
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-    > 
+    >
       <ToastContainer />
       {bSubmitting && (
         <div className="global-loader-overlay">
@@ -415,7 +448,6 @@ const Payments = () => {
             onScroll={handleTableScroll}
           >
             <table className="table-base">
-              {/* Floating Header */}
               <thead
                 className={`table-head-floating ${
                   tableScrollTop > 10 ? "table-head-floating-shadow" : ""
@@ -513,7 +545,7 @@ const Payments = () => {
                           {formatCurrency(payment.Amount)}
                         </div>
                       </td>
-                      <td className="table-cell w-1/6 pl-4">
+                      <td className="table-cell text-center w-1/6 pl-4">
                         <span
                           className={`status-badge ${
                             payment.PaymentStatus?.PaymentStatusID === 1
@@ -526,9 +558,9 @@ const Payments = () => {
                           {payment.PaymentStatus?.PaymentStatusName}
                         </span>
                       </td>
-                      <td className="table-cell w-1/6 text-left font-medium align-middle">
+                      <td className="table-cell w-1/6 font-medium text-center">
                         <button
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                          className="flex items-center justify-center gap-1 text-blue-600 hover:text-blue-800 mx-auto"
                           title="View"
                           onClick={() => handleView(payment.PaymentID)}
                         >

@@ -16,6 +16,8 @@ import {
   Globe,
   Navigation,
   Hash,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import SelectWithIcon from "../components/SelectWithIcon";
@@ -62,8 +64,8 @@ const getArray = (data) =>
   Array.isArray(data)
     ? data
     : data && Array.isArray(data.data)
-    ? data.data
-    : [];
+      ? data.data
+      : [];
 
 const AddUser = () => {
   const [oFormData, setFormData] = useState({
@@ -97,6 +99,10 @@ const AddUser = () => {
   const [bImgLoading, setImgLoading] = useState(true);
   const [bImgError, setImgError] = useState(false);
   const [fetchUserError, setFetchUserError] = useState("");
+
+  const [bShowConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [ShowPassword, setShowPassword] = useState(false);
+
 
   // Edit states for each section
   const [isPersonalInfoEditable, setIsPersonalInfoEditable] = useState(!id);
@@ -245,7 +251,7 @@ const AddUser = () => {
     if (!lastName?.trim()) {
       return t("ADD_USER.VALIDATION.LAST_NAME_REQUIRED");
     }
-    if (lastName.trim().length < 2) {
+    if (lastName.trim().length < 1) {
       return t("ADD_USER.VALIDATION.LAST_NAME_MIN_LENGTH");
     }
     if (lastName.trim().length > 50) {
@@ -355,7 +361,7 @@ const AddUser = () => {
    */
   const validateField = useCallback((name, value, forceShowError = false) => {
     let error = "";
-    
+
     switch (name) {
       case "firstName":
         error = validateFirstName(value);
@@ -449,12 +455,12 @@ const AddUser = () => {
    */
   const handleSelectChange = useCallback((e) => {
     const { name, value } = e.target;
-    
+
     let processedValue = value;
     if (Array.isArray(value)) {
       processedValue = value.filter(Boolean);
     }
-    
+
     setFormData((prev) => ({ ...prev, [name]: processedValue }));
     validateField(name, processedValue, true); // Force validation on select change
   }, [validateField]);
@@ -632,7 +638,7 @@ const AddUser = () => {
         .then((result) => {
           // States loaded successfully
         })
-        .catch((error) => {});
+        .catch((error) => { });
     } else {
       dispatch(clearStates());
       setFormData((prev) => ({ ...prev, state: "", city: "" }));
@@ -646,7 +652,7 @@ const AddUser = () => {
         .then((result) => {
           // Cities loaded successfully
         })
-        .catch((error) => {});
+        .catch((error) => { });
     } else {
       dispatch(clearCities());
       setFormData((prev) => ({ ...prev, city: "" }));
@@ -738,23 +744,23 @@ const AddUser = () => {
         // Mark all fields as touched for edit mode to show validation immediately
         setTimeout(() => {
           const fieldsToValidate = [
-            "firstName", "lastName", "email", "phone", "gender", 
-            "role", "stores", "streetAddress", "pincode", 
+            "firstName", "lastName", "email", "phone", "gender",
+            "role", "stores", "streetAddress", "pincode",
             "country", "state", "city"
           ];
           fieldsToValidate.forEach(field => {
             markFieldTouched(field);
-            validateField(field, 
+            validateField(field,
               field === "firstName" ? user.FirstName || "" :
-              field === "lastName" ? user.LastName || "" :
-              field === "email" ? user.Email || "" :
-              field === "phone" ? formattedPhone :
-              field === "gender" ? user.Gender || "" :
-              field === "role" ? user.RoleID || "" :
-              field === "stores" ? (user.Stores ? user.Stores.map((store) => store.StoreId) : []) :
-              field === "streetAddress" ? user.AddressLine || "" :
-              field === "pincode" ? user.Zipcode || "" :
-              "", 
+                field === "lastName" ? user.LastName || "" :
+                  field === "email" ? user.Email || "" :
+                    field === "phone" ? formattedPhone :
+                      field === "gender" ? user.Gender || "" :
+                        field === "role" ? user.RoleID || "" :
+                          field === "stores" ? (user.Stores ? user.Stores.map((store) => store.StoreId) : []) :
+                            field === "streetAddress" ? user.AddressLine || "" :
+                              field === "pincode" ? user.Zipcode || "" :
+                                "",
               true
             );
           });
@@ -838,7 +844,7 @@ const AddUser = () => {
           markFieldTouched("state");
           validateField("state", foundState.StateID, true);
         }
-      } catch (error) {}
+      } catch (error) { }
     };
 
     populateStateAndCity();
@@ -870,7 +876,7 @@ const AddUser = () => {
           markFieldTouched("city");
           validateField("city", foundCity.CityID, true);
         }
-      } catch (error) {}
+      } catch (error) { }
     };
 
     populateCity();
@@ -970,7 +976,7 @@ const AddUser = () => {
       account: ['role', 'stores', 'password', 'confirmPassword'],
       address: ['streetAddress', 'country', 'state', 'city', 'pincode']
     };
-    
+
     sectionFields[section].forEach(field => {
       markFieldTouched(field);
     });
@@ -1026,7 +1032,7 @@ const AddUser = () => {
   const handleSubmit = useCallback(
     async (e) => {
       e?.preventDefault();
-      
+
       // Mark all required fields as touched before validation
       Object.keys(requiredFields).forEach(field => {
         if (requiredFields[field]) {
@@ -1288,7 +1294,7 @@ const AddUser = () => {
     icon: Icon = Lock,
   }) => (
     <div className="flex flex-col">
-      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+      <label className="blocktext-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
         <Icon size={16} className="text-gray-500" />
         {label}
       </label>
@@ -1326,16 +1332,15 @@ const AddUser = () => {
           <img
             src={
               !bImgError &&
-              (nProfileImagePreview ||
-                (existingDocuments.length > 0 &&
-                  existingDocuments[0].documentUrl))
+                (nProfileImagePreview ||
+                  (existingDocuments.length > 0 &&
+                    existingDocuments[0].documentUrl))
                 ? nProfileImagePreview || existingDocuments[0].documentUrl
                 : userProfile
             }
             alt={t("ADD_USER.PROFILE_PREVIEW")}
-            className={`h-20 w-20 rounded-full object-cover border-2 border-gray-200 shadow-sm ${
-              bImgLoading ? "hidden" : ""
-            }`}
+            className={`h-20 w-20 rounded-full object-cover border-2 border-gray-200 shadow-sm ${bImgLoading ? "hidden" : ""
+              }`}
             style={{ display: bImgLoading ? "none" : "block" }}
             onLoad={() => setImgLoading(false)}
             onError={() => {
@@ -1358,11 +1363,10 @@ const AddUser = () => {
           />
           <label
             htmlFor="profile-image-upload"
-            className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors ${
-              !isPersonalInfoEditable && id
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300"
-                : "text-white bg-blue-600 hover:bg-blue-700 border border-blue-600"
-            }`}
+            className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors ${!isPersonalInfoEditable && id
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300"
+              : "text-white bg-blue-600 hover:bg-blue-700 border border-blue-600"
+              }`}
           >
             <FaCamera className="text-sm" />
             {t("COMMON.UPLOAD")}
@@ -1374,7 +1378,14 @@ const AddUser = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      {/* Added autoComplete="off" and hidden dummy inputs to stop browser autofill */}
+      <form onSubmit={handleSubmit} autoComplete="off">
+        {/* Anti-autofill hack for Chrome/Firefox: Hidden inputs that trap the browser's autofill attempt */}
+        <div style={{ width: 0, height: 0, overflow: "hidden", opacity: 0 }}>
+          <input type="text" name="fakeusernameremembered" tabIndex="-1" />
+          <input type="password" name="fakepasswordremembered" tabIndex="-1" />
+        </div>
+
         <div className="space-y-8">
           {/* Personal Information Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -1471,6 +1482,8 @@ const AddUser = () => {
                     error={oErrors.email}
                     isValid={oFieldValid.email}
                     required={requiredFields.email}
+                    // FIX: Disable autocomplete for email
+                    autoComplete="off"
                   />
                 ) : (
                   <DataField
@@ -1483,7 +1496,7 @@ const AddUser = () => {
 
                 {/* Phone Input with International Support */}
                 {isPersonalInfoEditable ? (
-                   <PhoneInputWithIcon
+                  <PhoneInputWithIcon
                     label={t("COMMON.PHONE_NUMBER")}
                     id="phone"
                     name="phone"
@@ -1547,8 +1560,8 @@ const AddUser = () => {
                           rolesLoading
                             ? t("COMMON.LOADING")
                             : id && !hasEditRolePermission
-                            ? t("COMMON.NO_PERMISSION")
-                            : t("ADD_USER.SELECT_ROLE")
+                              ? t("COMMON.NO_PERMISSION")
+                              : t("ADD_USER.SELECT_ROLE")
                         }
                         searchable
                         searchPlaceholder={
@@ -1608,8 +1621,8 @@ const AddUser = () => {
                           storesLoading
                             ? t("COMMON.LOADING")
                             : id && !hasEditStorePermission
-                            ? t("COMMON.NO_PERMISSION")
-                            : t("ADD_USER.SELECT_STORES")
+                              ? t("COMMON.NO_PERMISSION")
+                              : t("ADD_USER.SELECT_STORES")
                         }
                         multiple={true}
                         searchable
@@ -1660,11 +1673,26 @@ const AddUser = () => {
                             onBlur={handleBlur}
                             placeholder={t("COMMON.ENTER_PASSWORD")}
                             Icon={Lock}
-                            type="password"
+                            type={ShowPassword ? "text" : "password"}
                             error={oErrors.password}
                             isValid={oFieldValid.password}
                             required={requiredFields.password}
+                            autoComplete="new-password"
+
+
+                            inputSlot={
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword((v) => !v)}
+                                className="text-gray-500 hover:text-custom-bg"
+                                aria-label={ShowPassword ? "Hide password" : "Show password"}
+                              >
+                                {ShowPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                            }
+
                           />
+
                         ) : (
                           <DataPasswordField
                             label={renderLabel("password", "COMMON.PASSWORD")}
@@ -1683,11 +1711,23 @@ const AddUser = () => {
                             onBlur={handleBlur}
                             placeholder={t("COMMON.CONFIRM_PASSWORD")}
                             Icon={Lock}
-                            type="password"
+                            type={bShowConfirmPassword ? "text" : "password"}
                             error={oErrors.confirmPassword}
                             isValid={oFieldValid.confirmPassword}
                             required={requiredFields.confirmPassword}
+                            autoComplete="new-password"
+                            inputSlot={
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword((v) => !v)}
+                                className="cursor-pointer text-gray-500 hover:text-custom-bg"
+                                aria-label={bShowConfirmPassword ? "Hide password" : "Show password"}
+                              >
+                                {bShowConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                            }
                           />
+
                         ) : (
                           <DataPasswordField
                             label={renderLabel("confirmPassword", "COMMON.CONFIRM_PASSWORD")}
@@ -1710,8 +1750,8 @@ const AddUser = () => {
                                   passwordStrength === "strong"
                                     ? "#16a34a"
                                     : passwordStrength === "medium"
-                                    ? "#f59e42"
-                                    : "#dc2626",
+                                      ? "#f59e42"
+                                      : "#dc2626",
                                 fontWeight: 600,
                                 fontSize: 13,
                               }}

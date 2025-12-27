@@ -5,6 +5,10 @@ export const STATUS = {
   ERROR: "error",
   WARNING: "warning",
   FAILURE: "failure",
+  DELIVERED:"Delivered",
+  PROCESSING:"processing",
+  SHIPPED:"shipped",
+  CANCELLED:"cancelled",
 };
 export const DEFAULT_COLOR = "#000000";
 export const COLORS = {
@@ -118,6 +122,11 @@ export const PASSWORD_LABELS = {
   SHOW: "Hide",
   HIDE: "Show",
 };
+export const PASSWORD_ARIA = {
+  SHOW: "Show password",
+  HIDE: "Hide password",
+};
+
 export const LOCALES = {
   ENGLISH_US: "en-US",
   ENGLISH_INDIA: "en-IN",
@@ -213,6 +222,9 @@ export const FILE_CONSTANTS = {
   BRAND_LOGO_PREFIX: "brand-logo",
   CATEGORY_IMAGE_PREFIX: "category-image",
   FILE_TYPE: "image/jpeg",
+  IMAGE_SIZE_TEXT:" PNG, JPG, JPEG up to 10MB",
+  IMAGE_TITLE_TEXT:"Remove image",
+  UPLOAD_LOGO:"Upload Logo"
 };
 
 export const TOOLTIPSTATUS = { ACTIVE: "active", INACTIVE: "inactive" };
@@ -380,6 +392,7 @@ export const MESSAGES = {
   INACTIVE_USER_MESSAGE:
     "Your access permissions have been updated. Kindly <br/> log in again to proceed.",
   DEFAULT_ERROR_MESSAGE: "An unexpected error occurred. Please try again.",
+  USER_ERROR_MESSAGE:"Failed to fetch user details"
 };
 // Style constants
 export const STYLES = {

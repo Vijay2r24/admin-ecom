@@ -27,7 +27,7 @@ const OrderList = () => {
   );
   const { t } = useTranslation();
   const [sFilterStatus, setFilterStatus] = useState(
-    searchParams.get("status") || "all"
+    searchParams.get("status") || t("STATUS_VALUES.ALL")
   );
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
   const [sViewMode, setViewMode] = useState("table");
@@ -46,14 +46,23 @@ const OrderList = () => {
 
   // Redux hooks
   const dispatch = useDispatch();
+  
+  // --- 1. Select Stores from Redux ---
+  const storesState = useSelector(
+    (state) => state.allData.resources.stores || {}
+  );
+  const { data: aStores = [] } = storesState;
+
   const { paymentStatus, loadingPaymentStatus } = useSelector((state) => ({
     paymentStatus: state.allData.resources.paymentStatus?.data || [],
     loadingPaymentStatus:
       state.allData.resources.paymentStatus?.loading || false,
   }));
 
+  // --- 2. Update Default Filters ---
   const defaultFilters = {
-    paymentStatus: "all",
+    paymentStatus: t("STATUS_VALUES.ALL"),
+    store: t("STATUS_VALUES.ALL"), // Added store
     startDate: null,
     endDate: null,
   };
@@ -61,7 +70,8 @@ const OrderList = () => {
   // Initialize filters from URL parameters
   const [oFilters, setFilters] = useState({
     ...defaultFilters,
-    paymentStatus: searchParams.get("paymentStatus") || "all",
+    paymentStatus: searchParams.get("paymentStatus") || t("STATUS_VALUES.ALL"),
+    store: searchParams.get("store") || t("STATUS_VALUES.ALL"), 
   });
 
   const navigate = useNavigate();
@@ -74,9 +84,12 @@ const OrderList = () => {
     const params = {};
 
     if (sSearchTerm) params.search = sSearchTerm;
-    if (sFilterStatus !== "all") params.status = sFilterStatus;
-    if (oFilters.paymentStatus !== "all")
+    if (sFilterStatus !== t("STATUS_VALUES.ALL")) params.status = sFilterStatus;
+    if (oFilters.paymentStatus !== t("STATUS_VALUES.ALL"))
       params.paymentStatus = oFilters.paymentStatus;
+    // --- 3. Sync Store to URL ---
+    if (oFilters.store !== t("STATUS_VALUES.ALL")) params.store = oFilters.store;
+    
     if (nCurrentPage > 1) params.page = nCurrentPage.toString();
 
     // Handle date filters - convert to ISO string for URL
@@ -95,15 +108,23 @@ const OrderList = () => {
   // Fetch filter options from Redux on component mount
   useEffect(() => {
     dispatch(fetchResource({ key: "paymentStatus" }));
+    dispatch(fetchResource({ key: "stores" })); // Fetch stores
   }, [dispatch]);
 
+  // Fetch stores when filter dropdown is shown 
+  useEffect(() => {
+    if (bShowFilterDropdown) {
+      dispatch(fetchResource({ key: "stores" }));
+    }
+  }, [bShowFilterDropdown, dispatch]);
+
   const handleClearFilters = useCallback(() => {
-    // Clear all URL parameters
+
     setSearchParams({}, { replace: true });
 
     // Reset all local state
     setSearchTerm("");
-    setFilterStatus("all");
+    setFilterStatus(t("STATUS_VALUES.ALL"));
     setFilters(defaultFilters);
     setCurrentPage(1);
     setExpandedRows(new Set());
@@ -137,23 +158,40 @@ const OrderList = () => {
     [initialLoadComplete]
   );
 
+
+  const handleDropdownInputChange = (inputValue, filterName) => {
+    if (filterName === "store") {
+      dispatch(
+        fetchResource({ key: "stores", params: { searchText: inputValue } })
+      );
+    }
+  };
+
+
+  const storeOptions = [
+    { value: t("STATUS_VALUES.ALL"), label: t("COMMON.ALL") },
+    ...(Array.isArray(aStores)
+      ? aStores.map((store) => ({
+          value: store.StoreName,
+          label: store.StoreName,
+        }))
+      : []),
+  ];
+
   const getPaymentStatusOptions = () => {
-    // Show loading state while fetching
     if (loadingPaymentStatus) {
       return [{ value: "loading", label: t("COMMON.LOADING"), disabled: true }];
     }
 
-    // Use Redux data when available
     if (paymentStatus && paymentStatus.length > 0) {
       const options = paymentStatus.map((status) => ({
         value: status.PaymentStatusName,
         label: status.PaymentStatusName,
       }));
 
-      return [{ value: "all", label: t("COMMON.ALL") }, ...options];
+      return [{ value: t("STATUS_VALUES.ALL"), label: t("COMMON.ALL") }, ...options];
     }
 
-    // Empty state if no data available
     return [
       {
         value: "no-data",
@@ -163,12 +201,25 @@ const OrderList = () => {
     ];
   };
 
+
   const additionalFilters = [
+  
     {
       label: t("ORDERS.FILTERS.PAYMENT_STATUS"),
       name: "paymentStatus",
       value: oFilters.paymentStatus,
       options: getPaymentStatusOptions(),
+    },
+      {
+      label: t("COMMON.STORE"),
+      name: "store",
+      value: oFilters.store,
+      options: storeOptions,
+      placeholder: t("USERS.FILTERS.STORE") ,
+      searchable: true,
+      searchPlaceholder: t("COMMON.SEARCH_STORE") ,
+      onInputChange: (inputValue) =>
+        handleDropdownInputChange(inputValue, "store"),
     },
     {
       label: t("ORDERS.FILTERS.DATE_RANGE"),
@@ -211,31 +262,22 @@ const OrderList = () => {
     });
   };
 
-  // Helper function to format dates for API
   const formatDateForAPI = (date) => {
     if (!date) return undefined;
-
-    // If it's a dayjs object
     if (date.isValid && date.isValid()) {
       return date.toISOString();
     }
-
-    // If it's already a string
     if (typeof date === "string") {
       return date;
     }
-
-    // If it's a Date object
     if (date instanceof Date) {
       return date.toISOString();
     }
-
     return undefined;
   };
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
-
-    // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -251,7 +293,6 @@ const OrderList = () => {
 
       const token = localStorage.getItem("token");
 
-      // Format dates for API
       const startDate = formatDateForAPI(oFilters.startDate);
       const endDate = formatDateForAPI(oFilters.endDate);
 
@@ -259,13 +300,14 @@ const OrderList = () => {
         searchText: sSearchTerm,
         pageNumber: nCurrentPage,
         pageSize: nProductsPerPage,
+        // --- 7. Pass Store Name to API ---
+        storeName: oFilters.store !== t("STATUS_VALUES.ALL") ? oFilters.store : undefined,
         paymentStatus:
-          oFilters.paymentStatus !== "all" ? oFilters.paymentStatus : undefined,
+          oFilters.paymentStatus !== t("STATUS_VALUES.ALL") ? oFilters.paymentStatus : undefined,
         startDate: startDate,
         endDate: endDate,
       };
 
-      // Remove undefined parameters
       Object.keys(params).forEach((key) => {
         if (params[key] === undefined) {
           delete params[key];
@@ -282,10 +324,9 @@ const OrderList = () => {
       } else {
         const orders = oResponse.data.data || [];
 
-        // Map orders directly without flattening order items
         const formattedOrders = orders.map((order) => ({
           orderId: order.OrderID,
-          orderRefId: order.OrderRefID, // Add OrderRefID for display
+          orderRefId: order.OrderRefID,
           formattedOrderDate: formatOrderDateTime(order.OrderDate),
           totalAmount: order.TotalAmount,
           formattedTotalAmount: formatCurrency(order.TotalAmount),
@@ -300,7 +341,7 @@ const OrderList = () => {
           email: order.Email,
           phoneNumber: order.PhoneNumber,
           orderItems: order.orderItems || [],
-          order: order, // keep full order data for view details
+          order: order,
         }));
 
         setOrders(formattedOrders);
@@ -325,7 +366,7 @@ const OrderList = () => {
     nCurrentPage,
     nProductsPerPage,
     sSearchTerm,
-    oFilters,
+    oFilters, 
     initialLoadComplete,
     t,
   ]);
@@ -375,10 +416,9 @@ const OrderList = () => {
 
   const handleViewOrder = useCallback(
     (order) => {
-      // Navigate to order details with the full order data
       navigate(`/orders/${order.orderId}`, {
         state: {
-          order: order.order, // This contains the full order data
+          order: order.order,
         },
       });
     },
@@ -397,7 +437,6 @@ const OrderList = () => {
     setCurrentPage(page);
   }, []);
 
-  // Reset to page 1 when search term or filter status changes
   useEffect(() => {
     setCurrentPage(1);
   }, [sSearchTerm, sFilterStatus]);
@@ -405,31 +444,28 @@ const OrderList = () => {
   const handleExportOrders = useCallback(async () => {
     setExportLoading(true);
     try {
-      // Format dates for API
       const startDate = formatDateForAPI(oFilters.startDate);
       const endDate = formatDateForAPI(oFilters.endDate);
 
       await dispatch(
         exportOrderReport({
           searchText: sSearchTerm,
+          // --- 8. Pass Store Name to Export ---
+          storeName: oFilters.store !== t("STATUS_VALUES.ALL") ? oFilters.store : undefined,
           paymentStatus:
-            oFilters.paymentStatus !== "all"
+            oFilters.paymentStatus !== t("STATUS_VALUES.ALL")
               ? oFilters.paymentStatus
               : undefined,
           startDate: startDate,
           endDate: endDate,
         })
       ).unwrap();
-
-      // Optional: Show success message
-      // toast.success(t("ORDERS.EXPORT_SUCCESS"));
     } catch (error) {
     } finally {
       setExportLoading(false);
     }
   }, [dispatch, sSearchTerm, oFilters, t]);
 
-  // Handle table scroll for floating header
   const handleTableScroll = useCallback((e) => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
@@ -459,7 +495,6 @@ const OrderList = () => {
             onScroll={handleTableScroll}
           >
             <table className="table-base">
-              {/* Floating Header */}
               <thead
                 className={`table-head sticky top-0 z-0 transition-all duration-200 ${
                   tableScrollTop > 10 ? "shadow-sm" : "shadow-sm"

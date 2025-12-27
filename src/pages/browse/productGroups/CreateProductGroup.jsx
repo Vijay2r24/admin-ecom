@@ -183,6 +183,7 @@ const CreateProductGroup = () => {
             ]}
             Icon={Tag}
             error={errors.IsActive}
+             disabled={!isEditing}
           />
         </div>
 

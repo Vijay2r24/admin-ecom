@@ -645,8 +645,11 @@ const CreateCategory = () => {
       </div>
 
       {/* Form */}
+     {/* Form */}
+     {/* Form */}
       <form className="space-y-6" onSubmit={handleSubmit}>
-        {/* Category Name and Status Row */}
+        
+        {/* Row 1: Category Name and Status (Unchanged) */}
         <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
           <div className="flex-1">
             <TextInputWithIcon
@@ -684,139 +687,136 @@ const CreateCategory = () => {
                 { value: "false", label: t("COMMON.INACTIVE") },
               ]}
               Icon={Tag}
+              disabled={!isEditing}
             />
           </div>
         </div>
 
-        {/* Parent Category Row */}
-        <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
-          <div className="flex-1">
-            <SelectWithIcon
-              label={t("PRODUCT_SETUP.CREATE_CATEGORY.PARENT_LABEL")}
-              id="ParentCategoryID"
-              name="ParentCategoryID"
-              value={oFormData.ParentCategoryID}
-              onChange={handleInputChange}
-              options={parentCategories}
-              loading={bLoadingCategories}
-              placeholder={t("PRODUCT_SETUP.CREATE_CATEGORY.SELECT_PARENT")}
-              Icon={Tag}
-            />
-          </div>
-        </div>
+       
+        <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 ">
+          <div className="w-full md:w-1/2 flex flex-col space-y-4">
+            <div>
+              <SelectWithIcon
+                label={t("PRODUCT_SETUP.CREATE_CATEGORY.PARENT_LABEL")}
+                id="ParentCategoryID"
+                name="ParentCategoryID"
+                value={oFormData.ParentCategoryID}
+                onChange={handleInputChange}
+                options={parentCategories}
+                loading={bLoadingCategories}
+                placeholder={t("PRODUCT_SETUP.CREATE_CATEGORY.SELECT_PARENT")}
+                Icon={Tag}
+              />
+            </div>
 
-        {/* Image Upload and Description Row */}
-        <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
-          {/* Image Upload */}
-          <div className="w-full md:w-1/2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {renderLabel(
-                "CategoryImage",
-                "PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_LABEL"
-              )}
-            </label>
-            <div
-              className={`relative group rounded-xl border-2 ${
-                oErrors.CategoryImage
-                  ? "border-red-300"
-                  : oFieldValid.CategoryImage
-                  ? "border-green-300"
-                  : "border-gray-200"
-              } border-dashed transition-all duration-200 hover:border-bg-hover bg-gray-50 hover:bg-gray-50/50`}
-            >
-              <div className="p-6">
-                <div className="space-y-3 text-center">
-                  {/* Upload Icon - Only show when no image */}
-                  {!sImagePreview && (
-                    <div className="flex justify-center">
-                      <div className="p-3 rounded-full bg-white shadow-sm border border-gray-100">
-                        <Image className="h-8 w-8 text-gray-400 group-hover:text-custom-bg transition-colors duration-200" />
+       
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {renderLabel(
+                  "CategoryImage",
+                  "PRODUCT_SETUP.CREATE_CATEGORY.IMAGE_LABEL"
+                )}
+              </label>
+              <div
+                className={`relative group rounded-xl border-2 ${
+                  oErrors.CategoryImage
+                    ? "border-red-300"
+                    : oFieldValid.CategoryImage
+                    ? "border-green-300"
+                    : "border-gray-200"
+                } border-dashed transition-all duration-200 hover:border-bg-hover bg-gray-50 hover:bg-gray-50/50`}
+              >
+                <div className="p-6">
+                  <div className="space-y-3 text-center">
+                    {!sImagePreview && (
+                      <div className="flex justify-center">
+                        <div className="p-3 rounded-full bg-white shadow-sm border border-gray-100">
+                          <Image className="h-8 w-8 text-gray-400 group-hover:text-custom-bg transition-colors duration-200" />
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Upload input area */}
-                  <div className="flex flex-col items-center gap-2">
-                    {!sImagePreview ? (
-                      <>
-                        <div className="flex text-sm text-gray-600 justify-center">
-                          <label
-                            htmlFor="file-upload"
-                            className="relative cursor-pointer rounded-md font-medium text-custom-bg hover:text-[#4c39c7] underline"
-                          >
-                            <span>{t("COMMON.UPLOAD")}</span>
-                            <input
-                              id="file-upload"
-                              ref={fileInputRef}
-                              name="CategoryImage"
-                              type="file"
-                              accept="image/*"
-                              onChange={handleFileChange}
-                              className="sr-only"
+                    <div className="flex flex-col items-center gap-2">
+                      {!sImagePreview ? (
+                        <>
+                          <div className="flex text-sm text-gray-600 justify-center">
+                            <label
+                              htmlFor="file-upload"
+                              className="relative cursor-pointer rounded-md font-medium text-custom-bg hover:text-[#4c39c7] underline"
+                            >
+                              <span>{t("COMMON.UPLOAD")}</span>
+                              <input
+                                id="file-upload"
+                                ref={fileInputRef}
+                                name="CategoryImage"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="sr-only"
+                              />
+                            </label>
+                            <p className="pl-1">{t("COMMON.DRAG_DROP_TEXT")}</p>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            PNG, JPG, JPEG up to 10MB
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <div className="relative">
+                            <img
+                              src={sImagePreview}
+                              alt="Category Preview"
+                              className="h-32 w-32 object-contain rounded-lg border-2 border-gray-200 bg-white p-2 shadow-sm mx-auto"
                             />
-                          </label>
-                          <p className="pl-1">{t("COMMON.DRAG_DROP_TEXT")}</p>
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          PNG, JPG, JPEG up to 10MB
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        {/* Image preview with better styling */}
-                        <div className="relative">
-                          <img
-                            src={sImagePreview}
-                            alt="Category Preview"
-                            className="h-32 w-32 object-contain rounded-lg border-2 border-gray-200 bg-white p-2 shadow-sm mx-auto"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleRemoveImage}
-                            className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all duration-200"
-                            title="Remove image"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                          {oFieldValid.CategoryImage && (
-                            <div className="absolute -top-2 -left-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg">
-                              <svg
-                                className="h-3 w-3"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
-                        </p>
-                      </>
+                            <button
+                              type="button"
+                              onClick={handleRemoveImage}
+                              className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all duration-200"
+                               title={FILE_CONSTANTS.IMAGE_TITLE_TEXT}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                            {oFieldValid.CategoryImage && (
+                              <div className="absolute -top-2 -left-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg">
+                                <svg
+                                  className="h-3 w-3"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
+                          </p>
+                        </>
+                      )}
+                    </div>
+
+                    {oErrors.CategoryImage && (
+                      <p className="text-sm text-red-600 flex items-center justify-center mt-2">
+                        <span className="mr-1">⚠️</span>
+                        {oErrors.CategoryImage}
+                      </p>
                     )}
                   </div>
-
-                  {/* Logo errors */}
-                  {oErrors.CategoryImage && (
-                    <p className="text-sm text-red-600 flex items-center justify-center mt-2">
-                      <span className="mr-1">⚠️</span>
-                      {oErrors.CategoryImage}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Description */}
+         
           <div className="w-full md:w-1/2">
+            {/* Description */}
             <TextAreaWithIcon
               label={t("COMMON.DESCRIPTION")}
               name="CategoryDescription"
@@ -835,6 +835,7 @@ const CreateCategory = () => {
               rows={4}
             />
           </div>
+
         </div>
 
         {/* API Error Display */}
