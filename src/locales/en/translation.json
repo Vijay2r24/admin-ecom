@@ -567,7 +567,29 @@
     "UNITS": "units",
     "ADDITIONAL_INFO": "Additional Information",
     "PRICING_RANGE": "Pricing Range",
-    "EDIT_DISABLED_TOOLTIP": "Editing disabled for inactive products. Activate the product to enable editing."
+    "EDIT_DISABLED_TOOLTIP": "Editing disabled for inactive products. Activate the product to enable editing.",
+    "NO_IMAGES": "No images available",
+    "NO_VARIANTS_IN_GROUP": "No variants found in this group.",
+    "BACK_TO_VARIANTS": "Back to Variants",
+    "VARIANTS_LIST": "Variants List",
+    "CHANGE_GROUP_BY_NOTE": "To change variants, please modify the group-by option.",
+    "OPTION": "{{count}} option",
+    "OPTION_plural": "{{count}} options",
+    "OFF": "OFF"
+  },
+  "INVENTORY": {
+    "STORE_LABEL": "Store",
+    "VARIANT": "Variant",
+    "QTY": "Qty",
+    "PRICE": "Price",
+    "DISCOUNT": "Discount",
+    "ACTIVE": "Active",
+    "EDIT": "Edit",
+    "EDIT_INVENTORY_TITLE": "Edit Inventory",
+    "QUANTITY": "Quantity",
+    "SELLING_PRICE": "Selling Price",
+    "DISCOUNT_PERCENT": "Discount (%)",
+    "NA": "N/A"
   },
   "PRODUCT_CREATION": {
     "PRODUCT_NAME": "Product Name",
@@ -1296,5 +1318,12 @@
     "MSG_SELECT_VARIANT_ATTACH": "Please select at least one variant to attach",
     "MSG_VALIDATION_ABORTED": "Validation aborted: Missing product or variants.",
     "MSG_FIRST_GENERATE": "Please select a product and generate variants first."
+  },
+  "IMAGE_SORTING": {
+    "VIEW_DELETE_REORDER": "View, Delete Images & Change sort order",
+    "REORDER_IMAGES": "Reorder Images",
+    "SAVE_ORDER": "Save Order",
+    "CLICK_TO_UPLOAD": "Click to upload images",
+    "OR_DRAG_DROP": "or drag & drop"
   }
 }

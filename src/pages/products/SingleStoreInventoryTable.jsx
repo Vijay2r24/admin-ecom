@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const SingleStoreInventoryTable = ({
   product,
   getVariantAttributes,
   handleStoreStatusToggle,
 }) => {
+  const { t } = useTranslation();
   const store = product.Variants[0].Inventory[0];
 
   // Modal States
@@ -43,7 +45,7 @@ export const SingleStoreInventoryTable = ({
         {/* Store Name Header */}
         <div className="px-6 py-4 border-b bg-gray-50">
           <h3 className="text-lg font-semibold text-gray-900">
-            Store: {store.StoreName}
+            {t("INVENTORY.STORE_LABEL")}: {store.StoreName}
           </h3>
         </div>
 
@@ -52,12 +54,12 @@ export const SingleStoreInventoryTable = ({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-6 py-3 text-left">Variant</th>
-                <th className="px-6 py-3 text-left">Qty</th>
-                <th className="px-6 py-3 text-left">Price</th>
-                <th className="px-6 py-3 text-left">Discount</th>
-                <th className="px-6 py-3 text-center">Active</th>
-                <th className="px-6 py-3 text-center">Edit</th>
+                <th className="px-6 py-3 text-left">{t("INVENTORY.VARIANT")}</th>
+                <th className="px-6 py-3 text-left">{t("INVENTORY.QTY")}</th>
+                <th className="px-6 py-3 text-left">{t("INVENTORY.PRICE")}</th>
+                <th className="px-6 py-3 text-left">{t("INVENTORY.DISCOUNT")}</th>
+                <th className="px-6 py-3 text-center">{t("INVENTORY.ACTIVE")}</th>
+                <th className="px-6 py-3 text-center">{t("INVENTORY.EDIT")}</th>
               </tr>
             </thead>
 
@@ -69,7 +71,7 @@ export const SingleStoreInventoryTable = ({
                 return (
                   <tr key={variant.VariantID}>
                     <td className="px-6 py-3">
-                      {attrs.Size?.value || "N/A"} / {attrs.Color?.value || "N/A"}
+                      {attrs.Size?.value || t("INVENTORY.NA")} / {attrs.Color?.value || t("INVENTORY.NA")}
                     </td>
 
                     <td className="px-6 py-3">{inv.Quantity}</td>
@@ -103,7 +105,7 @@ export const SingleStoreInventoryTable = ({
                         className="text-blue-600 hover:underline"
                         onClick={() => openInventoryEditModal(variant, inv)}
                       >
-                        Edit
+                        {t("INVENTORY.EDIT")}
                       </button>
                     </td>
                   </tr>
@@ -119,12 +121,10 @@ export const SingleStoreInventoryTable = ({
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-4">
-
-            <h2 className="text-lg font-semibold">Edit Inventory</h2>
-
+            <h2 className="text-lg font-semibold">{t("INVENTORY.EDIT_INVENTORY_TITLE")}</h2>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium">Quantity</label>
+                <label className="block text-sm font-medium">{t("INVENTORY.QUANTITY")}</label>
                 <input
                   type="number"
                   name="Quantity"
@@ -135,7 +135,7 @@ export const SingleStoreInventoryTable = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Selling Price</label>
+                <label className="block text-sm font-medium">{t("INVENTORY.SELLING_PRICE")}</label>
                 <input
                   type="number"
                   name="SellingPrice"
@@ -146,7 +146,7 @@ export const SingleStoreInventoryTable = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Discount (%)</label>
+                <label className="block text-sm font-medium">{t("INVENTORY.DISCOUNT_PERCENT")}</label>
                 <input
                   type="number"
                   name="DiscountPercentage"
@@ -157,7 +157,7 @@ export const SingleStoreInventoryTable = ({
               </div>
 
               <div className="flex items-center gap-3">
-                <label className="text-sm font-medium">Active</label>
+                <label className="text-sm font-medium">{t("INVENTORY.ACTIVE")}</label>
                 <input
                   type="checkbox"
                   name="IsActive"
@@ -176,14 +176,14 @@ export const SingleStoreInventoryTable = ({
                 className="px-4 py-2 border rounded-md"
                 onClick={closeModal}
               >
-                Cancel
+                {t("PRODUCT_CREATION.CANCEL")}
               </button>
 
               <button
                 className="px-4 py-2 bg-custom-bg text-white rounded-md"
                 onClick={handleSave}
               >
-                Save
+                {t("PRODUCT_CREATION.SAVE_CHANGES")}
               </button>
             </div>
 

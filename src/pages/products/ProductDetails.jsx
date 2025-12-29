@@ -427,10 +427,7 @@ const ProductDetails = () => {
                     }))}
                     Icon={Tag}
                     multiple
-                    placeholder={
-                      t("PRODUCT_CREATION.STORE_ID_PLACEHOLDER") ||
-                      "Select store"
-                    }
+                    placeholder={t("PRODUCT_CREATION.STORE_ID_PLACEHOLDER")}
                   />
                 </div>
               </div>

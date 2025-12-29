@@ -5,7 +5,7 @@ import { useDropzone } from "react-dropzone";
 import TextInputWithIcon from "../../components/TextInputWithIcon";
 import SelectWithIcon from "../../components/SelectWithIcon";
 import { useTranslation } from "react-i18next";
-import { STATUS } from "../../contants/constants.jsx";
+import { STATUS, FILETYPE } from "../../contants/constants.jsx";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchResource } from "../../store/slices/allDataSlice.jsx";
 import { apiPost, apiGet, apiPut } from "../../utils/ApiUtils.jsx";
@@ -939,7 +939,7 @@ const AddProductForm = () => {
           [blob],
           modal.originalFile?.name || `cropped-image-${Date.now()}.jpg`,
           {
-            type: "image/jpeg",
+            type: FILETYPE,
           }
         );
 
@@ -1498,10 +1498,7 @@ const AddProductForm = () => {
                     Icon={Tag}
                     error={oValidationErrors.StoreID}
                     multiple
-                    placeholder={
-                      t("PRODUCT_CREATION.STORE_ID_PLACEHOLDER") ||
-                      "Select store"
-                    }
+                    placeholder={t("PRODUCT_CREATION.STORE_ID_PLACEHOLDER")}
                   />
                 </div>
               </div>

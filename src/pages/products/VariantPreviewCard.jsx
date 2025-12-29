@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function VariantPreviewSection({
   oFormData,
@@ -11,6 +12,7 @@ export default function VariantPreviewSection({
   attributes = [],
   groupingAttributeTypeID = "",
 }) {
+  const { t } = useTranslation();
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [selectedAttributes, setSelectedAttributes] = useState({});
   const [imageIndexMap, setImageIndexMap] = useState({});
@@ -85,7 +87,7 @@ export default function VariantPreviewSection({
             ?.map(
               (a) => attributesById.get(String(a.AttributeValueIDs?.[0]))?.Value
             )
-            ?.join(" - ") || `Variant ${i + 1}`,
+            ?.join(" - ") || `${t("PRODUCT_CREATION.VARIANT")} ${i + 1}`,
       };
     });
   })();
@@ -98,26 +100,26 @@ export default function VariantPreviewSection({
     INITIAL DEFAULT SELECTED VARIANT
   -------------------------------------------- */
   useEffect(() => {
-  if (!aVariants.length) return;
+    if (!aVariants.length) return;
 
-  // FIX: If only 1 variant → directly show details
-  if (!hasGroupList && aVariants.length === 1) {
-    const only = aVariants[0];
+    // FIX: If only 1 variant → directly show details
+    if (!hasGroupList && aVariants.length === 1) {
+      const only = aVariants[0];
 
-    // Build attribute map
-    const attMap = {};
-    only.attributes.forEach((a) => {
-      if (a.AttributeTypeID && a.AttributeValueIDs?.[0]) {
-        attMap[String(a.AttributeTypeID)] = String(a.AttributeValueIDs[0]);
-      }
-    });
+      // Build attribute map
+      const attMap = {};
+      only.attributes.forEach((a) => {
+        if (a.AttributeTypeID && a.AttributeValueIDs?.[0]) {
+          attMap[String(a.AttributeTypeID)] = String(a.AttributeValueIDs[0]);
+        }
+      });
 
-    setSelectedVariantIndex(0);
-    setSelectedAttributes(attMap);
-    setImageIndexMap({ [only.id]: 0 });
-    setShowDetails(true); // <-- this is the FIX
-  }
-}, [aVariants, hasGroupList]);
+      setSelectedVariantIndex(0);
+      setSelectedAttributes(attMap);
+      setImageIndexMap({ [only.id]: 0 });
+      setShowDetails(true); // <-- this is the FIX
+    }
+  }, [aVariants, hasGroupList]);
 
   /* --------------------------------------------
     FIND MATCHING VARIANT
@@ -213,12 +215,12 @@ export default function VariantPreviewSection({
           LIST PAGE (Shown when showDetails = false)
       ========================================================== */}
       {!showDetails && hasGroupList && (
-  <div>
-    <div className="p-3 bg-yellow-100 text-yellow-800 rounded mb-4 text-sm">
-      To change variants, please modify the group-by option.
-    </div>
+        <div>
+          <div className="p-3 bg-yellow-100 text-yellow-800 rounded mb-4 text-sm">
+            {t("PRODUCTS.CHANGE_GROUP_BY_NOTE")}
+          </div>
 
-    <h3 className="text-lg font-semibold mb-3">Variants List</h3>
+          <h3 className="text-lg font-semibold mb-3">{t("PRODUCTS.VARIANTS_LIST")}</h3>
 
           <div className="flex gap-3 overflow-x-auto">
             {groupedVariants.map((g) => {
@@ -237,8 +239,7 @@ export default function VariantPreviewSection({
                   <img src={thumb} className="w-24 h-24 object-cover rounded" />
                   <div className="font-medium text-sm">{g.label}</div>
                   <span className="text-xs text-gray-500">
-                    {g.variants.length} option
-                    {g.variants.length > 1 ? "s" : ""}
+                    {t("PRODUCTS.OPTION", { count: g.variants.length })}
                   </span>
                 </button>
               );
@@ -250,7 +251,7 @@ export default function VariantPreviewSection({
       {/* DEFAULT MODE */}
       {!hasGroupList && ungroupedVariantList.length > 1 && (
         <div>
-          <h3 className="text-lg font-semibold mb-3">Variants</h3>
+          <h3 className="text-lg font-semibold mb-3">{t("PRODUCTS.VARIANTS")}</h3>
 
           <div className="flex gap-3 overflow-x-auto">
             {ungroupedVariantList.map((v, i) => {
@@ -260,11 +261,10 @@ export default function VariantPreviewSection({
                 <button
                   key={i}
                   onClick={() => handleSelectVariant(i)}
-                  className={`flex-shrink-0 w-40 p-3 border rounded-lg flex flex-col items-center gap-2 transition ${
-                    active
-                      ? "ring-2 ring-black bg-gray-50"
-                      : "bg-white hover:shadow"
-                  }`}
+                  className={`flex-shrink-0 w-40 p-3 border rounded-lg flex flex-col items-center gap-2 transition ${active
+                    ? "ring-2 ring-black bg-gray-50"
+                    : "bg-white hover:shadow"
+                    }`}
                 >
                   <img src={v.thumb} className="w-24 h-24 rounded object-cover" />
                   <div className="font-medium text-sm">{v.label}</div>
@@ -276,7 +276,7 @@ export default function VariantPreviewSection({
       )}
       {!showDetails && !hasGroupList && ungroupedVariantList.length > 1 && (
         <div>
-          <h3 className="text-lg font-semibold mb-3">Variants</h3>
+          <h3 className="text-lg font-semibold mb-3">{t("PRODUCTS.VARIANTS")}</h3>
 
           <div className="flex gap-3 overflow-x-auto">
             {ungroupedVariantList.map((v, i) => (
@@ -304,7 +304,7 @@ export default function VariantPreviewSection({
             className="mb-4 flex items-center gap-2 text-gray-700 hover:underline"
           >
             <ChevronLeft size={18} />
-            Back to Variants
+            {t("PRODUCTS.BACK_TO_VARIANTS")}
           </button>
 
           <div className="lg:flex gap-10">
@@ -356,9 +356,8 @@ export default function VariantPreviewSection({
                       onClick={() =>
                         setImageIndexMap((p) => ({ ...p, [variant.id]: i }))
                       }
-                      className={`w-20 h-20 rounded object-cover cursor-pointer ${
-                        curImg === i ? "border-2 border-black" : "border"
-                      }`}
+                      className={`w-20 h-20 rounded object-cover cursor-pointer ${curImg === i ? "border-2 border-black" : "border"
+                        }`}
                     />
                   ))}
                 </div>
@@ -389,7 +388,7 @@ export default function VariantPreviewSection({
                   <>
                     <p className="line-through text-gray-500">₹{mrp}</p>
                     <span className="px-2 py-1 bg-red-500 text-white rounded text-xs">
-                      {discountPct}% OFF
+                      {discountPct}% {t("PRODUCTS.OFF")}
                     </span>
                   </>
                 )}
@@ -434,11 +433,10 @@ export default function VariantPreviewSection({
                         return (
                           <button
                             key={v.id}
-                            className={`px-3 py-2 border rounded-lg flex items-center gap-2 ${
-                              selected
-                                ? "bg-custom-bg text-white border-black"
-                                : "bg-white text-gray-700 border-gray-300"
-                            }`}
+                            className={`px-3 py-2 border rounded-lg flex items-center gap-2 ${selected
+                              ? "bg-custom-bg text-white border-black"
+                              : "bg-white text-gray-700 border-gray-300"
+                              }`}
                             onClick={() => handleSelect(tid, v.id)}
                           >
                             {isColor && (
@@ -456,13 +454,13 @@ export default function VariantPreviewSection({
                 );
               })}
 
-              <p className="font-medium">Quantity: {variant.Quantity}</p>
+              <p className="font-medium">{t("PRODUCT_CREATION.QUANTITY")}: {variant.Quantity}</p>
             </div>
           </div>
 
           {/* DESCRIPTION */}
           <section>
-            <h3 className="font-semibold text-lg mb-1">Description</h3>
+            <h3 className="font-semibold text-lg mb-1">{t("PRODUCT_CREATION.PRODUCT_DESCRIPTION")}</h3>
             <div
               className="prose"
               dangerouslySetInnerHTML={{
@@ -474,7 +472,7 @@ export default function VariantPreviewSection({
           {/* SPECIFICATIONS */}
           {aSpecifications.length > 0 && (
             <section>
-              <h3 className="font-semibold text-lg mb-2">Specifications</h3>
+              <h3 className="font-semibold text-lg mb-2">{t("PRODUCT_CREATION.SPECIFICATIONS")}</h3>
               <table className="w-full border">
                 <tbody>
                   {aSpecifications.map((spec, i) => {

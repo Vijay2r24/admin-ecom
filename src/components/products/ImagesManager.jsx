@@ -3,6 +3,7 @@ import React from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload } from "lucide-react";
 import PreviewSortable, { SortableThumb } from "./PreviewSortable.jsx";
+import { useTranslation } from "react-i18next";
 
 const ImageManagement = ({
   type = "variant",        // "variant" | "global"
@@ -14,6 +15,7 @@ const ImageManagement = ({
   sensors,
   hideUpload = false,
 }) => {
+  const { t } = useTranslation();
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     multiple: true,
     accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp"] },
@@ -41,9 +43,9 @@ const ImageManagement = ({
                 <Upload className="h-6 w-6 text-blue-500" />
               </div>
               <p className="text-sm text-gray-700">
-                {label || "Click to upload images"}
+                {label || t("IMAGE_SORTING.CLICK_TO_UPLOAD")}
               </p>
-              <p className="text-xs text-gray-500">or drag & drop</p>
+              <p className="text-xs text-gray-500">{t("IMAGE_SORTING.OR_DRAG_DROP")}</p>
             </div>
           ) : (
             <>
@@ -74,7 +76,7 @@ const ImageManagement = ({
       ) : (
         <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
           {images.length === 0 ? (
-            <p className="text-sm text-gray-400 italic">No images available</p>
+            <p className="text-sm text-gray-400 italic">{t("PRODUCTS.NO_IMAGES")}</p>
           ) : (
             images.map((img) => (
               <div key={img.id} className="w-14 h-14 rounded overflow-hidden border border-gray-200 shadow-sm">

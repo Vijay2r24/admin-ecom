@@ -307,7 +307,7 @@ export default function VariantTabs({
                   })
                 ) : (
                   <p className="text-gray-500 px-2">
-                    No variants found in this group.
+                    {t("PRODUCTS.NO_VARIANTS_IN_GROUP")}
                   </p>
                 )}
               </Tab.Panel>

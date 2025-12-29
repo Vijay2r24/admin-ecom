@@ -8,6 +8,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { X, Hash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /* -------------------------------------------------------
     MAIN COMPONENT
@@ -19,6 +20,7 @@ export default function PreviewSortable({
   sensors,
   maxVisible = 5,
 }) {
+  const { t } = useTranslation();
   const [openModal, setOpenModal] = useState(false);
 
   if (!images || images.length === 0) return null;
@@ -35,7 +37,7 @@ export default function PreviewSortable({
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm"
           >
             <Hash className="w-4 h-4" />
-            View ,Delete Images & Change sort order
+            {t("IMAGE_SORTING.VIEW_DELETE_REORDER")}
           </button>
         )}
       </div>
@@ -76,19 +78,6 @@ const SortableThumb = ({ id, img, onRemove }) => {
       className="group relative w-12 h-12 rounded overflow-hidden border bg-gray-100"
     >
       <img src={src} className="w-full h-full object-cover" alt="" />
-
-      {/* {onRemove && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-          className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 opacity-100 group-hover:opacity-100 transition"
-        >
-          <X className="h-3 w-3" />
-        </button>
-      )} */}
     </div>
   );
 };
@@ -97,6 +86,7 @@ export { SortableThumb };
     SORT ORDER MODAL — INCLUDED IN SAME FILE
 ======================================================= */
 const SortOrderModal = ({ images = [], sensors, onClose, onSortChange }) => {
+  const { t } = useTranslation();
   const [localImages, setLocalImages] = useState(images);
 
   const handleDragEnd = ({ active, over }) => {
@@ -124,7 +114,7 @@ const SortOrderModal = ({ images = [], sensors, onClose, onSortChange }) => {
       <div className="bg-white w-full max-w-lg rounded-xl p-6 shadow-xl">
         {/* ------------ HEADER ------------ */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Reorder Images</h2>
+          <h2 className="text-lg font-semibold">{t("IMAGE_SORTING.REORDER_IMAGES")}</h2>
           <button onClick={onClose}>
             <X className="w-5 h-5" />
           </button>
@@ -140,24 +130,20 @@ const SortOrderModal = ({ images = [], sensors, onClose, onSortChange }) => {
             items={localImages.map((img) => img.id)}
             strategy={rectSortingStrategy}
           >
-            {/* <div className="grid grid-cols-5 gap-4 p-2">
-              {localImages.map((img) => (
-                <ModalSortableThumb key={img.id} id={img.id} img={img} />
-              ))}
-            </div> */}
             <div className="grid grid-cols-5 gap-4 p-2">
-  {localImages.map((img) => (
-    <ModalSortableThumb 
-      key={img.id} 
-      id={img.id} 
-      img={img}
-      onDelete={() =>
-        setLocalImages(prev => prev.filter(i => i.id !== img.id))
-      }
-    />
-  ))}
-</div>
-
+              {localImages.map((img) => (
+                <ModalSortableThumb
+                  key={img.id}
+                  id={img.id}
+                  img={img}
+                  onDelete={() =>
+                    setLocalImages((prev) =>
+                      prev.filter((i) => i.id !== img.id)
+                    )
+                  }
+                />
+              ))}
+            </div>
           </SortableContext>
         </DndContext>
 
@@ -167,48 +153,20 @@ const SortOrderModal = ({ images = [], sensors, onClose, onSortChange }) => {
             className="px-4 py-2 border border-gray-300 rounded-lg"
             onClick={onClose}
           >
-            Cancel
+            {t("COMMON.CANCEL")}
           </button>
 
           <button
             className="px-4 py-2 bg-custom-bg text-white rounded-lg"
             onClick={handleSave}
           >
-            Save Order
+            {t("IMAGE_SORTING.SAVE_ORDER")}
           </button>
         </div>
       </div>
     </div>
   );
 };
-
-/* -------------------------------------------------------
-    SORTABLE THUMBNAIL (MODAL)
-------------------------------------------------------- */
-// const ModalSortableThumb = ({ id, img }) => {
-//   const { setNodeRef, attributes, listeners, transform, transition } =
-//     useSortable({ id });
-
-//   const style = {
-//     transform: CSS.Transform.toString(transform),
-//     transition,
-//   };
-
-//   const src = img.dataUrl || img.preview || img.documentUrl;
-
-//   return (
-//     <div
-//       ref={setNodeRef}
-//       {...attributes}
-//       {...listeners}
-//       style={style}
-//       className="w-20 h-20 rounded border overflow-hidden bg-gray-100 shadow-sm"
-//     >
-//       <img src={src} alt="" className="w-full h-full object-cover" />
-//     </div>
-//   );
-// };
-
 
 const ModalSortableThumb = ({ id, img, onDelete }) => {
   const { setNodeRef, attributes, listeners, transform, transition } =
@@ -229,7 +187,10 @@ const ModalSortableThumb = ({ id, img, onDelete }) => {
       className="relative group w-20 h-20 rounded border overflow-hidden bg-gray-100 shadow-sm"
     >
       {/* DRAG HANDLE AREA */}
-      <div {...listeners} className="w-full h-full cursor-grab active:cursor-grabbing">
+      <div
+        {...listeners}
+        className="w-full h-full cursor-grab active:cursor-grabbing"
+      >
         <img src={src} alt="" className="w-full h-full object-cover" />
       </div>
 

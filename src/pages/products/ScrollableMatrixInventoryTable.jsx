@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 // 3 Scrollable Matrix Inventory Table for 7+ Stores
 export const ScrollableMatrixInventoryTable = ({
   allStores,
@@ -6,13 +7,14 @@ export const ScrollableMatrixInventoryTable = ({
   handleStoreStatusToggle,
   openInventoryEditModal,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="overflow-x-auto bg-white border rounded-lg shadow">
       <table className="min-w-max divide-y divide-gray-300">
         <thead className="bg-gray-100">
           <tr>
             <th className="px-4 py-3 sticky left-0 bg-gray-100 z-10 text-left font-medium text-gray-700">
-              Variant
+              {t("INVENTORY.VARIANT")}
             </th>
 
             {allStores.map((store) => (
@@ -33,7 +35,7 @@ export const ScrollableMatrixInventoryTable = ({
             return (
               <tr key={variant.VariantID}>
                 <td className="px-4 py-4 sticky left-0 bg-white z-10 text-sm text-gray-900 font-medium">
-                  {attrs.Size?.value || "N/A"} / {attrs.Color?.value || "N/A"}
+                  {attrs.Size?.value || t("INVENTORY.NA")} / {attrs.Color?.value || t("INVENTORY.NA")}
                 </td>
 
                 {allStores.map((store) => {
@@ -48,9 +50,9 @@ export const ScrollableMatrixInventoryTable = ({
                     >
                       {inv ? (
                         <>
-                          <div>Qty: {inv.Quantity}</div>
-                          <div>Price: ₹{inv.SellingPrice}</div>
-                          <div>Discount: {inv.DiscountPercentage}%</div>
+                          <div>{t("INVENTORY.QTY")}: {inv.Quantity}</div>
+                          <div>{t("INVENTORY.PRICE")}: ₹{inv.SellingPrice}</div>
+                          <div>{t("INVENTORY.DISCOUNT")}: {inv.DiscountPercentage}%</div>
 
                           <input
                             type="checkbox"
@@ -69,7 +71,7 @@ export const ScrollableMatrixInventoryTable = ({
                             className="block text-blue-600 text-xs mt-1 hover:underline"
                             onClick={() => openInventoryEditModal(variant, inv)}
                           >
-                            Edit
+                            {t("INVENTORY.EDIT")}
                           </button>
                         </>
                       ) : (
