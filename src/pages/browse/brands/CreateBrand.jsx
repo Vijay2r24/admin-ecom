@@ -615,7 +615,7 @@ const CreateBrand = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          
+
           {/* Brand Name + Brand Code  */}
           <div className="flex flex-col md:flex-row md:space-x-4">
             <div className="w-full md:w-1/2">
@@ -728,11 +728,12 @@ const CreateBrand = () => {
                           <p className="text-xs text-gray-500 mt-2">
                             {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
                           </p>
-                        )}
-                      </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
+              </div>
             </div>
 
             {/* (Description) */}
