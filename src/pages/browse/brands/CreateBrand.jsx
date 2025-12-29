@@ -2,13 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowLeft, Building, Info, Image, X, Tag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-
 import TextInputWithIcon from "../../../components/TextInputWithIcon";
 import TextAreaWithIcon from "../../../components/TextAreaWithIcon";
 import Loader from "../../../components/Loader";
 import SelectWithIcon from "../../../components/SelectWithIcon";
 import ImageCropperModal from "../../../components/ImageCropperModal";
-
 import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
@@ -32,7 +30,6 @@ const CreateBrand = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { id: brandId } = useParams();
-
   const isEditing = Boolean(brandId);
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
@@ -157,6 +154,7 @@ const CreateBrand = () => {
 
   /**
    * Fetch brand details if editing
+   * FIX APPLIED HERE: Removed validateField from dependency array
    */
   useEffect(() => {
     if (isEditing && brandId) {
@@ -220,11 +218,13 @@ const CreateBrand = () => {
             }, 100);
           }
         } catch (error) {
+          console.error("Error fetching brand:", error);
         }
       };
       fetchBrandDetails();
     }
-  }, [brandId, isEditing, t, token, validateField]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brandId, isEditing, t, token]); // <--- Removed validateField from here
 
   /**
    * Cleanup blob URLs on unmount
@@ -615,7 +615,8 @@ const CreateBrand = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Brand Name + Brand Code */}
+          
+          {/* Brand Name + Brand Code  */}
           <div className="flex flex-col md:flex-row md:space-x-4">
             <div className="w-full md:w-1/2">
               <TextInputWithIcon
@@ -651,30 +652,6 @@ const CreateBrand = () => {
             </div>
           </div>
 
-          {/* Status */}
-          <div className="flex flex-col md:flex-row md:space-x-4">
-            <div className="w-full md:w-1/2">
-              <SelectWithIcon
-                label={t("PRODUCT_SETUP.CREATE_BRAND.STATUS_LABEL")}
-                id="IsActive"
-                name="IsActive"
-                value={oFormData.IsActive.toString()}
-                onChange={(e) =>
-                  handleInputChange({
-                    target: {
-                      name: "IsActive",
-                      value: e.target.value === "true",
-                    },
-                  })
-                }
-                options={statusOptions}
-                Icon={Tag}
-                error={oErrors.IsActive}
-              />
-            </div>
-          </div>
-
-          {/* Logo Upload + Description in one row */}
           <div className="flex flex-col md:flex-row md:space-x-4">
             {/* Logo Upload */}
             <div className="w-full md:w-1/2">
@@ -751,23 +728,14 @@ const CreateBrand = () => {
                           <p className="text-xs text-gray-500 mt-2">
                             {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
                           </p>
-                        </>
-                      )}
+                        )}
+                      </div>
                     </div>
-
-                    {/* Logo errors */}
-                    {oErrors.BrandLogo && (
-                      <p className="text-sm text-red-600 flex items-center justify-center mt-2">
-                        <span className="mr-1">⚠️</span>
-                        {oErrors.BrandLogo}
-                      </p>
-                    )}
                   </div>
                 </div>
-              </div>
             </div>
 
-            {/* Description */}
+            {/* (Description) */}
             <div className="w-full md:w-1/2">
               <TextAreaWithIcon
                 label={t("COMMON.DESCRIPTION")}

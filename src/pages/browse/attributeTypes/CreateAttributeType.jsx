@@ -36,6 +36,7 @@ const CreateAttributeType = () => {
   const userId = localStorage.getItem("userId");
 
   const [formData, setFormData] = useState({
+
     Name: "",
     AttributeTypeDescription: "",
     IsActive: STATUS_VALUES.BOOLEAN_ACTIVE,
@@ -45,6 +46,7 @@ const CreateAttributeType = () => {
   const [errors, setErrors] = useState({});
   const [fieldValid, setFieldValid] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [localAttributeValues, setLocalAttributeValues] = useState(null);
 
   // Required fields configuration
   const requiredFields = {
@@ -139,6 +141,11 @@ const CreateAttributeType = () => {
           IsActive: data.IsActive,
           TenantID: tenantID,
         });
+        if (data.AttributeValues && Array.isArray(data.AttributeValues)) {
+          setLocalAttributeValues(data.AttributeValues);
+        } else if (data.Values && Array.isArray(data.Values)) {
+          setLocalAttributeValues(data.Values);
+        }
 
         // Validate initial data after setting
         setTimeout(() => {
@@ -151,7 +158,7 @@ const CreateAttributeType = () => {
       } else {
         showEmsg(
           response.data.message ||
-            t("PRODUCT_SETUP.CREATE_ATTRIBUTE_TYPE.FETCH_ERROR"),
+          t("PRODUCT_SETUP.CREATE_ATTRIBUTE_TYPE.FETCH_ERROR"),
           STATUS.ERROR
         );
       }
@@ -165,15 +172,15 @@ const CreateAttributeType = () => {
 
   useEffect(() => {
     if (isEditing && AttributeTypeID) {
-      dispatch(fetchResource({ key: "attributes" })); // Use fetchResource with key "attributes"
+    const params = {attributeTypeId: AttributeTypeID,};
+    dispatch(fetchResource({ key: "attributes", params }));
       fetchAttributeTypeDetails();
     }
   }, [isEditing, AttributeTypeID, fetchAttributeTypeDetails, dispatch]);
 
-  // Filter attributes by current AttributeTypeID from Redux store
-  const attributeValues = allAttributes.filter(
-    (attr) => attr.AttributeTypeID === AttributeTypeID
-  );
+  // Prefering  Local values (from details API) if available.
+  // Otherwise, use Redux values (from list API), assuming params filtered them.
+  const displayValues = localAttributeValues || allAttributes;
 
   const handleInputChange = useCallback(
     ({ target: { name, value, type, checked } }) => {
@@ -356,7 +363,7 @@ const CreateAttributeType = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+        className="space-y-4 p-2"
       >
         <div className="flex flex-col md:flex-row md:space-x-4">
           <div className="w-full md:w-1/2">
@@ -379,7 +386,7 @@ const CreateAttributeType = () => {
               Icon={Tag}
             />
           </div>
-          <div className="w-full md:w-1/2">
+          <div className={`w-full md:w-1/2 `}>
             <SelectWithIcon
               label={t("PRODUCT_SETUP.CREATE_BRAND.STATUS_LABEL")}
               id="IsActive"
@@ -389,6 +396,7 @@ const CreateAttributeType = () => {
               options={statusOptions}
               Icon={Tag}
               error={errors.IsActive}
+              disabled={!isEditing}
             />
           </div>
         </div>
@@ -430,8 +438,8 @@ const CreateAttributeType = () => {
             {submitting
               ? t("COMMON.SUBMITTING")
               : isEditing
-              ? t("COMMON.SAVE_BUTTON")
-              : t("PRODUCT_SETUP.CREATE_ATTRIBUTE_TYPE.CREATE_BUTTON")}
+                ? t("COMMON.SAVE_BUTTON")
+                : t("PRODUCT_SETUP.CREATE_ATTRIBUTE_TYPE.CREATE_BUTTON")}
           </button>
         </div>
 
@@ -440,9 +448,9 @@ const CreateAttributeType = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <Ruler className="h-5 w-5 mr-2 text-custom-bg" />
               {t("PRODUCT_SETUP.TABS.ATTRIBUTES")}
-              {attributeValues.length > 0 && (
+              {displayValues.length > 0 && (
                 <span className="ml-2 text-sm font-normal text-gray-500">
-                  ({attributeValues.length})
+                  ({displayValues.length})
                 </span>
               )}
             </h3>
@@ -456,7 +464,7 @@ const CreateAttributeType = () => {
                   {t("COMMON.ERROR")}: {attributesError}
                 </p>
               </div>
-            ) : attributeValues.length > 0 ? (
+            ) : displayValues.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -488,7 +496,7 @@ const CreateAttributeType = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {attributeValues.map((attributeValue) => (
+                    {displayValues.map((attributeValue) => (
                       <tr
                         key={attributeValue.AttributeValueID}
                         className="hover:bg-gray-50"
@@ -512,11 +520,10 @@ const CreateAttributeType = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              attributeValue.IsActive
+                            className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${attributeValue.IsActive
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
-                            }`}
+                              }`}
                           >
                             {attributeValue.IsActive
                               ? t("COMMON.ACTIVE")

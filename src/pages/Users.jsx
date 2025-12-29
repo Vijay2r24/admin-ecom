@@ -412,7 +412,7 @@ const Users = () => {
                     </td>
 
                     {/* Contact */}
-                    <td className="table-cell hidden sm:table-cell text-center">
+                    <td className="table-cellhidden sm:table-cell text-center">
                       <div className="flex flex-col items-center space-y-1">
                         <div className="flex flex-col items-start space-y-1 w-full max-w-[150px]">
                           {" "}

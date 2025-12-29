@@ -491,29 +491,23 @@ const AddUserRole = () => {
   const handleSave = useCallback(
     async (event) => {
       event.preventDefault();
-      if (validateRoleDataSubmit()) {
-        // Scroll to first error
-        const firstErrorField = Object.keys(oErrors)[0];
-        if (firstErrorField) {
-          const element = document.getElementById(firstErrorField);
-          if (element) {
-            element.scrollIntoView({
-              behavior: SCROLL_CONSTANTS.BEHAVIOR,
-              block: SCROLL_CONSTANTS.BLOCK,
-            });
-            element.focus();
-          } else if (firstErrorField === "Permissions") {
-            // Scroll to permissions section if permissions error
-            const permissionsSection = document.querySelector(
-              ".permissions-section"
-            );
-            if (permissionsSection) {
-              permissionsSection.scrollIntoView({
-                behavior: SCROLL_CONSTANTS.BEHAVIOR,
-                block: SCROLL_CONSTANTS.BLOCK,
-              });
-            }
-          }
+      
+      const hasErrors = validateRoleDataSubmit();
+
+      // IF validation fails
+      if (hasErrors) {
+
+        window.scrollTo({
+          top: 0,
+          behavior: SCROLL_CONSTANTS.BEHAVIOR || "smooth",
+        });
+
+     
+        if (!sRoleName || !sRoleName.trim()) {
+           setTimeout(() => {
+             const element = document.getElementById("RoleName");
+             if (element) element.focus();
+           }, 100);
         }
         return;
       }
@@ -544,7 +538,7 @@ const AddUserRole = () => {
       const roleData = {
         RoleName: sRoleName,
         IsActive: bIsActive,
-        Permissions: permissions, // Send array of permission objects with permissionId and isChecked
+        Permissions: permissions, 
       };
 
       // Add additional fields based on create vs update
@@ -583,11 +577,7 @@ const AddUserRole = () => {
         } else {
           showEmsg(resData?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
         }
-      } catch (err) {
-        showEmsg(
-          err.response?.data?.message || t("COMMON.API_ERROR"),
-          STATUS.ERROR
-        );
+    
       } finally {
         setSubmitting(false);
       }
@@ -601,7 +591,6 @@ const AddUserRole = () => {
       t,
       navigate,
       isAdminRole,
-      oErrors,
     ]
   );
 
@@ -628,11 +617,6 @@ const AddUserRole = () => {
 
   const isEditingAdmin = roleId && isAdminRole();
 
-  // Count selected permissions for feedback
-  const selectedPermissionsCount = Object.values(oPermissionsByModule)
-    .flat()
-    .filter((permission) => permission.IsChecked).length;
-
   return (
     <div className="flex flex-col min-h-screen">
       <ToastContainer />
@@ -651,13 +635,15 @@ const AddUserRole = () => {
           <form onSubmit={handleSave}>
             <div className="flex flex-col md:flex-row md:space-x-4 mb-6">
               <div className="w-full md:w-1/2">
+                {/* Added ID here to allow focus targeting */}
                 <TextwithIcone
+                  id="RoleName"
                   label={renderLabel("RoleName", "COMMON.ROLE")}
                   type="text"
                   value={sRoleName}
                   onChange={handleRoleNameChange}
                   onBlur={handleRoleNameBlur}
-                  placeholder={t("CREATE_USER_ROLE.ENTER_ROLE_NAME")}
+                  placeholder={t("CREATE_USER_ROLE.ROLE_ISREQUID")}
                   error={oErrors.RoleName}
                   isValid={oFieldValid.RoleName}
                   required={requiredFields.RoleName}
@@ -679,7 +665,8 @@ const AddUserRole = () => {
                   }))}
                   Icon={Tag}
                   error={oErrors.IsActive}
-                  disabled={isEditingAdmin}
+                  disabled={!isEditingAdmin}
+                  
                 />
               </div>
             </div>
@@ -710,25 +697,28 @@ const AddUserRole = () => {
                             <h2 className="text-lg font-bold truncate">
                               {moduleName}
                             </h2>
-                            <label className="text-sm truncate">
-                              <input
-                                type="checkbox"
-                                checked={isAllSelected}
-                                onChange={(e) =>
-                                  handleSelectAllChange(
-                                    moduleName,
-                                    e.target.checked
-                                  )
-                                }
-                                className={`mr-2 form-checkbox h-[12px] w-[12px] ${
-                                  isEditingAdmin
-                                    ? "text-gray-400 cursor-not-allowed"
-                                    : "text-blue-600"
-                                }`}
-                                disabled={isEditingAdmin}
-                              />
-                              {t("CREATE_USER_ROLE.SELECT_ALL")}
-                            </label>
+                            {/* MODIFIED: Added check to hide Select All for Menu Management */}
+                            {moduleName !== "Menu Management" && (
+                              <label className="text-sm truncate">
+                                <input
+                                  type="checkbox"
+                                  checked={isAllSelected}
+                                  onChange={(e) =>
+                                    handleSelectAllChange(
+                                      moduleName,
+                                      e.target.checked
+                                    )
+                                  }
+                                  className={`mr-2 form-checkbox h-[12px] w-[12px] ${
+                                    isEditingAdmin
+                                      ? "text-gray-400 cursor-not-allowed"
+                                      : "text-blue-600"
+                                  }`}
+                                  disabled={isEditingAdmin}
+                                />
+                                {t("CREATE_USER_ROLE.SELECT_ALL")}
+                              </label>
+                            )}
                           </div>
                           <hr className="border-gray-300 my-4 mt-2 mb-4" />
                           {oPermissionsByModule[moduleName].map(

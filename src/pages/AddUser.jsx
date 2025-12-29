@@ -16,6 +16,8 @@ import {
   Globe,
   Navigation,
   Hash,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import SelectWithIcon from "../components/SelectWithIcon";
@@ -97,6 +99,10 @@ const AddUser = () => {
   const [bImgLoading, setImgLoading] = useState(true);
   const [bImgError, setImgError] = useState(false);
   const [fetchUserError, setFetchUserError] = useState("");
+
+  const [bShowConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [ShowPassword, setShowPassword] = useState(false);
+
 
   // Edit states for each section
   const [isPersonalInfoEditable, setIsPersonalInfoEditable] = useState(!id);
@@ -245,7 +251,7 @@ const AddUser = () => {
     if (!lastName?.trim()) {
       return t("ADD_USER.VALIDATION.LAST_NAME_REQUIRED");
     }
-    if (lastName.trim().length < 2) {
+    if (lastName.trim().length < 1) {
       return t("ADD_USER.VALIDATION.LAST_NAME_MIN_LENGTH");
     }
     if (lastName.trim().length > 50) {
@@ -1294,7 +1300,7 @@ const AddUser = () => {
     icon: Icon = Lock,
   }) => (
     <div className="flex flex-col">
-      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+      <label className="blocktext-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
         <Icon size={16} className="text-gray-500" />
         {label}
       </label>
@@ -1378,7 +1384,14 @@ const AddUser = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      {/* Added autoComplete="off" and hidden dummy inputs to stop browser autofill */}
+      <form onSubmit={handleSubmit} autoComplete="off">
+        {/* Anti-autofill hack for Chrome/Firefox: Hidden inputs that trap the browser's autofill attempt */}
+        <div style={{ width: 0, height: 0, overflow: "hidden", opacity: 0 }}>
+          <input type="text" name="fakeusernameremembered" tabIndex="-1" />
+          <input type="password" name="fakepasswordremembered" tabIndex="-1" />
+        </div>
+
         <div className="space-y-8">
           {/* Personal Information Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -1475,6 +1488,8 @@ const AddUser = () => {
                     error={oErrors.email}
                     isValid={oFieldValid.email}
                     required={requiredFields.email}
+                    // FIX: Disable autocomplete for email
+                    autoComplete="off"
                   />
                 ) : (
                   <DataField
@@ -1664,11 +1679,26 @@ const AddUser = () => {
                             onBlur={handleBlur}
                             placeholder={t("COMMON.ENTER_PASSWORD")}
                             Icon={Lock}
-                            type="password"
+                            type={ShowPassword ? "text" : "password"}
                             error={oErrors.password}
                             isValid={oFieldValid.password}
                             required={requiredFields.password}
+                            autoComplete="new-password"
+
+
+                            inputSlot={
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword((v) => !v)}
+                                className="text-gray-500 hover:text-custom-bg"
+                                aria-label={ShowPassword ? "Hide password" : "Show password"}
+                              >
+                                {ShowPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                            }
+
                           />
+
                         ) : (
                           <DataPasswordField
                             label={renderLabel("password", "COMMON.PASSWORD")}
@@ -1687,11 +1717,23 @@ const AddUser = () => {
                             onBlur={handleBlur}
                             placeholder={t("COMMON.CONFIRM_PASSWORD")}
                             Icon={Lock}
-                            type="password"
+                            type={bShowConfirmPassword ? "text" : "password"}
                             error={oErrors.confirmPassword}
                             isValid={oFieldValid.confirmPassword}
                             required={requiredFields.confirmPassword}
+                            autoComplete="new-password"
+                            inputSlot={
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword((v) => !v)}
+                                className="cursor-pointer text-gray-500 hover:text-custom-bg"
+                                aria-label={bShowConfirmPassword ? "Hide password" : "Show password"}
+                              >
+                                {bShowConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                            }
                           />
+
                         ) : (
                           <DataPasswordField
                             label={renderLabel("confirmPassword", "COMMON.CONFIRM_PASSWORD")}
