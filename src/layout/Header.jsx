@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
 import { useTitle } from "../context/TitleContext";
 import { fetchUserDetails, clearUserDetails } from "../store/slices/allDataSlice";
-import defaultAvatar from "../../assets/images/che-guevara.jpg"; 
+import user from "../../assets/images/user.jpg";
 
 const aMockNotifications = [
   { id: 1, title: "Order #1234 delivered", time: "2 min ago" },
@@ -44,7 +44,7 @@ const Header = ({ onMenuClick }) => {
     if (userDetails?.ProfileImageUrl && Array.isArray(userDetails.ProfileImageUrl) && userDetails.ProfileImageUrl.length > 0) {
       return userDetails.ProfileImageUrl[0].documentUrl;
     }
-    return defaultAvatar;
+    return user;
   };
 
   const oUserDetails = userDetails || {};
@@ -207,7 +207,7 @@ const Header = ({ onMenuClick }) => {
                   src={getProfileImageUrl()}
                   alt="Profile"
                   onError={(e) => {
-                    e.target.src = defaultAvatar; // Fallback on error
+                    e.target.src =user
                   }}
                 />
                 <div className="absolute bottom-0 right-0 h-2 w-2 bg-green-500 rounded-full border border-white"></div>
@@ -235,7 +235,7 @@ const Header = ({ onMenuClick }) => {
                     src={getProfileImageUrl()}
                     alt="Profile"
                     onError={(e) => {
-                      e.target.src = defaultAvatar;
+                      e.target.src = user;
                     }}
                   />
                   <div className="text-xs font-semibold text-gray-900 text-center">
