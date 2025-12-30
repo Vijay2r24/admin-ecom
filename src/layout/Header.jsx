@@ -5,8 +5,6 @@ import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
 import { useTitle } from "../context/TitleContext";
 import { fetchUserDetails, clearUserDetails } from "../store/slices/allDataSlice";
-
-// CHANGE: Importing the same image that works in ProfileDetails
 import defaultAvatar from "../../assets/images/che-guevara.jpg"; 
 
 const aMockNotifications = [
@@ -43,12 +41,9 @@ const Header = ({ onMenuClick }) => {
 
   // CHANGE: Updated logic to be consistent with ProfileDetails
   const getProfileImageUrl = () => {
-    // If we have a valid API image, use it
     if (userDetails?.ProfileImageUrl && Array.isArray(userDetails.ProfileImageUrl) && userDetails.ProfileImageUrl.length > 0) {
       return userDetails.ProfileImageUrl[0].documentUrl;
     }
-    
-    // Fallback to the imported image that we know works
     return defaultAvatar;
   };
 
@@ -118,7 +113,6 @@ const Header = ({ onMenuClick }) => {
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
       <div className="flex items-center justify-between h-12 px-3 lg:px-4">
-        {/* Left Side: Menu and Title */}
         <div className="flex items-center gap-2 lg:gap-4 flex-1">
           <div className="lg:hidden flex items-center">
             <button
@@ -131,8 +125,7 @@ const Header = ({ onMenuClick }) => {
           
           <div className="flex items-center gap-2">
             {backButton}
-            {/* If you want an APP LOGO here alongside the title, uncomment below */}
-            {/* <img src={defaultAvatar} alt="App Logo" className="h-6 w-6 rounded-full" /> */}
+          
             
             {title && (
               <h1 className="text-sm font-semibold text-gray-900 truncate max-w-xs">
@@ -142,9 +135,8 @@ const Header = ({ onMenuClick }) => {
           </div>
         </div>
 
-        {/* Right Side: Icons and Profile */}
         <div className="relative flex items-center gap-2">
-          {/* Notification Bell */}
+     
           <button
             ref={bellRef}
             className="relative p-1.5 text-gray-500 hover:text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
@@ -258,7 +250,7 @@ const Header = ({ onMenuClick }) => {
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors font-semibold"
                     onClick={() => handleProfileMenuAction("profile")}
                   >
-                    {/* Replaced SVG with standard Lucide icon for cleaner code if desired, keeping SVG for now */}
+              
                     <svg
                       className="w-3.5 h-3.5 text-blue-500"
                       fill="none"

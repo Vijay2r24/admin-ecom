@@ -122,6 +122,11 @@ export const PASSWORD_LABELS = {
   SHOW: "Hide",
   HIDE: "Show",
 };
+
+export const PASSWORD_ARIA = {
+  SHOW: "Show password",
+  HIDE: "Hide password",
+};
 export const LOCALES = {
   ENGLISH_US: "en-US",
   ENGLISH_INDIA: "en-IN",

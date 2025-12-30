@@ -12,6 +12,7 @@ import {
   DATE_FORMAT_OPTIONS,
   LOCALES,
   STATUS,
+  STATUS_VALUES,
 } from "../../contants/constants";
 import Loader from "../../components/Loader";
 import { fetchResource } from "../../store/slices/allDataSlice";
@@ -27,7 +28,7 @@ const OrderList = () => {
   );
   const { t } = useTranslation();
   const [sFilterStatus, setFilterStatus] = useState(
-    searchParams.get("status") || "all"
+    searchParams.get("status") || STATUS_VALUES.ALL
   );
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
   const [sViewMode, setViewMode] = useState("table");
@@ -61,8 +62,8 @@ const OrderList = () => {
 
   // --- 2. Update Default Filters ---
   const defaultFilters = {
-    paymentStatus: "all",
-    store: "all",
+    paymentStatus: STATUS_VALUES.ALL,
+    store: STATUS_VALUES.ALL,
     startDate: null,
     endDate: null,
   };
@@ -70,8 +71,8 @@ const OrderList = () => {
   // Initialize filters from URL parameters
   const [oFilters, setFilters] = useState({
     ...defaultFilters,
-    paymentStatus: searchParams.get("paymentStatus") || "all",
-    store: searchParams.get("store") || "all",
+    paymentStatus: searchParams.get("paymentStatus") || STATUS_VALUES.ALL,
+    store: searchParams.get("store") || STATUS_VALUES.ALL,
   });
 
   const navigate = useNavigate();
@@ -84,12 +85,11 @@ const OrderList = () => {
     const params = {};
 
     if (sSearchTerm) params.search = sSearchTerm;
-    if (sFilterStatus !== "all") params.status = sFilterStatus;
-    if (oFilters.paymentStatus !== "all")
+    if (sFilterStatus !== STATUS_VALUES.ALL) params.status = sFilterStatus;
+    if (oFilters.paymentStatus !== STATUS_VALUES.ALL)
       params.paymentStatus = oFilters.paymentStatus;
     // --- 3. Sync Store to URL ---
-    if (oFilters.store !== "all") params.store = oFilters.store;
-
+    if (oFilters.store !== STATUS_VALUES.ALL) params.store = oFilters.store;
     if (nCurrentPage > 1) params.page = nCurrentPage.toString();
 
     // Handle date filters - convert to ISO string for URL
@@ -124,7 +124,7 @@ const OrderList = () => {
 
     // Reset all local state
     setSearchTerm("");
-    setFilterStatus("all");
+    setFilterStatus(STATUS_VALUES.ALL);
     setFilters(defaultFilters);
     setCurrentPage(1);
     setExpandedRows(new Set());
@@ -169,7 +169,7 @@ const OrderList = () => {
 
 
   const storeOptions = [
-    { value: "all", label: t("COMMON.ALL") },
+    { value: STATUS_VALUES.ALL, label: t("COMMON.ALL") },
     ...(Array.isArray(aStores)
       ? aStores.map((store) => ({
         value: store.StoreID,
@@ -189,7 +189,7 @@ const OrderList = () => {
         label: status.PaymentStatusName,
       }));
 
-      return [{ value: "all", label: t("COMMON.ALL") }, ...options];
+      return [{ value: STATUS_VALUES.ALL, label: t("COMMON.ALL") }, ...options];
     }
 
     return [
@@ -301,9 +301,9 @@ const OrderList = () => {
         pageNumber: nCurrentPage,
         pageSize: nProductsPerPage,
         //  Passing Storeid to API ---
-        storeId: oFilters.store !== "all" ? oFilters.store : undefined,
+        storeId: oFilters.store !== STATUS_VALUES.ALL ? oFilters.store : undefined,
         paymentStatus:
-          oFilters.paymentStatus !== "all" ? oFilters.paymentStatus : undefined,
+          oFilters.paymentStatus !== STATUS_VALUES.ALL ? oFilters.paymentStatus : undefined,
         startDate: startDate,
         endDate: endDate,
       };
@@ -451,9 +451,9 @@ const OrderList = () => {
         exportOrderReport({
           searchText: sSearchTerm,
           //  Passing StoreId to Export ---
-          storeId: oFilters.store !== "all" ? oFilters.store : undefined,
+          storeId: oFilters.store !== STATUS_VALUES.ALL ? oFilters.store : undefined,
           paymentStatus:
-            oFilters.paymentStatus !== "all"
+            oFilters.paymentStatus !== STATUS_VALUES.ALL
               ? oFilters.paymentStatus
               : undefined,
           startDate: startDate,

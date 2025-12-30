@@ -578,9 +578,8 @@ const Users = () => {
       />
 
       {statusPopup.open && (
-        <FullscreenErrorPopup
-          message={`Are you sure you want to set this user as ${statusPopup.newStatus ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")
-            }?`}
+        <FullscreenErrorPopup message={`${t("USERS.DELETE_MESSAGE")} ${statusPopup.newStatus ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")}?`}
+
           onClose={handleStatusPopupClose}
           onConfirm={handleStatusConfirm}
         />

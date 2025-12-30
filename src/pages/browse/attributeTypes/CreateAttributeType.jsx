@@ -170,19 +170,10 @@ const CreateAttributeType = () => {
     }
   }, [AttributeTypeID, t, token, tenantID, validateField]);
 
-  useEffect(() => {
+   useEffect(() => {
     if (isEditing && AttributeTypeID) {
-
-      const params = {
-        AttributeTypeID: AttributeTypeID,
-        AttributeTypeId: AttributeTypeID,
-        attributeTypeId: AttributeTypeID,
-        typeId: AttributeTypeID,
-        pageSize: 1000,
-        pageNumber: 1
-      };
-
-      dispatch(fetchResource({ key: "attributes", params }));
+    const params = {attributeTypeId: AttributeTypeID,};
+    dispatch(fetchResource({ key: "attributes", params }));
       fetchAttributeTypeDetails();
     }
   }, [isEditing, AttributeTypeID, fetchAttributeTypeDetails, dispatch]);

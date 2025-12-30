@@ -30,7 +30,7 @@ import {
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { STATUS } from "../contants/constants";
+import { STATUS ,PASSWORD_ARIA,PASSWORD_LABELS} from "../contants/constants";
 import { useUserDetails } from "../../src/context/AllDataContext";
 import { useDispatch } from "react-redux";
 import {
@@ -131,7 +131,7 @@ const Login = () => {
                 return userData;
             } else {
                 throw new Error(
-                    response?.data?.message || "Failed to fetch user details"
+                    response?.data?.message ||  t("messages.USER_ERROR_MESSAGE")
                 );
             }
         } catch (err) {
@@ -232,7 +232,7 @@ const Login = () => {
                         );
                     }
                 } catch (e) {
-                    console.error("Permissions fetch failed", e);
+                   
                 }
 
                 try {
@@ -245,7 +245,7 @@ const Login = () => {
 
 
                 } catch (error) {
-                    console.error("User details fetch failed", STATUS.ERROR);
+                   
                 }
 
                 setTimeout(() => {
@@ -373,7 +373,7 @@ const Login = () => {
 
     const handleOtpInputChange = (index, value) => {
         if (value && !/^\d*$/.test(value)) {
-            setError((prev) => ({ ...prev, otp: "OTP must only contain digits." }));
+            setError((prev) => ({ ...prev, otp: t("OTP_DIALOG.OTP_VALIDATION") }));
             return;
         }
         setError((prev) => ({ ...prev, otp: "" }));
@@ -515,11 +515,21 @@ const Login = () => {
                             inputSlot={
                                 <button
                                     type="button"
-                                    onClick={() => setShowPassword((v) => !v)}
+                                    onClick={() =>
+                                        setShowPassword((v) => !v)
+                                    }
                                     className="text-gray-500 hover:text-custom-bg"
-                                    aria-label={bShowPassword ? "Hide password" : "Show password"}
+                                    aria-label={
+                                        bShowPassword
+                                            ? PASSWORD_ARIA.HIDE
+                                            : PASSWORD_ARIA.SHOW
+                                    }
                                 >
-                                    {bShowPassword ? "Hide" : "Show"}
+                                    {
+                                        bShowPassword
+                                            ? PASSWORD_LABELS.HIDE
+                                            : PASSWORD_LABELS.SHOW
+                                    }
                                 </button>
                             }
                         />
@@ -640,15 +650,16 @@ const Login = () => {
                             Icon={Lock}
                             required
                             inputSlot={
-                                <button
+                                 <button
                                     type="button"
-                                    onClick={() => setShowNewPassword((v) => !v)}
+                                    onClick={() =>
+                                        setShowNewPassword((v) => !v)
+                                    }
                                     className="text-gray-500 hover:text-custom-bg"
-                                    aria-label={
-                                        bShowNewPassword ? "Hide password" : "Show password"
+                                    aria-label={bShowNewPassword? PASSWORD_ARIA.HIDE: PASSWORD_ARIA.SHOW
                                     }
                                 >
-                                    {bShowNewPassword ? "Hide" : "Show"}
+                                    {bShowNewPassword? PASSWORD_LABELS.HIDE: PASSWORD_LABELS.SHOW}
                                 </button>
                             }
                         />
@@ -687,15 +698,23 @@ const Login = () => {
                             Icon={Lock}
                             required
                             inputSlot={
-                                <button
+                               <button
                                     type="button"
-                                    onClick={() => setShowConfirmPassword((v) => !v)}
+                                    onClick={() =>
+                                        setShowConfirmPassword((v) => !v)
+                                    }
                                     className="text-gray-500 hover:text-custom-bg"
                                     aria-label={
-                                        bShowConfirmPassword ? "Hide password" : "Show password"
+                                        bShowConfirmPassword
+                                            ? PASSWORD_ARIA.HIDE
+                                            : PASSWORD_ARIA.SHOW
                                     }
                                 >
-                                    {bShowConfirmPassword ? "Hide" : "Show"}
+                                    {
+                                        bShowConfirmPassword
+                                            ? PASSWORD_LABELS.HIDE
+                                            : PASSWORD_LABELS.SHOW
+                                    }
                                 </button>
                             }
                         />

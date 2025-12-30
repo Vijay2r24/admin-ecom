@@ -53,7 +53,7 @@ const Payments = () => {
     paymentStatus: "",
     paymentType: "",
     paymentMethod: "",
-    store: "all", // 
+    store: STATUS_VALUES.ALL, // 
     startDate: null,
     endDate: null,
   };
@@ -64,7 +64,7 @@ const Payments = () => {
     paymentStatus: searchParams.get("paymentStatus") || "",
     paymentType: searchParams.get("paymentType") || "",
     paymentMethod: searchParams.get("paymentMethod") || "",
-    store: searchParams.get("store") || "all",
+    store: searchParams.get("store") || STATUS_VALUES.ALL,
   });
 
   const itemsPerPage = ITEMS_PER_PAGE;
@@ -111,7 +111,7 @@ const Payments = () => {
 
   // --- Store Options 
   const storeOptions = [
-    { value: "all", label: t("COMMON.ALL") },
+    { value: STATUS_VALUES.ALL, label: t("COMMON.ALL") },
     ...(Array.isArray(aStores)
       ? aStores.map((store) => ({
           value: store.StoreID,
@@ -128,7 +128,7 @@ const Payments = () => {
     if (oFilters.paymentStatus) params.paymentStatus = oFilters.paymentStatus;
     if (oFilters.paymentType) params.paymentType = oFilters.paymentType;
     if (oFilters.paymentMethod) params.paymentMethod = oFilters.paymentMethod;
-    if (oFilters.store !== "all") params.store = oFilters.store; 
+    if (oFilters.store !== STATUS_VALUES.ALL) params.store = oFilters.store; 
 
     if (currentPage > 1) params.page = currentPage.toString();
 
@@ -322,7 +322,7 @@ const Payments = () => {
       await dispatch(
         exportPaymentReport({
           searchText: sSearchTerm,
-          storeId: oFilters.store !== "all" ? oFilters.store : undefined,
+          storeId: oFilters.store !== STATUS_VALUES.ALL ? oFilters.store : undefined,
           paymentStatus: oFilters.paymentStatus || undefined,
           paymentType: oFilters.paymentType || undefined,
           paymentMethod: oFilters.paymentMethod || undefined,
@@ -376,7 +376,7 @@ const Payments = () => {
         pageSize: itemsPerPage,
         ...(sSearchTerm && { searchText: sSearchTerm }),
       //  storeId 
-        storeId: oFilters.store !== "all" ? oFilters.store : undefined,
+        storeId: oFilters.store !== STATUS_VALUES.ALL ? oFilters.store : undefined,
         ...(oFilters.paymentStatus && { paymentStatus: oFilters.paymentStatus }),
         ...(oFilters.paymentType && { paymentType: oFilters.paymentType }),
         ...(oFilters.paymentMethod && { paymentMethod: oFilters.paymentMethod }),

@@ -23,7 +23,7 @@ export default function IdleLogout({
 
       timerRef.current = setTimeout(() => {
         if (!warningShownRef.current) {
-          toast.warning("⚠ You will be logged out in 10 seconds due to inactivity.", {
+         toast.warning(t("messages.INACTIVE_USER_MESSAGE"), {
             autoClose: 5000,
           });
           warningShownRef.current = true;
