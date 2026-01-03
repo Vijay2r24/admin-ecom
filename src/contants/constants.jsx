@@ -1,42 +1,50 @@
 import dayjs from "dayjs";
+
 export const STATUS = {
   PENDING: "pending",
   SUCCESS: "success",
   ERROR: "error",
   WARNING: "warning",
   FAILURE: "failure",
-  DELIVERED:"Delivered",
-  PROCESSING:"processing",
-  SHIPPED:"shipped",
-  CANCELLED:"cancelled",
+  DELIVERED: "Delivered",
+  PROCESSING: "processing",
+  SHIPPED: "shipped",
+  CANCELLED: "cancelled",
 };
+
 export const DEFAULT_COLOR = "#000000";
+
 export const COLORS = {
   GRAY_PRIMARY: "#e5efff",
   PRIMARY: "#3498db",
   SECONDARY: "#2ecc71",
   ERROR: "#e74c3c",
 };
+
 export const CUSTOM_COLORS = {
   primary: "#FF5A5F",
   primaryHover: "#E14E53",
   divider: "#FF5A5F",
   text: "#FFFFFF",
 };
+
 export const STATUS_VALUES = {
   ALL: "",
   BOOLEAN_ACTIVE: "true",
   BOOLEAN_INACTIVE: "false",
 };
+
 // Make sure it matches what your API expects
 export const STATUS_OPTIONS = [
   { value: "", labelKey: "COMMON.ALL" },
-  { value: "true", labelKey: "COMMON.ACTIVE" }, // or true for boolean
-  { value: "false", labelKey: "COMMON.INACTIVE" }, // or false for boolean
+  { value: "true", labelKey: "COMMON.ACTIVE" }, 
+  { value: "false", labelKey: "COMMON.INACTIVE" },
 ];
+
 export const ITEMS_PER_PAGE = 10;
 export const LOCALE = "en-US";
 export const CURRENCY = "INR";
+
 export const ORDER_STATUS = {
   DELIVERED: "Delivered",
   PENDING: "Pending",
@@ -45,10 +53,12 @@ export const ORDER_STATUS = {
   RETURNED: "Returned",
   PROCESSING: "Processing",
 };
+
 export const STATUS_DROPDOWN_OPTIONS = [
   { value: "true", labelKey: "COMMON.ACTIVE" },
   { value: "false", labelKey: "COMMON.INACTIVE" },
 ];
+
 export const DEFAULT_PAGE = 1;
 export const DASHBOARD_DEFAULT_LIMIT = 7;
 export const BANNER_WIDTH = 1200;
@@ -57,25 +67,30 @@ export const BANNER_HEIGHT = 600;
 export const FILTERS = {
   STATUS: "status",
 };
+
 export const FORM_MODES = {
   CREATE: "create",
   EDIT: "edit",
 };
+
 export const VIEW_TYPES = {
   GRID: "grid",
   LIST: "list",
 };
+
 export const DATE_PICKER_CONFIG = {
   PRIMARY_COLOR: "purple",
   POPOVER_DIRECTION: "down",
   DISPLAY_FORMAT: "YYYY-MM-DD",
 };
+
 export const EXPORT_TYPES = {
   ORDER: "order",
   STORE: "store",
   PRODUCT: "product",
   PAYMENT: "payment",
 };
+
 export const DOWNLOAD_ICON = (
   <svg
     className="w-4 h-4"
@@ -92,12 +107,14 @@ export const DOWNLOAD_ICON = (
     />
   </svg>
 );
+
 export const TOAST_DURATION = {
   SHORT: 1500,
   MEDIUM: 3000,
   LONG: 5000,
   TO_LONG: 10000,
 };
+
 export const DATE_FORMAT_OPTIONS = {
   year: "numeric",
   month: "long",
@@ -105,6 +122,7 @@ export const DATE_FORMAT_OPTIONS = {
   hour: "2-digit",
   minute: "2-digit",
 };
+
 const getTodayDate = () => new Date().toISOString().split("T")[0];
 
 export const REPORT_FILE_NAMES = {
@@ -113,6 +131,7 @@ export const REPORT_FILE_NAMES = {
   PRODUCTS: `products-report-${getTodayDate()}.xlsx`,
   PAYMENTS: `payments-report-${getTodayDate()}.xlsx`,
 };
+
 export const PASSWORD_VISIBILITY = {
   SHOW: "text",
   HIDE: "password",
@@ -127,10 +146,12 @@ export const PASSWORD_ARIA = {
   SHOW: "Show password",
   HIDE: "Hide password",
 };
+
 export const LOCALES = {
   ENGLISH_US: "en-US",
   ENGLISH_INDIA: "en-IN",
 };
+
 export const customShortcuts = [
   {
     label: "Today",
@@ -178,7 +199,7 @@ export const customShortcuts = [
     },
   },
 ];
-// datePickerConstants.js
+
 export const SHORTCUT_LABELS = {
   TODAY: "Today",
   YESTERDAY: "Yesterday",
@@ -209,25 +230,32 @@ export const TIME_PERIODS = {
     LAST_24_HOURS: -24,
   },
 };
+
 export const GENDER_OPTIONS = [
   { value: "Male", labelKey: "ADD_USER.GENDER_MALE" },
   { value: "Female", labelKey: "ADD_USER.GENDER_FEMALE" },
   { value: "Other", labelKey: "ADD_USER.GENDER_OTHER" },
 ];
+
 export const VIEW_MODES = {
   TABLE: "table",
   GRID: "grid",
 };
+
 export const FILE_CONSTANTS = {
   BRAND_LOGO_PREFIX: "brand-logo",
   CATEGORY_IMAGE_PREFIX: "category-image",
   FILE_TYPE: "image/jpeg",
-  IMAGE_SIZE_TEXT:" PNG, JPG, JPEG up to 10MB",
-  IMAGE_TITLE_TEXT:"Remove image",
-  UPLOAD_LOGO:"Upload Logo"
+  IMAGE_SIZE_TEXT: " PNG, JPG, JPEG up to 10MB",
+  IMAGE_TITLE_TEXT: "Remove image",
+  UPLOAD_LOGO: "Upload Logo",
 };
 
-export const TOOLTIPSTATUS = { ACTIVE: "active", INACTIVE: "inactive" , NO_PERMISSION: "You don’t have permission to change status"};
+export const TOOLTIPSTATUS = {
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+  NO_PERMISSION: "You don’t have permission to change status",
+};
 
 export const MODULES = {
   DASHBOARD: "Dashboard Management",
@@ -243,49 +271,37 @@ export const PERMISSIONS = {
   EDIT_ROLE: "00000103-0000-0000-0000-000000000103",
   EDIT_STORE: "00000104-0000-0000-0000-000000000104",
   VIEW_DASHBOARD: "View Dashboard",
-
   VIEW_ORDERS: "View Orders",
-
   VIEW_STORE: "View Store",
   ADD_STORE: "Add Store",
   UPDATE_STORE: "Update Store",
-
   VIEW_USER: "View User",
   ADD_USER: "Add User",
   UPDATE_USER: "Update user",
-
   VIEW_ROLE: "View Role",
   ADD_ROLE: "Add Role",
   UPDATE_ROLE: "Update Role",
-
   VIEW_BANNERS: "View Banners",
   CREATE_BANNER: "Create Banner",
   UPDATE_BANNER: "Update Banner",
   SEND_NOTIFICATION: "Send Push Notification",
-
   VIEW_PRODUCTS: "View Products",
   CREATE_PRODUCT: "Create Product",
   UPDATE_PRODUCT: "Update Product",
-
   VIEW_BRANDS: "View Brands",
   UPDATE_BRAND: "Update Brand",
-
   VIEW_CATEGORIES: "View Categories",
   UPDATE_CATEGORY: "Update Category",
-
   VIEW_ATTRIBUTE_TYPES: "View Attribute Types",
   UPDATE_ATTRIBUTE_TYPE: "Update Attribute Type",
-
   VIEW_COLOURS: "View Colours",
   UPDATE_COLOUR: "Update Colour",
-
   VIEW_ATTRIBUTES: "View Attributes",
   UPDATE_ATTRIBUTE: "Update Attribute",
-
   VIEW_PRODUCT_GROUPS: "View Product Groups",
   UPDATE_PRODUCT_GROUP: "Update Product Group",
+  ROLE_MANAGEMENT:"Role Management"
 };
-// quickFilters.js
 
 export const QUICK_FILTER_VALUES = [
   "last3hours",
@@ -305,20 +321,9 @@ export const QUICK_FILTER_LABELS = [
   "Last 7 Days",
 ];
 
-
 export const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 export const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -335,27 +340,44 @@ export const DATE_FORMATS = {
   FULL_DATETIME_12_HOUR: "MMM D, YYYY h:mm A",
   DATE_DISPLAY: "MMM D, YYYY",
 };
+
 export const DATE_UNITS = {
   DAY: "day",
   DAYS: "days",
   HOUR: "hour",
   HOURS: "hours",
 };
+
 export const DEFAULT_COUNTRY = "IN";
-export const FILETYPE= "image/jpeg";
+export const FILETYPE = "image/jpeg";
 export const SCROLL_CONSTANTS = {
   BEHAVIOR: "smooth",
   BLOCK: "center",
 };
+
 export const DEFAULT_PROPS = {
   showLabel: true,
   placeholder: "Select date range",
 };
 
-// Date range calculation functions
+
+export const formatDate = (dateString, format = DATE_FORMATS.FULL_DATETIME_12_HOUR) => {
+  if (!dateString) return "N/A";
+  const date = dayjs(dateString);
+  return date.isValid() ? date.format(format) : "N/A";
+};
+
+
+export const formatCurrency = (amount, currency = CURRENCY, locale = "en-IN") => {
+  if (amount === undefined || amount === null) return "₹0.00";
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currency,
+  }).format(amount);
+};
+
 export const getDateRangeForFilter = (filter) => {
   const now = dayjs();
-
   switch (filter) {
     case "today":
       return { start: now.startOf("day"), end: now.endOf("day") };
@@ -383,17 +405,23 @@ export const getDateRangeForFilter = (filter) => {
   }
 };
 
-// Calendar configuration
-export const CALENDAR_CONFIG = {
-  totalDays: 42, // 6 weeks of calendar
-  gridColumns: 7, // 7 days in a week
+export const formatDateForAPI = (date) => {
+  if (!date) return undefined;
+  const d = dayjs(date);
+  return d.isValid() ? d.toISOString() : undefined;
 };
+
+export const CALENDAR_CONFIG = {
+  totalDays: 42,
+  gridColumns: 7,
+};
+
 export const MESSAGES = {
   INACTIVE_USER_MESSAGE:
     "Your access permissions have been updated. Kindly <br/> log in again to proceed.",
   DEFAULT_ERROR_MESSAGE: "An unexpected error occurred. Please try again.",
 };
-// Style constants
+
 export const STYLES = {
   primaryColor: "#FF5A5F",
   textColor: {
@@ -421,26 +449,33 @@ export const STYLES = {
     },
   },
 };
+
 export const STATUS_VALUE_NAMES = {
   ACTIVE: "Active",
   INACTIVE: "Inactive",
 };
+
 export const COUNTRY_CODES = {
   INDIA: "+91",
   USA: "+1",
   UK: "+44",
-  // Add more if needed
 };
+
 export const REGEX_CONSTANTS = {
-  COMPONENT_NAME: /^[a-zA-Z0-9_]+$/,    // for componentName validation
-  ROLE_NAME: /^[A-Za-z0-9\s\-_]+$/,     // for roleName validation
+  COMPONENT_NAME: /^[a-zA-Z0-9_]+$/,
+  ROLE_NAME: /^[A-Za-z0-9\s\-_]+$/,
 };
+export const MOCK_NOTIFICATIONS = [
+  { id: 1, title: "Order #1234 delivered", time: "2 min ago" },
+  { id: 2, title: "New user registered", time: "10 min ago" },
+  { id: 3, title: "Stock running low for Laptop", time: "1 hour ago" },
+];
+
+
 export const customScrollbarStyles = `
   .max-w-8xl::-webkit-scrollbar {
     display: none;
   }
-
-  /* Custom scrollbar for table */
   .table-scroll-container::-webkit-scrollbar {
     width: 8px;
     height: 8px;

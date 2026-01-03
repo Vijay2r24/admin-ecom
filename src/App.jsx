@@ -42,6 +42,7 @@ import PaymentDetailsWrapper from './pages/payments/PaymentDetails';
 import NotFound from "./components/NotFound";
 import ScrollToTop from './components/ScrollToTop';
 import ThemeSettings from './pages/ApplicationSettings';
+import ApplicationSettings from './pages/ApplicationSettings';
 
 const dashboardPermission = getPermissionCode(MODULES.DASHBOARD, PERMISSIONS.VIEW_DASHBOARD);
 
@@ -301,7 +302,7 @@ const App = () => {
                 path="/application"
                 element={
                   <ProtectedRoute>
-                    <ThemeSettings />
+                    <ApplicationSettings />
                   </ProtectedRoute>
                 }
               />

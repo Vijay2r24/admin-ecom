@@ -6,12 +6,9 @@ import { useSelector, useDispatch } from "react-redux";
 import { useTitle } from "../context/TitleContext";
 import { fetchUserDetails, clearUserDetails } from "../store/slices/allDataSlice";
 import user from "../../assets/images/user.jpg";
+import { MOCK_NOTIFICATIONS } from "../contants/constants";
 
-const aMockNotifications = [
-  { id: 1, title: "Order #1234 delivered", time: "2 min ago" },
-  { id: 2, title: "New user registered", time: "10 min ago" },
-  { id: 3, title: "Stock running low for Laptop", time: "1 hour ago" },
-];
+
 
 const Header = ({ onMenuClick }) => {
   const { t } = useTranslation();
@@ -122,11 +119,11 @@ const Header = ({ onMenuClick }) => {
               <Menu className="h-4 w-4" />
             </button>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {backButton}
-          
-            
+
+
             {title && (
               <h1 className="text-sm font-semibold text-gray-900 truncate max-w-xs">
                 {title}
@@ -136,7 +133,7 @@ const Header = ({ onMenuClick }) => {
         </div>
 
         <div className="relative flex items-center gap-2">
-     
+
           <button
             ref={bellRef}
             className="relative p-1.5 text-gray-500 hover:text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
@@ -159,12 +156,12 @@ const Header = ({ onMenuClick }) => {
                 {t("HEADER.NOTIFICATIONS")}
               </div>
               <ul className="max-h-64 overflow-y-auto divide-y divide-gray-100">
-                {aMockNotifications.length === 0 ? (
+                {MOCK_NOTIFICATIONS.length === 0 ? (
                   <li className="p-3 text-gray-500 text-xs">
                     {t("HEADER.NO_NOTIFICATIONS")}
                   </li>
                 ) : (
-                  aMockNotifications.map((n) => (
+                  MOCK_NOTIFICATIONS.map((n) => (
                     <li
                       key={n.id}
                       className="flex items-start gap-2.5 p-2.5 hover:bg-blue-50/60 transition-colors cursor-pointer"
@@ -207,7 +204,7 @@ const Header = ({ onMenuClick }) => {
                   src={getProfileImageUrl()}
                   alt="Profile"
                   onError={(e) => {
-                    e.target.src =user
+                    e.target.src = user
                   }}
                 />
                 <div className="absolute bottom-0 right-0 h-2 w-2 bg-green-500 rounded-full border border-white"></div>
@@ -250,7 +247,7 @@ const Header = ({ onMenuClick }) => {
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors font-semibold"
                     onClick={() => handleProfileMenuAction("profile")}
                   >
-              
+
                     <svg
                       className="w-3.5 h-3.5 text-blue-500"
                       fill="none"

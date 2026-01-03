@@ -13,7 +13,7 @@ import { useTitle } from "../context/TitleContext";
 import { useTranslation } from "react-i18next";
 import { CUSTOM_COLORS, FILE_CONSTANTS } from "../contants/constants";
 
-const ThemeSettings = () => {
+const ApplicationSettings = () => {
   const { t } = useTranslation()
   const defaultColor = t(CUSTOM_COLORS.primary);
   const [primaryColor, setPrimaryColor] = useState(defaultColor);
@@ -217,6 +217,6 @@ const ThemeSettings = () => {
   );
 };
 
-export default ThemeSettings;
+export default ApplicationSettings;
 
 

@@ -17,6 +17,7 @@ import {
   STATUS,
   STATUS_OPTIONS,
   FILTERS,
+  PERMISSIONS,
 } from "../contants/constants.jsx";
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
@@ -68,8 +69,8 @@ const UserRolesList = () => {
 
 
   const permissionIdForEdit = getPermissionCode(
-    "Role Management",
-    "Edit Role"
+    PERMISSIONS.ROLE_MANAGEMENT,
+    PERMISSIONS.EDIT_ROLE
   );
   const hasEditPermission = hasPermissionId(permissionIdForEdit);
 
