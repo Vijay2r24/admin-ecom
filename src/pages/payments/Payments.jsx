@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Calendar, CreditCard, FileText, User, Eye } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -10,9 +8,10 @@ import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
-import { EXPORT_TYPES, ITEMS_PER_PAGE, STATUS ,formatDateForAPI,formatCurrency,formatDate} from "../../contants/constants";
+import { EXPORT_TYPES, ITEMS_PER_PAGE, STATUS ,STATUS_VALUES} from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
+import {formatDate,formatCurrency,formatDateForAPI} from "../../utils/DateUtils.jsx"
 import {
   getPermissionCode,
   hasPermissionId,
@@ -80,7 +79,7 @@ const Payments = () => {
   const paymentStatusOptions = useSelector(
     (state) =>
       state.allData.resources.paymentStatus?.data?.map((status) => ({
-        value: status.PaymentStatusName,
+        value: status.PaymentStatusID,
         label: status.PaymentStatusName,
       })) || []
   );

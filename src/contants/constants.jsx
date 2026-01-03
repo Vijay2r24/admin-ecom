@@ -361,20 +361,7 @@ export const DEFAULT_PROPS = {
 };
 
 
-export const formatDate = (dateString, format = DATE_FORMATS.FULL_DATETIME_12_HOUR) => {
-  if (!dateString) return "N/A";
-  const date = dayjs(dateString);
-  return date.isValid() ? date.format(format) : "N/A";
-};
 
-
-export const formatCurrency = (amount, currency = CURRENCY, locale = "en-IN") => {
-  if (amount === undefined || amount === null) return "₹0.00";
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: currency,
-  }).format(amount);
-};
 
 export const getDateRangeForFilter = (filter) => {
   const now = dayjs();
@@ -405,11 +392,7 @@ export const getDateRangeForFilter = (filter) => {
   }
 };
 
-export const formatDateForAPI = (date) => {
-  if (!date) return undefined;
-  const d = dayjs(date);
-  return d.isValid() ? d.toISOString() : undefined;
-};
+
 
 export const CALENDAR_CONFIG = {
   totalDays: 42,
