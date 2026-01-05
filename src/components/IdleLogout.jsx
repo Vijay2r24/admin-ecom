@@ -14,7 +14,7 @@ export default function IdleLogout({
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    const warningTime = timeout - 10 * 1000;
+    const warningTime = timeout - 10 * 1000; 
     const events = ["mousemove", "keydown", "mousedown", "scroll", "touchstart"];
 
     const resetTimer = () => {
@@ -23,12 +23,11 @@ export default function IdleLogout({
 
       timerRef.current = setTimeout(() => {
         if (!warningShownRef.current) {
-          toast.warning(t("messages.INACTIVE_USER_MESSAGE"), {
+         toast.warning(t("messages.INACTIVE_USER_MESSAGE"), {
             autoClose: 5000,
           });
           warningShownRef.current = true;
         }
-
 
         setTimeout(() => {
           onLogout();

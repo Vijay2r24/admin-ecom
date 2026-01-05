@@ -17,6 +17,7 @@ import {
   STATUS,
   STATUS_OPTIONS,
   FILTERS,
+  PERMISSIONS,
 } from "../contants/constants.jsx";
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
@@ -54,7 +55,7 @@ const UserRolesList = () => {
   const [nCurrentPage, setCurrentPage] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+  const [tableScrollTop, setTableScrollTop] = useState(0); 
   const itemsPerPage = ITEMS_PER_PAGE;
   const nTotalPages = Math.ceil(total / itemsPerPage);
   const [bSubmitting, setSubmitting] = useState(false);
@@ -64,25 +65,22 @@ const UserRolesList = () => {
     newStatus: null,
   });
   const [roles, setRoles] = useState([]);
-  const [deletePopup, setDeletePopup] = useState({ open: false, roleId: null });
   const [bFilterLoading, setFilterLoading] = useState(false);
-  const permissionIdForDelete = getPermissionCode(
-    "Role Management",
-    "Delete Role"
-  );
-  const hasDeletePermission = hasPermissionId(permissionIdForDelete);
 
-  // Hide body scrollbar when component mounts
+
+  const permissionIdForEdit = getPermissionCode(
+    PERMISSIONS.ROLE_MANAGEMENT,
+    PERMISSIONS.EDIT_ROLE
+  );
+  const hasEditPermission = hasPermissionId(permissionIdForEdit);
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    
-    // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, []);
 
-  // Handle table scroll for floating header
   const handleTableScroll = useCallback((e) => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
@@ -123,10 +121,7 @@ const UserRolesList = () => {
       searchText: sSearchTerm,
     };
 
-    // Fixed: Proper status filtering with correct parameter name and value mapping
     if (selectedStatus && selectedStatus !== "all") {
-      // Convert string to boolean - assuming API expects boolean for IsActive
-      // If your API expects string "true"/"false", use: filterParams.IsActive = selectedStatus;
       filterParams.IsActive =
         selectedStatus === "true" || selectedStatus === true;
     }
@@ -169,13 +164,16 @@ const UserRolesList = () => {
     setCurrentPage(page);
   };
 
+
   const handleEdit = (roleId, roleName, status) => {
-    // Prevent editing admin roles
+    if (!hasEditPermission) {
+      showEmsg(t("COMMON.NO_EDIT_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     if (isAdminRole({ RoleName: roleName })) {
       showEmsg(t("USER_ROLES_LIST.ADMIN_EDIT_DISABLED"), STATUS.ERROR);
       return;
     }
-
     navigate(`/edit-UserRole/${roleId}`, {
       state: {
         roleId,
@@ -186,7 +184,6 @@ const UserRolesList = () => {
   };
 
   const handleStatusChange = (roleId, isActive, roleName) => {
-    // Prevent status change for admin roles
     if (isAdminRole({ RoleName: roleName })) {
       showEmsg(t("USER_ROLES_LIST.ADMIN_STATUS_DISABLED"), STATUS.ERROR);
       return;
@@ -199,7 +196,6 @@ const UserRolesList = () => {
     const { roleId, newStatus } = statusPopup;
 
     try {
-      // Update status using Redux thunk
       const result = await dispatch(
         updateStatusById({
           key: "roles",
@@ -212,7 +208,6 @@ const UserRolesList = () => {
 
       showEmsg(result.message, STATUS.SUCCESS);
 
-      // Refresh roles data after status update
       const filterParams = {
         pageNumber: nCurrentPage,
         pageSize: itemsPerPage,
@@ -237,9 +232,7 @@ const UserRolesList = () => {
   };
 
   return (
-    <div 
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-    >
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       
       {bSubmitting && (
         <div className="global-loader-overlay">
@@ -267,29 +260,19 @@ const UserRolesList = () => {
             onScroll={handleTableScroll}
           >
             <table className="table-base">
-              {/* Floating Header */}
               <thead
                 className={`table-head-floating ${
                   tableScrollTop > 10 ? "table-head-floating-shadow" : ""
                 }`}
               >
                 <tr>
-                  <th
-                    scope="col"
-                    className="table-head-cell-floating text-left align-middle"
-                  >
+                  <th scope="col" className="table-head-cell-floating text-left align-middle">
                     {t("USER_ROLES_LIST.TABLE.ROLE_NAME")}
                   </th>
-                  <th
-                    scope="col"
-                    className="table-head-cell-floating hidden sm:table-cell text-center align-middle"
-                  >
+                  <th scope="col" className="table-head-cell-floating hidden sm:table-cell text-center align-middle">
                     {t("COMMON.STATUS")}
                   </th>
-                  <th
-                    scope="col"
-                    className="table-head-cell-floating text-center align-middle"
-                  >
+                  <th scope="col" className="table-head-cell-floating text-center align-middle">
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>
@@ -321,10 +304,7 @@ const UserRolesList = () => {
                     const isAdmin = isAdminRole(role);
 
                     return (
-                      <tr
-                        key={role.roleid || role.RoleID}
-                        className="table-row"
-                      >
+                      <tr key={role.roleid || role.RoleID} className="table-row">
                         <td className="table-cell text-left align-middle">
                           <div className="flex justify-start items-center">
                             <Shield className="h-4 w-4 mr-2 text-gray-400" />
@@ -374,9 +354,9 @@ const UserRolesList = () => {
                             <ActionButtons
                               id={role.roleid || role.RoleID}
                               onEdit={() =>
-                                handleEdit(role.RoleID, roleName, role.IsActive)
+                              handleEdit(role.RoleID, roleName, role.IsActive)
                               }
-                              disableEdit={isAdminRole({ RoleName: roleName })}
+                              disableEdit={isAdminRole({ RoleName: roleName }) || !hasEditPermission}
                             />
                           </div>
                         </td>
@@ -448,7 +428,7 @@ const UserRolesList = () => {
                   onEdit={() =>
                     handleEdit(role.RoleID, roleName, role.IsActive)
                   }
-                  disableEdit={isAdmin}
+                  disableEdit={isAdmin || !hasEditPermission}
                 />
               </div>
             );
@@ -482,4 +462,5 @@ const UserRolesList = () => {
   );
 };
 
-export default UserRolesList;
+export default UserRolesList; 
+

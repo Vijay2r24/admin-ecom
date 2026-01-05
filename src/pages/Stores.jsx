@@ -12,7 +12,7 @@ import { UPDATE_STORE_STATUS, DELETE_STORE } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
-import {ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS } from "../contants/constants";
 import { apiDelete } from "../utils/ApiUtils";
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
@@ -33,7 +33,6 @@ const Stores = () => {
 
   const aStores = storesData.data || [];
 
-  // FIX: Updated pagination extraction to match actual API response structure
   const totalItems = storesData.totalRecords || storesData.total || 0;
   const currentPageFromAPI = storesData.currentPage || 1;
   const totalPagesFromAPI =
@@ -53,13 +52,14 @@ const Stores = () => {
   const [bFilterLoading, setFilterLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
-  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+  const [tableScrollTop, setTableScrollTop] = useState(0);
 
-  const permissionIdForDelete = getPermissionCode(
-    "Store Management",
-    "Delete User"
+  // Edit permission
+  const permissionIdForEdit = getPermissionCode(
+    "Store Management", 
+    "Edit Store" 
   );
-  const hasDeletePermission = hasPermissionId(permissionIdForDelete);
+  const hasEditPermission = hasPermissionId(permissionIdForEdit)
 
   const statusOptions = STATUS_OPTIONS.map((opt) => ({
     value: opt.value,
@@ -87,34 +87,23 @@ const Stores = () => {
   });
 
   const itemsPerPage = ITEMS_PER_PAGE;
-
-  // FIX: Use pagination data from API or calculate fallback
   const totalPages = totalPagesFromAPI;
   const [viewMode, setViewMode] = useState("table");
-
-  // FIX: Sync currentPage with API response or use local state
   const [currentPage, setCurrentPage] = useState(currentPageFromAPI);
 
-  // Hide body scrollbar when component mounts
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    
-    // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, []);
 
   const handleEdit = (StoreID) => {
-    navigate(`/editStore/${StoreID}`);
-  };
-
-  const handleDelete = (storeId) => {
-    if (!hasDeletePermission) {
-      showEmsg(t("COMMON.NO_DELETE_PERMISSION"), STATUS.ERROR);
+    if (!hasEditPermission) {
+      showEmsg(t("COMMON.NO_EDIT_PERMISSION"), STATUS.ERROR); 
       return;
     }
-    setDeletePopup({ open: true, storeId });
+    navigate(`/editStore/${StoreID}`);
   };
 
   const handleClearFilters = () => {
@@ -181,7 +170,6 @@ const Stores = () => {
       const isActiveFilter =
         oFilters.status === "" ? undefined : oFilters.status === "true";
 
-      // Refresh the stores list after status update
       dispatch(
         fetchResource({
           key: "stores",
@@ -216,7 +204,6 @@ const Stores = () => {
       const isActiveFilter =
         oFilters.status === "" ? undefined : oFilters.status === "true";
 
-      // Refresh the stores list after deletion
       dispatch(
         fetchResource({
           key: "stores",
@@ -242,37 +229,27 @@ const Stores = () => {
     setDeletePopup({ open: false, storeId: null });
   };
 
-  // Handle table scroll for floating header
   const handleTableScroll = useCallback((e) => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
 
-  // Helper function to format dates for API
   const formatDateForAPI = (date) => {
     if (!date) return undefined;
-
-    // If it's a dayjs object
     if (date.isValid && date.isValid()) {
       return date.toISOString();
     }
-
-    // If it's already a string
     if (typeof date === "string") {
       return date;
     }
-
-    // If it's a Date object
     if (date instanceof Date) {
       return date.toISOString();
     }
-
     return undefined;
   };
 
   const handleExportStores = async () => {
     setExportLoading(true);
     try {
-      // Format dates for API
       const startDate = formatDateForAPI(oFilters.startDate);
       const endDate = formatDateForAPI(oFilters.endDate);
       const isActiveFilter =
@@ -341,16 +318,12 @@ const Stores = () => {
     setCurrentPage(1);
   }, [sSearchTerm, oFilters]);
 
-  // Helper function to get status text
   const getStatusText = (isActive) => {
     return isActive ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE");
   };
 
   return (
-    <div 
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
->
-      
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       <ToastContainer />
       {bSubmitting && (
         <div className="global-loader-overlay">
@@ -381,35 +354,22 @@ const Stores = () => {
             onScroll={handleTableScroll}
           >
             <table className="table-base">
-              {/* Floating Header */}
               <thead
                 className={`table-head-floating ${
                   tableScrollTop > 10 ? "table-head-floating-shadow" : ""
                 }`}
               >
                 <tr>
-                  <th
-                    scope="col"
-                    className="table-head-cell-floating text-left w-2/5"
-                  >
+                  <th scope="col" className="table-head-cell-floating text-left">
                     {t("STORES.STORE_DETAILS")}
                   </th>
-                  <th
-                    scope="col"
-                    className="table-head-cell-floating text-center w-1/5"
-                  >
+                  <th scope="col" className="table-head-cell-floating text-left">
                     {t("STORES.CONTACT")}
                   </th>
-                  <th
-                    scope="col"
-                    className="table-head-cell-floating text-center w-1/5"
-                  >
+                  <th scope="col" className="table-head-cell-floating text-center">
                     {t("COMMON.STATUS")}
                   </th>
-                  <th
-                    scope="col"
-                    className="table-head-cell-floating text-center w-1/5"
-                  >
+                  <th scope="col" className="table-head-cell-floating text-center">
                     {t("COMMON.ACTIONS")}
                   </th>
                 </tr>
@@ -433,43 +393,35 @@ const Stores = () => {
                 ) : (
                   aStores.map((store) => (
                     <tr key={store.StoreID} className="table-row">
-                      {/* Store Details - Highlighted main text */}
-                      <td className="table-cell w-2/5 text-left">
+                      <td className="table-cell text-left">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10 bg-custom-bg/10 rounded-lg flex items-center justify-center">
                             <Building className="h-5 w-5 text-custom-bg" />
                           </div>
                           <div className="ml-4">
-                            {/* Highlighted main text for Store Name */}
                             <div className="table-cell-text ellipsis-text font-medium text-gray-900">
                               {store.StoreName}
                             </div>
-                            {/* Subtext for Address */}
                             <div className="table-cell-subtext flex items-center">
                               <MapPin className="h-4 w-4 mr-1" />
                               <span className="ellipsis-text">
                                 {store.AddressLine1}
-                                {store.AddressLine2 &&
-                                  `, ${store.AddressLine2}`}
-                                {store.City?.CityName &&
-                                  `, ${store.City.CityName}`}
+                                {store.AddressLine2 && `, ${store.AddressLine2}`}
+                                {store.City?.CityName && `, ${store.City.CityName}`}
                               </span>
                             </div>
                           </div>
                         </div>
                       </td>
 
-                      {/* Contact - Highlighted main text */}
-                      <td className="table-cell w-1/5 text-left">
+                      <td className="table-cell text-left">
                         <div className="flex flex-col items-start space-y-1 w-full">
-                          {/* Highlighted main text for Phone */}
                           <div className="table-cell-text flex items-center font-medium text-gray-900">
                             <Phone className="h-4 w-4 mr-1 text-gray-400" />
                             <span className="ellipsis-text">
                               {store.CountryCode ? `${store.CountryCode} ${store.PhoneNumber}` : store.PhoneNumber}
                             </span>
                           </div>
-                          {/* Subtext for Email */}
                           <div className="table-cell-subtext flex items-center">
                             <Mail className="h-4 w-4 mr-1 text-gray-400" />
                             <span className="ellipsis-text">
@@ -479,8 +431,7 @@ const Stores = () => {
                         </div>
                       </td>
 
-                      {/* Status */}
-                      <td className="table-cell w-1/5 text-center">
+                      <td className="table-cell text-center">
                         <div className="flex justify-center">
                           <Switch
                             checked={store.IsActive}
@@ -491,12 +442,11 @@ const Stores = () => {
                         </div>
                       </td>
 
-                      {/* Actions */}
-                      <td className="table-cell w-1/5 text-center">
+                      <td className="table-cell text-center">
                         <ActionButtons
                           id={store.StoreID}
                           onEdit={handleEdit}
-                          onDelete={hasDeletePermission ? handleDelete : null}
+                          isEditDisabled={!hasEditPermission} 
                         />
                       </td>
                     </tr>
@@ -527,11 +477,9 @@ const Stores = () => {
                     <Building className="h-6 w-6 text-custom-bg" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    {/* Highlighted main text for Store Name */}
                     <div className="text-lg font-bold text-gray-900 ellipsis-text">
                       {store.StoreName}
                     </div>
-                    {/* Subtext for Address */}
                     <div className="text-xs text-gray-500 flex items-center mt-1">
                       <MapPin className="h-4 w-4 mr-1 shrink-0" />
                       <span className="ellipsis-text">
@@ -545,14 +493,12 @@ const Stores = () => {
                 </div>
 
                 <div className="flex flex-col gap-2 text-sm">
-                  {/* Highlighted main text for Phone */}
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-gray-400" />
                     <span className="font-medium text-gray-900 ellipsis-text">
                       {store.CountryCode ? `${store.CountryCode} ${store.PhoneNumber}` : store.PhoneNumber}
                     </span>
                   </div>
-                  {/* Subtext for Email */}
                   <div className="flex items-center gap-2 text-gray-500">
                     <Mail className="h-4 w-4 text-gray-400" />
                     <span className="ellipsis-text">{store.Email}</span>
@@ -602,17 +548,16 @@ const Stores = () => {
         />
       )}
 
-      {/* FIX: Pass correct pagination props */}
-       <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        itemsPerPage={itemsPerPage}
-        handlePrevPage={handlePrevPage}
-        handleNextPage={handleNextPage}
-        handlePageClick={handlePageClick}
-      />
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
       </div>
     </div>
   );

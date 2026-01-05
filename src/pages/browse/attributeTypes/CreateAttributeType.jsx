@@ -170,7 +170,7 @@ const CreateAttributeType = () => {
     }
   }, [AttributeTypeID, t, token, tenantID, validateField]);
 
-  useEffect(() => {
+   useEffect(() => {
     if (isEditing && AttributeTypeID) {
     const params = {attributeTypeId: AttributeTypeID,};
     dispatch(fetchResource({ key: "attributes", params }));
@@ -178,7 +178,7 @@ const CreateAttributeType = () => {
     }
   }, [isEditing, AttributeTypeID, fetchAttributeTypeDetails, dispatch]);
 
-  // Prefering  Local values (from details API) if available.
+  // LOGIC: Prefer Local values (from details API) if available.
   // Otherwise, use Redux values (from list API), assuming params filtered them.
   const displayValues = localAttributeValues || allAttributes;
 
