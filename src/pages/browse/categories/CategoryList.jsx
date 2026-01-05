@@ -29,7 +29,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
   const [sSearchQuery, setSearchQuery] = useState("");
   const [bShowFilters, setShowFilters] = useState(false);
   const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
-  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+  const [tableScrollTop, setTableScrollTop] = useState(0); 
 
   // Redux selectors
   const categoriesState = useSelector(
@@ -52,8 +52,6 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
   // Hide body scrollbar when component mounts
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    
-    // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -69,11 +67,9 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
       params.IsActive = oFilters.status;
     }
 
-    // Dispatch fetchResource thunk
     dispatch(fetchResource({ key: "categories", params }));
   }, [dispatch, nCurrentPage, iItemsPerPage, sSearchQuery, oFilters.status]);
 
-  // Clear error when component unmounts or search changes
   useEffect(() => {
     return () => {
       if (sError) {
@@ -82,13 +78,12 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
     };
   }, [sError, dispatch]);
 
-  // Handle table scroll for floating header
   const handleTableScroll = useCallback((e) => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
 
+  // --- Status Update Handler ---
   const handleStatusChange = (categoryId, currentStatus) => {
-    // Convert current status to boolean for the new status
     const isCurrentlyActive = currentStatus === "Active";
     setStatusPopup({
       open: true,
@@ -102,7 +97,6 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
     const { categoryId, newStatus } = statusPopup;
 
     try {
-      // Dispatch updateStatusById thunk
       const result = await dispatch(
         updateStatusById({
           key: "categories",
@@ -115,7 +109,6 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
 
       showEmsg(result.message, STATUS.SUCCESS);
 
-      // Refetch data after status update
       const params = {
         pageNumber: nCurrentPage,
         pageSize: iItemsPerPage,
@@ -160,24 +153,22 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
       ...oFilters,
       [filterName]: e.target.value,
     });
-    // Reset to first page when filters change
     setCurrentPage(DEFAULT_PAGE);
   };
 
   // Get status text for display
   const getStatusText = (category) => {
-    // Check both possible status fields
     if (category.Status) return category.Status;
     if (category.IsActive !== undefined)
       return category.IsActive ? "Active" : "Inactive";
-    return "Inactive"; // Default
+    return "Inactive"; 
   };
 
   // Check if category is active
   const isCategoryActive = (category) => {
     if (category.Status) return category.Status === "Active";
     if (category.IsActive !== undefined) return category.IsActive;
-    return false; // Default
+    return false;
   };
 
   const statusFilterOptions = STATUS_OPTIONS.map((option) => ({
@@ -203,8 +194,12 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
           showSearch={true}
           showViewToggle={false}
           showFilterButton={true}
+          
+          // --- Permissions removed, always enabled ---
           onCreate={onCreate}
           createLabel={t("PRODUCT_SETUP.CREATE")}
+          disableCreate={false}
+
           additionalFilters={
             bShowFilters
               ? [
@@ -300,6 +295,8 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                             </span>
                           )}
                         </div>
+                        
+                        {/* Conditional Link based only on Active status */}
                         {isCategoryActive(category) ? (
                           <Link
                             to={`/browse/editcatagiry/${category.CategoryID}`}
@@ -310,10 +307,8 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                           </Link>
                         ) : (
                           <span
-                            className="text-gray-500 block truncate max-w-[180px] cursor-not-allowed font-medium"
-                            title={t(
-                              "PRODUCT_SETUP.CATEGORIES.EDIT_DISABLED_TOOLTIP"
-                            )}
+                            className="block truncate max-w-[180px] font-medium text-gray-500 cursor-not-allowed"
+                            title={t("PRODUCT_SETUP.CATEGORIES.EDIT_DISABLED_TOOLTIP")}
                           >
                             {category.CategoryName}
                           </span>
@@ -335,7 +330,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                       </div>
                     </td>
 
-                    {/* Status */}
+                    {/* Status Badge */}
                     <td className="table-cell text-center align-middle px-6 py-4">
                       <span
                         className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
@@ -382,6 +377,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                               getStatusText(category)
                             )
                           }
+                          // disabled prop removed
                         />
                       </div>
                     </td>
@@ -408,7 +404,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
         </div>
       )}
 
-      {/* Pagination Controls - Fixed at bottom */}
+      {/* Pagination Controls */}
       {iTotalItems > 0 && (
           <Pagination
             currentPage={nCurrentPage}

@@ -168,8 +168,8 @@ const SelectWithIcon = forwardRef(
               {Icon && (
                 <Icon
                   className={`h-5 w-5 transition-colors duration-200 ${disabled
-                      ? "text-gray-400"
-                      : "text-gray-400 group-hover:text-custom-bg"
+                    ? "text-gray-400"
+                    : "text-gray-400 group-hover:text-custom-bg"
                     }`}
                 />
               )}
@@ -178,8 +178,8 @@ const SelectWithIcon = forwardRef(
             <div
               ref={selectedItemsRef}
               className={`flex flex-wrap gap-2 w-full pr-6 overflow-hidden ${multiple && value.length > maxVisibleItems
-                  ? "max-h-12 overflow-y-auto"
-                  : ""
+                ? "max-h-12 overflow-y-auto"
+                : ""
                 }`}
             >
               {multiple && Array.isArray(value) && value.length > 0 ? (
@@ -192,8 +192,8 @@ const SelectWithIcon = forwardRef(
                       <span
                         key={itemValue}
                         className={`flex items-center text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${disabled
-                            ? "bg-gray-300 text-gray-600"
-                            : "bg-custom-bg text-white"
+                          ? "bg-gray-300 text-gray-600"
+                          : "bg-custom-bg text-white"
                           }`}
                         onClick={(e) => handleRemoveSelectedItem(itemValue, e)}
                       >
@@ -213,8 +213,8 @@ const SelectWithIcon = forwardRef(
               ) : (
                 <span
                   className={`block truncate w-full text-left ${displayLabel === placeholder
-                      ? "text-gray-500"
-                      : "text-gray-900"
+                    ? "text-gray-500"
+                    : "text-gray-900"
                     }`}
                 >
                   {displayLabel}
@@ -300,8 +300,8 @@ const SelectWithIcon = forwardRef(
                       {shouldShowSelectAll && (
                         <li
                           className={`cursor-pointer select-none relative py-2 pl-4 pr-4 border-b border-gray-100 ${nHighlightedIndex === -1
-                              ? "bg-custom-bg text-white"
-                              : "text-gray-900 hover:bg-gray-100"
+                            ? "bg-custom-bg text-white"
+                            : "text-gray-900 hover:bg-gray-100"
                             }`}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -352,8 +352,8 @@ const SelectWithIcon = forwardRef(
                                 <div className="absolute left-0 flex items-center pl-3">
                                   <div
                                     className={`flex items-center justify-center w-4 h-4 border rounded ${isSelected
-                                        ? "bg-custom-bg border-custom-bg"
-                                        : "border-gray-300"
+                                      ? "bg-custom-bg border-custom-bg"
+                                      : "border-gray-300"
                                       }`}
                                   >
                                     {isSelected && (

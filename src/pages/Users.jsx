@@ -7,7 +7,7 @@ import ActionButtons from "../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { USER_ACTIVE_STATUS } from "../contants/apiRoutes";
 import { useTitle } from "../context/TitleContext";
-import {ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS } from "../contants/constants";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
@@ -70,16 +70,18 @@ const Users = () => {
     store: "all",
   };
   const [oFilters, setFilters] = useState(defaultFilters);
-
-  const permissionIdForDelete = getPermissionCode(
-    "User Management",
-    "Delete User"
+  
+  const permissionIdForEdit = getPermissionCode(
+    "User Management", 
+    "Edit User" 
   );
+  const hasEditPermission = hasPermissionId(permissionIdForEdit);
+
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    
+
     // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = 'unset';
@@ -155,9 +157,9 @@ const Users = () => {
     { value: "all", label: t("COMMON.ALL") },
     ...(Array.isArray(aRoles)
       ? aRoles.map((role) => ({
-          value: role.RoleName,
-          label: role.RoleName,
-        }))
+        value: role.RoleName,
+        label: role.RoleName,
+      }))
       : []),
   ];
 
@@ -170,9 +172,9 @@ const Users = () => {
     { value: "all", label: t("COMMON.ALL") },
     ...(Array.isArray(aStores)
       ? aStores.map((store) => ({
-          value: store.StoreName,
-          label: store.StoreName,
-        }))
+        value: store.StoreName,
+        label: store.StoreName,
+      }))
       : []),
   ];
 
@@ -225,7 +227,17 @@ const Users = () => {
     setCurrentPage((prev) => Math.min(prev + 1, nTotalPages));
   const handlePageClick = (page) => setCurrentPage(page);
 
-  const handleEdit = (userId) => navigate(`/editUser/${userId}`);
+  const handleEdit = (userId) => {
+
+    if (!hasEditPermission ) {
+
+      showEmsg(t("COMMON.NO_EDIT_PERMISSION"), STATUS.ERROR);
+      return;
+    }
+    navigate(`/editUser/${userId}`);
+  };
+
+  
 
   const [statusPopup, setStatusPopup] = useState({
     open: false,
@@ -323,7 +335,7 @@ const Users = () => {
   }, [sShowFilterDropdown, dispatch]);
 
   return (
-    <div 
+    <div
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
     >
       {bSubmitting && (
@@ -357,9 +369,8 @@ const Users = () => {
             <table className="table-base">
               {/* Floating Header */}
               <thead
-                className={`table-head-floating ${
-                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
-                }`}
+                className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                  }`}
               >
                 <tr>
                   <th className="table-head-cell-floating text-left">
@@ -423,7 +434,7 @@ const Users = () => {
                           </div>
                           <div className="table-cell-subtext flex items-center justify-start">
                             <Phone className="h-4 w-4 mr-2" />
-                           {user.CountryCode ? `${user.CountryCode} ${user.PhoneNumber}` : user.PhoneNumber}
+                            {user.CountryCode ? `${user.CountryCode} ${user.PhoneNumber}` : user.PhoneNumber}
                           </div>
                         </div>
                       </div>
@@ -450,12 +461,20 @@ const Users = () => {
                     </td>
 
                     {/* Actions */}
-                    <td className="table-cell text-right">
-                      <ActionButtons
-                        id={user.UserID}
-                        viewLink={`/editUser/${user.UserID}`}
-                      />
-                    </td>
+                <td className="text-right table-cellhidden sm:table-cell">
+                  <button
+                    disabled={!hasEditPermission}
+                    className={`w-full md:w-auto px-2 py-1 rounded text-xs font-medium transition
+                      ${hasEditPermission 
+                        ? "bg-custom-bg text-white hover:bg-bg-hover" 
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70"
+                      }`}
+                    onClick={() => handleEdit(user.UserID)}
+                  >
+                    {t("COMMON.VIEW")} 
+                  </button>
+                  </td>
+              
                   </tr>
                 ))}
               </tbody>
@@ -514,9 +533,8 @@ const Users = () => {
 
                 <div className="flex flex-wrap items-center gap-2 pt-2">
                   <span
-                    className={`px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.IsActive ? "status-active" : "status-inactive"
-                    }`}
+                    className={`px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${user.IsActive ? "status-active" : "status-inactive"
+                      }`}
                   >
                     {user.IsActive ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")}
                   </span>
@@ -540,6 +558,7 @@ const Users = () => {
                   <ActionButtons
                     id={user.UserID}
                     viewLink={`/editUser/${user.UserID}`}
+                     disableView={!hasEditPermission} 
                   />
                 </div>
               </div>
@@ -559,10 +578,8 @@ const Users = () => {
       />
 
       {statusPopup.open && (
-        <FullscreenErrorPopup
-          message={`Are you sure you want to set this user as ${
-            statusPopup.newStatus ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")
-          }?`}
+        <FullscreenErrorPopup message={`${t("USERS.DELETE_MESSAGE")} ${statusPopup.newStatus ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")}?`}
+
           onClose={handleStatusPopupClose}
           onConfirm={handleStatusConfirm}
         />

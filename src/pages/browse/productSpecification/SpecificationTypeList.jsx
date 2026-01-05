@@ -35,10 +35,10 @@ const SpecificationTypeList = ({ setSubmitting }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
-  const [sSearchQuery, setSearchQuery] = useState(""); // Search input
-  const [bShowFilters, setShowFilters] = useState(false); // Toggle filter dropdown
-  const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL }); // Filters applied on table
-  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+  const [sSearchQuery, setSearchQuery] = useState("");
+  const [bShowFilters, setShowFilters] = useState(false);
+  const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
+  const [tableScrollTop, setTableScrollTop] = useState(0);
 
   // Redux state for specification types
   const specificationTypesState = useSelector(
@@ -53,7 +53,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
   const [nCurrentPage, setCurrentPage] = useState(DEFAULT_PAGE);
   const [iItemsPerPage] = useState(ITEMS_PER_PAGE);
 
-  // Status popup state (for confirmation when toggling Active/Inactive)
+  // Status popup state
   const [statusPopup, setStatusPopup] = useState({
     open: false,
     specificationTypeId: null,
@@ -72,14 +72,11 @@ const SpecificationTypeList = ({ setSubmitting }) => {
   // Hide body scrollbar when component mounts
   useEffect(() => {
     document.body.style.overflow = "hidden";
-
-    // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = "unset";
     };
   }, []);
 
-  // Fetch specification types whenever search, page, or filters change
   useEffect(() => {
     const params = {
       pageNumber: nCurrentPage,
@@ -93,7 +90,6 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     dispatch(fetchResource({ key: "specificationType", params }));
   }, [dispatch, nCurrentPage, iItemsPerPage, sSearchQuery, oFilters.status]);
 
-  // Clear error when unmounting
   useEffect(() => {
     return () => {
       if (sError) {
@@ -102,14 +98,12 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     };
   }, [dispatch, sError]);
 
-  // Handle table scroll for floating header
   const handleTableScroll = useCallback((e) => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
 
   // Open confirmation popup when toggling Active/Inactive
   const handleStatusChange = (specificationTypeId, currentStatus) => {
-    // FIX: currentStatus is a boolean, not a string
     const isCurrentlyActive = Boolean(currentStatus);
     setStatusPopup({
       open: true,
@@ -118,12 +112,10 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     });
   };
 
-  // Close status popup
   const handleStatusPopupClose = () => {
     setStatusPopup({ open: false, specificationTypeId: null, newStatus: null });
   };
 
-  // Pagination controls
   const handlePageClick = (pageNumber) => setCurrentPage(pageNumber);
   const handleNextPage = () => {
     if (nCurrentPage < Math.ceil(iTotalItems / iItemsPerPage)) {
@@ -136,7 +128,6 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     }
   };
 
-  // Update filters
   const handleFilterChange = (e, filterName) => {
     setFilters({
       ...oFilters,
@@ -191,7 +182,6 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     }
   };
 
-  // Handle text input change for form
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setEditForm((prev) => ({
@@ -200,16 +190,14 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     }));
   };
 
-  // Handle form submission (create or update)
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (setSubmitting) setSubmitting(true);
 
     try {
       const token = localStorage.getItem("token");
-      const userId = localStorage.getItem("userId"); // Get user ID for CreatedBy/UpdatedBy
+      const userId = localStorage.getItem("userId");
 
-      // Base payload
       const payload = {
         Name: editForm.name,
         IsActive: true,
@@ -272,7 +260,6 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     }
   };
 
-  // Cancel form action
   const handleFormCancel = () => {
     setEditForm({
       open: false,
@@ -283,7 +270,6 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     });
   };
 
-  // Check if a row is currently being edited
   const isEditing = (specificationTypeId) => {
     return (
       editForm.open &&
@@ -292,7 +278,6 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     );
   };
 
-  // Get current status for row being edited
   const getCurrentStatus = (specificationTypeId) => {
     if (isEditing(specificationTypeId) && editForm.originalData) {
       return editForm.originalData.IsActive;
@@ -338,7 +323,6 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     }
   };
 
-  // Prepare status options using STATUS_OPTIONS from constants
   const statusFilterOptions = STATUS_OPTIONS.map((option) => ({
     value: option.value,
     label: t(option.labelKey),
@@ -347,8 +331,6 @@ const SpecificationTypeList = ({ setSubmitting }) => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       <style>{customScrollbarStyles}</style>
-
-      {/* Header */}
 
       {/* Toolbar with search and filters */}
       <div className="mb-6">
@@ -363,8 +345,12 @@ const SpecificationTypeList = ({ setSubmitting }) => {
           showSearch={true}
           showViewToggle={false}
           showFilterButton={true}
+          
+          // --- Permissions removed, always enabled ---
           onCreate={handleCreate}
           createLabel={t("PRODUCT_SETUP.CREATE")}
+          disableCreate={false}
+          
           additionalFilters={
             bShowFilters
               ? [
@@ -562,6 +548,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                                 currentStatus
                               )
                             }
+                            // Disabled only if editing
                             disabled={editing}
                           />
                         </div>
@@ -589,6 +576,9 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                             <ActionButtons
                               id={specType.SpecificationTypeID}
                               onEdit={() => handleEdit(specType)}
+                              /* 
+                                Disable Edit button only if Item is Inactive 
+                              */
                               disableEdit={isInactive}
                             />
                           )}
@@ -612,7 +602,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
             <div className="text-gray-500">
               {t("PRODUCT_SETUP.SPECIFICATION_TYPES.EMPTY.MESSAGE")}
             </div>
-            {sSearchQuery && (
+            {sSearchQuery && ( 
               <button
                 onClick={() => setSearchQuery("")}
                 className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
@@ -634,7 +624,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
           handleNextPage={handleNextPage}
           handlePageClick={handlePageClick}
         />
-      )}
+      )} 
 
       {/* Confirmation popup for status change */}
       {statusPopup.open && (

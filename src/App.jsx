@@ -41,7 +41,8 @@ import Payments from './pages/payments/Payments';
 import PaymentDetailsWrapper from './pages/payments/PaymentDetails';
 import NotFound from "./components/NotFound";
 import ScrollToTop from './components/ScrollToTop';
-import ThemeSettings from './pages/ThemeSettings';
+import ThemeSettings from './pages/ApplicationSettings';
+import ApplicationSettings from './pages/ApplicationSettings';
 
 const dashboardPermission = getPermissionCode(MODULES.DASHBOARD, PERMISSIONS.VIEW_DASHBOARD);
 
@@ -104,7 +105,7 @@ const App = () => {
     const timer = setTimeout(() => setLoading(false), 600);
     return () => clearTimeout(timer);
   }, [location]);
-  
+
 
   return (
     <Provider store={store}>
@@ -143,13 +144,13 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-              <Route 
-                path="/payment-details/:id" 
+              <Route
+                path="/payment-details/:id"
                 element={
                   <ProtectedRoute permissionCode={notificationsPermission}>
                     <PaymentDetailsWrapper />
                   </ProtectedRoute>
-                } 
+                }
               />
               <Route
                 path="/activeBanners"
@@ -297,11 +298,11 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-                 <Route
-                path="/theme"
+              <Route
+                path="/application-settings"
                 element={
                   <ProtectedRoute>
-                    <ThemeSettings />
+                    <ApplicationSettings />
                   </ProtectedRoute>
                 }
               />

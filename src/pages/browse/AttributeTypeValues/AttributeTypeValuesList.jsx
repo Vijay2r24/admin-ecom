@@ -4,7 +4,6 @@ import CreateAttribute from "./CreateAttributeTypeValuesList";
 import Toolbar from "../../../components/Toolbar";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { useAttributes } from "../../../context/AllDataContext";
 import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Switch from "../../../components/Switch";
@@ -30,7 +29,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
   const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
   const [bShowFilter, setShowFilter] = useState(false);
   const [bShowCreate, setShowCreate] = useState(false);
-  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+  const [tableScrollTop, setTableScrollTop] = useState(0);
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
@@ -39,7 +38,6 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
     loading: bLoading = false,
     error: sError = null,
     total: iTotalItems = 0,
-    pagination,
   } = useSelector((state) => state.allData.resources.attributes || {});
 
   const [iCurrentPage, setCurrentPage] = useState(DEFAULT_PAGE);
@@ -59,8 +57,6 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
   // Hide body scrollbar when component mounts
   useEffect(() => {
     document.body.style.overflow = "hidden";
-
-    // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -90,6 +86,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
 
+  // --- Status Update Handler ---
   const handleStatusChange = (attributeId, currentIsActive) => {
     setStatusPopup({ open: true, attributeId, newStatus: !currentIsActive });
   };
@@ -174,8 +171,12 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
             showSearch={true}
             showViewToggle={false}
             showFilterButton={true}
+            
+            // --- Permissions removed, always enabled ---
             onCreate={onCreate}
             createLabel={t("PRODUCT_SETUP.CREATE")}
+            disableCreate={false}
+            
             additionalFilters={
               bShowFilter
                 ? [
@@ -239,7 +240,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                         !attribute.IsActive ? "bg-gray-50" : ""
                       }`}
                     >
-                      {/* Name */}
+                      {/* Name Column with Conditional Link based on Active status only */}
                       <td className="table-cell table-cell-text text-left align-middle px-6 py-4">
                         {attribute.IsActive ? (
                           <Link
@@ -251,10 +252,8 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                           </Link>
                         ) : (
                           <span
-                            className="text-gray-500 block truncate max-w-[180px] cursor-not-allowed font-medium"
-                            title={t(
-                              "PRODUCT_SETUP.ATTRIBUTES.EDIT_DISABLED_TOOLTIP"
-                            )}
+                            className="block truncate max-w-[180px] font-medium text-gray-500 cursor-not-allowed"
+                            title={t("PRODUCT_SETUP.ATTRIBUTES.EDIT_DISABLED_TOOLTIP")}
                           >
                             {attribute.Value}
                           </span>
@@ -303,6 +302,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                                 attribute.IsActive
                               )
                             }
+                            // disabled prop removed
                           />
                         </div>
                       </td>
@@ -332,7 +332,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
           </div>
         )}
 
-        {/* Pagination Controls - Fixed at bottom */}
+        {/* Pagination Controls */}
         {!bLoading && !sError && iTotalItems > 0 && (
           <Pagination
             itemsPerPage={iItemsPerPage}

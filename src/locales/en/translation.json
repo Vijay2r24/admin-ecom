@@ -27,6 +27,7 @@
       "LOGIN_TOAST_ID" : "login_error_id",
       "LOGIN_SUCCESS_MESSAGE": "Login Successfully"
     }
+
   },
   "OTP": {
     "SUCCESS": "OTP sent successfully.",
@@ -66,7 +67,8 @@
     "ERROR": "Please enter the correct OTP",
     "TIMER": "Resend OTP in",
     "RESEND": "Resend",
-    "OTP_EXPIRE": "OTP expired. Please resend to try again."
+    "OTP_EXPIRE": "OTP expired. Please resend to try again.",
+    "OTP_VALIDATION":"OTP must only contain digits"
   },
   "ADMIN": {
     "TITLE": "Admin Portal <br/> Management System",
@@ -101,7 +103,7 @@
     "NOTIFICATIONS": "Notifications",
     "SETTINGS": "Settings",
     "PAGES": "Profile",
-    "THEMES":"Theme Settings"
+    "THEMES":"Application Settings"
   },
   "DASHBOARD": {
     "TITLE": "Dashboard",
@@ -704,6 +706,7 @@
     "EDIT_USER": "Edit User",
     "ADD_NEW_USER": "Add New User",
     "EDIT_USER_DESCRIPTION": "Edit existing user account details and permissions.",
+     "DELETE_MESSAGE":"Are you sure you want to set this user as",
     "TABLE": {
       "CONTACT": "Contact",
       "LAST_ACTIVE": "Last Active"
@@ -754,6 +757,7 @@
     "PASSWORD_WEAK": "Weak password",
     "PASSWORDS_MATCH": "Passwords must match.",
     "SUCCESS": "User created/updated successfully",
+   
     "VALIDATION": {
       "FIRST_NAME_REQUIRED": "First name is required",
       "LAST_NAME_REQUIRED": "Last name is required",
@@ -1083,6 +1087,7 @@
     "PINCODE": "Pincode",
     "ZIP_CODE": "ZIP Code",
     "NO_DELETE_PERMISSION": "You do not have permission to delete.",
+     "NO_EDIT_PERMISSION": "You do not have permission to edit.",
     "ROLE": "Role",
     "USER": "User",
     "ADMIN": "Admin",
@@ -1248,7 +1253,7 @@
   },
  "THEMESETTINGS":{
    "PREVIEW_TITLE":"Web Preview",
-      "TITLE": "ThemeSettings",
+      "TITLE": "Application Settings",
       "RESET_AS_DEFAULT": "Reset as Default",
       "WEB_TEXT":"ShopNow",
       "DESCRIPTION":"What are you looking for today!",
@@ -1256,7 +1261,10 @@
       "CATEGORY":"Category",
       "TRENDING_NOW":"Trending Now",
       "PRODUCT":"Product",
-      "COST":"999"
+      "COST":"999",
+      "STORE_LOGO":"Store Logo",
+      "NO_LOGO":"No Logo",
+      "UPLOAD_LOGO":"Upload Logo"
 
 
   

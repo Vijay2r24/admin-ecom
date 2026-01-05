@@ -12,6 +12,7 @@ import {
   DATE_FORMAT_OPTIONS,
   LOCALES,
   STATUS,
+  STATUS_VALUES,
 } from "../../contants/constants";
 import Loader from "../../components/Loader";
 import { fetchResource } from "../../store/slices/allDataSlice";
@@ -27,7 +28,7 @@ const OrderList = () => {
   );
   const { t } = useTranslation();
   const [sFilterStatus, setFilterStatus] = useState(
-    searchParams.get("status") || t("STATUS_VALUES.ALL")
+    searchParams.get("status") || STATUS_VALUES.ALL
   );
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
   const [sViewMode, setViewMode] = useState("table");
@@ -46,7 +47,7 @@ const OrderList = () => {
 
   // Redux hooks
   const dispatch = useDispatch();
-  
+
   // --- 1. Select Stores from Redux ---
   const storesState = useSelector(
     (state) => state.allData.resources.stores || {}
@@ -61,8 +62,8 @@ const OrderList = () => {
 
   // --- 2. Update Default Filters ---
   const defaultFilters = {
-    paymentStatus: t("STATUS_VALUES.ALL"),
-    store: t("STATUS_VALUES.ALL"), // Added store
+    paymentStatus: STATUS_VALUES.ALL,
+    store: STATUS_VALUES.ALL,
     startDate: null,
     endDate: null,
   };
@@ -70,8 +71,8 @@ const OrderList = () => {
   // Initialize filters from URL parameters
   const [oFilters, setFilters] = useState({
     ...defaultFilters,
-    paymentStatus: searchParams.get("paymentStatus") || t("STATUS_VALUES.ALL"),
-    store: searchParams.get("store") || t("STATUS_VALUES.ALL"), 
+    paymentStatus: searchParams.get("paymentStatus") || STATUS_VALUES.ALL,
+    store: searchParams.get("store") || STATUS_VALUES.ALL,
   });
 
   const navigate = useNavigate();
@@ -84,12 +85,11 @@ const OrderList = () => {
     const params = {};
 
     if (sSearchTerm) params.search = sSearchTerm;
-    if (sFilterStatus !== t("STATUS_VALUES.ALL")) params.status = sFilterStatus;
-    if (oFilters.paymentStatus !== t("STATUS_VALUES.ALL"))
+    if (sFilterStatus !== STATUS_VALUES.ALL) params.status = sFilterStatus;
+    if (oFilters.paymentStatus !== STATUS_VALUES.ALL)
       params.paymentStatus = oFilters.paymentStatus;
     // --- 3. Sync Store to URL ---
-    if (oFilters.store !== t("STATUS_VALUES.ALL")) params.store = oFilters.store;
-    
+    if (oFilters.store !== STATUS_VALUES.ALL) params.store = oFilters.store;
     if (nCurrentPage > 1) params.page = nCurrentPage.toString();
 
     // Handle date filters - convert to ISO string for URL
@@ -124,7 +124,7 @@ const OrderList = () => {
 
     // Reset all local state
     setSearchTerm("");
-    setFilterStatus(t("STATUS_VALUES.ALL"));
+    setFilterStatus(STATUS_VALUES.ALL);
     setFilters(defaultFilters);
     setCurrentPage(1);
     setExpandedRows(new Set());
@@ -169,12 +169,12 @@ const OrderList = () => {
 
 
   const storeOptions = [
-    { value: t("STATUS_VALUES.ALL"), label: t("COMMON.ALL") },
+    { value: STATUS_VALUES.ALL, label: t("COMMON.ALL") },
     ...(Array.isArray(aStores)
       ? aStores.map((store) => ({
-          value: store.StoreName,
-          label: store.StoreName,
-        }))
+        value: store.StoreID,
+        label: store.StoreName,
+      }))
       : []),
   ];
 
@@ -189,7 +189,7 @@ const OrderList = () => {
         label: status.PaymentStatusName,
       }));
 
-      return [{ value: t("STATUS_VALUES.ALL"), label: t("COMMON.ALL") }, ...options];
+      return [{ value: STATUS_VALUES.ALL, label: t("COMMON.ALL") }, ...options];
     }
 
     return [
@@ -203,21 +203,21 @@ const OrderList = () => {
 
 
   const additionalFilters = [
-  
+
     {
       label: t("ORDERS.FILTERS.PAYMENT_STATUS"),
       name: "paymentStatus",
       value: oFilters.paymentStatus,
       options: getPaymentStatusOptions(),
     },
-      {
+    {
       label: t("COMMON.STORE"),
       name: "store",
       value: oFilters.store,
       options: storeOptions,
-      placeholder: t("USERS.FILTERS.STORE") ,
+      placeholder: t("USERS.FILTERS.STORE"),
       searchable: true,
-      searchPlaceholder: t("COMMON.SEARCH_STORE") ,
+      searchPlaceholder: t("COMMON.SEARCH_STORE"),
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "store"),
     },
@@ -300,10 +300,10 @@ const OrderList = () => {
         searchText: sSearchTerm,
         pageNumber: nCurrentPage,
         pageSize: nProductsPerPage,
-        // --- 7. Pass Store Name to API ---
-        storeName: oFilters.store !== t("STATUS_VALUES.ALL") ? oFilters.store : undefined,
+        //  Passing Storeid to API ---
+        storeId: oFilters.store !== STATUS_VALUES.ALL ? oFilters.store : undefined,
         paymentStatus:
-          oFilters.paymentStatus !== t("STATUS_VALUES.ALL") ? oFilters.paymentStatus : undefined,
+          oFilters.paymentStatus !== STATUS_VALUES.ALL ? oFilters.paymentStatus : undefined,
         startDate: startDate,
         endDate: endDate,
       };
@@ -366,7 +366,7 @@ const OrderList = () => {
     nCurrentPage,
     nProductsPerPage,
     sSearchTerm,
-    oFilters, 
+    oFilters,
     initialLoadComplete,
     t,
   ]);
@@ -450,10 +450,10 @@ const OrderList = () => {
       await dispatch(
         exportOrderReport({
           searchText: sSearchTerm,
-          // --- 8. Pass Store Name to Export ---
-          storeName: oFilters.store !== t("STATUS_VALUES.ALL") ? oFilters.store : undefined,
+          //  Passing StoreId to Export ---
+          storeId: oFilters.store !== STATUS_VALUES.ALL ? oFilters.store : undefined,
           paymentStatus:
-            oFilters.paymentStatus !== t("STATUS_VALUES.ALL")
+            oFilters.paymentStatus !== STATUS_VALUES.ALL
               ? oFilters.paymentStatus
               : undefined,
           startDate: startDate,
@@ -496,9 +496,8 @@ const OrderList = () => {
           >
             <table className="table-base">
               <thead
-                className={`table-head sticky top-0 z-0 transition-all duration-200 ${
-                  tableScrollTop > 10 ? "shadow-sm" : "shadow-sm"
-                }`}
+                className={`table-head sticky top-0 z-0 transition-all duration-200 ${tableScrollTop > 10 ? "shadow-sm" : "shadow-sm"
+                  }`}
               >
                 <tr>
                   <th className="table-head-cell w-8"></th>
@@ -788,3 +787,5 @@ const OrderList = () => {
 };
 
 export default OrderList;
+
+
