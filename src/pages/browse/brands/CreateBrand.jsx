@@ -60,9 +60,8 @@ const CreateBrand = () => {
   // Cropper modal state
   const [bShowCropper, setShowCropper] = useState(false);
   const [oImageToCrop, setImageToCrop] = useState(null);
-  const croppedFileName = `${
-    FILE_CONSTANTS.BRAND_LOGO_PREFIX
-  }-${Date.now()}.jpg`;
+  const croppedFileName = `${FILE_CONSTANTS.BRAND_LOGO_PREFIX
+    }-${Date.now()}.jpg`;
 
   // Required fields configuration
   const requiredFields = {
@@ -124,7 +123,7 @@ const CreateBrand = () => {
    */
   const validateField = useCallback((name, value) => {
     let error = "";
-    
+
     switch (name) {
       case "BrandName":
         error = validateBrandName(value);
@@ -169,6 +168,26 @@ const CreateBrand = () => {
               res?.data?.status === STATUS.SUCCESS.toUpperCase()) &&
             brand
           ) {
+            // Determine existing logo ID and URL from either documentMetadata or BrandLogo
+            let existingLogoId = null;
+            let existingLogoUrl = null;
+            let existingLogoObj = null;
+
+            if (brand.documentMetadata && brand.documentMetadata.length > 0) {
+              const meta = brand.documentMetadata[0];
+              existingLogoId = meta.DocumentID || meta.documentId || meta.id || meta._id;
+              existingLogoUrl = meta.documentUrl;
+              existingLogoObj = meta;
+            }
+
+            if (brand.BrandLogo && brand.BrandLogo.length > 0) {
+              const logo = brand.BrandLogo[0];
+              if (!existingLogoId)
+                existingLogoId = logo.DocumentID || logo.documentId || logo.id || logo._id;
+              if (!existingLogoUrl) existingLogoUrl = logo.documentUrl;
+              if (!existingLogoObj) existingLogoObj = logo;
+            }
+
             setFormData((prev) => ({
               ...prev,
               TenantID: brand.TenantID || localStorage.getItem("tenantID"),
@@ -182,12 +201,12 @@ const CreateBrand = () => {
               description: brand.BrandDescription || "",
               CreatedBy: brand.CreatedBy || t("COMMON.ADMIN"),
               UpdatedBy: t("COMMON.ADMIN"),
-              existingLogo: brand.BrandLogo?.[0] || null,
-              existingLogoDocumentId: brand.BrandLogo?.[0]?.documentId || null,
+              existingLogo: existingLogoObj,
+              existingLogoDocumentId: existingLogoId,
             }));
 
-            if (brand.BrandLogo && brand.BrandLogo.length > 0) {
-              setImagePreview(brand.BrandLogo[0].documentUrl);
+            if (existingLogoUrl) {
+              setImagePreview(existingLogoUrl);
             }
 
             // Validate initial data after setting
@@ -227,7 +246,7 @@ const CreateBrand = () => {
    */
   const handleInputChange = ({ target: { name, value, type, checked } }) => {
     const newValue = type === "checkbox" ? checked : value;
-    
+
     setFormData((prev) => ({
       ...prev,
       [name]: newValue,
@@ -347,7 +366,13 @@ const CreateBrand = () => {
   /**
    * Remove uploaded or existing logo
    */
-  const handleRemoveImage = () => {
+  const handleRemoveImage = (e) => {
+    // Prevent event propagation
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     if (
       sImagePreview &&
       typeof sImagePreview === "string" &&
@@ -355,20 +380,17 @@ const CreateBrand = () => {
     ) {
       URL.revokeObjectURL(sImagePreview);
     }
-    
+
     setFormData((prev) => ({
       ...prev,
       BrandLogo: null,
       existingLogo: null,
+      // existingLogoDocumentId is preserved from ...prev
     }));
     setImagePreview(null);
-    
-    // Explicitly update validation state since we know it's null now
-    // We do this manually because validateField inside the hook might 
-    // access stale state due to batching
-    const error = validateBrandLogo(null);
-    setErrors(prev => ({ ...prev, BrandLogo: error }));
-    setFieldValid(prev => ({ ...prev, BrandLogo: false }));
+
+    // Validate the logo field after removal
+    validateField("BrandLogo", null);
 
     // Reset file input
     if (fileInputRef.current) {
@@ -381,7 +403,7 @@ const CreateBrand = () => {
    */
   const validateForm = () => {
     const errors = {};
-    
+
     errors.BrandName = validateBrandName(oFormData.BrandName);
     errors.BrandCode = validateBrandCode(oFormData.BrandCode);
     errors.BrandLogo = validateBrandLogo(oFormData.BrandLogo || sImagePreview);
@@ -417,8 +439,10 @@ const CreateBrand = () => {
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
         if (element) {
-          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
-         block: SCROLL_CONSTANTS.BLOCK, });
+          element.scrollIntoView({
+            behavior: SCROLL_CONSTANTS.BEHAVIOR,
+            block: SCROLL_CONSTANTS.BLOCK,
+          });
           element.focus();
         }
       }
@@ -438,8 +462,8 @@ const CreateBrand = () => {
         sortOrder: 1,
         ...(isEditing &&
           oFormData.existingLogoDocumentId && {
-            DocumentID: oFormData.existingLogoDocumentId,
-          }),
+          DocumentID: oFormData.existingLogoDocumentId,
+        }),
       });
     } else if (
       isEditing &&
@@ -591,7 +615,7 @@ const CreateBrand = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          
+
           {/* Brand Name + Brand Code  */}
           <div className="flex flex-col md:flex-row md:space-x-4">
             <div className="w-full md:w-1/2">
@@ -629,130 +653,87 @@ const CreateBrand = () => {
           </div>
 
           <div className="flex flex-col md:flex-row md:space-x-4">
-            <div className="w-full md:w-1/2 flex flex-col space-y-4">
-                <SelectWithIcon
-                  label={t("PRODUCT_SETUP.CREATE_BRAND.STATUS_LABEL")}
-                  id="IsActive"
-                  name="IsActive"
-                  value={oFormData.IsActive.toString()}
-                  onChange={(e) =>
-                    handleInputChange({
-                      target: {
-                        name: "IsActive",
-                        value: e.target.value === "true",
-                      },
-                    })
-                  }
-                  options={statusOptions}
-                  Icon={Tag}
-                  error={oErrors.IsActive}
-                  disabled={!isEditing}
-                />
-
-                {/* Brand Logo */}
-                <div className="w-full">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {renderLabel("BrandLogo", "PRODUCT_SETUP.CREATE_BRAND.LOGO_LABEL")}
-                  </label>
-                  <div
-                    className={`relative group rounded-xl border-2 ${
-                      oErrors.BrandLogo
-                        ? "border-red-300"
-                        : oFieldValid.BrandLogo
-                        ? "border-green-300"
-                        : "border-gray-200"
-                    } border-dashed transition-all duration-200 hover:border-bg-hover bg-gray-50 hover:bg-gray-50/50`}
-                  >
-                    <div className="p-6">
-                      <div className="space-y-3 text-center">
-                        {/* Upload Icon - Only show when no image */}
-                        {!sImagePreview && (
-                          <div className="flex justify-center">
-                            <div className="p-3 rounded-full bg-white shadow-sm border border-gray-100">
-                              <Image className="h-8 w-8 text-gray-400 group-hover:text-custom-bg transition-colors duration-200" />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Upload input area */}
-                        <div className="flex flex-col items-center gap-2">
-                          {!sImagePreview ? (
-                            <>
-                              <div className="flex text-sm text-gray-600 justify-center">
-                                <label
-                                  htmlFor="file-upload"
-                                  className="relative cursor-pointer rounded-md font-medium text-custom-bg hover:text-[#4c39c7] underline"
-                                >
-                                  <span>{t("COMMON.UPLOAD")}</span>
-                                  <input
-                                    id="file-upload"
-                                    ref={fileInputRef}
-                                    name="BrandLogo"
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                    className="sr-only"
-                                  />
-                                </label>
-                                <p className="pl-1">{t("COMMON.DRAG_DROP_TEXT")}</p>
-                              </div>
-                              <p className="text-xs text-gray-500">
-                               {FILE_CONSTANTS.IMAGE_SIZE_TEXT}
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              {/* Image preview with better styling */}
-                              <div className="relative">
-                                <img
-                                  src={sImagePreview}
-                                  alt="Brand Logo Preview"
-                                  className="h-32 w-32 object-contain rounded-lg border-2 border-gray-200 bg-white p-2 shadow-sm mx-auto"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={handleRemoveImage}
-                                  className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all duration-200"
-                                  title={FILE_CONSTANTS.IMAGE_TITLE_TEXT}
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                                {oFieldValid.BrandLogo && (
-                                  <div className="absolute -top-2 -left-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg">
-                                    <svg
-                                      className="h-3 w-3"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                  </div>
-                                )}
-                              </div>
-                              <p className="text-xs text-gray-500 mt-2">
-                                {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
-                              </p>
-                            </>
-                          )}
+            {/* Logo Upload */}
+            <div className="w-full md:w-1/2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {renderLabel("BrandLogo", "PRODUCT_SETUP.CREATE_BRAND.LOGO_LABEL")}
+              </label>
+              <div
+                className={`relative group rounded-xl border-2 ${oErrors.BrandLogo ? "border-red-300" : oFieldValid.BrandLogo ? "border-green-300" : "border-gray-200"
+                  } border-dashed transition-all duration-200 hover:border-bg-hover bg-gray-50 hover:bg-gray-50/50`}
+              >
+                <div className="p-6 overflow-visible">
+                  <div className="space-y-3 text-center overflow-visible">
+                    {/* Upload Icon - Only show when no image */}
+                    {!sImagePreview && (
+                      <div className="flex justify-center">
+                        <div className="p-3 rounded-full bg-white shadow-sm border border-gray-100">
+                          <Image className="h-8 w-8 text-gray-400 group-hover:text-custom-bg transition-colors duration-200" />
                         </div>
-
-                        {/* Logo errors */}
-                        {oErrors.BrandLogo && (
-                          <p className="text-sm text-red-600 flex items-center justify-center mt-2">
-                            <span className="mr-1">⚠️</span>
-                            {oErrors.BrandLogo}
-                          </p>
-                        )}
                       </div>
+                    )}
+
+                    {/* Upload input area */}
+                    <div className="flex flex-col items-center gap-2">
+                      {!sImagePreview ? (
+                        <>
+                          <div className="flex text-sm text-gray-600 justify-center">
+                            <label
+                              htmlFor="file-upload"
+                              className="relative cursor-pointer rounded-md font-medium text-custom-bg hover:text-[#4c39c7] underline"
+                            >
+                              <span>{t("COMMON.UPLOAD")}</span>
+                              <input
+                                id="file-upload"
+                                ref={fileInputRef}
+                                name="BrandLogo"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="sr-only"
+                              />
+                            </label>
+                            <p className="pl-1">{t("COMMON.DRAG_DROP_TEXT")}</p>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            PNG, JPG, JPEG up to 10MB
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          {/* Image preview with better styling */}
+                          <div className="relative inline-block overflow-visible">
+                            <img
+                              src={sImagePreview}
+                              alt="Brand Logo Preview"
+                              className="h-32 w-32 object-contain rounded-lg border-2 border-gray-200 bg-white p-2 shadow-sm mx-auto"
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => handleRemoveImage(e)}
+                              className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all duration-200 z-10 pointer-events-auto cursor-pointer"
+                              title="Remove image"
+                              aria-label="Remove image"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                            {oFieldValid.BrandLogo && (
+                              <div className="absolute -top-2 -left-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg z-10">
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
+              </div>
             </div>
 
             {/* (Description) */}
@@ -787,8 +768,8 @@ const CreateBrand = () => {
             >
               {t("COMMON.CANCEL")}
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn-primary"
               disabled={bSubmitting}
             >

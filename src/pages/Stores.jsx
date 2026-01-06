@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useCallback } from "react";
 import { MapPin, Phone, Mail, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -57,8 +54,6 @@ const Stores = () => {
   const [exportLoading, setExportLoading] = useState(false);
   const [tableScrollTop, setTableScrollTop] = useState(0);
 
-
- 
   // Edit permission
   const permissionIdForEdit = getPermissionCode(
     "Store Management", 
@@ -104,16 +99,12 @@ const Stores = () => {
   }, []);
 
   const handleEdit = (StoreID) => {
-  
     if (!hasEditPermission) {
-    
       showEmsg(t("COMMON.NO_EDIT_PERMISSION"), STATUS.ERROR); 
       return;
     }
     navigate(`/editStore/${StoreID}`);
   };
-
- 
 
   const handleClearFilters = () => {
     setFilters(defaultFilters);
@@ -372,7 +363,7 @@ const Stores = () => {
                   <th scope="col" className="table-head-cell-floating text-left">
                     {t("STORES.STORE_DETAILS")}
                   </th>
-                  <th scope="col" className="table-head-cell-floating text-center">
+                  <th scope="col" className="table-head-cell-floating text-left">
                     {t("STORES.CONTACT")}
                   </th>
                   <th scope="col" className="table-head-cell-floating text-center">
@@ -408,7 +399,7 @@ const Stores = () => {
                             <Building className="h-5 w-5 text-custom-bg" />
                           </div>
                           <div className="ml-4">
-                            <div className="table-cell-text ellipsis-text">
+                            <div className="table-cell-text ellipsis-text font-medium text-gray-900">
                               {store.StoreName}
                             </div>
                             <div className="table-cell-subtext flex items-center">
@@ -423,38 +414,38 @@ const Stores = () => {
                         </div>
                       </td>
 
-                      <td className="table-cell text-center">
-                        <div className="flex flex-col items-center space-y-1">
-                          <div className="flex flex-col items-start space-y-1 w-full max-w-[150px]">
-                            <div className="table-cell-text flex items-center">
-                              <Phone className="h-4 w-4 mr-1 text-gray-400" />
+                      <td className="table-cell text-left">
+                        <div className="flex flex-col items-start space-y-1 w-full">
+                          <div className="table-cell-text flex items-center font-medium text-gray-900">
+                            <Phone className="h-4 w-4 mr-1 text-gray-400" />
+                            <span className="ellipsis-text">
                               {store.CountryCode ? `${store.CountryCode} ${store.PhoneNumber}` : store.PhoneNumber}
-                            </div>
-                            <div className="table-cell-subtext flex items-center">
-                              <Mail className="h-4 w-4 mr-1 text-gray-400" />
-                              <span className="ellipsis-text">
-                                {store.Email}
-                              </span>
-                            </div>
+                            </span>
+                          </div>
+                          <div className="table-cell-subtext flex items-center">
+                            <Mail className="h-4 w-4 mr-1 text-gray-400" />
+                            <span className="ellipsis-text">
+                              {store.Email}
+                            </span>
                           </div>
                         </div>
                       </td>
 
                       <td className="table-cell text-center">
-                        <Switch
-                          checked={store.IsActive}
-                          onChange={() =>
-                            handleStatusChange(store.StoreID, store.IsActive)
-                          }
-                        />
+                        <div className="flex justify-center">
+                          <Switch
+                            checked={store.IsActive}
+                            onChange={() =>
+                              handleStatusChange(store.StoreID, store.IsActive)
+                            }
+                          />
+                        </div>
                       </td>
 
                       <td className="table-cell text-center">
-                    
                         <ActionButtons
                           id={store.StoreID}
                           onEdit={handleEdit}
-                         
                           isEditDisabled={!hasEditPermission} 
                         />
                       </td>
@@ -501,12 +492,14 @@ const Stores = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 text-sm text-caption">
+                <div className="flex flex-col gap-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-gray-400" />
-                    <span className="ellipsis-text">{store.PhoneNumber}</span>
+                    <span className="font-medium text-gray-900 ellipsis-text">
+                      {store.CountryCode ? `${store.CountryCode} ${store.PhoneNumber}` : store.PhoneNumber}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-gray-500">
                     <Mail className="h-4 w-4 text-gray-400" />
                     <span className="ellipsis-text">{store.Email}</span>
                   </div>

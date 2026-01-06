@@ -19,6 +19,7 @@ import Orders from "./pages/orders/OrderList";
 import AddUser from "./pages/AddUser";
 import ProductList from "./pages/products/ProductList";
 import Addproduct from "./pages/products/AddProductForm";
+import AddVariants from "./pages/products/AddVariant";
 import ProfileDetails from "./pages/ProfileDetails";
 import Stores from "./pages/Stores";
 import AddStore from "./pages/AddStore";
@@ -253,6 +254,11 @@ const App = () => {
                     <Addproduct />
                   </ProtectedRoute>
                 }
+              />
+              <Route path="/AddVariants"
+                element={<ProtectedRoute>
+                  <AddVariants />
+                </ProtectedRoute>}
               />
               <Route
                 path="/edit-product/:productId?"

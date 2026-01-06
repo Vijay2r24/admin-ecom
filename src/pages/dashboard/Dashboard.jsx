@@ -694,7 +694,7 @@ const generateComparisonText = (startDate, endDate) => {
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-secondary">{t("DASHBOARD.DESCRIPTION")}</p>
+            <p className="text-xs text-gray-500">{t("DASHBOARD.DESCRIPTION")}</p>
           </div>
 
           {/* Using the new DateTimeRangePickerComponent */}
@@ -713,11 +713,11 @@ const generateComparisonText = (startDate, endDate) => {
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {metrics.map((metric, index) => (
           <div
             key={index}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
           >
             <button
               onClick={() => {
@@ -729,28 +729,28 @@ const generateComparisonText = (startDate, endDate) => {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="text-xs font-medium text-gray-500">
                     {metric.title}
                   </p>
-                  <p className="mt-2 text-3xl font-semibold text-gray-900">
+                  <p className="mt-2 text-xl font-semibold text-gray-900">
                     {metric.value}
                   </p>
                 </div>
-                <div className={`p-3 rounded-lg ${metric.color}`}>
+                <div className={`p-2 rounded-lg ${metric.color}`}>
                   <metric.icon className="h-5 w-5" />
                 </div>
               </div>
             </button>
             <div className="mt-4 flex items-center">
               {metric.trend === "up" ? (
-                <ArrowUp className="h-4 w-4 text-green-500" />
+                <ArrowUp className="h-3 w-3 text-green-500" />
               ) : metric.trend === "down" ? (
-                <ArrowDown className="h-4 w-4 text-red-500" />
+                <ArrowDown className="h-3 w-3 text-red-500" />
               ) : (
-                <span className="h-4 w-4 text-gray-500">-</span>
+                <span className="h-3 w-3 text-gray-500">-</span>
               )}
               <span
-                className={`ml-2 text-sm font-medium ${
+                className={`ml-2 text-xs font-medium ${
                   metric.trend === "up"
                     ? "text-green-500"
                     : metric.trend === "down"
@@ -760,7 +760,7 @@ const generateComparisonText = (startDate, endDate) => {
               >
                 {metric.change}
               </span>
-              <span className="ml-2 text-secondary">
+              <span className="ml-2 text-xs text-gray-500">
                 {metric.comparisonText}
               </span>
             </div>
@@ -769,21 +769,21 @@ const generateComparisonText = (startDate, endDate) => {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Top Products */}
         <div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col mt-6 md:mt-0">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h2 className="text-sm font-semibold text-gray-900">
                 {t("DASHBOARD.TOP_PRODUCTS.TOP_PRODUCTS")}
               </h2>
             </div>
-            <div className="flex flex-col gap-3 p-4 flex-1">
+            <div className="flex flex-col gap-2 p-3 flex-1">
               {paginatedTopProducts.length > 0 ? (
                 paginatedTopProducts.map((product, index) => (
                   <div
                     key={index}
-                    className="flex flex-col md:flex-row items-center bg-white rounded-lg shadow-sm px-4 py-3 hover:shadow-md transition min-h-[80px]"
+                    className="flex flex-col md:flex-row items-center bg-white rounded-lg shadow-sm px-3 py-2 hover:shadow-md transition min-h-[70px]"
                   >
                     <div className="flex-shrink-0 mb-2 md:mb-0 md:mr-4">
                       <img
@@ -792,15 +792,15 @@ const generateComparisonText = (startDate, endDate) => {
                           "https://via.placeholder.com/48x48?text=Img"
                         }
                         alt={product.name}
-                        className="h-12 w-12 rounded object-cover border"
+                        className="h-10 w-10 rounded object-cover border"
                       />
                     </div>
                     <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-900 truncate max-w-[10rem]">
+                        <span className="text-xs font-semibold text-gray-900 truncate max-w-[10rem]">
                           {product.name}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-700">
                           {product.category ||
                             t("DASHBOARD.PRODUCT_MODAL.CATEGORY_DEFAULT")}
                         </span>
@@ -847,7 +847,7 @@ const generateComparisonText = (startDate, endDate) => {
                     </div>
                     <div className="w-full md:w-auto mt-2 md:mt-0 md:ml-4 flex flex-col items-end gap-2">
                       <button
-                        className="w-full md:w-auto px-3 py-1 rounded bg-custom-bg text-white text-sm font-medium hover:bg-bg-hover transition"
+                        className="w-full md:w-auto px-2.5 py-1 rounded bg-custom-bg text-white text-[10px] font-medium hover:bg-bg-hover transition"
                         onClick={() => {
                           setSelectedProduct(product);
                           setShowProductModal(true);
@@ -872,8 +872,8 @@ const generateComparisonText = (startDate, endDate) => {
         {/* Recent Orders */}
         <div className="mb-6 md:mb-0 -z-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h2 className="text-sm font-semibold text-gray-900">
                 {t("DASHBOARD.RECENT_ORDERS.RECENT_ORDERS")}
               </h2>
             </div>
@@ -900,26 +900,26 @@ const generateComparisonText = (startDate, endDate) => {
                     {recentOrders.map((order) => (
                       <tr
                         key={order.id}
-                        className="hover:bg-gray-50 transition h-12"
+                        className="hover:bg-gray-50 transition h-10"
                       >
                         <td className="px-4 py-3 align-middle whitespace-nowrap">
                           <span
-                            className="inline-block align-middle h-8 w-8 rounded-full bg-indigo-100 text-indigo-700 font-bold text-sm text-center leading-8 mr-2"
-                            style={{ minWidth: "2rem" }}
+                            className="inline-block align-middle h-7 w-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs text-center leading-7 mr-2"
+                            style={{ minWidth: "1.75rem" }}
                           >
                             {order.customer
                               .split(" ")
                               .map((n) => n[0])
                               .join("")}
                           </span>
-                          <span className="inline-block align-middle text-sm text-gray-900 max-w-[8rem] truncate">
+                          <span className="inline-block align-middle text-xs text-gray-900 max-w-[8rem] truncate">
                             {order.customer}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-700 align-middle whitespace-nowrap max-w-[8rem] truncate">
+                        <td className="px-4 py-3 text-xs text-gray-700 align-middle whitespace-nowrap max-w-[8rem] truncate">
                           {order.id}
                         </td>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 text-right align-middle whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs font-medium text-gray-900 text-right align-middle whitespace-nowrap">
                           {order.amount}
                         </td>
                         <td className="px-4 py-3 align-middle whitespace-nowrap">

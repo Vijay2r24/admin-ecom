@@ -137,7 +137,7 @@ const SelectWithIcon = forwardRef(
     }, [isOpen]);
 
     return (
-      <div className="w-full mt-4 md:mt-0">
+      <div className="w-full">
         <label
           htmlFor={id}
           className="block text-sm font-medium text-gray-700 mb-2"
@@ -148,13 +148,12 @@ const SelectWithIcon = forwardRef(
         <div className="relative group" ref={selectRef}>
           <div
             ref={ref}
-            className={`relative w-full pl-9 pr-2 py-5 text-sm border ${error ? "border-red-300" : "border-gray-200"
-              } rounded-lg transition-all duration-200 flex items-center justify-between 
+            className={`relative w-full pl-10 pr-3 py-2 text-sm border ${error ? "border-red-300" : "border-gray-200"
+              } rounded-lg transition-all duration-200 flex items-center justify-between
             ${disabled
                 ? "bg-gray-100 cursor-not-allowed opacity-75"
                 : "bg-white cursor-pointer group-hover:border-custom-bg focus:ring-2 focus:ring-custom-bg focus:border-custom-bg placeholder:text-sm"
-              }
-            ${multiple && value.length > 0 ? "h-auto min-h-9" : "h-9"}`}
+              }`}
             onClick={(e) => {
               e.stopPropagation();
               if (!disabled) {
@@ -177,10 +176,9 @@ const SelectWithIcon = forwardRef(
 
             <div
               ref={selectedItemsRef}
-              className={`flex flex-wrap gap-2 w-full pr-6 overflow-hidden ${multiple && value.length > maxVisibleItems
-                ? "max-h-12 overflow-y-auto"
-                : ""
+              className={`flex flex-nowrap gap-2 w-full pr-6 overflow-x-auto items-center [&::-webkit-scrollbar]:hidden ${multiple && value.length > 0 ? "py-0.5" : ""
                 }`}
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {multiple && Array.isArray(value) && value.length > 0 ? (
                 <>
@@ -217,7 +215,7 @@ const SelectWithIcon = forwardRef(
                     : "text-gray-900"
                     }`}
                 >
-                  {displayLabel}
+                  {displayLabel || "\u00A0"}
                 </span>
               )}
             </div>
@@ -331,12 +329,12 @@ const SelectWithIcon = forwardRef(
                         return (
                           <li
                             key={opt.value}
-                            className={`cursor-pointer select-none relative py-2 text-sm 
-                            ${multiple ? "pl-12 pr-4" : "pl-4 pr-4"} 
+                            className={`cursor-pointer select-none relative py-2 text-sm
+                            ${multiple ? "pl-12 pr-4" : "pl-4 pr-4"}
                             ${isHighlighted
                                 ? "bg-custom-bg text-white"
                                 : "text-gray-900 hover:bg-gray-100"
-                              } 
+                              }
                             ${isSelected && !isHighlighted ? "bg-blue-50" : ""}`}
                             onClick={(e) => {
                               e.stopPropagation();

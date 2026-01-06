@@ -27,6 +27,7 @@ import {
 } from "../contants/constants";
 import { ToastContainer } from "react-toastify";
 import Loader from "../components/Loader";
+import FloatingFooter from "../components/FloatingFooter";
 
 const BannerForm = () => {
   const { t } = useTranslation();
@@ -44,13 +45,13 @@ const BannerForm = () => {
   );
 
   // Filter active categories and brands
-  const activeCategories = useMemo(() => 
-    categories.filter(category => category.IsActive === true), 
+  const activeCategories = useMemo(() =>
+    categories.filter(category => category.IsActive === true),
     [categories]
   );
 
-  const activeBrands = useMemo(() => 
-    brands.filter(brand => brand.IsActive === true), 
+  const activeBrands = useMemo(() =>
+    brands.filter(brand => brand.IsActive === true),
     [brands]
   );
 
@@ -130,7 +131,7 @@ const BannerForm = () => {
     if (!discount?.toString().trim()) {
       return t("BANNER_FORM.VALIDATION.DISCOUNT_REQUIRED");
     }
-    
+
     const discountValue = parseFloat(discount);
     if (isNaN(discountValue)) {
       return t("BANNER_FORM.VALIDATION.DISCOUNT_NUMBER");
@@ -148,7 +149,7 @@ const BannerForm = () => {
     if (!price?.toString().trim()) {
       return t("BANNER_FORM.VALIDATION.PRICE_REQUIRED");
     }
-    
+
     const priceValue = parseFloat(price);
     if (isNaN(priceValue)) {
       return t("BANNER_FORM.VALIDATION.PRICE_NUMBER");
@@ -164,7 +165,7 @@ const BannerForm = () => {
    */
   const validateField = useCallback((name, value, forceShowError = false) => {
     let error = "";
-    
+
     switch (name) {
       case "BannerName":
         error = validateBannerName(value);
@@ -198,8 +199,8 @@ const BannerForm = () => {
 
     setFieldValid(prev => ({
       ...prev,
-      [name]: !error && (value !== "" && value !== null && value !== undefined && 
-               (!Array.isArray(value) || value.length > 0))
+      [name]: !error && (value !== "" && value !== null && value !== undefined &&
+        (!Array.isArray(value) || value.length > 0))
     }));
 
     return error;
@@ -239,9 +240,9 @@ const BannerForm = () => {
    */
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    
+
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Validate the field immediately
     validateField(name, value, touchedFields[name]);
   }, [validateField, touchedFields]);
@@ -251,12 +252,12 @@ const BannerForm = () => {
    */
   const handleSelectChange = useCallback((e) => {
     const { name, value } = e.target;
-    
+
     let processedValue = value;
     if (Array.isArray(value)) {
       processedValue = value.filter(Boolean);
     }
-    
+
     setFormData((prev) => ({ ...prev, [name]: processedValue }));
     validateField(name, processedValue, true); // Force validation on select change
   }, [validateField]);
@@ -388,7 +389,7 @@ const BannerForm = () => {
         file: croppedFile,
       }));
       setCroppingImage(null);
-      
+
       // Validate the preview after setting and mark as touched
       markFieldTouched("preview");
       validateField("preview", previewUrl, true);
@@ -419,7 +420,7 @@ const BannerForm = () => {
     });
 
     const errors = {};
-    
+
     errors.BannerName = validateBannerName(formData.BannerName);
     errors.preview = validatePreview(formData.preview);
     errors.category = validateCategory(formData.category);
@@ -458,7 +459,7 @@ const BannerForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Run comprehensive validation
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
@@ -467,8 +468,10 @@ const BannerForm = () => {
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
         if (element) {
-          element.scrollIntoView({ behavior: SCROLL_CONSTANTS.BEHAVIOR,
-          block: SCROLL_CONSTANTS.BLOCK, });
+          element.scrollIntoView({
+            behavior: SCROLL_CONSTANTS.BEHAVIOR,
+            block: SCROLL_CONSTANTS.BLOCK,
+          });
           element.focus();
         }
       }
@@ -490,12 +493,12 @@ const BannerForm = () => {
       SellingPrice: Number(formData.price) || 0,
       ...(bannerId
         ? {
-            BannerID: bannerId,
-            UpdatedBy: localStorage.getItem("userId") || "admin",
-          }
+          BannerID: bannerId,
+          UpdatedBy: localStorage.getItem("userId") || "admin",
+        }
         : {
-            CreatedBy: localStorage.getItem("userId") || "admin",
-          }),
+          CreatedBy: localStorage.getItem("userId") || "admin",
+        }),
     };
 
     // Handle document metadata for different scenarios
@@ -799,22 +802,12 @@ const BannerForm = () => {
           </div>
         </div>
 
-        <div className="flex justify-end mt-8 gap-4">
-          <button 
-            type="submit" 
-            className="btn-primary" 
-            disabled={isLoading}
-          >
-            {isLoading ? t("COMMON.SAVING") : t("COMMON.SUBMIT")}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/banners")}
-            className="btn-cancel ml-4"
-          >
-            {t("COMMON.CANCEL")}
-          </button>
-        </div>
+        <FloatingFooter
+          onCancel={() => navigate("/banners")}
+          onSubmit={handleSubmit}
+          isSubmitting={isLoading}
+          isEditMode={!!bannerId}
+        />
       </form>
     </div>
   );

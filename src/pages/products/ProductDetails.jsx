@@ -25,19 +25,25 @@ import {
   Edit2,
   IndianRupee,
 } from "lucide-react";
-
+import { SingleStoreInventoryTable } from "../products/SingleStoreInventoryTable";
+import { MatrixInventoryTable } from "../products/MatrixInventoryTable";
+import { ScrollableMatrixInventoryTable } from "../products/ScrollableMatrixInventoryTable";
+import { fetchResource } from "../../store/slices/allDataSlice.jsx";
+import { useSelector, useDispatch } from "react-redux";
+import SelectWithIcon from "../../components/SelectWithIcon.jsx";
 const ProductDetails = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { setTitle, setBackButton } = useTitle();
-
+  const dispatch = useDispatch();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("variants");
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [storeId, setStoreId] = useState("");
 
   useEffect(() => {
     setTitle(`${t("PRODUCTS.PRODUCTS_DETAILS")}`);
@@ -48,6 +54,13 @@ const ProductDetails = () => {
       setTitle("");
     };
   }, [productId, setTitle, setBackButton, t, navigate]);
+  useEffect(() => {
+    dispatch(fetchResource({ key: "stores" }));
+  }, [dispatch]);
+
+  const stores = useSelector(
+    (state) => state.allData.resources.stores?.data || []
+  );
 
   const fetchProductDetails = async () => {
     try {
@@ -77,8 +90,7 @@ const ProductDetails = () => {
   const getVariantAttributes = (variant) => {
     const attributes = {};
     variant.Attributes.forEach((attr) => {
-      const key = attr.Name.trim(); // <-- trim whitespace
-      attributes[key] = {
+      attributes[attr.Name] = {
         id: attr.AttributeValueID,
         value: attr.Value,
         unit: attr.Unit,
@@ -100,6 +112,47 @@ const ProductDetails = () => {
         0
       ) || 0
     );
+  };
+  const handleVariantToggle = (variant, index, newState) => {
+    // Update UI instantly
+    const updated = [...product.Variants];
+    updated[index].IsActive = newState;
+
+    setProduct((prev) => ({
+      ...prev,
+      Variants: updated,
+    }));
+  };
+  const handleStoreStatusToggle = (variant, store, newState) => {
+    // Update UI instantly
+    setProduct((prev) => {
+      const updated = { ...prev };
+      const variantIndex = updated.Variants.findIndex(
+        (v) => v.VariantID === variant.VariantID
+      );
+
+      updated.Variants[variantIndex].Inventory = updated.Variants[
+        variantIndex
+      ].Inventory.map((s) =>
+        s.StoreID === store.StoreID ? { ...s, IsActive: newState } : s
+      );
+
+      return updated;
+    });
+
+    // TODO: If you want API update, I can write that too
+    // updateStoreStatusAPI(store.StoreID, variant.VariantID, newState)
+  };
+  const openInventoryEditModal = (variant, store) => {
+    setEditInventoryData({
+      variant,
+      store,
+      quantity: store.Quantity,
+      sellingPrice: store.SellingPrice,
+      discount: store.DiscountPercentage,
+    });
+
+    setIsInventoryModalOpen(true);
   };
 
   if (loading) {
@@ -183,33 +236,30 @@ const ProductDetails = () => {
             <nav className="flex space-x-8 px-8" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab("variants")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === "variants"
-                    ? "border-custom-bg text-custom-bg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "variants"
+                  ? "border-custom-bg text-custom-bg"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 <Grid className="h-4 w-4" />
                 {t("PRODUCTS.VARIANTS")}
               </button>
               <button
                 onClick={() => setActiveTab("inventory")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === "inventory"
-                    ? "border-custom-bg text-custom-bg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "inventory"
+                  ? "border-custom-bg text-custom-bg"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 <Store className="h-4 w-4" />
                 {t("STORES.INVENTORY")}
               </button>
               <button
                 onClick={() => setActiveTab("specs")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === "specs"
-                    ? "border-custom-bg text-custom-bg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "specs"
+                  ? "border-custom-bg text-custom-bg"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 <Info className="h-4 w-4" />
                 {t("PRODUCT_CREATION.SPECIFICATIONS")}
@@ -218,269 +268,135 @@ const ProductDetails = () => {
           </div>
 
           {/* Variants Tab */}
+
           {activeTab === "variants" && (
             <div className="p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Variant Images & Details */}
-                <div className="space-y-6">
-                  {/* Main Image */}
-                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    {currentVariant?.ProductVariantImages?.length > 0 ? (
-                      <img
-                        src={
-                          currentVariant.ProductVariantImages[selectedImage]
-                            ?.documentUrl
-                        }
-                        alt={`${product.ProductName} - ${currentVariant.VariantID}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src =
-                            "https://via.placeholder.com/500x500?text=No+Image";
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <ImageIcon className="h-16 w-16 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Thumbnail Images */}
-                  {currentVariant?.ProductVariantImages?.length > 1 && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {currentVariant.ProductVariantImages.map(
-                        (image, index) => (
-                          <button
-                            key={image.documentId}
-                            onClick={() => setSelectedImage(index)}
-                            className={`aspect-square bg-gray-100 rounded-md overflow-hidden border-2 ${
-                              selectedImage === index
-                                ? "border-custom-bg"
-                                : "border-transparent"
-                            }`}
-                          >
-                            <img
-                              src={image.documentUrl}
-                              alt={`${product.ProductName} ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </button>
-                        )
-                      )}
-                    </div>
-                  )}
-
-                  {/* Current Variant Details */}
-                  {currentVariant && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="font-semibold text-gray-900 mb-3">
-                        {t("PRODUCTS.CURRENT_VARIANT_DETAILS")}
-                      </h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">
-                            {t("PRODUCTS.VARIANTS_ID")}:
-                          </span>
-                          <span className="font-mono text-gray-900">
-                            {currentVariant.VariantID}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">
-                            {t(
-                              "PRODUCT_SETUP.CREATE_PRODUCT_GROUP.STATUS_LABEL"
-                            )}
-                          </span>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              currentVariant.IsActive
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {currentVariant.IsActive ? "Active" : "Inactive"}
-                          </span>
-                        </div>
-                        {Object.entries(
-                          getVariantAttributes(currentVariant)
-                        ).map(([attrName, attrValue]) => (
-                          <div key={attrName} className="flex justify-between">
-                            <span className="text-gray-600 capitalize">
-                              {attrName}:
-                            </span>
-                            <span className="text-gray-900">
-                              {attrValue.value}
-                              {attrName.toLowerCase() === "color" &&
-                                attrValue.unit && (
-                                  <span
-                                    className="ml-2 w-4 h-4 inline-block rounded-full border"
-                                    style={{ backgroundColor: attrValue.unit }}
-                                  ></span>
-                                )}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+              {/* All Variants Table Only (Main Image section removed) */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {t("PRODUCTS.PRODUCT_VARIANTS")}
+                  </h3>
+                  <span className="text-sm text-gray-600">
+                    {t("PRODUCTS.TOTAL_VARIANTS")}: {product.Variants.length}
+                  </span>
                 </div>
 
-                {/* All Variants Table */}
-                {/* All Variants Table */}
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      {t("PRODUCTS.PRODUCT_VARIANTS")}
-                    </h3>
-                    <span className="text-sm text-gray-600">
-                      {t("PRODUCTS.TOTAL_VARIANTS")}: {product.Variants.length}
-                    </span>
-                  </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t("PRODUCT_CREATION.VARIANT")}
+                        </th>
 
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {t("PRODUCT_CREATION.VARIANT")}
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {t("PRODUCT_CREATION.SIZE")}
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {t("PRODUCT_CREATION.COLOUR_ID")}
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {t("PRODUCT_CREATION.MRP")}
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {t("PRODUCT_CREATION.SELLING_PRICE")}
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {t("BANNER_FORM.DISCOUNT_PERCENTAGE")}
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {t("PRODUCTS.TOTAL_STOCK")}
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {t("COMMON.ACTIONS")}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {product.Variants.map((variant, index) => {
-                          const attributes = getVariantAttributes(variant);
-                          // Get the first inventory item for pricing (assuming same price across stores)
-                          const inventory =
-                            variant.Inventory && variant.Inventory[0];
-                          const sellingPrice = inventory
-                            ? inventory.SellingPrice
-                            : "0.00";
-                          const discountPercentage = inventory
-                            ? inventory.DiscountPercentage
-                            : "0.00";
-                          const totalStock = getTotalInventory(variant);
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t("PRODUCT_CREATION.MRP")}
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t("PRODUCT_CREATION.SELLING_PRICE")}
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t("BANNER_FORM.DISCOUNT_PERCENTAGE")}
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t("PRODUCTS.TOTAL_STOCK")}
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t("COMMON.ACTIONS")}
+                        </th>
+                      </tr>
+                    </thead>
 
-                          return (
-                            <tr
-                              key={variant.VariantID}
-                              className={`hover:bg-gray-50 cursor-pointer transition-colors ${
-                                selectedVariant === index
-                                  ? "bg-blue-50 border-l-4 border-custom-bg"
-                                  : ""
-                              }`}
-                              onClick={() => {
-                                setSelectedVariant(index);
-                                setSelectedImage(0);
-                              }}
-                            >
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div className="flex-shrink-0 h-10 w-10">
-                                    {variant.ProductVariantImages?.[0]
-                                      ?.documentUrl ? (
-                                      <img
-                                        className="h-10 w-10 rounded object-cover"
-                                        src={
-                                          variant.ProductVariantImages[0]
-                                            .documentUrl
-                                        }
-                                        alt=""
-                                      />
-                                    ) : (
-                                      <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
-                                        <ImageIcon className="h-5 w-5 text-gray-400" />
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="ml-4">
-                                    <div className="text-sm font-medium text-gray-900">
-                                      {t("PRODUCT_CREATION.VARIANT")}{" "}
-                                      {index + 1}
-                                    </div>
-                                    <div className="text-sm text-gray-500">
-                                      {variant.VariantID.slice(-8)}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {attributes.Size?.value || "N/A"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <span className="text-sm text-gray-900 mr-2">
-                                    {attributes.Color?.value || "N/A"}
-                                  </span>
-                                  {attributes.Color?.unit && (
-                                    <span
-                                      className="w-4 h-4 rounded-full border inline-block"
-                                      style={{
-                                        backgroundColor: attributes.Color.unit,
-                                      }}
-                                      title={attributes.Color.unit}
-                                    ></span>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                                ₹{parseFloat(variant.MRP).toFixed(2)}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                                ₹{parseFloat(sellingPrice).toFixed(2)}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                {parseFloat(discountPercentage) > 0 ? (
-                                  <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
-                                    {parseFloat(discountPercentage)}%
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-500">-</span>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right">
-                                <span
-                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    totalStock > 0
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-red-100 text-red-800"
-                                  }`}
-                                >
-                                  {totalStock}
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {product.Variants.map((variant, index) => {
+                        const attributes = getVariantAttributes(variant);
+                        // Derive Selling Price from Inventory (lowest price across stores)
+                        const inventory = variant.Inventory || [];
+                        const sellingPrices = inventory
+                          .map((i) => parseFloat(i.SellingPrice))
+                          .filter((p) => !isNaN(p));
+
+                        const minSellingPrice = sellingPrices.length > 0 ? Math.min(...sellingPrices) : 0;
+
+                        // Use derived selling price for discount calculation
+                        const discount = calculateDiscount(
+                          variant.MRP,
+                          minSellingPrice
+                        );
+                        const totalStock = getTotalInventory(variant);
+
+                        return (
+                          <tr
+                            key={variant.VariantID}
+                            onClick={() => {
+                              setSelectedVariant(index);
+                              setSelectedImage(0);
+                            }}
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              Variant {index + 1}
+                            </td>
+
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                              ₹{parseFloat(variant.MRP).toFixed(2)}
+                            </td>
+
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                              ₹{minSellingPrice > 0 ? minSellingPrice.toFixed(2) : "0.00"}
+                            </td>
+
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                              {discount > 0 ? (
+                                <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
+                                  {discount}%
                                 </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button className="text-blue-600 hover:text-blue-900">
-                                  <Eye className="h-4 w-4" />
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                              ) : (
+                                <span className="text-gray-500">-</span>
+                              )}
+                            </td>
+
+                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                              <span
+                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${totalStock > 0
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                                  }`}
+                              >
+                                {totalStock}
+                              </span>
+                            </td>
+
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <label className="inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={variant.IsActive}
+                                  onChange={(e) =>
+                                    handleVariantToggle(
+                                      variant,
+                                      index,
+                                      e.target.checked
+                                    )
+                                  }
+                                  className="sr-only peer"
+                                />
+                                <div
+                                  className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 
+    rounded-full peer peer-checked:bg-blue-600 relative transition-all"
+                                >
+                                  <span
+                                    className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-all 
+      peer-checked:translate-x-5"
+                                  ></span>
+                                </div>
+                              </label>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -489,117 +405,89 @@ const ProductDetails = () => {
           {/* Inventory Tab */}
           {activeTab === "inventory" && (
             <div className="p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Inventory Summary */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    {t("PRODUCTS.INVENTORY_SUMMARY")}
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">
-                        {t("PRODUCTS.TOTAL_VARIANTS")}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {product.Variants.length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">
-                        {t("PRODUCTS.TOTAL_STOCK")}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {totalInventory}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">
-                        {t("PRODUCTS.LOW_STOCK_VARIANTS")}
-                      </span>
-                      <span className="text-sm font-semibold text-yellow-600">
-                        {
-                          product.Variants.filter(
-                            (v) => getTotalInventory(v) < 10
-                          ).length
-                        }
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">
-                        {t("PRODUCTS.OUT_OF_STOCK")}
-                      </span>
-                      <span className="text-sm font-semibold text-red-600">
-                        {
-                          product.Variants.filter(
-                            (v) => getTotalInventory(v) === 0
-                          ).length
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {/* ------------------------------- */}
+              {/*     STORE INVENTORY HEADER      */}
+              {/* ------------------------------- */}
 
-                {/* Detailed Inventory */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    {t("PRODUCTS.STORE_INVENTORY")}
-                  </h3>
-                  {product.Variants.map((variant, index) => (
-                    <div
-                      key={variant.VariantID}
-                      className="mb-6 p-4 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-medium text-gray-900">
-                          {t("PRODUCT_CREATION.VARIANT")} {index + 1}
-                          {(getVariantAttributes(variant).Size?.value ||
-                            getVariantAttributes(variant).Color?.value) &&
-                            " - "}
-                          {getVariantAttributes(variant).Size?.value && (
-                            <>
-                              {getVariantAttributes(variant).Size.value}
-                              {getVariantAttributes(variant).Color?.value &&
-                                " / "}
-                            </>
-                          )}
-                          {getVariantAttributes(variant).Color?.value}
-                        </h4>
-                        <span className="text-sm text-gray-500">
-                          {t("VIEW_ORDER.TABLE.TOTAL")}:{" "}
-                          {getTotalInventory(variant)} {t("PRODUCTS.UNITS")}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        {variant.Inventory.map((store, storeIndex) => (
-                          <div
-                            key={storeIndex}
-                            className="flex items-center justify-between py-2"
-                          >
-                            <div className="flex items-center gap-3">
-                              <Store className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                              <span className="text-sm font-medium text-gray-900">
-                                {store.StoreName}
-                              </span>
-                            </div>
-                            <span
-                              className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                                store.Quantity > 20
-                                  ? "bg-green-100 text-green-800"
-                                  : store.Quantity > 5
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {store.Quantity}{" "}
-                              {t("DASHBOARD.PRODUCT_MODAL.IN_STOCK")}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {t("PRODUCTS.STORE_INVENTORY")}
+                </h3>
+
+                <div className="w-60">
+                  <SelectWithIcon
+                    label={t("COMMON.STORE")}
+                    id="StoreID"
+                    name="StoreID"
+                    value={storeId}
+                    onChange={(e) => setStoreId(e.target.value)}
+                    options={stores.map((store) => ({
+                      value: store.StoreID,
+                      label: store.StoreName,
+                    }))}
+                    Icon={Tag}
+                    multiple
+                    placeholder={t("PRODUCT_CREATION.STORE_ID_PLACEHOLDER")}
+                  />
                 </div>
               </div>
+
+              {/* ---------------------------------------------------------- */}
+              {/*           STORE COUNT LOGIC (Single / Matrix / Scroll)      */}
+              {/* ---------------------------------------------------------- */}
+
+              {(() => {
+                const storeList = Array.from(
+                  new Map(
+                    product.Variants.flatMap((v) =>
+                      v.Inventory.map((s) => [s.StoreID, s])
+                    )
+                  ).values()
+                );
+                const storeCount = storeList.length;
+
+                /* ---------------------- */
+                /* CASE 1: SINGLE STORE   */
+                /* ---------------------- */
+                if (storeCount === 1) {
+                  return (
+                    <SingleStoreInventoryTable
+                      product={product}
+                      getVariantAttributes={getVariantAttributes}
+                      handleStoreStatusToggle={handleStoreStatusToggle}
+                      openInventoryEditModal={openInventoryEditModal}
+                    />
+                  );
+                }
+
+                /* ---------------------------- */
+                /* CASE 2: 2-6 STORES MATRIX    */
+                /* ---------------------------- */
+                if (storeCount > 1 && storeCount <= 6) {
+                  return (
+                    <MatrixInventoryTable
+                      allStores={storeList}
+                      product={product}
+                      getVariantAttributes={getVariantAttributes}
+                      handleStoreStatusToggle={handleStoreStatusToggle}
+                      openInventoryEditModal={openInventoryEditModal}
+                    />
+                  );
+                }
+
+                /* ------------------------------- */
+                /* CASE 3: 7+ STORES SCROLL MATRIX */
+                /* ------------------------------- */
+                return (
+                  <ScrollableMatrixInventoryTable
+                    allStores={storeList}
+                    product={product}
+                    getVariantAttributes={getVariantAttributes}
+                    handleStoreStatusToggle={handleStoreStatusToggle}
+                    openInventoryEditModal={openInventoryEditModal}
+                  />
+                );
+              })()}
             </div>
           )}
 
@@ -669,6 +557,34 @@ const ProductDetails = () => {
                       </p>
                       <p className="text-gray-700 text-lg font-medium">
                         {product.CategoryName}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                    <div className="p-3 bg-purple-50 rounded-lg">
+                      <IndianRupee className="h-6 w-6 text-purple-600 flex-shrink-0" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 mb-1">
+                        {t("PRODUCTS.PRICING_RANGE")}
+                      </p>
+                      <p className="text-gray-700 text-lg font-medium">
+                        ₹
+                        {(() => {
+                          const allPrices = product.Variants.flatMap((v) =>
+                            (v.Inventory || []).map((i) =>
+                              parseFloat(i.SellingPrice)
+                            )
+                          ).filter((p) => !isNaN(p));
+
+                          if (allPrices.length === 0) return "0";
+                          const min = Math.min(...allPrices);
+                          const max = Math.max(...allPrices);
+
+                          if (min === max) return min.toLocaleString("en-IN");
+                          return `${min.toLocaleString("en-IN")} - ₹${max.toLocaleString("en-IN")}`;
+                        })()}
                       </p>
                     </div>
                   </div>

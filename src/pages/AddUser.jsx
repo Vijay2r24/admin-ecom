@@ -486,51 +486,54 @@ const AddUser = () => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!oFormData.firstName?.trim()) {
-      errors.firstName = t("ADD_USER.VALIDATION.FIRST_NAME_REQUIRED");
-    }
-
-    if (!oFormData.lastName?.trim()) {
-      errors.lastName = t("ADD_USER.VALIDATION.LAST_NAME_REQUIRED");
-    }
-
-    if (!oFormData.email?.trim()) {
-      errors.email = t("ADD_USER.VALIDATION.EMAIL_REQUIRED");
-    } else if (!emailRegex.test(oFormData.email)) {
-      errors.email = t("ADD_USER.VALIDATION.EMAIL_INVALID");
-    }
-
-    // Enhanced Phone validation with country code check
-    if (!oFormData.phone?.trim()) {
-      errors.phone = t("ADD_USER.PHONE_REQUIRED");
-    } else {
-      // Validate phone number format using react-phone-number-input
-      if (!isValidPhoneNumber(oFormData.phone)) {
-        errors.phone = t("ADD_USER.VALIDATION.PHONE_INVALID");
+    // Personal Info validation
+    if (isPersonalInfoEditable) {
+      if (!oFormData.firstName?.trim()) {
+        errors.firstName = t("ADD_USER.VALIDATION.FIRST_NAME_REQUIRED");
       }
 
-      if (!oFormData.phone.startsWith("+")) {
-        errors.phone = t("ADD_USER.VALIDATION.COUNTRY_CODE_REQUIRED");
+      if (!oFormData.lastName?.trim()) {
+        errors.lastName = t("ADD_USER.VALIDATION.LAST_NAME_REQUIRED");
       }
 
-      // Validate minimum phone number length (country code + number)
-      // Most countries have at least 8 digits after country code
-      const phoneWithoutSpaces = oFormData.phone.replace(/\s/g, "");
-      const digitsAfterPlus = phoneWithoutSpaces.substring(1); // Remove the +
-      if (digitsAfterPlus.length < 8) {
-        errors.phone = t("ADD_USER.VALIDATION.PHONE_TOO_SHORT");
+      if (!oFormData.email?.trim()) {
+        errors.email = t("ADD_USER.VALIDATION.EMAIL_REQUIRED");
+      } else if (!emailRegex.test(oFormData.email)) {
+        errors.email = t("ADD_USER.VALIDATION.EMAIL_INVALID");
       }
 
-      // Validate country code length (typically 1-3 digits)
-      const countryCodeMatch = oFormData.phone.match(/^\+\d{1,3}/);
-      if (!countryCodeMatch) {
-        errors.phone = t("ADD_USER.VALIDATION.INVALID_COUNTRY_CODE");
-      }
-    }
+      // Enhanced Phone validation with country code check
+      if (!oFormData.phone?.trim()) {
+        errors.phone = t("ADD_USER.PHONE_REQUIRED");
+      } else {
+        // Validate phone number format using react-phone-number-input
+        if (!isValidPhoneNumber(oFormData.phone)) {
+          errors.phone = t("ADD_USER.VALIDATION.PHONE_INVALID");
+        }
 
-    // Gender validation
-    if (!oFormData.gender) {
-      errors.gender = t("ADD_USER.VALIDATION.GENDER_REQUIRED");
+        if (!oFormData.phone.startsWith("+")) {
+          errors.phone = t("ADD_USER.VALIDATION.COUNTRY_CODE_REQUIRED");
+        }
+
+        // Validate minimum phone number length (country code + number)
+        // Most countries have at least 8 digits after country code
+        const phoneWithoutSpaces = oFormData.phone.replace(/\s/g, "");
+        const digitsAfterPlus = phoneWithoutSpaces.substring(1); // Remove the +
+        if (digitsAfterPlus.length < 8) {
+          errors.phone = t("ADD_USER.VALIDATION.PHONE_TOO_SHORT");
+        }
+
+        // Validate country code length (typically 1-3 digits)
+        const countryCodeMatch = oFormData.phone.match(/^\+\d{1,3}/);
+        if (!countryCodeMatch) {
+          errors.phone = t("ADD_USER.VALIDATION.INVALID_COUNTRY_CODE");
+        }
+      }
+
+      // Gender validation
+      if (!oFormData.gender) {
+        errors.gender = t("ADD_USER.VALIDATION.GENDER_REQUIRED");
+      }
     }
 
     // Only validate role and stores if they are visible and editable
@@ -555,24 +558,27 @@ const AddUser = () => {
       Object.assign(errors, passwordErrors);
     }
 
-    if (!oFormData.streetAddress?.trim()) {
-      errors.streetAddress = t("ADD_USER.VALIDATION.ADDRESS_REQUIRED");
-    }
+    // Address Info validation
+    if (isAddressInfoEditable) {
+      if (!oFormData.streetAddress?.trim()) {
+        errors.streetAddress = t("ADD_USER.VALIDATION.ADDRESS_REQUIRED");
+      }
 
-    if (!oFormData.country) {
-      errors.country = t("ADD_USER.VALIDATION.COUNTRY_REQUIRED");
-    }
+      if (!oFormData.country) {
+        errors.country = t("ADD_USER.VALIDATION.COUNTRY_REQUIRED");
+      }
 
-    if (!oFormData.state) {
-      errors.state = t("ADD_USER.VALIDATION.STATE_REQUIRED");
-    }
+      if (!oFormData.state) {
+        errors.state = t("ADD_USER.VALIDATION.STATE_REQUIRED");
+      }
 
-    if (!oFormData.city) {
-      errors.city = t("ADD_USER.VALIDATION.CITY_REQUIRED");
-    }
+      if (!oFormData.city) {
+        errors.city = t("ADD_USER.VALIDATION.CITY_REQUIRED");
+      }
 
-    if (!oFormData.pincode?.trim()) {
-      errors.pincode = t("ADD_USER.VALIDATION.PINCODE_REQUIRED");
+      if (!oFormData.pincode?.trim()) {
+        errors.pincode = t("ADD_USER.VALIDATION.PINCODE_REQUIRED");
+      }
     }
 
     return errors;

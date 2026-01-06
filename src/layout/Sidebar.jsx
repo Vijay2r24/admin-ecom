@@ -46,7 +46,7 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
       section: 'Product Management',
       subItems: [
         { name: t('SIDEBAR.PRODUCT_SETUP'), href: '/browse', icon: Settings },
-        { name: t('SIDEBAR.PRODUCTS'), href: '/productList', icon: Package, relatedPaths: ['/Addproduct','/edit-product'] },
+        { name: t('SIDEBAR.PRODUCTS'), href: '/productList', icon: Package, relatedPaths: ['/Addproduct','/edit-product','/AddVariants','/productdetails'] },
       ]
     },
     {
