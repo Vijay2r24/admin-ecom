@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import Toolbar from "../../components/Toolbar";
 import Pagination from "../../components/Pagination";
+import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
@@ -35,9 +36,9 @@ const Payments = () => {
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
 
   const defaultFilters = {
-    paymentStatus: "",
-    paymentType: "",
-    paymentMethod: "",
+    paymentStatusId: [],
+    paymentTypeId: [],
+    paymentMethodId: [],
     startDate: null,
     endDate: null,
   };
@@ -53,6 +54,13 @@ const Payments = () => {
     "Delete Payment"
   );
   const hasDeletePermission = hasPermissionId(permissionIdForDelete);
+
+  // Permission check for View Payment Details
+  const permissionIdForView = getPermissionCode(
+    "Payment Management",
+    "View Payment Details"
+  );
+  const hasViewPermission = hasPermissionId(permissionIdForView);
   const paymentStatusOptions = useSelector(
     (state) =>
       state.allData.resources.paymentStatus?.data?.map((status) => ({
@@ -90,39 +98,24 @@ const Payments = () => {
   const aAdditionalFilters = [
     {
       label: t("COMMON.STATUS"),
-      name: "paymentStatus",
-      value: oFilters.paymentStatus,
-      options: [
-        { value: "", label: t("COMMON.ALL") },
-        ...paymentStatusOptions.map((opt) => ({
-          value: opt.label, // Use the name as value
-          label: opt.label,
-        })),
-      ],
+      name: "paymentStatusId",
+      value: oFilters.paymentStatusId,
+      options: paymentStatusOptions,
+      multiple: true,
     },
     {
       label: t("PAYMENTS.TYPE"),
-      name: "paymentType",
-      value: oFilters.paymentType,
-      options: [
-        { value: "", label: t("COMMON.ALL") },
-        ...paymentTypeOptions.map((opt) => ({
-          value: opt.label, // Use the name as value
-          label: opt.label,
-        })),
-      ],
+      name: "paymentTypeId",
+      value: oFilters.paymentTypeId,
+      options: paymentTypeOptions,
+      multiple: true,
     },
     {
       label: t("PAYMENTS.METHOD"),
-      name: "paymentMethod",
-      value: oFilters.paymentMethod,
-      options: [
-        { value: "", label: t("COMMON.ALL") },
-        ...paymentMethodOptions.map((opt) => ({
-          value: opt.label, // Use the name as value
-          label: opt.label,
-        })),
-      ],
+      name: "paymentMethodId",
+      value: oFilters.paymentMethodId,
+      options: paymentMethodOptions,
+      multiple: true,
     },
     {
       label: t("COMMON.DATE_RANGE"),
@@ -146,9 +139,7 @@ const Payments = () => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
 
-  const handleView = (paymentID) => {
-    navigate(`/payment-details/${paymentID}`);
-  };
+
 
   const handleDelete = (paymentId) => {
     if (!hasDeletePermission) {
@@ -195,9 +186,9 @@ const Payments = () => {
       await dispatch(
         exportPaymentReport({
           searchText: sSearchTerm,
-          paymentStatus: oFilters.paymentStatus || undefined,
-          paymentType: oFilters.paymentType || undefined,
-          paymentMethod: oFilters.paymentMethod || undefined,
+          paymentStatusId: Array.isArray(oFilters.paymentStatusId) && oFilters.paymentStatusId.length > 0 ? oFilters.paymentStatusId : undefined,
+          paymentTypeId: Array.isArray(oFilters.paymentTypeId) && oFilters.paymentTypeId.length > 0 ? oFilters.paymentTypeId : undefined,
+          paymentMethodId: Array.isArray(oFilters.paymentMethodId) && oFilters.paymentMethodId.length > 0 ? oFilters.paymentMethodId : undefined,
           startDate: startDate,
           endDate: endDate,
         })
@@ -249,6 +240,13 @@ const Payments = () => {
 
         // 👇 ensure page resets and re-fetch triggers properly
         setCurrentPage(1);
+      } else if (Array.isArray(e.target?.value)) {
+        // handle multi-select
+        setFilters((prev) => ({
+          ...prev,
+          [filterName]: e.target.value,
+        }));
+        setCurrentPage(1);
       } else {
         const { name, value } = e.target;
         setFilters((prev) => ({
@@ -295,13 +293,9 @@ const Payments = () => {
         pageNumber: currentPage,
         pageSize: itemsPerPage,
         ...(sSearchTerm && { searchText: sSearchTerm }),
-        ...(oFilters.paymentStatus && {
-          paymentStatus: oFilters.paymentStatus,
-        }),
-        ...(oFilters.paymentType && { paymentType: oFilters.paymentType }),
-        ...(oFilters.paymentMethod && {
-          paymentMethod: oFilters.paymentMethod,
-        }),
+        ...(Array.isArray(oFilters.paymentStatusId) && oFilters.paymentStatusId.length > 0 && { paymentStatusId: oFilters.paymentStatusId }),
+        ...(Array.isArray(oFilters.paymentTypeId) && oFilters.paymentTypeId.length > 0 && { paymentTypeId: oFilters.paymentTypeId }),
+        ...(Array.isArray(oFilters.paymentMethodId) && oFilters.paymentMethodId.length > 0 && { paymentMethodId: oFilters.paymentMethodId }),
         ...(startDate && { startDate: startDate }),
         ...(endDate && { endDate: endDate }),
       };
@@ -354,9 +348,9 @@ const Payments = () => {
     currentPage,
     itemsPerPage,
     sSearchTerm,
-    oFilters.paymentStatus,
-    oFilters.paymentType,
-    oFilters.paymentMethod,
+    oFilters.paymentStatusId,
+    oFilters.paymentTypeId,
+    oFilters.paymentMethodId,
     oFilters.startDate,
     oFilters.endDate,
     setBackButton,
@@ -412,9 +406,8 @@ const Payments = () => {
             <table className="table-base">
               {/* Floating Header */}
               <thead
-                className={`table-head-floating ${
-                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
-                }`}
+                className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                  }`}
               >
                 <tr>
                   <th scope="col" className="table-head-cell-floating w-1/4">
@@ -515,28 +508,25 @@ const Payments = () => {
                       </td>
                       <td className="table-cell w-1/6 text-center">
                         <span
-                          className={`status-badge ${
-                            payment.PaymentStatus?.PaymentStatusID === 1
-                              ? "status-pending"
-                              : payment.PaymentStatus?.PaymentStatusID === 2
+                          className={`status-badge ${payment.PaymentStatus?.PaymentStatusID === 1
+                            ? "status-pending"
+                            : payment.PaymentStatus?.PaymentStatusID === 2
                               ? "status-active"
                               : "status-inactive"
-                          }`}
+                            }`}
                         >
                           {payment.PaymentStatus?.PaymentStatusName}
                         </span>
                       </td>
-
                       <td className="table-cell w-1/6 align-middle">
                         <div className="flex justify-center">
-                          <button
-                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                            title="View"
-                            onClick={() => handleView(payment.PaymentID)}
-                          >
-                            <Eye className="w-4 h-4" />
-                            <span>View</span>
-                          </button>
+                          <ActionButtons
+                            id={payment.PaymentID}
+                            viewLink={`/payment-details/${payment.PaymentID}`}
+                            hasViewPermission={hasViewPermission}
+                            onDelete={handleDelete}
+                            canDelete={hasDeletePermission}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -570,13 +560,12 @@ const Payments = () => {
                     </span>
                   </div>
                   <span
-                    className={`status-badge ${
-                      payment.PaymentStatus?.PaymentStatusID === 1
-                        ? "status-pending"
-                        : payment.PaymentStatus?.PaymentStatusID === 2
+                    className={`status-badge ${payment.PaymentStatus?.PaymentStatusID === 1
+                      ? "status-pending"
+                      : payment.PaymentStatus?.PaymentStatusID === 2
                         ? "status-active"
                         : "status-inactive"
-                    }`}
+                      }`}
                   >
                     {payment.PaymentStatus?.PaymentStatusName}
                   </span>
@@ -610,13 +599,13 @@ const Payments = () => {
                     {formatCurrency(payment.Amount)}
                   </div>
                 </div>
-                <button
-                  className="flex items-center justify-center gap-1 text-blue-600 hover:text-blue-800 mt-2"
-                  onClick={() => handleView(payment.PaymentID)}
-                >
-                  <Eye className="w-4 h-4" />
-                  <span>View Details</span>
-                </button>
+                <ActionButtons
+                  id={payment.PaymentID}
+                  viewLink={`/payment-details/${payment.PaymentID}`}
+                  hasViewPermission={hasViewPermission}
+                  onDelete={handleDelete}
+                  canDelete={hasDeletePermission}
+                />
               </div>
             ))
           )}

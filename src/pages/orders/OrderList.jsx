@@ -12,12 +12,12 @@ import {
   DATE_FORMAT_OPTIONS,
   LOCALES,
   STATUS,
-  STATUS_VALUES,
 } from "../../contants/constants";
 import Loader from "../../components/Loader";
 import { fetchResource } from "../../store/slices/allDataSlice";
 import { exportOrderReport } from "../../store/slices/exportSlice";
 import { ToastContainer } from "react-toastify";
+import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 
 const OrderList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,7 +28,7 @@ const OrderList = () => {
   );
   const { t } = useTranslation();
   const [sFilterStatus, setFilterStatus] = useState(
-    searchParams.get("status") || STATUS_VALUES.ALL
+    searchParams.get("status") || t("STATUS_VALUES.ALL")
   );
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
   const [sViewMode, setViewMode] = useState("table");
@@ -62,8 +62,8 @@ const OrderList = () => {
 
   // --- 2. Update Default Filters ---
   const defaultFilters = {
-    paymentStatus: STATUS_VALUES.ALL,
-    store: STATUS_VALUES.ALL,
+    paymentStatus: [], // Changed to array
+    store: [],        // Changed to array
     startDate: null,
     endDate: null,
   };
@@ -71,8 +71,12 @@ const OrderList = () => {
   // Initialize filters from URL parameters
   const [oFilters, setFilters] = useState({
     ...defaultFilters,
-    paymentStatus: searchParams.get("paymentStatus") || STATUS_VALUES.ALL,
-    store: searchParams.get("store") || STATUS_VALUES.ALL,
+    paymentStatus: searchParams.get("paymentStatus")
+      ? searchParams.get("paymentStatus").split(",")
+      : [],
+    store: searchParams.get("store")
+      ? searchParams.get("store").split(",")
+      : [],
   });
 
   const navigate = useNavigate();
@@ -80,16 +84,28 @@ const OrderList = () => {
   const [sError, setError] = useState(null);
   const [bLoading, setLoading] = useState(true);
 
+  // Permission check for View Order Details
+  const permissionIdForView = getPermissionCode(
+    "Order Management",
+    "View Order Details"
+  );
+  const hasViewPermission = hasPermissionId(permissionIdForView);
+
   // Update URL parameters when filters change
   useEffect(() => {
     const params = {};
 
     if (sSearchTerm) params.search = sSearchTerm;
-    if (sFilterStatus !== STATUS_VALUES.ALL) params.status = sFilterStatus;
-    if (oFilters.paymentStatus !== STATUS_VALUES.ALL)
-      params.paymentStatus = oFilters.paymentStatus;
+    if (sFilterStatus !== t("STATUS_VALUES.ALL")) params.status = sFilterStatus;
+
+    // Convert arrays to comma-separated strings for URL
+    if (Array.isArray(oFilters.paymentStatus) && oFilters.paymentStatus.length > 0)
+      params.paymentStatus = oFilters.paymentStatus.join(",");
+
     // --- 3. Sync Store to URL ---
-    if (oFilters.store !== STATUS_VALUES.ALL) params.store = oFilters.store;
+    if (Array.isArray(oFilters.store) && oFilters.store.length > 0)
+      params.store = oFilters.store.join(",");
+
     if (nCurrentPage > 1) params.page = nCurrentPage.toString();
 
     // Handle date filters - convert to ISO string for URL
@@ -124,8 +140,13 @@ const OrderList = () => {
 
     // Reset all local state
     setSearchTerm("");
-    setFilterStatus(STATUS_VALUES.ALL);
-    setFilters(defaultFilters);
+    setFilterStatus(t("STATUS_VALUES.ALL"));
+    setFilters({
+      paymentStatus: [],
+      store: [],
+      startDate: null,
+      endDate: null,
+    });
     setCurrentPage(1);
     setExpandedRows(new Set());
   }, [setSearchParams]);
@@ -169,7 +190,7 @@ const OrderList = () => {
 
 
   const storeOptions = [
-    { value: STATUS_VALUES.ALL, label: t("COMMON.ALL") },
+    // Removed "All" option for multi-select
     ...(Array.isArray(aStores)
       ? aStores.map((store) => ({
         value: store.StoreID,
@@ -185,11 +206,12 @@ const OrderList = () => {
 
     if (paymentStatus && paymentStatus.length > 0) {
       const options = paymentStatus.map((status) => ({
-        value: status.PaymentStatusName,
+        value: status.PaymentStatusID,
         label: status.PaymentStatusName,
       }));
 
-      return [{ value: STATUS_VALUES.ALL, label: t("COMMON.ALL") }, ...options];
+      // Removed "All" option for multi-select
+      return options;
     }
 
     return [
@@ -209,6 +231,7 @@ const OrderList = () => {
       name: "paymentStatus",
       value: oFilters.paymentStatus,
       options: getPaymentStatusOptions(),
+      multiple: true, // Enable multi-select
     },
     {
       label: t("COMMON.STORE"),
@@ -220,6 +243,7 @@ const OrderList = () => {
       searchPlaceholder: t("COMMON.SEARCH_STORE"),
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "store"),
+      multiple: true, // Enable multi-select
     },
     {
       label: t("ORDERS.FILTERS.DATE_RANGE"),
@@ -300,10 +324,14 @@ const OrderList = () => {
         searchText: sSearchTerm,
         pageNumber: nCurrentPage,
         pageSize: nProductsPerPage,
-        //  Passing Storeid to API ---
-        storeId: oFilters.store !== STATUS_VALUES.ALL ? oFilters.store : undefined,
-        paymentStatus:
-          oFilters.paymentStatus !== STATUS_VALUES.ALL ? oFilters.paymentStatus : undefined,
+        // --- 7. Pass Store ID as Array ---
+        storeId: Array.isArray(oFilters.store) && oFilters.store.length > 0
+          ? oFilters.store
+          : undefined,
+        paymentStatusId:
+          Array.isArray(oFilters.paymentStatus) && oFilters.paymentStatus.length > 0
+            ? oFilters.paymentStatus
+            : undefined,
         startDate: startDate,
         endDate: endDate,
       };
@@ -416,13 +444,17 @@ const OrderList = () => {
 
   const handleViewOrder = useCallback(
     (order) => {
+      // Check permission before navigating
+      if (!hasViewPermission) {
+        return; // Do nothing if no permission
+      }
       navigate(`/orders/${order.orderId}`, {
         state: {
           order: order.order,
         },
       });
     },
-    [navigate]
+    [navigate, hasViewPermission]
   );
 
   const handlePrevPage = useCallback(() => {
@@ -450,10 +482,12 @@ const OrderList = () => {
       await dispatch(
         exportOrderReport({
           searchText: sSearchTerm,
-          //  Passing StoreId to Export ---
-          storeId: oFilters.store !== STATUS_VALUES.ALL ? oFilters.store : undefined,
-          paymentStatus:
-            oFilters.paymentStatus !== STATUS_VALUES.ALL
+          // --- 8. Pass Store ID as Array ---
+          storeId: Array.isArray(oFilters.store) && oFilters.store.length > 0
+            ? oFilters.store
+            : undefined,
+          paymentStatusId:
+            Array.isArray(oFilters.paymentStatus) && oFilters.paymentStatus.length > 0
               ? oFilters.paymentStatus
               : undefined,
           startDate: startDate,
@@ -613,7 +647,9 @@ const OrderList = () => {
                         <td className="table-cell">
                           <button
                             onClick={() => handleViewOrder(order)}
-                            className="action-button"
+                            className={`action-button ${!hasViewPermission ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={!hasViewPermission}
+                            title={!hasViewPermission ? t("COMMON.NO_PERMISSION") : t("ORDERS.VIEW_DETAILS")}
                           >
                             {t("ORDERS.VIEW_DETAILS")}
                           </button>
@@ -761,7 +797,12 @@ const OrderList = () => {
                 {/* Action Button */}
                 <button
                   onClick={() => handleViewOrder(order)}
-                  className="mt-4 w-full inline-flex justify-center items-center px-4 py-2 border border-[#5B45E0] text-[#5B45E0] rounded-lg font-medium hover:bg-[#5B45E0]/10 transition-colors duration-150 text-sm"
+                  className={`mt-4 w-full inline-flex justify-center items-center px-4 py-2 border rounded-lg font-medium transition-colors duration-150 text-sm ${hasViewPermission
+                    ? 'border-[#5B45E0] text-[#5B45E0] hover:bg-[#5B45E0]/10 cursor-pointer'
+                    : 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
+                    }`}
+                  disabled={!hasViewPermission}
+                  title={!hasViewPermission ? t("COMMON.NO_PERMISSION") : t("ORDERS.VIEW_DETAILS")}
                 >
                   {t("ORDERS.VIEW_DETAILS")}
                 </button>
@@ -787,5 +828,3 @@ const OrderList = () => {
 };
 
 export default OrderList;
-
-

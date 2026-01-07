@@ -65,18 +65,23 @@ const Users = () => {
   const { data: aStores = [] } = storesState;
 
   const defaultFilters = {
-    role: "all",
+    role: [],
     status: "all",
-    store: "all",
+    store: [],
   };
   const [oFilters, setFilters] = useState(defaultFilters);
-  
+
+  const permissionIdForDelete = getPermissionCode(
+    "User Management",
+    "Delete User"
+  );
+
+  // Permission check for Edit User
   const permissionIdForEdit = getPermissionCode(
-    "User Management", 
-    "Edit User" 
+    "User Management",
+    "Edit User"
   );
   const hasEditPermission = hasPermissionId(permissionIdForEdit);
-
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
@@ -128,8 +133,8 @@ const Users = () => {
       pageNumber: nCurrentPage,
       pageSize: itemsPerPage,
       ...(sSearchTerm ? { searchText: sSearchTerm } : {}),
-      ...(oFilters.role !== "all" ? { roleName: oFilters.role } : {}),
-      ...(oFilters.store !== "all" ? { storeName: oFilters.store } : {}),
+      ...(Array.isArray(oFilters.role) && oFilters.role.length > 0 ? { roleId: oFilters.role } : {}),
+      ...(Array.isArray(oFilters.store) && oFilters.store.length > 0 ? { storeId: oFilters.store } : {}),
     };
 
     // only include IsActive when it's NOT "all" and NOT empty
@@ -153,30 +158,24 @@ const Users = () => {
     setCurrentPage(1);
   };
 
-  const roleOptions = [
-    { value: "all", label: t("COMMON.ALL") },
-    ...(Array.isArray(aRoles)
-      ? aRoles.map((role) => ({
-        value: role.RoleName,
-        label: role.RoleName,
-      }))
-      : []),
-  ];
+  const roleOptions = Array.isArray(aRoles)
+    ? aRoles.map((role) => ({
+      value: role.RoleID,
+      label: role.RoleName,
+    }))
+    : [];
 
   const statusOptions = STATUS_OPTIONS.map((opt) => ({
     value: opt.value,
     label: t(opt.labelKey),
   }));
 
-  const storeOptions = [
-    { value: "all", label: t("COMMON.ALL") },
-    ...(Array.isArray(aStores)
-      ? aStores.map((store) => ({
-        value: store.StoreName,
-        label: store.StoreName,
-      }))
-      : []),
-  ];
+  const storeOptions = Array.isArray(aStores)
+    ? aStores.map((store) => ({
+      value: store.StoreID,
+      label: store.StoreName,
+    }))
+    : [];
 
   const handleDropdownInputChange = (inputValue, filterName) => {
     if (filterName === "role") {
@@ -199,6 +198,7 @@ const Users = () => {
       options: roleOptions,
       placeholder: t("USERS.FILTERS.USER_ROLE"),
       searchable: true,
+      multiple: true,
       searchPlaceholder: t("COMMON.SEARCH_ROLE") || "Search role",
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "role"),
@@ -216,11 +216,11 @@ const Users = () => {
       options: storeOptions,
       placeholder: t("USERS.FILTERS.STORE"),
       searchable: true,
+      multiple: true,
       searchPlaceholder: t("COMMON.SEARCH_STORE") || "Search store",
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "store"),
-    },
-  ];
+    },];
 
   const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNextPage = () =>
@@ -228,16 +228,13 @@ const Users = () => {
   const handlePageClick = (page) => setCurrentPage(page);
 
   const handleEdit = (userId) => {
-
-    if (!hasEditPermission ) {
-
-      showEmsg(t("COMMON.NO_EDIT_PERMISSION"), STATUS.ERROR);
+    // Check permission before editing
+    if (!hasEditPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
       return;
     }
     navigate(`/editUser/${userId}`);
   };
-
-  
 
   const [statusPopup, setStatusPopup] = useState({
     open: false,
@@ -463,20 +460,13 @@ const Users = () => {
                     </td>
 
                     {/* Actions */}
-                <td className="text-right table-cellhidden sm:table-cell">
-                  <button
-                    disabled={!hasEditPermission}
-                    className={`w-full md:w-auto px-2 py-1 rounded text-xs font-medium transition
-                      ${hasEditPermission 
-                        ? "bg-custom-bg text-white hover:bg-bg-hover" 
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70"
-                      }`}
-                    onClick={() => handleEdit(user.UserID)}
-                  >
-                    {t("COMMON.VIEW")} 
-                  </button>
-                  </td>
-              
+                    <td className="table-cell text-right">
+                      <ActionButtons
+                        id={user.UserID}
+                        viewLink={`/editUser/${user.UserID}`}
+                        disableEdit={!hasEditPermission}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -560,7 +550,7 @@ const Users = () => {
                   <ActionButtons
                     id={user.UserID}
                     viewLink={`/editUser/${user.UserID}`}
-                     disableView={!hasEditPermission} 
+                    disableEdit={!hasEditPermission}
                   />
                 </div>
               </div>
@@ -580,8 +570,9 @@ const Users = () => {
       />
 
       {statusPopup.open && (
-        <FullscreenErrorPopup message={`${t("USERS.DELETE_MESSAGE")} ${statusPopup.newStatus ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")}?`}
-
+        <FullscreenErrorPopup
+          message={`Are you sure you want to set this user as ${statusPopup.newStatus ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")
+            }?`}
           onClose={handleStatusPopupClose}
           onConfirm={handleStatusConfirm}
         />
