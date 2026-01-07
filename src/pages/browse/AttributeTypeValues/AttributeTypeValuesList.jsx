@@ -242,7 +242,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                     >
                       {/* Name Column with Conditional Link based on Active status only */}
                       <td className="table-cell table-cell-text text-left align-middle px-6 py-4">
-                        {attribute.IsActive ? (
+                        {attribute.IsActive && attribute.editable ? (
                           <Link
                             to={`/browse/editattribute/${attribute.AttributeValueID}`}
                             className="text-blue-600 hover:underline block truncate max-w-[180px] font-medium"
@@ -296,6 +296,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                         <div className="flex justify-center">
                           <Switch
                             checked={attribute.IsActive}
+                            disabled={!attribute.editable}
                             onChange={() =>
                               handleStatusChange(
                                 attribute.AttributeValueID,

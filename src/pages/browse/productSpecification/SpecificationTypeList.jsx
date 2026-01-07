@@ -549,7 +549,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                               )
                             }
                             // Disabled only if editing
-                            disabled={editing}
+                            disabled={editing || !specType.editable}
                           />
                         </div>
                       </td>
@@ -579,7 +579,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                               /* 
                                 Disable Edit button only if Item is Inactive 
                               */
-                              disableEdit={isInactive}
+                               disableEdit={!specType.editable}
                             />
                           )}
                         </div>
