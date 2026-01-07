@@ -17,8 +17,8 @@ import {
   GET_ALL_PAYMENT_TYPES,
   GET_USER_BY_ID,
   GET_COUNTRIES,
-  GET_STATES_BY_COUNTRY_ID,
-  GET_CITIES_BY_STATE_ID,
+  GET_STATES_BY_COUNTRY,
+  GET_CITIES_BY_STATE,
   GET_ALL_SPECIFICATIONS
 } from "../../contants/apiRoutes";
 import { STATUS } from "../../contants/constants";
@@ -61,16 +61,16 @@ const aResourceConfigs = [
   {
     key: "countries",
     api: GET_COUNTRIES,
-    idField: "CountryID"
+    idField: "CountryCode" // API returns CountryCode, not CountryID
   },
   {
     key: "states",
-    api: GET_STATES_BY_COUNTRY_ID,
+    api: GET_STATES_BY_COUNTRY,
     idField: "StateID"
   },
   {
     key: "cities",
-    api: GET_CITIES_BY_STATE_ID,
+    api: GET_CITIES_BY_STATE,
     idField: "CityID"
   },
   {
@@ -108,6 +108,22 @@ export const fetchResource = createAsyncThunk(
         data = response.data?.data || [];
         pagination = response.data?.pagination || {};
         total = pagination.totalRecords || data.length;
+      }
+
+      // Transform countries data: ensure absolute consistency for IDs and codes
+      if (key === "countries" && Array.isArray(data)) {
+        data = data.map((country) => {
+          const name = country.Name || country.CountryName || country.Country || country.Code;
+          const id = country.CountryCode || country.CountryID || country.Code || country.ID || name;
+          return {
+            ...country,
+            CountryID: id,
+            CountryCode: id,
+            CountryName: name,
+            label: name,
+            value: id,
+          };
+        });
       }
 
       return { key, data, total, pagination };
@@ -164,14 +180,14 @@ export const fetchUserDetails = createAsyncThunk(
 );
 
 /**
- * FETCH STATES BY COUNTRY ID
+ * FETCH STATES BY COUNTRY CODE
  */
 export const fetchStatesByCountryId = createAsyncThunk(
   "allData/fetchStatesByCountryId",
-  async (countryId, { rejectWithValue }) => {
+  async (countryCode, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await apiGet(`${GET_STATES_BY_COUNTRY_ID}/${countryId}`, {}, token);
+      const response = await apiGet(`${GET_STATES_BY_COUNTRY}/${countryCode}`, {}, token);
 
       let data = [];
 
@@ -184,22 +200,39 @@ export const fetchStatesByCountryId = createAsyncThunk(
         data = response.data.data;
       }
 
-      return { key: "states", countryId, data };
+      // Transform: ensure absolute consistency for States
+      if (Array.isArray(data)) {
+        data = data.map((state) => {
+          const name = state.Name || state.StateName || state.State || state.Code;
+          const id = state.Code || state.StateCode || state.StateID || state.ID || name;
+          return {
+            ...state,
+            StateID: id,
+            StateCode: id,
+            StateName: name,
+            label: name,
+            value: id,
+          };
+        });
+      }
+
+      return { key: "states", countryCode, data };
     } catch (err) {
-      return rejectWithValue({ key: "states", error: err.message, countryId });
+      return rejectWithValue({ key: "states", error: err.message, countryCode });
     }
   }
 );
 
 /**
- * FETCH CITIES BY STATE ID
+ * FETCH CITIES BY STATE CODE
+ * @param {Object} params - { countryCode, stateCode }
  */
 export const fetchCitiesByStateId = createAsyncThunk(
   "allData/fetchCitiesByStateId",
-  async (stateId, { rejectWithValue }) => {
+  async ({ countryCode, stateCode }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await apiGet(`${GET_CITIES_BY_STATE_ID}/${stateId}`, {}, token);
+      const response = await apiGet(`${GET_CITIES_BY_STATE}/${countryCode}/${stateCode}`, {}, token);
 
       let data = [];
 
@@ -212,9 +245,25 @@ export const fetchCitiesByStateId = createAsyncThunk(
         data = response.data.data;
       }
 
-      return { key: "cities", stateId, data };
+      // Transform: ensure absolute consistency for Cities
+      if (Array.isArray(data)) {
+        data = data.map((city) => {
+          const name = city.Name || city.CityName || city.City;
+          const id = city.Code || city.CityCode || city.CityID || city.ID || name;
+          return {
+            ...city,
+            CityID: id,
+            CityCode: id,
+            CityName: name,
+            label: name,
+            value: id,
+          };
+        });
+      }
+
+      return { key: "cities", countryCode, stateCode, data };
     } catch (err) {
-      return rejectWithValue({ key: "cities", error: err.message, stateId });
+      return rejectWithValue({ key: "cities", error: err.message, countryCode, stateCode });
     }
   }
 );
@@ -227,8 +276,22 @@ const allDataSlice = createSlice({
   initialState: {
     resources: {
       countries: { data: [], loading: false, error: null },
-      states: { data: [], loading: false, error: null, countryId: null },
-      cities: { data: [], loading: false, error: null, stateId: null }
+      states: { data: [], loading: false, error: null, countryCode: null },
+      cities: { data: [], loading: false, error: null, countryCode: null, stateCode: null },
+      categories: { data: [], loading: false, error: null },
+      brands: { data: [], loading: false, error: null },
+      stores: { data: [], loading: false, error: null },
+      allStores: { data: [], loading: false, error: null },
+      attributes: { data: [], loading: false, error: null },
+      attributeTypes: { data: [], loading: false, error: null },
+      roles: { data: [], loading: false, error: null },
+      orderStatuses: { data: [], loading: false, error: null },
+      paymentStatus: { data: [], loading: false, error: null },
+      productGroups: { data: [], loading: false, error: null },
+      paymentMethods: { data: [], loading: false, error: null },
+      paymentTypes: { data: [], loading: false, error: null },
+      specificationType: { data: [], loading: false, error: null },
+      colors: { data: [], loading: false, error: null },
     },
     userDetails: null,
     userDetailsError: null,
@@ -247,10 +310,10 @@ const allDataSlice = createSlice({
       localStorage.removeItem("userDetails");
     },
     clearStates: (state) => {
-      state.resources.states = { data: [], loading: false, error: null, countryId: null };
+      state.resources.states = { data: [], loading: false, error: null, countryCode: null };
     },
     clearCities: (state) => {
-      state.resources.cities = { data: [], loading: false, error: null, stateId: null };
+      state.resources.cities = { data: [], loading: false, error: null, countryCode: null, stateCode: null };
     },
   },
   extraReducers: (builder) => {
@@ -319,12 +382,12 @@ const allDataSlice = createSlice({
         };
       })
       .addCase(fetchStatesByCountryId.fulfilled, (state, action) => {
-        const { countryId, data } = action.payload;
+        const { countryCode, data } = action.payload;
         state.resources.states = {
           data,
           loading: false,
           error: null,
-          countryId,
+          countryCode,
         };
       })
       .addCase(fetchStatesByCountryId.rejected, (state, action) => {
@@ -344,12 +407,13 @@ const allDataSlice = createSlice({
         };
       })
       .addCase(fetchCitiesByStateId.fulfilled, (state, action) => {
-        const { stateId, data } = action.payload;
+        const { countryCode, stateCode, data } = action.payload;
         state.resources.cities = {
           data,
           loading: false,
           error: null,
-          stateId,
+          countryCode,
+          stateCode,
         };
       })
       .addCase(fetchCitiesByStateId.rejected, (state, action) => {

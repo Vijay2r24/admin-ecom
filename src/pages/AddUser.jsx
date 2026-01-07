@@ -67,6 +67,108 @@ const getArray = (data) =>
       ? data.data
       : [];
 
+// Section header component with only edit button
+const SectionHeader = ({ title, isEditable, onEditToggle, sectionKey, id, t }) => (
+  <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex justify-between items-center">
+    <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+    {id && !isEditable && (
+      <button
+        type="button"
+        onClick={() => onEditToggle(sectionKey)}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#FF5A5F] text-white hover:bg-[#e04a4f] transition-colors"
+      >
+        <Edit3 size={14} />
+        {t("COMMON.EDIT")}
+      </button>
+    )}
+  </div>
+);
+
+// Section footer with update and cancel buttons
+const SectionFooter = ({ isEditable, onEditToggle, onUpdate, sectionKey, id, t }) =>
+  id &&
+  isEditable && (
+    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+      <button
+        type="button"
+        onClick={() => onEditToggle(sectionKey)}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 transition-colors"
+      >
+        <Edit3 size={14} />
+        {t("COMMON.CANCEL")}
+      </button>
+      <button
+        type="button"
+        onClick={() => onUpdate(sectionKey)}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#FF5A5F] text-white hover:bg-[#e04a4f] transition-colors"
+      >
+        <Save size={14} />
+        {t("COMMON.UPDATE")}
+      </button>
+    </div>
+  );
+
+// Data display component for non-editable mode with larger font
+const DataField = ({
+  label,
+  value,
+  placeholder = "-",
+  icon: Icon = User,
+}) => (
+  <div className="flex flex-col mb-2">
+    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+      <Icon size={16} className="text-gray-500" />
+      {label}
+    </label>
+    <div className="pl-6">
+      <span className="text-gray-900 text-base font-medium align-middle">
+        {value || <span className="text-gray-400 italic">{placeholder}</span>}
+      </span>
+    </div>
+  </div>
+);
+
+// Data display component for select fields in non-editable mode
+const DataSelectField = ({
+  label,
+  value,
+  options,
+  multiple = false,
+  placeholder = "-",
+  icon: Icon = Building,
+  getDisplayValue,
+  displayName, // Fallback name to show immediately
+}) => (
+  <div className="flex flex-col mb-2">
+    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+      <Icon size={16} className="text-gray-500" />
+      {label}
+    </label>
+    <div className="pl-6">
+      <span className="text-gray-900 text-base font-medium align-middle">
+        {displayName || getDisplayValue(value, options, multiple) || (
+          <span className="text-gray-400 italic">{placeholder}</span>
+        )}
+      </span>
+    </div>
+  </div>
+);
+
+// Data display component for password fields in non-editable mode
+const DataPasswordField = ({ label, placeholder = "********", icon: Icon = Lock }) => (
+  <div className="flex flex-col mb-2">
+    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+      <Icon size={16} className="text-gray-500" />
+      {label}
+    </label>
+    <div className="pl-6">
+      <span className="text-gray-900 text-base font-medium align-middle">
+        {placeholder}
+      </span>
+    </div>
+  </div>
+);
+
 const AddUser = () => {
   const [oFormData, setFormData] = useState({
     firstName: "",
@@ -89,6 +191,7 @@ const AddUser = () => {
     documentIds: [],
     IsActive: true,
     gender: "",
+    roleName: "",
   });
   const [nProfileImage, setProfileImage] = useState(null);
   const [nProfileImagePreview, setProfileImagePreview] = useState(null);
@@ -98,6 +201,8 @@ const AddUser = () => {
   const { id } = useParams();
   const [bImgLoading, setImgLoading] = useState(true);
   const [bImgError, setImgError] = useState(false);
+  // NEW: Form data loading state for edit mode
+  const [isFormDataLoading, setIsFormDataLoading] = useState(!!id);
   const [fetchUserError, setFetchUserError] = useState("");
 
   const [bShowConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -235,6 +340,7 @@ const AddUser = () => {
    * Live validation functions
    */
   const validateFirstName = (firstName) => {
+    if (isFormDataLoading && id && !firstName) return "";
     if (!firstName?.trim()) {
       return t("ADD_USER.VALIDATION.FIRST_NAME_REQUIRED");
     }
@@ -248,6 +354,7 @@ const AddUser = () => {
   };
 
   const validateLastName = (lastName) => {
+    if (isFormDataLoading && id && !lastName) return "";
     if (!lastName?.trim()) {
       return t("ADD_USER.VALIDATION.LAST_NAME_REQUIRED");
     }
@@ -261,6 +368,7 @@ const AddUser = () => {
   };
 
   const validateEmail = (email) => {
+    if (isFormDataLoading && id && !email) return "";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email?.trim()) {
       return t("ADD_USER.VALIDATION.EMAIL_REQUIRED");
@@ -272,6 +380,7 @@ const AddUser = () => {
   };
 
   const validatePhone = (phone) => {
+    if (isFormDataLoading && id && !phone) return "";
     if (!phone?.trim()) {
       return t("ADD_USER.PHONE_REQUIRED");
     }
@@ -294,6 +403,7 @@ const AddUser = () => {
   };
 
   const validateGender = (gender) => {
+    if (isFormDataLoading && id && !gender) return "";
     if (!gender) {
       return t("ADD_USER.VALIDATION.GENDER_REQUIRED");
     }
@@ -301,6 +411,7 @@ const AddUser = () => {
   };
 
   const validateRole = (role) => {
+    if (isFormDataLoading && id && !role) return "";
     if (!role && shouldShowAccountSecuritySection && isAccountSecurityEditable) {
       return t("ADD_USER.VALIDATION.ROLE_REQUIRED");
     }
@@ -308,6 +419,7 @@ const AddUser = () => {
   };
 
   const validateStores = (stores) => {
+    if (isFormDataLoading && id && (!stores || stores.length === 0)) return "";
     if ((!stores || stores.length === 0) && shouldShowAccountSecuritySection && isAccountSecurityEditable) {
       return t("ADD_USER.VALIDATION.STORES_REQUIRED");
     }
@@ -315,16 +427,18 @@ const AddUser = () => {
   };
 
   const validateStreetAddress = (address) => {
+    if (isFormDataLoading && id && !address) return "";
     if (!address?.trim()) {
       return t("ADD_USER.VALIDATION.ADDRESS_REQUIRED");
     }
-    if (address.trim().length < 10) {
+    if (address.trim().length < 5) {
       return t("ADD_USER.VALIDATION.ADDRESS_MIN_LENGTH");
     }
     return "";
   };
 
   const validateCountry = (country) => {
+    if (isFormDataLoading && id && !country) return "";
     if (!country) {
       return t("ADD_USER.VALIDATION.COUNTRY_REQUIRED");
     }
@@ -332,6 +446,7 @@ const AddUser = () => {
   };
 
   const validateState = (state) => {
+    if (isFormDataLoading && id && !state) return "";
     if (!state) {
       return t("ADD_USER.VALIDATION.STATE_REQUIRED");
     }
@@ -339,6 +454,7 @@ const AddUser = () => {
   };
 
   const validateCity = (city) => {
+    if (isFormDataLoading && id && !city) return "";
     if (!city) {
       return t("ADD_USER.VALIDATION.CITY_REQUIRED");
     }
@@ -346,6 +462,7 @@ const AddUser = () => {
   };
 
   const validatePincode = (pincode) => {
+    if (isFormDataLoading && id && !pincode) return "";
     if (!pincode?.trim()) {
       return t("ADD_USER.VALIDATION.PINCODE_REQUIRED");
     }
@@ -457,12 +574,41 @@ const AddUser = () => {
     const { name, value } = e.target;
 
     let processedValue = value;
-    if (Array.isArray(value)) {
-      processedValue = value.filter(Boolean);
+    if (Array.isArray(processedValue)) {
+      processedValue = processedValue.filter(Boolean);
     }
 
-    setFormData((prev) => ({ ...prev, [name]: processedValue }));
-    validateField(name, processedValue, true); // Force validation on select change
+    if (name === "country") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: processedValue,
+        state: "",
+        city: "",
+        stateName: "",
+        cityName: "",
+      }));
+      validateField(name, processedValue, true);
+      validateField("state", "", false);
+      validateField("city", "", false);
+    } else if (name === "state") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: processedValue,
+        city: "",
+        cityName: "",
+      }));
+      validateField(name, processedValue, true);
+      validateField("city", "", false);
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: processedValue }));
+      validateField(name, processedValue, true);
+    }
+
+    // Mark field as touched
+    setFieldTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
   }, [validateField]);
 
   /**
@@ -484,101 +630,61 @@ const AddUser = () => {
 
   const validate = useCallback(() => {
     const errors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     // Personal Info validation
     if (isPersonalInfoEditable) {
-      if (!oFormData.firstName?.trim()) {
-        errors.firstName = t("ADD_USER.VALIDATION.FIRST_NAME_REQUIRED");
-      }
+      const firstNameError = validateFirstName(oFormData.firstName);
+      if (firstNameError) errors.firstName = firstNameError;
 
-      if (!oFormData.lastName?.trim()) {
-        errors.lastName = t("ADD_USER.VALIDATION.LAST_NAME_REQUIRED");
-      }
+      const lastNameError = validateLastName(oFormData.lastName);
+      if (lastNameError) errors.lastName = lastNameError;
 
-      if (!oFormData.email?.trim()) {
-        errors.email = t("ADD_USER.VALIDATION.EMAIL_REQUIRED");
-      } else if (!emailRegex.test(oFormData.email)) {
-        errors.email = t("ADD_USER.VALIDATION.EMAIL_INVALID");
-      }
+      const emailError = validateEmail(oFormData.email);
+      if (emailError) errors.email = emailError;
 
-      // Enhanced Phone validation with country code check
-      if (!oFormData.phone?.trim()) {
-        errors.phone = t("ADD_USER.PHONE_REQUIRED");
-      } else {
-        // Validate phone number format using react-phone-number-input
-        if (!isValidPhoneNumber(oFormData.phone)) {
-          errors.phone = t("ADD_USER.VALIDATION.PHONE_INVALID");
-        }
+      const phoneError = validatePhone(oFormData.phone);
+      if (phoneError) errors.phone = phoneError;
 
-        if (!oFormData.phone.startsWith("+")) {
-          errors.phone = t("ADD_USER.VALIDATION.COUNTRY_CODE_REQUIRED");
-        }
-
-        // Validate minimum phone number length (country code + number)
-        // Most countries have at least 8 digits after country code
-        const phoneWithoutSpaces = oFormData.phone.replace(/\s/g, "");
-        const digitsAfterPlus = phoneWithoutSpaces.substring(1); // Remove the +
-        if (digitsAfterPlus.length < 8) {
-          errors.phone = t("ADD_USER.VALIDATION.PHONE_TOO_SHORT");
-        }
-
-        // Validate country code length (typically 1-3 digits)
-        const countryCodeMatch = oFormData.phone.match(/^\+\d{1,3}/);
-        if (!countryCodeMatch) {
-          errors.phone = t("ADD_USER.VALIDATION.INVALID_COUNTRY_CODE");
-        }
-      }
-
-      // Gender validation
-      if (!oFormData.gender) {
-        errors.gender = t("ADD_USER.VALIDATION.GENDER_REQUIRED");
-      }
+      const genderError = validateGender(oFormData.gender);
+      if (genderError) errors.gender = genderError;
     }
 
-    // Only validate role and stores if they are visible and editable
+    // Account Security validation
     if (shouldShowAccountSecuritySection && isAccountSecurityEditable) {
-      if (!oFormData.role) {
-        errors.role = t("ADD_USER.VALIDATION.ROLE_REQUIRED");
-      }
+      const roleError = validateRole(oFormData.role);
+      if (roleError) errors.role = roleError;
 
-      if (!oFormData.stores || oFormData.stores.length === 0) {
-        errors.stores = t("ADD_USER.VALIDATION.STORES_REQUIRED");
-      }
-    }
+      const storesError = validateStores(oFormData.stores);
+      if (storesError) errors.stores = storesError;
 
-    // Password validation only for new users or when editing password
-    if (!id || (id && isAccountSecurityEditable && oFormData.password)) {
-      const passwordErrors = validateFormPassword(
-        oFormData.password,
-        oFormData.confirmPassword,
-        t,
-        !id // isNewUser = true when creating new user
-      );
-      Object.assign(errors, passwordErrors);
+      // Password validation only for new users or when editing password
+      if (!id || (id && oFormData.password)) {
+        const passwordErrors = validateFormPassword(
+          oFormData.password,
+          oFormData.confirmPassword,
+          t,
+          !id
+        );
+        Object.assign(errors, passwordErrors);
+      }
     }
 
     // Address Info validation
     if (isAddressInfoEditable) {
-      if (!oFormData.streetAddress?.trim()) {
-        errors.streetAddress = t("ADD_USER.VALIDATION.ADDRESS_REQUIRED");
-      }
+      const addressError = validateStreetAddress(oFormData.streetAddress);
+      if (addressError) errors.streetAddress = addressError;
 
-      if (!oFormData.country) {
-        errors.country = t("ADD_USER.VALIDATION.COUNTRY_REQUIRED");
-      }
+      const countryError = validateCountry(oFormData.country);
+      if (countryError) errors.country = countryError;
 
-      if (!oFormData.state) {
-        errors.state = t("ADD_USER.VALIDATION.STATE_REQUIRED");
-      }
+      const stateError = validateState(oFormData.state);
+      if (stateError) errors.state = stateError;
 
-      if (!oFormData.city) {
-        errors.city = t("ADD_USER.VALIDATION.CITY_REQUIRED");
-      }
+      const cityError = validateCity(oFormData.city);
+      if (cityError) errors.city = cityError;
 
-      if (!oFormData.pincode?.trim()) {
-        errors.pincode = t("ADD_USER.VALIDATION.PINCODE_REQUIRED");
-      }
+      const pincodeError = validatePincode(oFormData.pincode);
+      if (pincodeError) errors.pincode = pincodeError;
     }
 
     return errors;
@@ -588,6 +694,8 @@ const AddUser = () => {
     id,
     shouldShowAccountSecuritySection,
     isAccountSecurityEditable,
+    isPersonalInfoEditable,
+    isAddressInfoEditable
   ]);
 
   useEffect(() => {
@@ -639,31 +747,55 @@ const AddUser = () => {
 
   useEffect(() => {
     if (oFormData.country) {
-      dispatch(fetchStatesByCountryId(oFormData.country))
-        .unwrap()
-        .then((result) => {
-          // States loaded successfully
-        })
-        .catch((error) => { });
+      // Find the selected country to get its code
+      const countriesArray = getArray(countries);
+      const selectedCountry = countriesArray.find(
+        (c) => String(c.CountryID) === String(oFormData.country)
+      );
+
+      if (selectedCountry && selectedCountry.CountryCode) {
+        dispatch(fetchStatesByCountryId(selectedCountry.CountryCode))
+          .unwrap()
+          .then((result) => {
+            // States loaded successfully
+          })
+          .catch((error) => { });
+      }
     } else {
       dispatch(clearStates());
       setFormData((prev) => ({ ...prev, state: "", city: "" }));
     }
-  }, [dispatch, oFormData.country]);
+  }, [dispatch, oFormData.country, countries]);
 
   useEffect(() => {
-    if (oFormData.state) {
-      dispatch(fetchCitiesByStateId(oFormData.state))
-        .unwrap()
-        .then((result) => {
-          // Cities loaded successfully
-        })
-        .catch((error) => { });
+    if (oFormData.state && oFormData.country) {
+      // Find the selected country and state to get their codes
+      const countriesArray = getArray(countries);
+      const selectedCountry = countriesArray.find(
+        (c) => String(c.CountryID) === String(oFormData.country)
+      );
+
+      const statesArray = getArray(states);
+      const selectedState = statesArray.find(
+        (s) => String(s.StateID) === String(oFormData.state)
+      );
+
+      if (selectedCountry && selectedCountry.CountryCode && selectedState && selectedState.StateCode) {
+        dispatch(fetchCitiesByStateId({
+          countryCode: selectedCountry.CountryCode,
+          stateCode: selectedState.StateCode
+        }))
+          .unwrap()
+          .then((result) => {
+            // Cities loaded successfully
+          })
+          .catch((error) => { });
+      }
     } else {
       dispatch(clearCities());
       setFormData((prev) => ({ ...prev, city: "" }));
     }
-  }, [dispatch, oFormData.state]);
+  }, [dispatch, oFormData.state, oFormData.country, countries, states]);
 
   // Extract country code from phone number
   const extractCountryCode = (phoneNumber) => {
@@ -686,7 +818,7 @@ const AddUser = () => {
       setFormData((prev) => ({
         ...prev,
         phone: formatted,
-        CountryCode: countryCode,
+        CountryCallingCode: countryCode,
         PhoneNumber: phoneNumber,
       }));
 
@@ -700,6 +832,7 @@ const AddUser = () => {
     if (!id || hasFetchedUser.current) return;
 
     hasFetchedUser.current = true;
+    setIsFormDataLoading(true);
     const token = localStorage.getItem("token");
 
     try {
@@ -709,13 +842,13 @@ const AddUser = () => {
       if (resData?.status === STATUS.SUCCESS.toUpperCase() && resData.data) {
         const user = resData.data;
 
-        // FIX: Properly format phone number for the phone input component
         let formattedPhone = "";
+        const callingCode = user.CountryCallingCode || user.CountryCode || "";
 
-        if (user.PhoneNumber && user.CountryCode) {
+        if (user.PhoneNumber && callingCode) {
           // Format: "+91 63644 37189" (with spaces for better readability)
           const cleanPhone = user.PhoneNumber.replace(/\D/g, ""); // Remove any non-digits
-          formattedPhone = `${user.CountryCode} ${cleanPhone}`;
+          formattedPhone = `${callingCode} ${cleanPhone}`;
         } else if (user.PhoneNumber && user.PhoneNumber.startsWith("+")) {
           // If phone number already has country code but no separate CountryCode field
           formattedPhone = user.PhoneNumber;
@@ -731,7 +864,9 @@ const AddUser = () => {
           lastName: user.LastName || "",
           email: user.Email || "",
           phone: formattedPhone, // Use formatted phone number
-          CountryCode: user.CountryCode || COUNTRY_CODES.INDIA, // Ensure country code is set
+          CountryCallingCode: callingCode, // Ensure calling code is set (e.g. +91)
+          CountryCode: user.CountryCode || "", // ISO code (e.g. IN)
+          StateCode: user.StateCode || "",
           PhoneNumber: user.PhoneNumber || "", // Keep raw phone number
           role: user.RoleID || "",
           IsActive: user.IsActive !== undefined ? user.IsActive : true,
@@ -745,6 +880,7 @@ const AddUser = () => {
             ? user.ProfileImageUrl.map((doc) => doc.documentId)
             : [],
           gender: user.Gender || "",
+          roleName: user.RoleName || "",
         }));
 
         // Mark all fields as touched for edit mode to show validation immediately
@@ -782,6 +918,11 @@ const AddUser = () => {
           setExistingDocuments([]);
         }
 
+        // Set loading to false after a slight delay
+        setTimeout(() => {
+          setIsFormDataLoading(false);
+        }, 1000);
+
         // Store location names for later population
         const locationData = {
           countryName: user.CountryName,
@@ -818,9 +959,11 @@ const AddUser = () => {
         setRemovedDocumentIds([]);
         setFetchUserError("");
       } else {
+        setIsFormDataLoading(false);
         setFetchUserError(resData?.message || t("COMMON.FAILED_OPERATION"));
       }
     } catch (error) {
+      setIsFormDataLoading(false);
       const backendMessage = error?.response?.data?.message;
       setFetchUserError(backendMessage || t("COMMON.ERROR_MESSAGE"));
     }
@@ -1081,38 +1224,46 @@ const AddUser = () => {
         }));
       }
 
-      // Base user data structure - updated to include gender and phoneCountryCode
+      const selectedCountry = getArray(countries).find(
+        (c) => String(c.CountryID) === String(oFormData.country)
+      );
+      const selectedState = getArray(states).find(
+        (s) => String(s.StateID) === String(oFormData.state)
+      );
+      const selectedCity = getArray(cities).find(
+        (c) => String(c.CityID) === String(oFormData.city)
+      );
+
+      // Base user data structure restructured as per user request
       const userData = {
         FirstName: oFormData.firstName || "",
         LastName: oFormData.lastName || "",
         Email: oFormData.email || "",
+        Password: oFormData.password ? md5(oFormData.password) : "",
+        CountryCallingCode: oFormData.CountryCallingCode || "",
         PhoneNumber: oFormData.PhoneNumber || "",
-        CountryCode: oFormData.CountryCode || "", // Send country code to API
-        AddressLine: oFormData.streetAddress || "",
-        CityID: oFormData.city ? parseInt(oFormData.city, 10) : 0,
-        StateID: oFormData.state ? parseInt(oFormData.state, 10) : 0,
-        CountryID: oFormData.country ? parseInt(oFormData.country, 10) : 0,
-        Zipcode: oFormData.pincode || "",
+        Gender: oFormData.gender || "",
+        IsActive: oFormData.IsActive !== undefined ? oFormData.IsActive : true,
         RoleID: oFormData.role || "",
         StoreIDs: oFormData.stores || [],
-        IsActive: oFormData.IsActive !== undefined ? oFormData.IsActive : true,
+        AddressLine: oFormData.streetAddress || "",
+        CityName: selectedCity ? selectedCity.CityName : (oFormData.cityName || ""),
+        StateCode: selectedState ? selectedState.StateCode : (oFormData.StateCode || ""),
+        CountryCode: selectedCountry ? selectedCountry.CountryCode : (oFormData.CountryCode || ""),
+        Zipcode: oFormData.pincode || "",
         documentMetadata: documentMetadata,
-        Gender: oFormData.gender || "",
       };
 
-      // Add UserID for update and handle password differently
+      // Add UserID for update and handle password for edit mode
       if (id) {
-        // Update operation
         userData.UserID = id;
         userData.UpdatedBy = userId;
 
-        // Only include password if provided during update (optional field)
-        if (oFormData.password && oFormData.password.trim() !== "") {
-          userData.Password = md5(oFormData.password);
+        // In update mode, if password is not touched, remove it from payload
+        if (!oFormData.password || oFormData.password.trim() === "") {
+          delete userData.Password;
         }
       } else {
-        // Create operation - password is required
-        userData.Password = oFormData.password ? md5(oFormData.password) : "";
         userData.CreatedBy = userId;
       }
 
@@ -1171,151 +1322,25 @@ const AddUser = () => {
     ]
   );
 
-  // Section header component with only edit button
-  const SectionHeader = ({ title, isEditable, onEditToggle, sectionKey }) => (
-    <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex justify-between items-center">
-      <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-      {id && !isEditable && (
-        <button
-          type="button"
-          onClick={() => onEditToggle(sectionKey)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#FF5A5F] text-white hover:bg-[#e04a4f] transition-colors"
-        >
-          <Edit3 size={14} />
-          {t("COMMON.EDIT")}
-        </button>
-      )}
-    </div>
-  );
-
-  // Section footer with update and cancel buttons - Only show for edit mode (id exists)
-  const SectionFooter = ({ isEditable, onEditToggle, onUpdate, sectionKey }) =>
-    id &&
-    isEditable && (
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => onEditToggle(sectionKey)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 transition-colors"
-        >
-          <Edit3 size={14} />
-          {t("COMMON.CANCEL")}
-        </button>
-        <button
-          type="button"
-          onClick={() => onUpdate(sectionKey)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#FF5A5F] text-white hover:bg-[#e04a4f] transition-colors"
-        >
-          <Save size={14} />
-          {t("COMMON.UPDATE")}
-        </button>
-      </div>
-    );
-
   const toggleSectionEdit = (section) => {
     switch (section) {
       case "personal":
-        setIsPersonalInfoEditable(!isPersonalInfoEditable);
+        setIsPersonalInfoEditable((prev) => !prev);
         break;
       case "account":
-        setIsAccountSecurityEditable(!isAccountSecurityEditable);
+        setIsAccountSecurityEditable((prev) => !prev);
         break;
       case "address":
-        setIsAddressInfoEditable(!isAddressInfoEditable);
+        setIsAddressInfoEditable((prev) => !prev);
         break;
       default:
         break;
     }
   };
 
-  // Data display component for non-editable mode with larger font
-  const DataField = ({
-    label,
-    value,
-    placeholder = "-",
-    icon: Icon = User,
-  }) => (
-    <div className="flex flex-col mb-2">
-      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-        <Icon size={16} className="text-gray-500" />
-        {label}
-      </label>
-      <div className="pl-6">
-        <span className="text-gray-900 text-base font-medium align-middle">
-          {value || <span className="text-gray-400 italic">{placeholder}</span>}
-        </span>
-      </div>
-    </div>
-  );
 
-  // Data display component for select fields in non-editable mode
-  const DataSelectField = ({
-    label,
-    value,
-    options,
-    multiple = false,
-    placeholder = "-",
-    icon: Icon = User,
-  }) => {
-    const displayValue = getDisplayValue(value, options, multiple);
 
-    return (
-      <div className="flex flex-col mb-2">
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-          <Icon size={16} className="text-gray-500" />
-          {label}
-        </label>
-        <div className="pl-6">
-          {displayValue !== "-" ? (
-            multiple ? (
-              <div className="flex flex-wrap gap-2">
-                {displayValue.split(", ").map((item, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <span className="text-gray-900 text-base font-medium align-middle">
-                {displayValue}
-              </span>
-            )
-          ) : (
-            <span className="text-gray-400 italic text-base">
-              {placeholder}
-            </span>
-          )}
-        </div>
-      </div>
-    );
-  };
 
-  // Data display for password fields in non-editable mode with larger font
-  const DataPasswordField = ({
-    label,
-    placeholder = "-",
-    icon: Icon = Lock,
-  }) => (
-    <div className="flex flex-col">
-      <label className="blocktext-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-        <Icon size={16} className="text-gray-500" />
-        {label}
-      </label>
-      <div className="p-2">
-        <div className="flex items-center gap-3">
-          <span className="text-xl tracking-widest text-gray-600 font-medium">
-            ••••••••
-          </span>
-          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-            {t("COMMON.HIDDEN")}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="max-w-8xl mx-auto pb-20">
@@ -1400,6 +1425,8 @@ const AddUser = () => {
               isEditable={isPersonalInfoEditable}
               onEditToggle={toggleSectionEdit}
               sectionKey="personal"
+              id={id}
+              t={t}
             />
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1456,7 +1483,6 @@ const AddUser = () => {
                     name="gender"
                     value={oFormData.gender}
                     onChange={handleSelectChange}
-                    onBlur={() => handleSelectBlur("gender")}
                     options={genderOptions}
                     Icon={Users}
                     error={oErrors.gender}
@@ -1471,6 +1497,8 @@ const AddUser = () => {
                     options={genderOptions}
                     placeholder={t("ADD_USER.SELECT_GENDER")}
                     icon={Users}
+                    getDisplayValue={getDisplayValue}
+                    displayName={oFormData.gender}
                   />
                 )}
 
@@ -1528,6 +1556,8 @@ const AddUser = () => {
               onEditToggle={toggleSectionEdit}
               onUpdate={handleSectionUpdate}
               sectionKey="personal"
+              id={id}
+              t={t}
             />
           </div>
 
@@ -1538,6 +1568,8 @@ const AddUser = () => {
                 isEditable={isAccountSecurityEditable}
                 onEditToggle={toggleSectionEdit}
                 sectionKey="account"
+                id={id}
+                t={t}
               />
               <div className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1550,7 +1582,6 @@ const AddUser = () => {
                         name="role"
                         value={oFormData.role}
                         onChange={handleSelectChange}
-                        onBlur={() => handleSelectBlur("role")}
                         options={roles.map((r) => ({
                           value: r.RoleID,
                           label: r.RoleName,
@@ -1599,6 +1630,8 @@ const AddUser = () => {
                         }))}
                         placeholder={t("ADD_USER.SELECT_ROLE")}
                         icon={Building}
+                        getDisplayValue={getDisplayValue}
+                        displayName={oFormData.roleName}
                       />
                     ))}
 
@@ -1611,7 +1644,6 @@ const AddUser = () => {
                         name="stores"
                         value={oFormData.stores}
                         onChange={handleSelectChange}
-                        onBlur={() => handleSelectBlur("stores")}
                         options={stores.map((s) => ({
                           value: s.StoreID,
                           label: s.StoreName,
@@ -1662,6 +1694,7 @@ const AddUser = () => {
                         multiple={true}
                         placeholder={t("ADD_USER.SELECT_STORES")}
                         icon={Store}
+                        getDisplayValue={getDisplayValue}
                       />
                     ))}
 
@@ -1824,6 +1857,8 @@ const AddUser = () => {
                 onEditToggle={toggleSectionEdit}
                 onUpdate={handleSectionUpdate}
                 sectionKey="account"
+                id={id}
+                t={t}
               />
             </div>
           )}
@@ -1835,6 +1870,8 @@ const AddUser = () => {
               isEditable={isAddressInfoEditable}
               onEditToggle={toggleSectionEdit}
               sectionKey="address"
+              id={id}
+              t={t}
             />
             <div className="p-6 space-y-6">
               {isAddressInfoEditable ? (
@@ -1867,7 +1904,6 @@ const AddUser = () => {
                     name="country"
                     value={oFormData.country}
                     onChange={handleSelectChange}
-                    onBlur={() => handleSelectBlur("country")}
                     options={countries.map((c) => ({
                       value: c.CountryID,
                       label: c.CountryName,
@@ -1893,6 +1929,8 @@ const AddUser = () => {
                     }))}
                     placeholder={t("COMMON.SELECT_COUNTRY")}
                     icon={Globe}
+                    getDisplayValue={getDisplayValue}
+                    displayName={oFormData.countryName}
                   />
                 )}
 
@@ -1903,7 +1941,6 @@ const AddUser = () => {
                     name="state"
                     value={oFormData.state}
                     onChange={handleSelectChange}
-                    onBlur={() => handleSelectBlur("state")}
                     options={states.map((s) => ({
                       value: s.StateID,
                       label: s.StateName,
@@ -1929,6 +1966,8 @@ const AddUser = () => {
                     }))}
                     placeholder={t("COMMON.SELECT_STATE")}
                     icon={Navigation}
+                    getDisplayValue={getDisplayValue}
+                    displayName={oFormData.stateName}
                   />
                 )}
 
@@ -1939,7 +1978,6 @@ const AddUser = () => {
                     name="city"
                     value={oFormData.city}
                     onChange={handleSelectChange}
-                    onBlur={() => handleSelectBlur("city")}
                     options={cities.map((c) => ({
                       value: c.CityID,
                       label: c.CityName,
@@ -1965,6 +2003,8 @@ const AddUser = () => {
                     }))}
                     placeholder={t("COMMON.SELECT_CITY")}
                     icon={Building}
+                    getDisplayValue={getDisplayValue}
+                    displayName={oFormData.cityName}
                   />
                 )}
 
@@ -1997,6 +2037,8 @@ const AddUser = () => {
               onEditToggle={toggleSectionEdit}
               onUpdate={handleSectionUpdate}
               sectionKey="address"
+              id={id}
+              t={t}
             />
           </div>
         </div>

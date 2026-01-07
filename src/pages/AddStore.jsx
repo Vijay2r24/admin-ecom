@@ -35,8 +35,8 @@ const getArray = (data) =>
   Array.isArray(data)
     ? data
     : data && Array.isArray(data.data)
-    ? data.data
-    : [];
+      ? data.data
+      : [];
 
 const AddStore = () => {
   const { t } = useTranslation();
@@ -74,7 +74,7 @@ const AddStore = () => {
   const [oFieldTouched, setFieldTouched] = useState({}); // Track touched fields
   const [bSubmitting, setbSubmitting] = useState(false);
   const [isFetchingStore, setIsFetchingStore] = useState(false);
-  
+
   // NEW: Form data loading state for edit mode
   const [isFormDataLoading, setIsFormDataLoading] = useState(!!id);
 
@@ -280,7 +280,7 @@ const AddStore = () => {
    */
   const handleSelectChange = useCallback((e) => {
     const { name, value } = e.target;
-    
+
     // When country changes, reset state and city
     if (name === "country") {
       setFormData((prev) => ({
@@ -291,10 +291,10 @@ const AddStore = () => {
         stateName: "",
         cityName: "",
       }));
-      // Validate the changed field and reset dependent fields
+      // Validate the changed field and reset dependent fields (don't force errors for empty)
       validateField(name, value, true);
-      validateField("state", "", true);
-      validateField("city", "", true);
+      validateField("state", "", false);
+      validateField("city", "", false);
     }
     // When state changes, reset city
     else if (name === "state") {
@@ -305,7 +305,7 @@ const AddStore = () => {
         cityName: "",
       }));
       validateField(name, value, true);
-      validateField("city", "", true);
+      validateField("city", "", false);
     }
     // For all other select fields
     else {
@@ -315,6 +315,12 @@ const AddStore = () => {
       }));
       validateField(name, value, true);
     }
+
+    // Mark field as touched immediately
+    setFieldTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
   }, [validateField]);
 
   /**
@@ -386,20 +392,44 @@ const AddStore = () => {
   // Fetch states when country changes
   useEffect(() => {
     if (oFormData.country && oFormData.country !== "") {
-      dispatch(fetchStatesByCountryId(oFormData.country));
+      // Find the selected country to get its code
+      const countriesArray = getArray(countriesData.data);
+      const selectedCountry = countriesArray.find(
+        (c) => String(c.CountryID) === String(oFormData.country)
+      );
+
+      if (selectedCountry && selectedCountry.CountryCode) {
+        dispatch(fetchStatesByCountryId(selectedCountry.CountryCode));
+      }
     } else {
       dispatch(clearStates());
     }
-  }, [dispatch, oFormData.country]);
+  }, [dispatch, oFormData.country, countriesData.data]);
 
   // Fetch cities when state changes
   useEffect(() => {
-    if (oFormData.state && oFormData.state !== "") {
-      dispatch(fetchCitiesByStateId(oFormData.state));
+    if (oFormData.state && oFormData.state !== "" && oFormData.country) {
+      // Find the selected country and state to get their codes
+      const countriesArray = getArray(countriesData.data);
+      const selectedCountry = countriesArray.find(
+        (c) => String(c.CountryID) === String(oFormData.country)
+      );
+
+      const statesArray = getArray(statesData.data);
+      const selectedState = statesArray.find(
+        (s) => String(s.StateID) === String(oFormData.state)
+      );
+
+      if (selectedCountry && selectedCountry.CountryCode && selectedState && selectedState.StateCode) {
+        dispatch(fetchCitiesByStateId({
+          countryCode: selectedCountry.CountryCode,
+          stateCode: selectedState.StateCode
+        }));
+      }
     } else {
       dispatch(clearCities());
     }
-  }, [dispatch, oFormData.state]);
+  }, [dispatch, oFormData.state, oFormData.country, countriesData.data, statesData.data]);
 
   // NEW: Effect to validate country when countries data loads
   useEffect(() => {
@@ -439,13 +469,15 @@ const AddStore = () => {
         // FIX: Properly format phone number for the phone input component
         let formattedPhone = "";
         let rawPhoneNumber = store.PhoneNumber || "";
-        let countryCode = store.CountryCode || "";
+        let countryCode = store.CountryCallingCode || store.CountryCode || "";
 
-        if (store.PhoneNumber && store.CountryCode) {
+        if (store.PhoneNumber && (store.CountryCallingCode || store.CountryCode)) {
           // Format: "+91 63644 37189" (with spaces for better readability)
           const cleanPhone = store.PhoneNumber.replace(/\D/g, ""); // Remove any non-digits
-          formattedPhone = `${store.CountryCode} ${cleanPhone}`;
-          rawPhoneNumber = cleanPhone; // Store the raw phone number without country code
+          const callingCode = store.CountryCallingCode || store.CountryCode;
+          formattedPhone = `${callingCode} ${cleanPhone}`;
+          rawPhoneNumber = cleanPhone;
+          countryCode = callingCode;
         } else if (store.PhoneNumber && store.PhoneNumber.startsWith("+")) {
           // If phone number already has country code but no separate CountryCode field
           formattedPhone = store.PhoneNumber;
@@ -457,7 +489,7 @@ const AddStore = () => {
         } else if (store.PhoneNumber) {
           // If no country code but has phone number, use default country code
           formattedPhone = `+${COUNTRY_CODES.INDIA} ${store.PhoneNumber}`;
-           countryCode = COUNTRY_CODES.INDIA;
+          countryCode = COUNTRY_CODES.INDIA;
           rawPhoneNumber = store.PhoneNumber.replace(/\D/g, "");
         }
 
@@ -466,9 +498,11 @@ const AddStore = () => {
           name: store.StoreName || "",
           address: store.AddressLine1 || "",
           zipCode: store.Zipcode || "",
-          phone: formattedPhone, // Use formatted phone number for display
-          CountryCode: countryCode, // Country code only
-          PhoneNumber: rawPhoneNumber, // Raw phone number without country code
+          phone: formattedPhone,
+          CountryCallingCode: countryCode, // Calling code (e.g., +91)
+          CountryCode: store.CountryCode || "", // ISO code (e.g., IN)
+          StateCode: store.StateCode || "",
+          PhoneNumber: rawPhoneNumber,
           StoreID: store.StoreID || "",
           email: store.Email || "",
           countryName: store.CountryName || "",
@@ -480,18 +514,18 @@ const AddStore = () => {
         // Mark all fields as touched for edit mode to show validation immediately
         setTimeout(() => {
           const fieldsToValidate = [
-            "name", "address", "zipCode", "email", "phone", 
+            "name", "address", "zipCode", "email", "phone",
             "country", "state", "city"
           ];
           fieldsToValidate.forEach(field => {
             markFieldTouched(field);
-            validateField(field, 
+            validateField(field,
               field === "name" ? store.StoreName || "" :
-              field === "address" ? store.AddressLine1 || "" :
-              field === "zipCode" ? store.Zipcode || "" :
-              field === "email" ? store.Email || "" :
-              field === "phone" ? formattedPhone :
-              "", 
+                field === "address" ? store.AddressLine1 || "" :
+                  field === "zipCode" ? store.Zipcode || "" :
+                    field === "email" ? store.Email || "" :
+                      field === "phone" ? formattedPhone :
+                        "",
               true
             );
           });
@@ -500,7 +534,7 @@ const AddStore = () => {
         const countriesArray = getArray(countriesData.data);
         if (countriesArray.length > 0) {
           const foundCountry = countriesArray.find(
-            (c) => c.CountryName === store.CountryName
+            (c) => (c.CountryName || "").toLowerCase() === (store.CountryName || "").toLowerCase()
           );
           if (foundCountry) {
             setFormData((prev) => ({
@@ -511,7 +545,7 @@ const AddStore = () => {
             validateField("country", foundCountry.CountryID, true);
           }
         }
-        
+
         // Set loading to false after a short delay to ensure all data is processed
         setTimeout(() => {
           setIsFormDataLoading(false);
@@ -542,7 +576,7 @@ const AddStore = () => {
     const statesArray = getArray(statesData.data);
     if (statesArray.length > 0) {
       const foundState = statesArray.find(
-        (s) => s.StateName === oFormData.stateName
+        (s) => (s.StateName || "").toLowerCase() === (oFormData.stateName || "").toLowerCase()
       );
 
       if (foundState) {
@@ -572,7 +606,7 @@ const AddStore = () => {
     const citiesArray = getArray(citiesData.data);
     if (citiesArray.length > 0) {
       const foundCity = citiesArray.find(
-        (c) => c.CityName === oFormData.cityName
+        (c) => (c.CityName || "").toLowerCase() === (oFormData.cityName || "").toLowerCase()
       );
 
       if (foundCity) {
@@ -665,7 +699,7 @@ const AddStore = () => {
   const handleSubmit = useCallback(
     async (e) => {
       e?.preventDefault();
-      
+
       // Mark all required fields as touched before validation
       Object.keys(requiredFields).forEach(field => {
         if (requiredFields[field]) {
@@ -711,29 +745,19 @@ const AddStore = () => {
       phoneNumber = phoneNumber.replace(/\D/g, "");
 
       const payload = {
-        TenantID: localStorage.getItem("tenantID"),
+        StoreID: id || "",
         StoreName: oFormData.name,
         Email: oFormData.email,
-        PhoneNumber: phoneNumber, // Raw phone number without country code (only digits)
-        CountryCode: countryCode, // Country code only (like "+91")
+        CountryCallingCode: oFormData.CountryCallingCode || countryCode,
+        PhoneNumber: phoneNumber,
         AddressLine1: oFormData.address,
         AddressLine2: oFormData.addressLine2 || "",
-        CityID: parseInt(oFormData.city, 10),
-        StateID: parseInt(oFormData.state, 10),
-        CountryID: parseInt(oFormData.country, 10),
+        CityName: selectedCity ? selectedCity.CityName : (oFormData.cityName || ""),
+        StateCode: selectedState ? selectedState.StateCode : (oFormData.stateCode || ""),
+        CountryCode: selectedCountry ? selectedCountry.CountryCode : (oFormData.CountryCode || ""),
         Zipcode: oFormData.zipCode,
         IsActive: status,
-        CountryName: selectedCountry ? selectedCountry.CountryName : "",
-        StateName: selectedState ? selectedState.StateName : "",
-        CityName: selectedCity ? selectedCity.CityName : "",
-        ...(id
-          ? {
-              StoreID: oFormData.StoreID || 0,
-              UpdatedBy: userId,
-            }
-          : {
-              CreatedBy: userId,
-            }),
+        TenantID: localStorage.getItem("tenantID"),
       };
 
       try {
@@ -846,7 +870,6 @@ const AddStore = () => {
                     name="country"
                     value={oFormData.country}
                     onChange={handleSelectChange}
-                    onBlur={() => handleSelectBlur("country")}
                     options={getArray(countriesData.data).map((c) => ({
                       value: c.CountryID,
                       label: c.CountryName,
@@ -865,7 +888,6 @@ const AddStore = () => {
                     name="state"
                     value={oFormData.state}
                     onChange={handleSelectChange}
-                    onBlur={() => handleSelectBlur("state")}
                     options={getArray(statesData.data).map((s) => ({
                       value: s.StateID,
                       label: s.StateName,
@@ -885,7 +907,6 @@ const AddStore = () => {
                     name="city"
                     value={oFormData.city}
                     onChange={handleSelectChange}
-                    onBlur={() => handleSelectBlur("city")}
                     options={getArray(citiesData.data).map((c) => ({
                       value: c.CityID,
                       label: c.CityName,

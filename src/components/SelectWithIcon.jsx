@@ -36,18 +36,16 @@ const SelectWithIcon = forwardRef(
     const selectedOptionLabels = Array.isArray(value)
       ? options
         .filter((option) => value.includes(option.value))
-        .map((option) => option.label)
-      : [options.find((option) => option.value === value)?.label || placeholder];
+        .map((option) => option.label || option.value)
+      : [options.find((option) => option.value == value)?.label || placeholder];
 
     const displayLabel =
       multiple && Array.isArray(value) && value.length === 0
         ? placeholder
         : selectedOptionLabels[0];
 
-    const filteredOptions = options.filter(
-      (option) =>
-        typeof option.label === "string" &&
-        option.label.toLowerCase().includes(sSearchTerm.toLowerCase())
+    const filteredOptions = options.filter((option) =>
+      (option.label || "").toString().toLowerCase().includes(sSearchTerm.toLowerCase())
     );
     const shouldShowSelectAll = multiple && filteredOptions.length > 2;
 
@@ -184,7 +182,7 @@ const SelectWithIcon = forwardRef(
                 <>
                   {visibleItems.map((itemValue) => {
                     const itemLabel = options.find(
-                      (opt) => opt.value === itemValue
+                      (opt) => opt.value == itemValue
                     )?.label;
                     return itemLabel ? (
                       <span
@@ -323,7 +321,7 @@ const SelectWithIcon = forwardRef(
                       {filteredOptions.map((opt, index) => {
                         const isSelected = multiple
                           ? Array.isArray(value) && value.includes(opt.value)
-                          : value === opt.value;
+                          : value == opt.value;
                         const isHighlighted = index === nHighlightedIndex;
 
                         return (
