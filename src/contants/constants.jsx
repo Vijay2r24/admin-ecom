@@ -303,7 +303,9 @@ export const PERMISSIONS = {
   UPDATE_PRODUCT_GROUP: "Update Product Group",
   ROLE_MANAGEMENT:"Role Management",
   EDIT_USER: "Edit User",
-  EDIT_PAYMENT: "Edit Payment"
+  EDIT_PAYMENT: "Edit Payment",
+  VIEW_PAYMENT_DETAILS: "View Payment Details",
+  VIEW_ORDER_DETAILS: "View Order Details"
 };
 
 export const QUICK_FILTER_VALUES = [

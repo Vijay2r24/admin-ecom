@@ -12,6 +12,8 @@ import {
   DATE_FORMAT_OPTIONS,
   LOCALES,
   STATUS,
+  MODULES,
+  PERMISSIONS,
 } from "../../contants/constants";
 import Loader from "../../components/Loader";
 import { fetchResource } from "../../store/slices/allDataSlice";
@@ -86,8 +88,8 @@ const OrderList = () => {
 
   // Permission check for View Order Details
   const permissionIdForView = getPermissionCode(
-    "Order Management",
-    "View Order Details"
+    MODULES.ORDER,
+    PERMISSIONS.VIEW_ORDER_DETAILS
   );
   const hasViewPermission = hasPermissionId(permissionIdForView);
 

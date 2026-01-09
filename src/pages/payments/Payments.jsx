@@ -64,8 +64,8 @@ const Payments = () => {
 
   // Permission check for View Payment Details
   const permissionIdForView = getPermissionCode(
-    "Payment Management",
-    "View Payment Details"
+    MODULES.PAYMENT,
+    PERMISSIONS.VIEW_PAYMENT_DETAILS
   );
   const hasViewPermission = hasPermissionId(permissionIdForView);
   const paymentStatusOptions = useSelector(
