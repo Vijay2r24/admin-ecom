@@ -25,7 +25,7 @@ const resources = {
       "Stock": "Stock",
       "Status": "Status",
       "Low Stock": "Low Stock",
-      "In Stock": "In Stock"
+      "In Stock": "In Stock",
       // Add more translations here
     }
   }

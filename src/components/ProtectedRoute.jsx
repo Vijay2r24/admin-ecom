@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../layout/Layout";
 import { Box, Typography } from "@mui/material";
-import LockIcon from "@mui/icons-material/Lock";
+import { Lock as LockIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
 import { Navigate } from "react-router-dom";

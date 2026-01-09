@@ -380,7 +380,7 @@ const FilterCombobox = ({ filter, handleComboboxChange, t }) => {
                               <Check className="h-3 w-3 text-white" />
                             }
                           </div>
-                          <span>Select All</span>
+                          <span>{t("COMMON.SELECT_ALL")}</span>
                         </div>
                       )}
                       {filteredOptions.length > 0 ? (

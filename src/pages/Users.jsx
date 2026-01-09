@@ -7,7 +7,7 @@ import ActionButtons from "../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { USER_ACTIVE_STATUS } from "../contants/apiRoutes";
 import { useTitle } from "../context/TitleContext";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS } from "../contants/constants";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
@@ -78,8 +78,8 @@ const Users = () => {
 
   // Permission check for Edit User
   const permissionIdForEdit = getPermissionCode(
-    "User Management",
-    "Edit User"
+    MODULES.USER,
+    PERMISSIONS.EDIT_USER
   );
   const hasEditPermission = hasPermissionId(permissionIdForEdit);
 

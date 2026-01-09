@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS } from "../../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, MODULES, PERMISSIONS } from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
 import {
@@ -54,6 +54,13 @@ const Payments = () => {
     "Delete Payment"
   );
   const hasDeletePermission = hasPermissionId(permissionIdForDelete);
+
+  // Permission check for Edit Payment
+  const permissionIdForEdit = getPermissionCode(
+    MODULES.PAYMENT,
+    PERMISSIONS.EDIT_PAYMENT
+  );
+  const hasEditPermission = hasPermissionId(permissionIdForEdit);
 
   // Permission check for View Payment Details
   const permissionIdForView = getPermissionCode(
