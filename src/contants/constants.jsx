@@ -265,6 +265,7 @@ export const MODULES = {
   ROLE: "Role Management",
   CONTENT: "Content Management",
   PRODUCT: "Product Management",
+  PAYMENT: "Payment Management",
 };
 
 export const PERMISSIONS = {
@@ -300,7 +301,11 @@ export const PERMISSIONS = {
   UPDATE_ATTRIBUTE: "Update Attribute",
   VIEW_PRODUCT_GROUPS: "View Product Groups",
   UPDATE_PRODUCT_GROUP: "Update Product Group",
-  ROLE_MANAGEMENT:"Role Management"
+  ROLE_MANAGEMENT:"Role Management",
+  EDIT_USER: "Edit User",
+  EDIT_PAYMENT: "Edit Payment",
+  VIEW_PAYMENT_DETAILS: "View Payment Details",
+  VIEW_ORDER_DETAILS: "View Order Details"
 };
 
 export const QUICK_FILTER_VALUES = [

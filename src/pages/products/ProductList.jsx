@@ -58,6 +58,14 @@ const getBrandName = (product) => {
   return product.BrandName || "N/A";
 };
 
+const EMPTY_ARRAY = [];
+const DEFAULT_FILTERS = {
+  category: [],
+  brand: [],
+  store: [],
+  status: "all",
+};
+
 const ProductList = () => {
   const [sSearchTerm, setSearchTerm] = useState("");
   const [sViewMode, setViewMode] = useState("table");
@@ -91,7 +99,7 @@ const ProductList = () => {
   // Hide body scrollbar when component mounts
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    
+
     // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = 'unset';
@@ -105,13 +113,13 @@ const ProductList = () => {
 
   // Fetch categories, brands, and stores from Redux
   const categories = useSelector(
-    (state) => state.allData.resources.categories?.data || []
+    (state) => state.allData.resources.categories?.data || EMPTY_ARRAY
   );
   const brands = useSelector(
-    (state) => state.allData.resources.brands?.data || []
+    (state) => state.allData.resources.brands?.data || EMPTY_ARRAY
   );
   const stores = useSelector(
-    (state) => state.allData.resources.stores?.data || []
+    (state) => state.allData.resources.stores?.data || EMPTY_ARRAY
   );
 
   // Fetch categories, brands, and stores when filter dropdown is opened
@@ -123,16 +131,10 @@ const ProductList = () => {
     }
   }, [bShowFilterDropdown, dispatch]);
 
-  const defaultFilters = {
-    category: "all",
-    brand: "all",
-    store: "all",
-    status: "all",
-  };
-  const [oFilters, setFilters] = useState(defaultFilters);
+  const [oFilters, setFilters] = useState(DEFAULT_FILTERS);
 
   const handleClearFilters = () => {
-    setFilters(defaultFilters);
+    setFilters(DEFAULT_FILTERS);
     setCurrentPage(1);
   };
 
@@ -156,19 +158,37 @@ const ProductList = () => {
         params.IsActive = oFilters.status === "true";
       }
 
-      // Map selected brand name to ID only when needed
-      if (oFilters.brand && oFilters.brand !== "all") {
-        const selectedBrand = brands.find(
-          (b) => b.BrandName === oFilters.brand
-        );
-        if (selectedBrand) params.brandId = [selectedBrand.BrandID];
+      // Map selected brand names to IDs
+      if (oFilters.brand && oFilters.brand.length > 0) {
+        const selectedBrandIds = brands
+          .filter((b) => oFilters.brand.includes(b.BrandName))
+          .map((b) => b.BrandID);
+
+        if (selectedBrandIds.length > 0) {
+          params.brandId = selectedBrandIds;
+        }
       }
 
-      if (oFilters.category && oFilters.category !== "all") {
-        const selectedCategory = categories.find(
-          (c) => c.CategoryName === oFilters.category
-        );
-        if (selectedCategory) params.categoryId = [selectedCategory.CategoryID];
+      // Map selected category names to IDs
+      if (oFilters.category && oFilters.category.length > 0) {
+        const selectedCategoryIds = categories
+          .filter((c) => oFilters.category.includes(c.CategoryName))
+          .map((c) => c.CategoryID);
+
+        if (selectedCategoryIds.length > 0) {
+          params.categoryId = selectedCategoryIds;
+        }
+      }
+
+      // Map selected store names to IDs
+      if (oFilters.store && oFilters.store.length > 0) {
+        const selectedStoreIds = stores
+          .filter((s) => oFilters.store.includes(s.StoreName))
+          .map((s) => s.StoreID);
+
+        if (selectedStoreIds.length > 0) {
+          params.storeId = selectedStoreIds;
+        }
       }
 
       const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
@@ -190,7 +210,7 @@ const ProductList = () => {
             firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
             status:
               product.IsActive &&
-              getTotalStock(firstVariant.Inventory || []) > 0
+                getTotalStock(firstVariant.Inventory || []) > 0
                 ? "active"
                 : "out-of-stock",
           };
@@ -213,7 +233,7 @@ const ProductList = () => {
       setLoading(false);
       setFilterLoading(false);
     }
-  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
+  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t, brands, categories, stores]);
 
   useEffect(() => {
     fetchProducts();
@@ -224,7 +244,6 @@ const ProductList = () => {
   }, [setTitle, t]);
 
   const categoryOptions = [
-    { value: "all", label: t("COMMON.ALL") },
     ...categories.map((cat) => ({
       value: cat.CategoryName,
       label: cat.CategoryName,
@@ -232,7 +251,6 @@ const ProductList = () => {
   ];
 
   const brandOptions = [
-    { value: "all", label: t("COMMON.ALL") },
     ...brands.map((brand) => ({
       value: brand.BrandName,
       label: brand.BrandName,
@@ -240,7 +258,6 @@ const ProductList = () => {
   ];
 
   const storeOptions = [
-    { value: "all", label: t("COMMON.ALL") },
     ...stores.map((store) => ({
       value: store.StoreName,
       label: store.StoreName,
@@ -294,6 +311,7 @@ const ProductList = () => {
       options: categoryOptions,
       placeholder: t("PRODUCT_SETUP.TABS.CATEGORIES"),
       searchable: true,
+      multiple: true,
       searchPlaceholder: t("COMMON.SEARCH_CATEGORY"),
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "category"),
@@ -305,6 +323,7 @@ const ProductList = () => {
       options: brandOptions,
       placeholder: t("PRODUCT_SETUP.TABS.BRANDS"),
       searchable: true,
+      multiple: true,
       searchPlaceholder: t("COMMON.SEARCH_BRAND"),
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "brand"),
@@ -315,6 +334,7 @@ const ProductList = () => {
       value: oFilters.status,
       options: statusOptions,
     },
+    // Store filter can be added here if needed, following the same pattern
   ];
 
   const handleFilterChange = (e, filterName) => {
@@ -354,21 +374,37 @@ const ProductList = () => {
   const handleExportProducts = async () => {
     setExportLoading(true);
     try {
-      // Find the brand and category IDs from the Redux state
-      const brand = brands.find((b) => b.BrandName === oFilters.brand);
-      const category = categories.find(
-        (c) => c.CategoryName === oFilters.category
-      );
-
       const isActiveFilter =
         oFilters.status === "all" ? undefined : oFilters.status === "true";
+
+      const brandIds =
+        oFilters.brand && oFilters.brand.length > 0
+          ? brands
+            .filter((b) => oFilters.brand.includes(b.BrandName))
+            .map((b) => b.BrandID)
+          : undefined;
+
+      const categoryIds =
+        oFilters.category && oFilters.category.length > 0
+          ? categories
+            .filter((c) => oFilters.category.includes(c.CategoryName))
+            .map((c) => c.CategoryID)
+          : undefined;
+
+      const storeIds =
+        oFilters.store && oFilters.store.length > 0
+          ? stores
+            .filter((s) => oFilters.store.includes(s.StoreName))
+            .map((s) => s.StoreID)
+          : undefined;
 
       await dispatch(
         exportProductReport({
           searchText: sSearchTerm,
           isActive: isActiveFilter,
-          brandId: brand ? [brand.BrandID] : undefined,
-          categoryId: category ? [category.CategoryID] : undefined,
+          brandId: brandIds,
+          categoryId: categoryIds,
+          storeId: storeIds,
         })
       ).unwrap();
 
@@ -393,8 +429,10 @@ const ProductList = () => {
   };
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [sSearchTerm, oFilters]);
+    if (sSearchTerm) {
+      setCurrentPage(1);
+    }
+  }, [sSearchTerm]);
 
   // --- Status Update Handlers ---
   const handleStatusChange = (productId, currentIsActive) => {
@@ -444,11 +482,11 @@ const ProductList = () => {
   };
 
   return (
-    <div 
+    <div
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
     >
       {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
-      
+
       <ToastContainer />
       <Toolbar
         searchTerm={sSearchTerm}
@@ -482,9 +520,8 @@ const ProductList = () => {
             <table className="table-base">
               {/* Floating Header */}
               <thead
-                className={`table-head-floating ${
-                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
-                }`}
+                className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                  }`}
               >
                 <tr>
                   <th className="table-head-cell-floating text-left">
