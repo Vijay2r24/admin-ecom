@@ -228,7 +228,10 @@ const allDataSlice = createSlice({
     resources: {
       countries: { data: [], loading: false, error: null },
       states: { data: [], loading: false, error: null, countryId: null },
-      cities: { data: [], loading: false, error: null, stateId: null }
+      cities: { data: [], loading: false, error: null, stateId: null },
+      categories: { data: [], loading: false, error: null },
+      brands: { data: [], loading: false, error: null },
+      stores: { data: [], loading: false, error: null },
     },
     userDetails: null,
     userDetailsError: null,
