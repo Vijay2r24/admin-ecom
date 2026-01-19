@@ -23,11 +23,10 @@
       "OTP_INVALID": "Invalid OTP. Please try again.",
       "OTP_VALIDATION_ERROR": "An error occurred during OTP validation.",
       "PASSWORD_RESET_FAILED": "Failed to reset password.",
-      "LOGIN_CONTAINER_ID ":"login_page_container",
-      "LOGIN_TOAST_ID" : "login_error_id",
+      "LOGIN_CONTAINER_ID ": "login_page_container",
+      "LOGIN_TOAST_ID": "login_error_id",
       "LOGIN_SUCCESS_MESSAGE": "Login Successfully"
     }
-
   },
   "OTP": {
     "SUCCESS": "OTP sent successfully.",
@@ -67,8 +66,7 @@
     "ERROR": "Please enter the correct OTP",
     "TIMER": "Resend OTP in",
     "RESEND": "Resend",
-    "OTP_EXPIRE": "OTP expired. Please resend to try again.",
-    "OTP_VALIDATION":"OTP must only contain digits"
+    "OTP_EXPIRE": "OTP expired. Please resend to try again."
   },
   "ADMIN": {
     "TITLE": "Admin Portal <br/> Management System",
@@ -103,7 +101,11 @@
     "NOTIFICATIONS": "Notifications",
     "SETTINGS": "Settings",
     "PAGES": "Profile",
-    "THEMES":"Application Settings"
+    "THEMES": "Theme Settings",
+    "LOW_STOCK": "Low Stock"
+  },
+  "LOW_STOCK": {
+    "TITLE": "Low Stock Products"
   },
   "DASHBOARD": {
     "TITLE": "Dashboard",
@@ -453,6 +455,22 @@
     "PAYMENT_PROVIDER": "Payment Type",
     "CARD_NUMBER": "Card Number"
   },
+  "THEMESETTINGS": {
+    "PRIMARY_COLOR": "Primary Color",
+    "PREVIEW_TITLE": "Web Preview",
+    "TITLE": "Application Settings",
+    "RESET_AS_DEFAULT": "Reset as Default",
+    "WEB_TEXT": "ShopNow",
+    "DESCRIPTION": "What are you looking for today!",
+    "CATEGORIES": "Categories",
+    "CATEGORY": "Category",
+    "TRENDING_NOW": "Trending Now",
+    "PRODUCT": "Product",
+    "COST": "999",
+    "STORE_LOGO": "Store Logo",
+    "NO_LOGO": "No Logo",
+    "UPLOAD_LOGO": "Upload Logo"
+  },
   "ORDERS": {
     "TITLE": "Orders",
     "SUBTITLE": "View and manage all orders",
@@ -730,7 +748,6 @@
     "EDIT_USER": "Edit User",
     "ADD_NEW_USER": "Add New User",
     "EDIT_USER_DESCRIPTION": "Edit existing user account details and permissions.",
-     "DELETE_MESSAGE":"Are you sure you want to set this user as",
     "TABLE": {
       "CONTACT": "Contact",
       "LAST_ACTIVE": "Last Active"
@@ -741,7 +758,8 @@
     "FETCH_ERROR": "An error occurred while fetching users.",
     "FILTERS": {
       "USER_ROLE": "User Role",
-      "STATUS": "Status"
+      "STATUS": "Status",
+      "STORE": "Store"
     },
     "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete this user? this action cannot be undone."
   },
@@ -781,7 +799,6 @@
     "PASSWORD_WEAK": "Weak password",
     "PASSWORDS_MATCH": "Passwords must match.",
     "SUCCESS": "User created/updated successfully",
-   
     "VALIDATION": {
       "FIRST_NAME_REQUIRED": "First name is required",
       "LAST_NAME_REQUIRED": "Last name is required",
@@ -1111,7 +1128,7 @@
     "PINCODE": "Pincode",
     "ZIP_CODE": "ZIP Code",
     "NO_DELETE_PERMISSION": "You do not have permission to delete.",
-     "NO_EDIT_PERMISSION": "You do not have permission to edit.",
+    "NO_PERMISSION": "You do not have permission to perform this action.",
     "ROLE": "Role",
     "USER": "User",
     "ADMIN": "Admin",
