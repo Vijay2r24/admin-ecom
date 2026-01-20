@@ -297,7 +297,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                         </div>
                         
                         {/* Conditional Link based only on Active status */}
-                        {isCategoryActive(category) ? (
+                        {isCategoryActive(category) && category.editable ? (
                           <Link
                             to={`/browse/editcatagiry/${category.CategoryID}`}
                             className="text-blue-600 hover:underline block truncate max-w-[180px] font-medium"
@@ -371,6 +371,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                       <div className="flex justify-center">
                         <Switch
                           checked={isCategoryActive(category)}
+                          disabled={!category.editable} 
                           onChange={() =>
                             handleStatusChange(
                               category.CategoryID,

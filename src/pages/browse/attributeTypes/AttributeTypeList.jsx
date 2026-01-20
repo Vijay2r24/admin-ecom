@@ -246,7 +246,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                     }`}
                   >
                     <td className="table-cell text-left align-middle px-6 py-4">
-                      {type.IsActive ? (
+                      {type.IsActive && type.editable ? (
                         <Link
                           to={`/browse/editattributetype/${type.AttributeTypeID}`}
                           className="text-sm font-medium text-blue-600 hover:underline block truncate max-w-[180px]"
@@ -306,6 +306,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                       <div className="flex justify-center">
                         <Switch
                           checked={type.IsActive}
+                          disabled={!type.editable}
                           onChange={() =>
                             handleStatusChange(
                               type.AttributeTypeID,

@@ -277,7 +277,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                         </div>
 
                         {/* Brand Name - Conditional Link based only on Status */}
-                        {brand.IsActive ? (
+                        {brand.editable && brand.IsActive ? (
                           <Link
                             to={`/browse/editbrand/${brand.BrandID}`}
                             className="text-blue-600 hover:underline block truncate max-w-[200px] font-medium"
@@ -331,6 +331,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                       <div className="flex justify-center">
                         <Switch
                           checked={brand.IsActive}
+                          disabled={!brand.editable}
                           onChange={() =>
                             handleStatusChange(brand.BrandID, brand.IsActive)
                           }
