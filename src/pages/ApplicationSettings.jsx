@@ -12,28 +12,111 @@ import mobile from "../../assets/images/mobile.jpg";
 import { useTitle } from "../context/TitleContext";
 import { useTranslation } from "react-i18next";
 import { CUSTOM_COLORS, FILE_CONSTANTS } from "../contants/constants";
+import { apiPatch } from "../utils/ApiUtils";
+import { UPDATE_TENANT_THEME, UPDATE_TENANT_LOGO } from "../contants/apiRoutes";
+import { showEmsg } from "../utils/ShowEmsg";
+import Loader from "../components/Loader";
 
 const ThemeSettings = () => {
   const { t } = useTranslation()
   const defaultColor = t(CUSTOM_COLORS.primary);
   const [primaryColor, setPrimaryColor] = useState(defaultColor);
   const [logo, setLogo] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
+  const [loading, setLoading] = useState(false);
   const { setTitle } = useTitle();
 
   const fileInputRef = useRef(null);
 
+  // Get tenant ID from localStorage (adjust based on your auth structure)
+  const getTenantId = () => {
+    return localStorage.getItem('tenantId') || '0000d6ab-8064-4786-a906-f458567224b8';
+  };
+
+  // Get DocumentID dynamically (you may need to fetch this from an API or get from localStorage)
+  const getDocumentId = () => {
+    // Option 1: Get from localStorage if stored there
+    return localStorage.getItem('documentId') || '77777191-87a8-45f9-b3a9-96caffb51fea';
+    
+    // Option 2: You could also generate a UUID if needed
+    // return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    //   const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    //   return v.toString(16);
+    // });
+  };
+
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setLogoFile(file);
       const reader = new FileReader();
       reader.onload = (e) => setLogo(e.target.result);
       reader.readAsDataURL(file);
     }
   };
 
+  const updateThemeColor = async () => {
+    try {
+      setLoading(true);
+      const tenantId = getTenantId();
+      console.log('Updating theme color for tenant:', tenantId);
+      const response = await apiPatch(
+        `${UPDATE_TENANT_THEME}/${tenantId}`,
+        { ThemeColour: primaryColor }
+      );
+      console.log('Theme update response:', response);
+      
+      showEmsg('Theme color updated successfully!', 'success');
+    } catch (error) {
+      console.error('Theme update error:', error);
+      showEmsg(error.message || 'Failed to update theme color', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateLogo = async () => {
+    if (!logoFile) {
+      showEmsg('Please select a logo first', 'warning');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const tenantId = getTenantId();
+      console.log('Updating logo for tenant:', tenantId);
+      
+      const formData = new FormData();
+      formData.append('data', JSON.stringify({
+        documentMetadata: [{
+          image: "application_logo",
+          sortOrder: 1,
+          DocumentID: getDocumentId()
+        }]
+      }));
+      formData.append('application_logo', logoFile);
+
+      const response = await apiPatch(
+        `${UPDATE_TENANT_LOGO}/${tenantId}`,
+        formData,
+        null,
+        true
+      );
+      console.log('Logo update response:', response);
+      
+      showEmsg('Logo updated successfully!', 'success');
+    } catch (error) {
+      console.error('Logo update error:', error);
+      showEmsg(error.message || 'Failed to update logo', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleReset = () => {
     setPrimaryColor(defaultColor);
     setLogo(null);
+    setLogoFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -43,9 +126,15 @@ const ThemeSettings = () => {
   }, [setTitle, t]);
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50 py-6">
-      <div className="flex flex-col lg:flex-row gap-10">
-        <div className="w-full lg:w-[450px] bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
+    <React.Fragment>
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Loader height={48} width={48} color="#FF5A5F" />
+        </div>
+      )}
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50 py-6">
+        <div className="flex flex-col lg:flex-row gap-10">
+          <div className="w-full lg:w-[450px] bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
           <TextInputWithIcon
             label={t("THEMESETTINGS.PRIMARY_COLOR")}
             value={primaryColor}
@@ -101,7 +190,11 @@ const ThemeSettings = () => {
                     </button>
                     {logo && (
                       <button
-                        onClick={() => setLogo(null)}
+                        onClick={() => {
+  setLogo(null);
+  setLogoFile(null);
+  if (fileInputRef.current) fileInputRef.current.value = "";
+}}
                         className="text-xs text-red-500 hover:text-red-700 font-medium text-left"
                       >
                         {t("COMMON.REMOVE")}
@@ -112,9 +205,25 @@ const ThemeSettings = () => {
               </div>
             </div>
           </div>
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={updateThemeColor}
+              disabled={loading}
+              className="flex-1 bg-custom-bg hover:bg-bg-hover disabled:opacity-50 rounded-lg py-2 text-sm text-white font-semibold transition-colors shadow-sm"
+            >
+              {loading ? 'Updating...' : 'Update Theme'}
+            </button>
+            <button
+              onClick={updateLogo}
+              disabled={loading || !logoFile}
+              className="flex-1 bg-custom-bg hover:bg-bg-hover disabled:opacity-50 rounded-lg py-2 text-sm text-white font-semibold transition-colors shadow-sm"
+            >
+              {loading ? 'Updating...' : 'Update Logo'}
+            </button>
+          </div>
           <button
             onClick={handleReset}
-            className="w-full mt-8 bg-custom-bg hover:bg-bg-hover rounded-lg py-2 text-sm text-white font-semibold transition-colors shadow-sm"
+            className="w-full mt-3 bg-gray-200 hover:bg-gray-300 rounded-lg py-2 text-sm text-gray-700 font-semibold transition-colors shadow-sm"
           >
             {t("THEMESETTINGS.RESET_AS_DEFAULT")}
           </button>
@@ -211,8 +320,9 @@ const ThemeSettings = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </React.Fragment>
   );
 };
 

@@ -141,3 +141,5 @@ export const ADD_PRODUCT_VARIANTS = `/addProductVariants`;
 export const VALIDATE_PRODUCT_VARIANTS = `/validateProductVariants`;
 export const UPDATE_INVENTORY = `/updateInventory`;
 export const UPDATE_INVENTORY_STATUS = `/updateInventoryStatus`;
+export const UPDATE_TENANT_THEME = `/updateTenantSettingTheme`;
+export const UPDATE_TENANT_LOGO = `/updateTenantSettingLogo`;
