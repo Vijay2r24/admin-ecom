@@ -867,6 +867,7 @@ const AddUser = () => {
           CountryCallingCode: callingCode, // Ensure calling code is set (e.g. +91)
           CountryCode: user.CountryCode || "", // ISO code (e.g. IN)
           StateCode: user.StateCode || "",
+          CityName: user.CityName || "",
           PhoneNumber: user.PhoneNumber || "", // Keep raw phone number
           role: user.RoleID || "",
           IsActive: user.IsActive !== undefined ? user.IsActive : true,
