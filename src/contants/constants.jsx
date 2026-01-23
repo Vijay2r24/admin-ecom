@@ -281,7 +281,7 @@ export const PERMISSIONS = {
   UPDATE_USER: "Update user",
   VIEW_ROLE: "View Role",
   ADD_ROLE: "Add Role",
-  UPDATE_ROLE: "Update Role",
+  EDIT_ROLE: "Edit Role",
   VIEW_BANNERS: "View Banners",
   CREATE_BANNER: "Create Banner",
   UPDATE_BANNER: "Update Banner",
