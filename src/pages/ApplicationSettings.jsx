@@ -35,14 +35,8 @@ const ThemeSettings = () => {
 
   // Get DocumentID dynamically (you may need to fetch this from an API or get from localStorage)
   const getDocumentId = () => {
-    // Option 1: Get from localStorage if stored there
-    return localStorage.getItem('documentId') || '77777191-87a8-45f9-b3a9-96caffb51fea';
+     return localStorage.getItem('documentId') || '77777191-87a8-45f9-b3a9-96caffb51fea';
     
-    // Option 2: You could also generate a UUID if needed
-    // return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    //   const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-    //   return v.toString(16);
-    // });
   };
 
   const handleLogoUpload = (e) => {
@@ -59,16 +53,13 @@ const ThemeSettings = () => {
     try {
       setLoading(true);
       const tenantId = getTenantId();
-      console.log('Updating theme color for tenant:', tenantId);
       const response = await apiPatch(
         `${UPDATE_TENANT_THEME}/${tenantId}`,
         { ThemeColour: primaryColor }
       );
-      console.log('Theme update response:', response);
       
       showEmsg('Theme color updated successfully!', 'success');
     } catch (error) {
-      console.error('Theme update error:', error);
       showEmsg(error.message || 'Failed to update theme color', 'error');
     } finally {
       setLoading(false);
@@ -84,8 +75,6 @@ const ThemeSettings = () => {
     try {
       setLoading(true);
       const tenantId = getTenantId();
-      console.log('Updating logo for tenant:', tenantId);
-      
       const formData = new FormData();
       formData.append('data', JSON.stringify({
         documentMetadata: [{
@@ -102,11 +91,9 @@ const ThemeSettings = () => {
         null,
         true
       );
-      console.log('Logo update response:', response);
       
       showEmsg('Logo updated successfully!', 'success');
     } catch (error) {
-      console.error('Logo update error:', error);
       showEmsg(error.message || 'Failed to update logo', 'error');
     } finally {
       setLoading(false);
