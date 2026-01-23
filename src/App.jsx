@@ -60,7 +60,7 @@ const editUserPermission = getPermissionCode(MODULES.USER, PERMISSIONS.UPDATE_US
 
 const userRolesPermission = getPermissionCode(MODULES.ROLE, PERMISSIONS.VIEW_ROLE);
 const addUserRolePermission = getPermissionCode(MODULES.ROLE, PERMISSIONS.ADD_ROLE);
-const editUserRolePermission = getPermissionCode(MODULES.ROLE, PERMISSIONS.UPDATE_ROLE);
+const editUserRolePermission = getPermissionCode(MODULES.ROLE, PERMISSIONS.EDIT_ROLE);
 
 const bannersPermission = getPermissionCode(MODULES.CONTENT, PERMISSIONS.VIEW_BANNERS);
 const bannersCreatePermission = getPermissionCode(MODULES.CONTENT, PERMISSIONS.CREATE_BANNER);
