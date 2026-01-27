@@ -753,7 +753,7 @@ const AddStore = () => {
         AddressLine1: oFormData.address,
         AddressLine2: oFormData.addressLine2 || "",
         CityName: selectedCity ? selectedCity.CityName : (oFormData.cityName || ""),
-        StateCode: selectedState ? selectedState.StateCode : (oFormData.stateCode || ""),
+        StateCode: selectedState ? selectedState.StateCode : (oFormData.StateCode || ""),
         CountryCode: selectedCountry ? selectedCountry.CountryCode : (oFormData.CountryCode || ""),
         Zipcode: oFormData.zipCode,
         IsActive: status,
