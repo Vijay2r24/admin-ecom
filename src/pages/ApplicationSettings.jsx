@@ -11,7 +11,7 @@ import banner1 from "../../assets/images/banner1.jpg";
 import mobile from "../../assets/images/mobile.jpg";
 import { useTitle } from "../context/TitleContext";
 import { useTranslation } from "react-i18next";
-import { CUSTOM_COLORS, FILE_CONSTANTS } from "../contants/constants";
+import { CUSTOM_COLORS, FILE_CONSTANTS, STATUS, DOCUMENT_ID } from "../contants/constants";
 import { apiPatch } from "../utils/ApiUtils";
 import { UPDATE_TENANT_THEME, UPDATE_TENANT_LOGO } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
@@ -30,13 +30,12 @@ const ThemeSettings = () => {
 
   // Get tenant ID from localStorage (adjust based on your auth structure)
   const getTenantId = () => {
-    return localStorage.getItem('tenantId') || '0000d6ab-8064-4786-a906-f458567224b8';
+    return localStorage.getItem('tenantID');
   };
 
-  // Get DocumentID dynamically (you may need to fetch this from an API or get from localStorage)
+  // Get DocumentID from constants
   const getDocumentId = () => {
-     return localStorage.getItem('documentId') || '77777191-87a8-45f9-b3a9-96caffb51fea';
-    
+    return DOCUMENT_ID;
   };
 
   const handleLogoUpload = (e) => {
@@ -58,9 +57,9 @@ const ThemeSettings = () => {
         { ThemeColour: primaryColor }
       );
       
-      showEmsg('Theme color updated successfully!', 'success');
+      showEmsg(response?.data?.message , STATUS.SUCCESS);
     } catch (error) {
-      showEmsg(error.message || 'Failed to update theme color', 'error');
+      showEmsg(error.message , STATUS.ERROR);
     } finally {
       setLoading(false);
     }
@@ -68,7 +67,7 @@ const ThemeSettings = () => {
 
   const updateLogo = async () => {
     if (!logoFile) {
-      showEmsg('Please select a logo first', 'warning');
+      showEmsg(t("THEMESETTINGS.SELECT_LOGO_FIRST"), STATUS.WARNING);
       return;
     }
 
@@ -92,9 +91,9 @@ const ThemeSettings = () => {
         true
       );
       
-      showEmsg('Logo updated successfully!', 'success');
+      showEmsg(response?.data?.message , STATUS.SUCCESS);
     } catch (error) {
-      showEmsg(error.message || 'Failed to update logo', 'error');
+      showEmsg(error.message , STATUS.ERROR);
     } finally {
       setLoading(false);
     }

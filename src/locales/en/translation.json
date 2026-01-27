@@ -101,7 +101,7 @@
     "NOTIFICATIONS": "Notifications",
     "SETTINGS": "Settings",
     "PAGES": "Profile",
-    "THEMES": "Theme Settings",
+    "THEMES": "Application Settings",
     "LOW_STOCK": "Low Stock"
   },
   "LOW_STOCK": {
@@ -469,7 +469,8 @@
     "COST": "999",
     "STORE_LOGO": "Store Logo",
     "NO_LOGO": "No Logo",
-    "UPLOAD_LOGO": "Upload Logo"
+    "UPLOAD_LOGO": "Upload Logo",
+    "SELECT_LOGO_FIRST": "Please select a logo first"
   },
   "ORDERS": {
     "TITLE": "Orders",
@@ -1177,6 +1178,7 @@
     "REQUIRED": "is required",
     "CLEAR_DATE_RANGE": "Clear date range",
     "ACCESS_DENIED_TITLE": "Access to this page is restricted",
+    "REMOVE":"Remove",
     "ACCESS_DENIED_MESSAGE": "Please check with the site admin if you believe this is a mistake.",
     "EXPORTING": "Exporting.."
   },
