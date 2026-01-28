@@ -89,11 +89,13 @@ const ActiveBannersWithSequence = () => {
 
         const activeBannersData = bannersData
           .filter(banner => banner.IsActive === true)
+          .sort((a, b) => (a.SortOrder || 0) - (b.SortOrder || 0)) // Sort by SortOrder
           .map((banner, index) => ({
             BannerID: banner.BannerId || banner.BannerID,
             BannerName: banner.BannerName,
             Status: banner.IsActive ? "Active" : "Inactive",
-            SequenceNumber: index + 1,
+            SequenceNumber: banner.SortOrder || index + 1, // Use SortOrder from backend
+            SortOrder: banner.SortOrder || index + 1, // Keep original SortOrder
             BannerImages: banner.BannerImage
               ? banner.BannerImage.map((img) => ({
                 BannerImageID: img.documentId,
@@ -213,9 +215,9 @@ const ActiveBannersWithSequence = () => {
 
       // Prepare payload for API
       const payload = {
-        BannerDetails: activeBanners.map((banner) => ({
+        BannerDetails: activeBanners.map((banner, index) => ({
           BannerId: banner.BannerID,
-          SortOrder: banner.SequenceNumber,
+          SortOrder: index + 1, // Use array index + 1 for correct sequence
         })),
       };
 
@@ -376,168 +378,163 @@ const ActiveBannersWithSequence = () => {
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="space-y-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                 >
-                  {groupedBanners.map((row, rowIndex) => (
-                    <div
-                      key={`row-${rowIndex}`}
-                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-
+                  {activeBanners.map((banner, index) => (
+                    <Draggable
+                      key={banner.BannerID}
+                      draggableId={banner.BannerID}
+                      index={index}
                     >
-                      {row.map((banner, index) => {
-                        const absoluteIndex = rowIndex * 4 + index;
+                      {(provided, snapshot) => {
+                        let transform = "";
+                        let zIndex = "auto";
+                        let transition =
+                          "all 0.3s cubic-bezier(0.2, 0, 0, 1)";
+
+                        if (swapPreview) {
+                          if (index === swapPreview.from) {
+                            zIndex = 50;
+                          } else if (
+                            swapPreview.direction === "down" &&
+                            index > swapPreview.from &&
+                            index <= swapPreview.to
+                          ) {
+                            transform = "translateY(-100%)";
+                          } else if (
+                            swapPreview.direction === "up" &&
+                            index < swapPreview.from &&
+                            index >= swapPreview.to
+                          ) {
+                            transform = "translateY(100%)";
+                          }
+                        }
+
                         return (
-                          <Draggable
-                            key={banner.BannerID}
-                            draggableId={banner.BannerID}
-                            index={absoluteIndex}
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`relative bg-white rounded-2xl shadow-sm border transition-all duration-300 ${snapshot.isDragging
+                              ? "shadow-2xl border-custom-bg/50 z-50 scale-105"
+                              : "border-gray-200 hover:shadow-md"
+                              } ${inputErrors[banner.BannerID]
+                                ? "border-red-300"
+                                : ""
+                              }`}
+                            style={{
+                              ...provided.draggableProps.style,
+                              transform: snapshot.isDragging
+                                ? `${provided.draggableProps.style?.transform} rotate(2deg)`
+                                : transform ||
+                                  provided.draggableProps.style?.transform,
+                              zIndex,
+                              transition,
+                            }}
                           >
-                            {(provided, snapshot) => {
-                              let transform = "";
-                              let zIndex = "auto";
-                              let transition =
-                                "all 0.3s cubic-bezier(0.2, 0, 0, 1)";
+                            <div
+                              {...provided.dragHandleProps}
+                              className={`absolute inset-0 cursor-grab active:cursor-grabbing ${snapshot.isDragging
+                                ? "opacity-100"
+                                : "opacity-0 hover:opacity-20"
+                                } bg-custom-bg/10 transition-opacity rounded-2xl z-10`}
+                            />
 
-                              if (swapPreview) {
-                                if (absoluteIndex === swapPreview.from) {
-                                  zIndex = 50;
-                                } else if (
-                                  swapPreview.direction === "down" &&
-                                  absoluteIndex > swapPreview.from &&
-                                  absoluteIndex <= swapPreview.to
-                                ) {
-                                  transform = "translateY(-100%)";
-                                } else if (
-                                  swapPreview.direction === "up" &&
-                                  absoluteIndex < swapPreview.from &&
-                                  absoluteIndex >= swapPreview.to
-                                ) {
-                                  transform = "translateY(100%)";
-                                }
-                              }
+                            <div className="absolute top-2 left-2 cursor-grab active:cursor-grabbing z-20">
+                              <div className="p-2 bg-white/80 rounded-lg shadow-md hover:bg-white transition-colors">
+                                <GripVertical className="h-5 w-5 text-custom-bg" />
+                              </div>
+                            </div>
 
-                              return (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  className={`relative bg-white rounded-2xl shadow-sm border transition-all duration-300 ${snapshot.isDragging
-                                    ? "shadow-2xl border-custom-bg/50 z-50 scale-105"
-                                    : "border-gray-200 hover:shadow-md"
-                                    } ${inputErrors[banner.BannerID]
-                                      ? "border-red-300"
-                                      : ""
-                                    }`}
-                                  style={{
-                                    ...provided.draggableProps.style,
-                                    transform: snapshot.isDragging
-                                      ? `${provided.draggableProps.style?.transform} rotate(2deg)`
-                                      : transform ||
-                                      provided.draggableProps.style?.transform,
-                                    zIndex,
-                                    transition,
-                                  }}
-                                >
-                                  <div
-                                    {...provided.dragHandleProps}
-                                    className={`absolute inset-0 cursor-grab active:cursor-grabbing ${snapshot.isDragging
-                                      ? "opacity-100"
-                                      : "opacity-0 hover:opacity-5"
-                                      } bg-custom-bg/10 transition-opacity rounded-2xl`}
+                            <div className="flex flex-col">
+                              <div className="relative h-48">
+                                {banner.BannerImages?.length > 0 ? (
+                                  <img
+                                    src={banner.BannerImages[0].BannerImage}
+                                    alt={banner.BannerName}
+                                    className="w-full h-full object-contain rounded-t-2xl"
                                   />
+                                ) : (
+                                  <div className="h-full bg-gray-100 flex items-center justify-center rounded-t-2xl">
+                                    <div className="text-center text-gray-500">
+                                      <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                                      <p className="text-sm">
+                                        {t("BANNERS.NO_IMAGE")}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
 
-                                  <div className="flex flex-col">
-                                    <div className="relative h-48">
-                                      {banner.BannerImages?.length > 0 ? (
-                                        <img
-                                          src={banner.BannerImages[0].BannerImage}
-                                          alt={banner.BannerName}
-                                          className="w-full h-full object-contain rounded-t-2xl"
-                                        />
-                                      ) : (
-                                        <div className="h-full bg-gray-100 flex items-center justify-center rounded-t-2xl">
-                                          <div className="text-center text-gray-500">
-                                            <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                                            <p className="text-sm">
-                                              {t("BANNERS.NO_IMAGE")}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      )}
+                                <div className="absolute top-4 left-4">
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    {banner.Status}
+                                  </span>
+                                </div>
 
-                                      <div className="absolute top-4 left-4">
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                                          <CheckCircle className="h-3 w-3 mr-1" />
-                                          {banner.Status}
-                                        </span>
-                                      </div>
+                                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-1 shadow-sm">
+                                  <span className="text-sm font-semibold text-gray-700">
+                                    #{banner.SequenceNumber}
+                                  </span>
+                                </div>
+                              </div>
 
-                                      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-1 shadow-sm">
-                                        <span className="text-sm font-semibold text-gray-700">
-                                          #{banner.SequenceNumber}
-                                        </span>
-                                      </div>
+                              <div className="p-6">
+                                <div className="flex flex-col">
+                                  <div className="flex items-center justify-between mb-4">
+                                    <div className="flex-1">
+                                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                        {banner.BannerName}
+                                      </h3>
                                     </div>
 
-                                    <div className="p-6">
-                                      <div className="flex flex-col">
-                                        <div className="flex items-center justify-between mb-4">
-                                          <div className="flex-1">
-                                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                              {banner.BannerName}
-                                            </h3>
-                                          </div>
-
-                                          <div
-                                            className={`rounded-xl p-3 border transition-all ${inputErrors[banner.BannerID]
-                                              ? "bg-red-50 border-red-200"
-                                              : "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200"
+                                    <div
+                                      className={`rounded-xl p-3 border transition-all ${inputErrors[banner.BannerID]
+                                        ? "bg-red-50 border-red-200"
+                                        : "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200"
+                                        }`}
+                                    >
+                                      <div className="flex items-center space-x-3">
+                                        <div className="relative">
+                                          <input
+                                            type="number"
+                                            min="1"
+                                            max={activeBanners.length}
+                                            value={banner.SequenceNumber}
+                                            onChange={(e) =>
+                                              handleSequenceChange(
+                                                banner.BannerID,
+                                                e.target.value
+                                              )
+                                            }
+                                            className={`w-16 px-3 py-2 border rounded-lg text-center font-medium focus:ring-2 focus:outline-none transition-all duration-200 bg-white ${inputErrors[banner.BannerID]
+                                              ? "border-red-400 focus:ring-red-200 focus:border-red-500"
+                                              : "border-gray-300 focus:ring-custom-bg/20 focus:border-custom-bg/50"
                                               }`}
-                                          >
-                                            <div className="flex items-center space-x-3">
-                                              <div className="relative">
-                                                <input
-                                                  type="number"
-                                                  min="1"
-                                                  max={activeBanners.length}
-                                                  value={banner.SequenceNumber}
-                                                  onChange={(e) =>
-                                                    handleSequenceChange(
-                                                      banner.BannerID,
-                                                      e.target.value
-                                                    )
-                                                  }
-                                                  className={`w-16 px-3 py-2 border rounded-lg text-center font-medium focus:ring-2 focus:outline-none transition-all duration-200 bg-white ${inputErrors[banner.BannerID]
-                                                    ? "border-red-400 focus:ring-red-200 focus:border-red-500"
-                                                    : "border-gray-300 focus:ring-custom-bg/20 focus:border-custom-bg/50"
-                                                    }`}
-                                                />
-                                                {inputErrors[banner.BannerID] && (
-                                                  <div className="absolute -bottom-5 left-0 right-0 text-center text-xs text-red-500">
-                                                    {t(
-                                                      "BANNERS.INVALID_POSITION"
-                                                    )}
-                                                  </div>
-                                                )}
-                                              </div>
+                                          />
+                                          {inputErrors[banner.BannerID] && (
+                                            <div className="absolute -bottom-5 left-0 right-0 text-center text-xs text-red-500">
+                                              {t(
+                                                "BANNERS.INVALID_POSITION"
+                                              )}
                                             </div>
-                                          </div>
+                                          )}
                                         </div>
                                       </div>
                                     </div>
                                   </div>
-
-                                  {swapPreview?.from === absoluteIndex && (
-                                    <div className="absolute -right-4 top-1/2 -translate-y-1/2 bg-custom-bg/70 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                      {swapPreview.direction === "up" ? "↑" : "↓"}
-                                    </div>
-                                  )}
                                 </div>
-                              );
-                            }}
-                          </Draggable>
+                              </div>
+                            </div>
+
+                            {swapPreview?.from === index && (
+                              <div className="absolute -right-4 top-1/2 -translate-y-1/2 bg-custom-bg/70 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                {swapPreview.direction === "up" ? "↑" : "↓"}
+                              </div>
+                            )}
+                          </div>
                         );
-                      })}
-                    </div>
+                      }}
+                    </Draggable>
                   ))}
                   {provided.placeholder}
                 </div>

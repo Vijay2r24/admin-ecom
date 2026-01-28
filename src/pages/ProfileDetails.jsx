@@ -1,22 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Edit,
-  Camera,
-  Shield,
-  Bell,
-  Globe,
-  Lock,
-  Key,
-  CheckCircle,
-  XCircle,
-  X,
-  Store
-} from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Edit, Camera, Shield, Bell, Globe, Lock, Key, CheckCircle, XCircle, X, Store, Image } from "lucide-react";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import cheGuevaraImg from "../../assets/images/che-guevara.jpg";
 import { useTranslation } from "react-i18next";
@@ -106,7 +89,7 @@ const ProfileDetails = () => {
         joinDate: userDetails.CreatedDate || new Date().toISOString(),
         avatar: userDetails.ProfileImageUrl && userDetails.ProfileImageUrl.length > 0 
           ? userDetails.ProfileImageUrl[0].documentUrl 
-          : cheGuevaraImg,
+          : null,
         role: userDetails.RoleName || "",
         gender: userDetails.Gender,
         country: userDetails.CountryName,
@@ -379,12 +362,19 @@ const ProfileDetails = () => {
         <div className="relative px-8 py-12">
           <div className="flex flex-col md:flex-row items-center md:items-end space-y-4 md:space-y-0 md:space-x-6 w-full">
             <div className="relative group">
-              <div className="h-32 w-32 rounded-full overflow-hidden border-4 border-white ring-2 ring-custom-bg/50 transition-all duration-300 group-hover:scale-105">
-                <img
-                  src={user?.avatar || cheGuevaraImg}
-                  alt={user?.name}
-                  className="h-full w-full object-cover"
-                />
+              <div className="h-32 w-32 rounded-full overflow-hidden border-4 border-white ring-2 ring-custom-bg/50 transition-all duration-300 group-hover:scale-105 bg-gray-100 flex items-center justify-center">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user?.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <Image className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500">No Image</p>
+                  </div>
+                )}
               </div>
               <button className="absolute bottom-0 right-0 p-2.5 bg-white rounded-full text-custom-bg hover:bg-sky-50 transition-all duration-200 border border-custom-bg hover:scale-110">
                 <Camera className="h-5 w-5" />

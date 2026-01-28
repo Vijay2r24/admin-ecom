@@ -333,7 +333,7 @@ const Users = () => {
 
   return (
     <div
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col"
     >
       {bSubmitting && (
         <div className="global-loader-overlay">
@@ -474,7 +474,8 @@ const Users = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex-1 overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-hide p-4">
           {loading ? (
             <div className="col-span-full text-center py-8">
               <div className="flex justify-center items-center h-32">
@@ -557,17 +558,20 @@ const Users = () => {
             ))
           )}
         </div>
+        </div>
       )}
 
-      <Pagination
-        currentPage={nCurrentPage}
-        totalPages={nTotalPages}
-        totalItems={actualTotal}
-        itemsPerPage={currentPageSize}
-        handlePrevPage={handlePrevPage}
-        handleNextPage={handleNextPage}
-        handlePageClick={handlePageClick}
-      />
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
+        <Pagination
+          currentPage={nCurrentPage}
+          totalPages={nTotalPages}
+          totalItems={actualTotal}
+          itemsPerPage={currentPageSize}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
+      </div>
 
       {statusPopup.open && (
         <FullscreenErrorPopup

@@ -233,7 +233,7 @@ const CreateAttribute = () => {
         dispatch(clearResourceError("attributeTypes"));
       }
     };
-  }, [dispatch, isEditing, attributeValueId, fetchAttributeDetails, attributeTypesError]);
+  }, [dispatch, isEditing, attributeValueId, attributeTypesError]);
 
   /** Input change with live validation */
   const handleInputChange = useCallback((e) => {
