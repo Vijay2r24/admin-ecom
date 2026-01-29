@@ -201,7 +201,7 @@ const Banners = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen">
       <ToastContainer />
-      <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-50 py-3 shadow">
+      <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-10 py-3 shadow">
         <div className="flex-1" />
         <button
           type="button"

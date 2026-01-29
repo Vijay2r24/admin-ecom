@@ -19,11 +19,12 @@ import {
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../context/TitleContext";
 import BackButton from "../components/BackButton";
+import Loader from "../components/Loader";
 import { useNavigate } from "react-router-dom";
 import { GET_ALL_BANNERS, UPDATE_BANNER_SORTORDER } from "../contants/apiRoutes";
 import { apiGet, apiPatch } from "../utils/ApiUtils";
 import { toast } from "react-toastify";
-import { STATUS } from "../contants/constants";
+import { STATUS, STATUS_VALUE_NAMES, DIRECTIONS } from "../contants/constants";
 import { ToastContainer } from "react-toastify";
 const ActiveBannersWithSequence = () => {
   const { t } = useTranslation();
@@ -93,7 +94,7 @@ const ActiveBannersWithSequence = () => {
           .map((banner, index) => ({
             BannerID: banner.BannerId || banner.BannerID,
             BannerName: banner.BannerName,
-            Status: banner.IsActive ? "Active" : "Inactive",
+            Status: banner.IsActive ? STATUS_VALUE_NAMES.ACTIVE : STATUS_VALUE_NAMES.INACTIVE,
             SequenceNumber: banner.SortOrder || index + 1, // Use SortOrder from backend
             SortOrder: banner.SortOrder || index + 1, // Keep original SortOrder
             BannerImages: banner.BannerImage
@@ -153,7 +154,7 @@ const ActiveBannersWithSequence = () => {
       setSwapPreview({
         from: sourceIndex,
         to: destIndex,
-        direction: destIndex > sourceIndex ? "down" : "up",
+        direction: destIndex > sourceIndex ? DIRECTIONS.DOWN : DIRECTIONS.UP,
       });
     } else {
       setSwapPreview(null);
@@ -197,7 +198,7 @@ const ActiveBannersWithSequence = () => {
     if (!banner) return;
 
     const newSequence =
-      direction === "up"
+      direction === DIRECTIONS.UP
         ? banner.SequenceNumber - 1
         : banner.SequenceNumber + 1;
 
@@ -299,6 +300,11 @@ const ActiveBannersWithSequence = () => {
         }`}
     >
       <ToastContainer />
+      {isSubmitting && (
+        <div className="global-loader-overlay">
+          <Loader />
+        </div>
+      )}
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-4">
         <div className="mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
@@ -396,13 +402,13 @@ const ActiveBannersWithSequence = () => {
                           if (index === swapPreview.from) {
                             zIndex = 50;
                           } else if (
-                            swapPreview.direction === "down" &&
+                            swapPreview.direction === DIRECTIONS.DOWN &&
                             index > swapPreview.from &&
                             index <= swapPreview.to
                           ) {
                             transform = "translateY(-100%)";
                           } else if (
-                            swapPreview.direction === "up" &&
+                            swapPreview.direction === DIRECTIONS.UP &&
                             index < swapPreview.from &&
                             index >= swapPreview.to
                           ) {
@@ -528,7 +534,7 @@ const ActiveBannersWithSequence = () => {
 
                             {swapPreview?.from === index && (
                               <div className="absolute -right-4 top-1/2 -translate-y-1/2 bg-custom-bg/70 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                {swapPreview.direction === "up" ? "↑" : "↓"}
+                                {swapPreview.direction === DIRECTIONS.UP ? "↑" : "↓"}
                               </div>
                             )}
                           </div>

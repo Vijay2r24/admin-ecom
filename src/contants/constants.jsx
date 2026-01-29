@@ -443,6 +443,11 @@ export const STATUS_VALUE_NAMES = {
   INACTIVE: "Inactive",
 };
 
+export const DIRECTIONS = {
+  UP: "up",
+  DOWN: "down",
+};
+
 export const COUNTRY_CODES = {
   INDIA: "+91",
   USA: "+1",

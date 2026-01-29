@@ -67,7 +67,7 @@ const ProfileDetails = () => {
         // Fetch user details using Redux thunk
         await dispatch(fetchUserDetails(userId)).unwrap();
       } catch (err) {
-        console.error("Failed to fetch user details:", err);
+        setError(err);
       } finally {
         setLoading(false);
       }

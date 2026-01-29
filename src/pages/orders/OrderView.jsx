@@ -79,43 +79,33 @@ const OrderView = () => {
 
   const getOrderStatusArray = useCallback(() => {
     if (!orderStatusData) {
-      console.log('No order status data found');
       return [];
     }
     
-    console.log('Order status data:', orderStatusData);
-    
     if (Array.isArray(orderStatusData)) {
-      console.log('Order status is array:', orderStatusData.length);
       return orderStatusData;
     }
     
     if (orderStatusData.data && Array.isArray(orderStatusData.data)) {
-      console.log('Order status data.data is array:', orderStatusData.data.length);
       return orderStatusData.data;
     }
     
     if (orderStatusData.data && orderStatusData.data.data && Array.isArray(orderStatusData.data.data)) {
-      console.log('Order status data.data.data is array:', orderStatusData.data.data.length);
       return orderStatusData.data.data;
     }
     
     if (orderStatusData.data && orderStatusData.data.rows && Array.isArray(orderStatusData.data.rows)) {
-      console.log('Order status data.data.rows is array:', orderStatusData.data.rows.length);
       return orderStatusData.data.rows;
     }
     
     if (orderStatusData.rows && Array.isArray(orderStatusData.rows)) {
-      console.log('Order status rows is array:', orderStatusData.rows.length);
       return orderStatusData.rows;
     }
     
     if (orderStatusData && typeof orderStatusData === "object") {
-      console.log('Order status is single object, converting to array');
       return [orderStatusData];
     }
     
-    console.log('No valid order status array found');
     return [];
   }, [orderStatusData]);
 
@@ -254,7 +244,6 @@ const OrderView = () => {
 
         setOrder(mappedOrder);
       } catch (error) {
-        console.error("Failed to fetch data:", error);
         setError(error);
       } finally {
         setLoading(false);
@@ -284,7 +273,6 @@ const OrderView = () => {
 
         setHistory(mappedHistory);
       } catch (error) {
-        console.error("Failed to fetch order item history:", error);
         setError(error);
       } finally {
         setLoading(false);
@@ -347,58 +335,44 @@ const OrderView = () => {
     hideLoaderWithDelay(setbSubmitting);
   }, [oEditingItem?.id, sEditedStatusId, sEditedRemarks, orderId, t]);
 
-  // Get next status options for the editing item
   const getNextStatusOptionsForItem = useCallback(() => {
-    console.log('Getting next status options for item:', oEditingItem);
-    console.log('Order status array length:', orderStatusArray.length);
-    
     if (!oEditingItem || !orderStatusArray.length) {
-      console.log('No editing item or no order status array');
       return [];
     }
 
     const currentStatus = oEditingItem.status;
-    console.log('Current status:', currentStatus);
     
     const currentStatusObj = orderStatusArray.find(
       (status) => (status.OrderStatus || status.StatusName) === currentStatus
     );
-    
-    console.log('Current status object:', currentStatusObj);
 
     if (!currentStatusObj) {
-      console.log('Current status object not found');
       return [];
     }
 
     const currentSortOrder = currentStatusObj.SortOrder || 0;
-    console.log('Current sort order:', currentSortOrder);
 
     const nextStatuses = orderStatusArray
       .filter(
         (status) => {
-          // Check if status has required properties and higher sort order
           const statusId = status.OrderStatusID || status.StatusID;
           const statusName = status.OrderStatus || status.StatusName;
           const sortOrder = status.SortOrder || 0;
           
-          console.log('Checking status:', { statusId, statusName, sortOrder });
-          
           return (
             status &&
-            statusId !== undefined &&
-            statusName !== undefined &&
+            statusId &&
+            statusName &&
             sortOrder > currentSortOrder
           );
         }
       )
       .map((status) => ({
-        value: (status.OrderStatusID || status.StatusID).toString(),
+        value: status.OrderStatusID || status.StatusID,
         label: status.OrderStatus || status.StatusName,
         color: status.Colour?.HexCode || status.Color?.HexCode || "#000000",
       }));
       
-    console.log('Next status options:', nextStatuses);
     return nextStatuses;
   }, [oEditingItem, orderStatusArray]);
 

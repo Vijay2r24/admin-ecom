@@ -12,7 +12,7 @@ import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
 import Switch from "../components/Switch";
-import userProfile from "../../assets/images/userProfile.svg";
+import { Image } from "lucide-react";
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
@@ -98,27 +98,85 @@ const Users = () => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
 
+  // Helper function to check if user has profile image
+  const hasProfileImage = (user) => {
+    if (!user || !user.ProfileImageUrl) return false;
+
+    // Handle empty string
+    if (typeof user.ProfileImageUrl === "string" && user.ProfileImageUrl.trim() === "") {
+      return false;
+    }
+
+    // Handle string format
+    if (typeof user.ProfileImageUrl === "string") {
+      return true;
+    }
+
+    // Handle array format
+    if (Array.isArray(user.ProfileImageUrl)) {
+      if (user.ProfileImageUrl.length === 0) {
+        return false;
+      }
+      
+      // Check if any image has valid documentUrl
+      const validImage = user.ProfileImageUrl.find(img => 
+        img && img.documentUrl && img.documentUrl.trim() !== ""
+      );
+      
+      return !!validImage;
+    }
+
+    // Handle object format (single image object)
+    if (typeof user.ProfileImageUrl === "object" && user.ProfileImageUrl.documentUrl) {
+      return true;
+    }
+
+    return false;
+  };
+
   // Helper function to get profile image URL
   const getProfileImageUrl = (user) => {
-    if (!user.ProfileImageUrl) return userProfile;
+    // Handle null, undefined, or empty ProfileImageUrl
+    if (!user || !user.ProfileImageUrl) return null;
 
-    // Handle both string and array formats
+    // Handle empty string
+    if (typeof user.ProfileImageUrl === "string" && user.ProfileImageUrl.trim() === "") {
+      return null;
+    }
+
+    // Handle string format
     if (typeof user.ProfileImageUrl === "string") {
       return user.ProfileImageUrl;
     }
 
-    if (
-      Array.isArray(user.ProfileImageUrl) &&
-      user.ProfileImageUrl.length > 0
-    ) {
-      // Get the first image with the highest sortOrder or the first one
-      const sortedImages = [...user.ProfileImageUrl].sort(
-        (a, b) => (b.sortOrder || 0) - (a.sortOrder || 0)
+    // Handle array format
+    if (Array.isArray(user.ProfileImageUrl)) {
+      if (user.ProfileImageUrl.length === 0) {
+        return null;
+      }
+      
+      // Get the first image with valid documentUrl
+      const validImage = user.ProfileImageUrl.find(img => 
+        img && img.documentUrl && img.documentUrl.trim() !== ""
       );
-      return sortedImages[0].documentUrl || userProfile;
+      
+      if (validImage) {
+        return validImage.documentUrl;
+      }
+      
+      // Fallback to first image if no valid one found
+      const firstImage = user.ProfileImageUrl[0];
+      if (firstImage && firstImage.documentUrl) {
+        return firstImage.documentUrl;
+      }
     }
 
-    return userProfile;
+    // Handle object format (single image object)
+    if (typeof user.ProfileImageUrl === "object" && user.ProfileImageUrl.documentUrl) {
+      return user.ProfileImageUrl.documentUrl;
+    }
+
+    return null;
   };
 
   // Helper function to get stores as comma-separated string
@@ -394,15 +452,35 @@ const Users = () => {
                     {/* User */}
                     <td className="table-cell text-left">
                       <div className="flex items-center">
-                        <img
-                          className="h-10 w-10 rounded-full object-cover"
-                          src={getProfileImageUrl(user)}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = userProfile;
-                          }}
-                          alt=""
-                        />
+                        {hasProfileImage(user) ? (
+                          <img
+                            className="h-10 w-10 rounded-full object-cover"
+                            src={getProfileImageUrl(user)}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                            alt=""
+                          />
+                        ) : null}
+                        {!hasProfileImage(user) && (
+                          <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                            <Image className="h-5 w-5 text-gray-400" />
+                          </div>
+                        )}
+                        {hasProfileImage(user) && (
+                          <div 
+                            className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center" 
+                            style={{ display: 'none' }}
+                            onError={(e) => {
+                              e.target.style.display = 'flex';
+                              e.target.previousSibling.style.display = 'none';
+                            }}
+                          >
+                            <Image className="h-5 w-5 text-gray-400" />
+                          </div>
+                        )}
                         <div className="ml-4">
                           <div className="table-cell-text">
                             <span className="ellipsis-text">
@@ -498,15 +576,35 @@ const Users = () => {
               >
                 <div className="flex items-center gap-4 pb-2 border-b border-gray-100">
                   <div className="flex-shrink-0 h-12 w-12 bg-gray-100 rounded-full overflow-hidden">
-                    <img
-                      className="h-full w-full object-cover"
-                      src={getProfileImageUrl(user)}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = userProfile;
-                      }}
-                      alt=""
-                    />
+                    {hasProfileImage(user) ? (
+                      <img
+                        className="h-full w-full object-cover"
+                        src={getProfileImageUrl(user)}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                        alt=""
+                      />
+                    ) : null}
+                    {!hasProfileImage(user) && (
+                      <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+                        <Image className="h-6 w-6 text-gray-400" />
+                      </div>
+                    )}
+                    {hasProfileImage(user) && (
+                      <div 
+                        className="h-full w-full bg-gray-100 flex items-center justify-center" 
+                        style={{ display: 'none' }}
+                        onError={(e) => {
+                          e.target.style.display = 'flex';
+                          e.target.previousSibling.style.display = 'none';
+                        }}
+                      >
+                        <Image className="h-6 w-6 text-gray-400" />
+                      </div>
+                    )}
                   </div>
                   <div>
                     <div className="text-title font-bold text-gray-900">
