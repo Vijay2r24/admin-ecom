@@ -448,6 +448,11 @@ export const DIRECTIONS = {
   DOWN: "down",
 };
 
+export const DATA_TYPES = {
+  OBJECT: "object",
+  STRING: "string",
+};
+
 export const COUNTRY_CODES = {
   INDIA: "+91",
   USA: "+1",

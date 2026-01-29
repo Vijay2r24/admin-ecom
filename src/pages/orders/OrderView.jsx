@@ -29,7 +29,7 @@ import TextAreaWithIcon from "../../components/TextAreaWithIcon";
 import StatusBadge from "./StatusBadge";
 import { showEmsg } from "../../utils/ShowEmsg";
 import { useTitle } from "../../context/TitleContext";
-import { STATUS } from "../../contants/constants";
+import { STATUS, DATA_TYPES } from "../../contants/constants";
 import Loader from "../../components/Loader";
 import { hideLoaderWithDelay } from "../../utils/loaderUtils";
 import BackButton from "../../components/BackButton";
@@ -102,7 +102,7 @@ const OrderView = () => {
       return orderStatusData.rows;
     }
     
-    if (orderStatusData && typeof orderStatusData === "object") {
+    if (orderStatusData && typeof orderStatusData === DATA_TYPES.OBJECT) {
       return [orderStatusData];
     }
     

@@ -372,7 +372,7 @@ const ProfileDetails = () => {
                 ) : (
                   <div className="text-center">
                     <Image className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-xs text-gray-500">No Image</p>
+                    <p className="text-xs text-gray-500">{t("COMMON.NO_IMAGE")}</p>
                   </div>
                 )}
               </div>
