@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, MoreVertical, Image as ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { apiGet, apiPatch, apiDelete } from "../utils/ApiUtils";
+import { apiGet,apiPut, apiPatch, apiDelete } from "../utils/ApiUtils";
 import {
   GET_ALL_BANNERS,
   UPDATE_BANNER_STATUS,
@@ -201,7 +201,7 @@ const Banners = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen">
       <ToastContainer />
-      <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-50 py-3 shadow">
+      <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-10 py-3 shadow">
         <div className="flex-1" />
         <button
           type="button"
@@ -230,7 +230,7 @@ const Banners = () => {
             {t("BANNER_FORM.NO_BANNERS_FOUND")}
           </div>
         ) : (
-         <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto scrollbar-hide">
+         <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-hide">
             {paginatedBanners.map((project) => (
               <div
                 key={project.BannerID}

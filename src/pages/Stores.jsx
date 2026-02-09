@@ -360,7 +360,7 @@ const Stores = () => {
 
   return (
     <div
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col"
     >
 
       <ToastContainer />
@@ -519,7 +519,8 @@ const Stores = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex-1 overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-hide p-4">
           {bFilterLoading || storesLoading ? (
             <div className="col-span-full flex justify-center py-8">
               <Loader size="medium" />
@@ -588,6 +589,7 @@ const Stores = () => {
               </div>
             ))
           )}
+        </div>
         </div>
       )}
 
