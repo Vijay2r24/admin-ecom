@@ -44,10 +44,6 @@ export const STATUS_OPTIONS = [
 export const ITEMS_PER_PAGE = 20;
 export const LOCALE = "en-US";
 export const CURRENCY = "INR";
-
-// Document ID for tenant logo updates
-export const DOCUMENT_ID = "77777191-87a8-45f9-b3a9-96caffb51fea";
-
 export const ORDER_STATUS = {
   DELIVERED: "Delivered",
   PENDING: "Pending",

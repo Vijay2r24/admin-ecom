@@ -11,7 +11,7 @@ import banner1 from "../../assets/images/banner1.jpg";
 import mobile from "../../assets/images/mobile.jpg";
 import { useTitle } from "../context/TitleContext";
 import { useTranslation } from "react-i18next";
-import { CUSTOM_COLORS, FILE_CONSTANTS, STATUS } from "../contants/constants";
+import { CUSTOM_COLORS,STATUS } from "../contants/constants";
 import { apiPatch, apiGet } from "../utils/ApiUtils";
 import { UPDATE_TENANT_THEME, UPDATE_TENANT_LOGO, GET_TENANT_SETTINGS } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
@@ -242,14 +242,14 @@ const ThemeSettings = () => {
               disabled={loading}
               className="flex-1 bg-custom-bg hover:bg-bg-hover disabled:opacity-50 rounded-lg py-2 text-sm text-white font-semibold transition-colors shadow-sm"
             >
-              {loading ? 'Updating...' : 'Update Theme'}
+              {loading ? t("COMMON.UPDATING") : t("COMMON.UPDATE_COLOR")}
             </button>
             <button
               onClick={updateLogo}
               disabled={loading || !logoFile}
               className="flex-1 bg-custom-bg hover:bg-bg-hover disabled:opacity-50 rounded-lg py-2 text-sm text-white font-semibold transition-colors shadow-sm"
             >
-              {loading ? 'Updating...' : 'Update Logo'}
+               {loading ? t("COMMON.UPDATING") : t("COMMON.UPDATE_COLOUR")}
             </button>
           </div>
           <button

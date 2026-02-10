@@ -1179,7 +1179,10 @@
     "REQUIRED": "is required",
     "CLEAR_DATE_RANGE": "Clear date range",
     "ACCESS_DENIED_TITLE": "Access to this page is restricted",
-    "REMOVE":"Remove",
+    "UPDATING": "Updating...",
+    "UPDATE_LOGO": "Update Logo",
+    "UPDATE_COLOUR": "Update Colour",
+    "REMOVE": "Remove",
     "ACCESS_DENIED_MESSAGE": "Please check with the site admin if you believe this is a mistake.",
     "EXPORTING": "Exporting.."
   },
