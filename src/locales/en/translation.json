@@ -470,7 +470,8 @@
     "STORE_LOGO": "Store Logo",
     "NO_LOGO": "No Logo",
     "UPLOAD_LOGO": "Upload Logo",
-    "SELECT_LOGO_FIRST": "Please select a logo first"
+    "SELECT_LOGO_FIRST": "Please select a logo first",
+    "NO_LOGO_DOCUMENT_ID": "No logo document ID available. Please refresh the page."
   },
   "ORDERS": {
     "TITLE": "Orders",

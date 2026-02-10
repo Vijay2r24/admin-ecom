@@ -143,3 +143,4 @@ export const UPDATE_INVENTORY = `/updateInventory`;
 export const UPDATE_INVENTORY_STATUS = `/updateInventoryStatus`;
 export const UPDATE_TENANT_THEME = `/updateTenantSettingTheme`;
 export const UPDATE_TENANT_LOGO = `/updateTenantSettingLogo`;
+export const GET_TENANT_SETTINGS = `/getTenantSettings`;

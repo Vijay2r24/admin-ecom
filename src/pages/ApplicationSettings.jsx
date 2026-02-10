@@ -11,9 +11,9 @@ import banner1 from "../../assets/images/banner1.jpg";
 import mobile from "../../assets/images/mobile.jpg";
 import { useTitle } from "../context/TitleContext";
 import { useTranslation } from "react-i18next";
-import { CUSTOM_COLORS, FILE_CONSTANTS, STATUS, DOCUMENT_ID } from "../contants/constants";
-import { apiPatch } from "../utils/ApiUtils";
-import { UPDATE_TENANT_THEME, UPDATE_TENANT_LOGO } from "../contants/apiRoutes";
+import { CUSTOM_COLORS, FILE_CONSTANTS, STATUS } from "../contants/constants";
+import { apiPatch, apiGet } from "../utils/ApiUtils";
+import { UPDATE_TENANT_THEME, UPDATE_TENANT_LOGO, GET_TENANT_SETTINGS } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import Loader from "../components/Loader";
 
@@ -23,6 +23,7 @@ const ThemeSettings = () => {
   const [primaryColor, setPrimaryColor] = useState(defaultColor);
   const [logo, setLogo] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
+  const [currentLogoDocumentId, setCurrentLogoDocumentId] = useState(null);
   const [loading, setLoading] = useState(false);
   const { setTitle } = useTitle();
 
@@ -33,9 +34,9 @@ const ThemeSettings = () => {
     return localStorage.getItem('tenantID');
   };
 
-  // Get DocumentID from constants
+  // Get DocumentID from current logo - no hardcoded fallback
   const getDocumentId = () => {
-    return DOCUMENT_ID;
+    return currentLogoDocumentId;
   };
 
   const handleLogoUpload = (e) => {
@@ -68,6 +69,11 @@ const ThemeSettings = () => {
   const updateLogo = async () => {
     if (!logoFile) {
       showEmsg(t("THEMESETTINGS.SELECT_LOGO_FIRST"), STATUS.WARNING);
+      return;
+    }
+
+    if (!currentLogoDocumentId) {
+      showEmsg(t("THEMESETTINGS.NO_LOGO_DOCUMENT_ID"), STATUS.ERROR);
       return;
     }
 
@@ -106,10 +112,49 @@ const ThemeSettings = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const getTenantSettings = async () => {
+    try {
+      const response = await apiGet(GET_TENANT_SETTINGS);
+      
+      // Handle different response structures
+      let settings = null;
+      if (response?.data) {
+        // Check if data is directly the settings object
+        if (response.data.ThemeColour || response.data.LogoUrl) {
+          settings = response.data;
+        } else if (response.data.data) {
+          settings = response.data.data;
+        }
+      }
+      
+      if (settings) {
+        // Set theme color if available
+        if (settings.ThemeColour) {
+          setPrimaryColor(settings.ThemeColour);
+        }
+        
+        // Set logo if available - LogoUrl is an array, get the first one or find one with sortOrder 1
+        if (settings.LogoUrl && settings.LogoUrl.length > 0) {
+          // Find logo with sortOrder 1 or take the first one
+          const logo = settings.LogoUrl.find(logo => logo.sortOrder === 1) || settings.LogoUrl[0];
+          if (logo && logo.documentUrl) {
+            setLogo(logo.documentUrl);
+            // Store the current documentId for updates
+            if (logo.documentId) {
+              setCurrentLogoDocumentId(logo.documentId);
+            }
+          }
+        }
+      }
+    } catch (error) {
+    }
+  };
+
   const categories = [women, beauty, kids, men, accessories, mobile];
   useEffect(() => {
     setTitle(t("THEMESETTINGS.TITLE"));
-  }, [setTitle, t]);
+    getTenantSettings(); // Fetch tenant settings on component mount
+  }, [setTitle, t]); // Remove getTenantSettings from dependencies to prevent infinite calls
 
   return (
     <React.Fragment>
