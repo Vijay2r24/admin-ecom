@@ -8,17 +8,18 @@ import {
 } from "../../contants/apiRoutes";
 import { showEmsg } from "../../utils/ShowEmsg";
 import { EXPORT_TYPES, REPORT_FILE_NAMES, STATUS } from "../../contants/constants";
-import i18next from "i18next"; 
+import i18next from "i18next";
 
 export const exportOrderReport = createAsyncThunk(
   "export/orderReport",
-  async ({ 
-    searchText, 
-    startDate, 
-    endDate, 
-    paymentStatus,
-    paymentType,
-    paymentMethod 
+  async ({
+    searchText,
+    startDate,
+    endDate,
+    paymentStatusId,
+    paymentTypeId,
+    paymentMethodId,
+    storeId // Added storeId
   }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
@@ -27,9 +28,10 @@ export const exportOrderReport = createAsyncThunk(
         searchText: searchText || null,
         startDate: startDate ? new Date(startDate).toISOString() : null,
         endDate: endDate ? new Date(endDate).toISOString() : null,
-        paymentStatus: paymentStatus || null,
-        paymentType: paymentType || null,
-        paymentMethod: paymentMethod || null,
+        paymentStatusId: paymentStatusId || null,
+        paymentTypeId: paymentTypeId || null,
+        paymentMethodId: paymentMethodId || null,
+        storeId: storeId || null // Added storeId to request
       };
 
       // Remove null/undefined parameters
@@ -77,11 +79,11 @@ export const exportOrderReport = createAsyncThunk(
  */
 export const exportStoreReport = createAsyncThunk(
   "export/storeReport",
-  async ({ 
-    searchText, 
-    startDate, 
-    endDate, 
-    isActive 
+  async ({
+    searchText,
+    startDate,
+    endDate,
+    isActive
   }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
@@ -140,13 +142,13 @@ export const exportStoreReport = createAsyncThunk(
  */
 export const exportProductReport = createAsyncThunk(
   "export/productReport",
-  async ({ 
-    searchText, 
-    startDate, 
-    endDate, 
+  async ({
+    searchText,
+    startDate,
+    endDate,
     isActive,
     brandId,
-    categoryId 
+    categoryId
   }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
@@ -205,13 +207,13 @@ export const exportProductReport = createAsyncThunk(
  */
 export const exportPaymentReport = createAsyncThunk(
   "export/paymentReport",
-  async ({ 
-    searchText, 
-    startDate, 
-    endDate, 
-    paymentStatus,
-    paymentType,
-    paymentMethod 
+  async ({
+    searchText,
+    startDate,
+    endDate,
+    paymentStatusId,
+    paymentTypeId,
+    paymentMethodId
   }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
@@ -220,9 +222,9 @@ export const exportPaymentReport = createAsyncThunk(
         searchText: searchText || null,
         startDate: startDate ? new Date(startDate).toISOString() : null,
         endDate: endDate ? new Date(endDate).toISOString() : null,
-        paymentStatus: paymentStatus || null,
-        paymentType: paymentType || null,
-        paymentMethod: paymentMethod || null,
+        paymentStatusId: paymentStatusId || null,
+        paymentTypeId: paymentTypeId || null,
+        paymentMethodId: paymentMethodId || null,
       };
 
       // Remove null/undefined parameters
@@ -284,7 +286,7 @@ const exportSlice = createSlice({
       else if (exportType === EXPORT_TYPES.PAYMENT) state.paymentExport.error = null;
     },
   },
-  
+
   extraReducers: (builder) => {
     const handlePending = (section) => {
       section.loading = true;
