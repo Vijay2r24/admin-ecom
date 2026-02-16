@@ -105,11 +105,18 @@ const ThemeSettings = () => {
     }
   };
 
+  const removeLogo = () => {
+    setLogo(null);
+    setLogoFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleReset = () => {
     setPrimaryColor(defaultColor);
     setLogo(null);
     setLogoFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    getTenantSettings(); // Fetch tenant settings from API
   };
 
   const getTenantSettings = async () => {
@@ -182,19 +189,18 @@ const ThemeSettings = () => {
             }
           />
           <div className="space-y-2">
-            <div className="relative">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleLogoUpload}
-                className="absolute w-full h-full opacity-0 cursor-pointer z-10"
-              />
-
               <div className="mt-6">
                 <p className="text-sm font-medium text-gray-700 mb-2">
                   {t("THEMESETTINGS.STORE_LOGO")}
                 </p>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
 
                 <div className="flex items-center gap-4">
                   <div className="w-20 h-20 rounded-xl border border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50">
@@ -221,11 +227,7 @@ const ThemeSettings = () => {
                     </button>
                     {logo && (
                       <button
-                        onClick={() => {
-  setLogo(null);
-  setLogoFile(null);
-  if (fileInputRef.current) fileInputRef.current.value = "";
-}}
+                        onClick={removeLogo}
                         className="text-xs text-red-500 hover:text-red-700 font-medium text-left"
                       >
                         {t("COMMON.REMOVE")}
@@ -234,7 +236,6 @@ const ThemeSettings = () => {
                   </div>
                 </div>
               </div>
-            </div>
           </div>
           <div className="flex gap-3 mt-6">
             <button
@@ -242,14 +243,14 @@ const ThemeSettings = () => {
               disabled={loading}
               className="flex-1 bg-custom-bg hover:bg-bg-hover disabled:opacity-50 rounded-lg py-2 text-sm text-white font-semibold transition-colors shadow-sm"
             >
-              {loading ? t("COMMON.UPDATING") : t("COMMON.UPDATE_COLOR")}
+              {loading ? t("COMMON.UPDATING") : t("COMMON.UPDATE_COLOUR")}
             </button>
             <button
               onClick={updateLogo}
               disabled={loading || !logoFile}
               className="flex-1 bg-custom-bg hover:bg-bg-hover disabled:opacity-50 rounded-lg py-2 text-sm text-white font-semibold transition-colors shadow-sm"
             >
-               {loading ? t("COMMON.UPDATING") : t("COMMON.UPDATE_COLOUR")}
+               {loading ? t("COMMON.UPDATING") : t("COMMON.UPDATE_LOGO")}
             </button>
           </div>
           <button
