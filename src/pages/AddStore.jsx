@@ -50,7 +50,7 @@ const AddStore = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { setTitle, setBackButton } = useTitle();
-  const [status, setStatus] = useState(false);
+  const [status, setStatus] = useState(true);
   const [oFormData, setFormData] = useState({
     name: "",
     address: "",

@@ -220,7 +220,7 @@ const Header = ({ onMenuClick }) => {
                 />
                 <div className="absolute bottom-0 right-0 h-2 w-2 bg-green-500 rounded-full border border-white"></div>
               </div>
-              <div className="hidden sm:block text-left ml-2">
+              <div className="hidden sm:block text-left ml-2 z-50">
                 <div className="text-xs font-semibold text-gray-900 truncate max-w-[120px] whitespace-nowrap overflow-hidden text-ellipsis">
                   {oUserDetails?.FirstName} {oUserDetails?.LastName}
                 </div>

@@ -29,7 +29,7 @@ import TextAreaWithIcon from "../../components/TextAreaWithIcon";
 import StatusBadge from "./StatusBadge";
 import { showEmsg } from "../../utils/ShowEmsg";
 import { useTitle } from "../../context/TitleContext";
-import { STATUS, MODULES, PERMISSIONS, TOOLTIP_MESSAGES } from "../../contants/constants";
+import { STATUS, MODULES, PERMISSIONS, TOOLTIP_MESSAGES,DATA_TYPES } from "../../contants/constants";
 import Loader from "../../components/Loader";
 import { hideLoaderWithDelay } from "../../utils/loaderUtils";
 import BackButton from "../../components/BackButton";
@@ -87,10 +87,8 @@ const OrderView = () => {
 
   useEffect(() => {
     // Fetch order statuses if not already loaded
-    if (!orderStatusData) {
-      dispatch(fetchResource({ key: "orderStatuses" }));
-    }
-  }, [dispatch, orderStatusData]);
+    dispatch(fetchResource({ key: "orderStatuses" }));
+  }, [dispatch]);
 
   useEffect(() => {
     if (location.state?.orderItem) {
@@ -101,23 +99,34 @@ const OrderView = () => {
   }, [location.state]);
 
   const getOrderStatusArray = useCallback(() => {
-    if (!orderStatusData) return [];
-    if (Array.isArray(orderStatusData)) return orderStatusData;
-    if (
-      orderStatusData.data &&
-      orderStatusData.data.data &&
-      Array.isArray(orderStatusData.data.data.rows)
-    ) {
-      return orderStatusData.data.data.rows;
+    if (!orderStatusData) {
+      return [];
     }
-    if (orderStatusData.data && Array.isArray(orderStatusData.data.rows)) {
+    
+    if (Array.isArray(orderStatusData)) {
+      return orderStatusData;
+    }
+    
+    if (orderStatusData.data && Array.isArray(orderStatusData.data)) {
+      return orderStatusData.data;
+    }
+    
+    if (orderStatusData.data && orderStatusData.data.data && Array.isArray(orderStatusData.data.data)) {
+      return orderStatusData.data.data;
+    }
+    
+    if (orderStatusData.data && orderStatusData.data.rows && Array.isArray(orderStatusData.data.rows)) {
       return orderStatusData.data.rows;
     }
+    
     if (orderStatusData.rows && Array.isArray(orderStatusData.rows)) {
       return orderStatusData.rows;
     }
-    if (orderStatusData && typeof orderStatusData === "object")
+    
+    if (orderStatusData && typeof orderStatusData === DATA_TYPES.OBJECT) {
       return [orderStatusData];
+    }
+    
     return [];
   }, [orderStatusData]);
 
@@ -135,7 +144,7 @@ const OrderView = () => {
       // Find the current status in the order status array
       const currentStatusObj = orderStatusArray.find(
         (status) =>
-          status.OrderStatus.toLowerCase() === currentStatus.toLowerCase()
+          (status.OrderStatus || status.StatusName)?.toLowerCase() === currentStatus.toLowerCase()
       );
 
       if (!currentStatusObj) return [];
@@ -144,9 +153,9 @@ const OrderView = () => {
       return orderStatusArray
         .filter(
           (status) =>
-            status.OrderStatus.toLowerCase() !== currentStatus.toLowerCase()
+            (status.OrderStatus || status.StatusName)?.toLowerCase() !== currentStatus.toLowerCase()
         )
-        .map((status) => status.OrderStatus);
+        .map((status) => status.OrderStatus || status.StatusName);
     },
     [orderStatusArray]
   );
@@ -160,11 +169,11 @@ const OrderView = () => {
     setEditingItem(item);
 
     const currentStatus = orderStatusArray.find(
-      (status) => status.OrderStatus === item.status
+      (status) => (status.OrderStatus || status.StatusName) === item.status
     );
 
     setEditedStatus(item.status || "");
-    setEditedStatusId(currentStatus?.StatusID || null);
+    setEditedStatusId(currentStatus?.OrderStatusID || currentStatus?.StatusID || null);
     setEditedRemarks("");
     setShowEditDialog(true);
   };
@@ -256,7 +265,6 @@ const OrderView = () => {
 
         setOrder(mappedOrder);
       } catch (error) {
-        console.error("Failed to fetch data:", error);
         setError(error);
       } finally {
         setLoading(false);
@@ -286,7 +294,6 @@ const OrderView = () => {
 
         setHistory(mappedHistory);
       } catch (error) {
-        console.error("Failed to fetch order item history:", error);
         setError(error);
       } finally {
         setLoading(false);
@@ -366,32 +373,45 @@ const OrderView = () => {
     hideLoaderWithDelay(setbSubmitting);
   }, [oEditingItem?.id, sEditedStatusId, sEditedRemarks, orderId, t]);
 
-  // Get next status options for the editing item
   const getNextStatusOptionsForItem = useCallback(() => {
-    if (!oEditingItem || !orderStatusArray.length) return [];
+    if (!oEditingItem || !orderStatusArray.length) {
+      return [];
+    }
 
     const currentStatus = oEditingItem.status;
+    
     const currentStatusObj = orderStatusArray.find(
-      (status) => status.OrderStatus === currentStatus
+      (status) => (status.OrderStatus || status.StatusName) === currentStatus
     );
 
-    if (!currentStatusObj) return [];
+    if (!currentStatusObj) {
+      return [];
+    }
 
-    const currentSortOrder = currentStatusObj.SortOrder;
+    const currentSortOrder = currentStatusObj.SortOrder || 0;
 
-    return orderStatusArray
+    const nextStatuses = orderStatusArray
       .filter(
-        (status) =>
-          status &&
-          typeof status.OrderStatusID !== "undefined" &&
-          typeof status.OrderStatus !== "undefined" &&
-          status.SortOrder > currentSortOrder // Only show statuses with higher sort order
+        (status) => {
+          const statusId = status.OrderStatusID || status.StatusID;
+          const statusName = status.OrderStatus || status.StatusName;
+          const sortOrder = status.SortOrder || 0;
+          
+          return (
+            status &&
+            statusId &&
+            statusName &&
+            sortOrder > currentSortOrder
+          );
+        }
       )
       .map((status) => ({
-        value: status.OrderStatusID.toString(),
-        label: status.OrderStatus,
-        color: status.Colour?.HexCode || "#000000",
+        value: status.OrderStatusID || status.StatusID,
+        label: status.OrderStatus || status.StatusName,
+        color: status.Colour?.HexCode || status.Color?.HexCode || "#000000",
       }));
+      
+    return nextStatuses;
   }, [oEditingItem, orderStatusArray]);
 
   const orderStatusOptions = getNextStatusOptionsForItem();
@@ -888,10 +908,11 @@ const OrderView = () => {
                   onChange={(e) => {
                     const selectedStatusId = e.target.value;
                     const selectedStatus = orderStatusArray.find(
-                      (status) => status.StatusID === parseInt(selectedStatusId)
+                      (status) => 
+                        (status.OrderStatusID || status.StatusID) === parseInt(selectedStatusId)
                     );
                     setEditedStatusId(parseInt(selectedStatusId));
-                    setEditedStatus(selectedStatus?.OrderStatus || "");
+                    setEditedStatus(selectedStatus?.OrderStatus || selectedStatus?.StatusName || "");
                   }}
                   options={orderStatusOptions}
                   Icon={Truck}

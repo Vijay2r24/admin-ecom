@@ -9,6 +9,8 @@ import { getPermissionCode } from './utils/permissionUtils';
 import { Provider } from "react-redux";
 import { store } from "./store/index";
 import { MODULES, PERMISSIONS } from './contants/constants';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Direct imports instead of lazy loading
 import Layout from "./layout/Layout";
@@ -410,6 +412,18 @@ const App = () => {
           </LocationDataProvider>
         </TitleProvider>
       </AllDataProvider>
+      <ToastContainer
+        position="top-right"
+        autoClose={1400}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </Provider>
   );
 };

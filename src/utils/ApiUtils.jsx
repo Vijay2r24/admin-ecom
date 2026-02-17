@@ -39,11 +39,10 @@ const showLogoutNotification = (message, fallbackText = INACTIVE_USER_MESSAGE) =
   const html = `
     <div style="display:flex;flex-direction:column;gap:8px;text-align:left;">
       <p style="margin:0;">${fallbackText}</p>
-      ${
-        message
-          ? `<p style="margin:0;color:#dc2626;font-weight:600;">Error: ${message}</p>`
-          : ""
-      }
+      ${message
+      ? `<p style="margin:0;color:#dc2626;font-weight:600;">Error: ${message}</p>`
+      : ""
+    }
       <p style="margin:0;font-size:14px;color:#1f2937;">
         Auto logout in <span data-swal-timer-countdown>10</span> seconds.
       </p>
@@ -193,6 +192,7 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
         } else {
           showEmsg(msg || DEFAULT_ERROR_MESSAGE, "error");
         }
+        // Don't show toast here - let components handle their own error display
         return Promise.reject(new Error(msg));
       }
 
@@ -209,7 +209,7 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       if (axios.isCancel(error)) {
         // Return a special promise that never resolves or rejects
         // This completely silences the error for the caller
-        return new Promise(() => {}); // Hung promise - never settles
+        return new Promise(() => { }); // Hung promise - never settles
       }
 
       // Safe error message extraction
@@ -250,6 +250,7 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       } else {
         showEmsg(msg, "error");
       }
+      // Don't show toast here - let components handle their own error display
 
       return Promise.reject(error);
     }

@@ -396,7 +396,9 @@ const Payments = () => {
   };
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+    <div
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col"
+    >
       <ToastContainer />
       {bSubmitting && (
         <div className="global-loader-overlay">
@@ -557,7 +559,8 @@ const Payments = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex-1 overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 h-full overflow-y-auto scrollbar-hide p-4">
           {bFilterLoading || paymentsLoading ? (
             <div className="col-span-full flex justify-center py-8">
               <Loader size="medium" />
@@ -630,6 +633,7 @@ const Payments = () => {
             ))
           )}
         </div>
+        </div>
       )}
 
       {deletePopup.open && (
@@ -642,15 +646,17 @@ const Payments = () => {
       )}
 
       {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        </div>
       )}
     </div>
   );

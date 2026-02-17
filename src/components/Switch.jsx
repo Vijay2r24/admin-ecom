@@ -38,9 +38,12 @@ const Switch = ({
       <div
         className={`
           absolute top-[2px] left-[2px]
-          h-4 w-4 bg-white border border-gray-300 rounded-full
-          transition-all
-          ${checked ? "translate-x-[18px]" : ""}
+          h-4 w-4 bg-white rounded-full
+          transition-all shadow-sm border-2 border-gray-200
+          ${checked 
+            ? "translate-x-[16px]" 
+            : ""
+          }
         `}
       />
 

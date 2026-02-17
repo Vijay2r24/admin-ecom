@@ -519,7 +519,9 @@ const OrderList = () => {
   }, []);
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+    <div
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col"
+    >
       <ToastContainer />
       <Toolbar
         searchTerm={sSearchTerm}
@@ -723,7 +725,8 @@ const OrderList = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="flex-1 overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-hide p-4">
           {bLoading ? (
             <div className="col-span-full text-center py-8 text-gray-500">
               {t("COMMON.LOADING")}
@@ -744,10 +747,10 @@ const OrderList = () => {
             aOrders.map((order) => (
               <div
                 key={order.orderId}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full"
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full"
               >
                 {/* Header Section */}
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3">
                   <div className="text-sm font-semibold text-gray-900 truncate max-w-[120px]">
                     {order.orderId}
                   </div>
@@ -761,7 +764,7 @@ const OrderList = () => {
                 </div>
 
                 {/* Order Details */}
-                <div className="space-y-3 flex-1">
+                <div className="space-y-2 flex-1">
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 font-medium">
                       {t("ORDERS.TABLE.ORDER_DATE")}
@@ -799,7 +802,7 @@ const OrderList = () => {
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                  <div className="flex justify-between items-center pt-1 border-t border-gray-100">
                     <span className="text-xs text-gray-500 font-medium">
                       {t("COMMON.TOTAL_ORDER_ITEMS")}
                     </span>
@@ -812,7 +815,7 @@ const OrderList = () => {
                 {/* Action Button */}
                 <button
                   onClick={() => handleViewOrder(order)}
-                  className={`mt-4 w-full inline-flex justify-center items-center px-4 py-2 border rounded-lg font-medium transition-colors duration-150 text-sm ${hasViewPermission
+                  className={`mt-3 w-full inline-flex justify-center items-center px-3 py-1.5 border rounded-lg font-medium transition-colors duration-150 text-sm ${hasViewPermission
                     ? 'border-[#5B45E0] text-[#5B45E0] hover:bg-[#5B45E0]/10 cursor-pointer'
                     : 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
                     }`}
@@ -825,18 +828,21 @@ const OrderList = () => {
             ))
           )}
         </div>
+        </div>
       )}
 
       {aOrders.length > 0 && (
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={sTotalPages}
-          totalItems={nTotalRecords}
-          itemsPerPage={nProductsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={sTotalPages}
+            totalItems={nTotalRecords}
+            itemsPerPage={nProductsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        </div>
       )}
     </div>
   );
