@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { logout } from "../store/slices/authSlice";
-import IdleLogout from "../components/IdleLogout";
 import { useSelector, useDispatch } from "react-redux";
 
 const Layout = ({ children }) => {
@@ -21,7 +20,6 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-        <IdleLogout isLoggedIn={isLoggedIn} onLogout={handleLogout}/> 
       <div
         className={`  
           fixed top-0 left-0 z-50 h-screen transition-all duration-300 ease-in-out
@@ -47,7 +45,7 @@ const Layout = ({ children }) => {
           ${bIsMobileSidebarOpen ? 'pl-56' : 'pl-0'}
           ${bIsSidebarOpen && bIsCollapsed ? 'lg:pl-16' : ''}
           ${bIsSidebarOpen && !bIsCollapsed ? 'lg:pl-56' : ''}
-          {!bIsSidebarOpen ? 'lg:pl-0' : ''}
+          ${!bIsSidebarOpen ? 'lg:pl-0' : ''}
         `}
       >
         <Header onMenuClick={() => setIsMobileSidebarOpen(!bIsMobileSidebarOpen)} />

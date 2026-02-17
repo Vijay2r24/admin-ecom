@@ -1,6 +1,9 @@
-import { useTranslation } from "react-i18next";
+import React from 'react';
 import { Edit, Trash, Eye } from 'lucide-react';
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import Tooltip from './Tooltip';
+import { TOOLTIP_MESSAGES } from '../contants/constants';
 
 const ActionButtons = ({ 
   id, 
@@ -20,48 +23,55 @@ const ActionButtons = ({
 
       {/* EDIT BUTTON */}
       {onEdit && (
-        <button 
-          onClick={() => onEdit(id)}
-          disabled={disableEdit}
-          className={`p-2 rounded transition ${
-            disableEdit
-              ? "cursor-not-allowed text-gray-400 opacity-50"
-              : "action-button"
-          }`}
-          title={t('COMMON.EDIT')}
+        <Tooltip 
+          text={TOOLTIP_MESSAGES.EDIT} 
+          position="top"
         >
-          <Edit className="h-5 w-5" />
-        </button>
+          <button 
+            onClick={() => onEdit(id)}
+            disabled={disableEdit}
+            className={`p-2 rounded transition ${
+              disableEdit
+                ? "cursor-not-allowed text-gray-400 opacity-50"
+                : "action-button"
+            }`}
+          >
+            <Edit className="h-5 w-5" />
+          </button>
+        </Tooltip>
       )}
 
       {/* DELETE BUTTON */}
       {onDelete && canDelete && (
-        <button 
-          onClick={() => onDelete(id)}
-          className="action-button"
-          title={t('COMMON.DELETE')}
-        >
-          <Trash className="h-5 w-5" />
-        </button>
+        <Tooltip text={TOOLTIP_MESSAGES.DELETE} position="top">
+          <button 
+            onClick={() => onDelete(id)}
+            className="action-button"
+          >
+            <Trash className="h-5 w-5" />
+          </button>
+        </Tooltip>
       )}
 
       {/* VIEW BUTTON */}
       {viewLink && (
         disableView ? (
-          <div 
-            className="p-2 rounded cursor-not-allowed text-gray-400 opacity-50"
-            title={t("COMMON.VIEW")}
-          >
-            <Eye className="h-5 w-5" />
-          </div>
+          <Tooltip text={TOOLTIP_MESSAGES.VIEW} position="top">
+            <div 
+              className="p-2 rounded cursor-not-allowed text-gray-400 opacity-50"
+            >
+              <Eye className="h-5 w-5" />
+            </div>
+          </Tooltip>
         ) : (
-          <Link 
-            to={viewLink}
-            className="view-button"
-            title={t("COMMON.VIEW")}
-          >
-            <Eye className="h-5 w-5" />
-          </Link>
+          <Tooltip text={TOOLTIP_MESSAGES.VIEW} position="top">
+            <Link 
+              to={viewLink}
+              className="view-button"
+            >
+              <Eye className="h-5 w-5" />
+            </Link>
+          </Tooltip>
         )
       )}
 

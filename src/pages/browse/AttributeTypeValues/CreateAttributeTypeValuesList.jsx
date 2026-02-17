@@ -66,15 +66,7 @@ const CreateAttribute = () => {
    * Live validation functions
    */
   const validateValue = (value) => {
-    if (!value?.trim()) {
-      return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.NAME_REQUIRED");
-    }
-    if (value.trim().length < 2) {
-      return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.NAME_MIN_LENGTH");
-    }
-    if (value.trim().length > 100) {
-      return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.NAME_MAX_LENGTH");
-    }
+    // No validation - allow any input including single characters and numbers
     return "";
   };
 
@@ -141,11 +133,12 @@ const CreateAttribute = () => {
   }, [oFormData, validateField]);
 
   /**
-   * Handle field blur for additional validation
+   * Handle field blur for validation - especially important for Value field
    */
   const handleBlur = useCallback((e) => {
     const { name, value } = e.target;
     markFieldTouched(name);
+    // Always validate on blur, including Value field
     validateField(name, value, true);
   }, [markFieldTouched, validateField]);
 
@@ -233,9 +226,9 @@ const CreateAttribute = () => {
         dispatch(clearResourceError("attributeTypes"));
       }
     };
-  }, [dispatch, isEditing, attributeValueId, fetchAttributeDetails, attributeTypesError]);
+  }, [dispatch, isEditing, attributeValueId]); // Removed fetchAttributeDetails and attributeTypesError from dependencies
 
-  /** Input change with live validation */
+  /** Input change with reduced validation frequency */
   const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === "checkbox" ? checked : value;
@@ -245,8 +238,12 @@ const CreateAttribute = () => {
       [name]: newValue,
     }));
 
-    validateField(name, newValue, oFieldTouched[name]);
-    markFieldTouched(name);
+    // Only validate on blur for Value field to reduce API calls and improve performance
+    // Don't validate on every keystroke
+    if (name !== "Value") {
+      validateField(name, newValue, oFieldTouched[name]);
+      markFieldTouched(name);
+    }
   }, [validateField, markFieldTouched, oFieldTouched]);
 
   /** Validation */

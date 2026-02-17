@@ -93,6 +93,13 @@ const OrderList = () => {
   );
   const hasViewPermission = hasPermissionId(permissionIdForView);
 
+  // Permission check for Generate Order Report
+  const permissionIdForExport = getPermissionCode(
+    MODULES.ORDER,
+    PERMISSIONS.GENERATE_ORDER_REPORT
+  );
+  const hasExportPermission = hasPermissionId(permissionIdForExport);
+
   // Update URL parameters when filters change
   useEffect(() => {
     const params = {};
@@ -476,6 +483,11 @@ const OrderList = () => {
   }, [sSearchTerm, sFilterStatus]);
 
   const handleExportOrders = useCallback(async () => {
+    // Check permission before exporting
+    if (!hasExportPermission) {
+      return;
+    }
+    
     setExportLoading(true);
     try {
       const startDate = formatDateForAPI(oFilters.startDate);
@@ -500,7 +512,7 @@ const OrderList = () => {
     } finally {
       setExportLoading(false);
     }
-  }, [dispatch, sSearchTerm, oFilters, t]);
+  }, [dispatch, sSearchTerm, oFilters, t, hasExportPermission]);
 
   const handleTableScroll = useCallback((e) => {
     setTableScrollTop(e.target.scrollTop);
@@ -522,6 +534,7 @@ const OrderList = () => {
         onClearFilters={handleClearFilters}
         onExport={handleExportOrders}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
+        exportDisabled={!hasExportPermission}
       />
 
       {sViewMode === "table" ? (

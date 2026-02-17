@@ -14,6 +14,7 @@ import { showEmsg } from "../../../utils/ShowEmsg";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import { UPDATE_BRAND_STATUS } from "../../../contants/apiRoutes";
 import Switch from "../../../components/Switch";
+import Tooltip from "../../../components/Tooltip";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -21,8 +22,11 @@ import {
   STATUS_VALUES,
   STATUS_OPTIONS,
   customScrollbarStyles,
+  PERMISSIONS,
+  MODULES,
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
+import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
 
 const BrandList = ({ onCreate, onBack, setSubmitting }) => {
   const dispatch = useDispatch();
@@ -49,6 +53,24 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
   const bLoading = brandsState?.loading || false;
   const sError = brandsState?.error || null;
   const iTotalItems = brandsState?.total || 0;
+
+  // --- Permission Checks ---
+  const permissionIdForAddBrand = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.ADD_BRAND
+  );
+  const permissionIdForEditBrand = getPermissionCode(
+    MODULES.PRODUCT_SETUP, 
+    PERMISSIONS.EDIT_BRAND
+  );
+  const permissionIdForUpdateBrandStatus = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.UPDATE_BRAND_STATUS
+  );
+
+  const hasAddBrandPermission = hasPermissionId(permissionIdForAddBrand);
+  const hasEditBrandPermission = hasPermissionId(permissionIdForEditBrand);
+  const hasUpdateBrandStatusPermission = hasPermissionId(permissionIdForUpdateBrandStatus);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -96,10 +118,29 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
   };
 
   const handleStatusChange = (brandId, currentIsActive) => {
+    // Check permission before allowing status change
+    if (!hasUpdateBrandStatusPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     setStatusPopup({ open: true, brandId, newStatus: !currentIsActive });
   };
 
+  const handleCreateBrand = () => {
+    // Check permission before allowing brand creation
+    if (!hasAddBrandPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
+    onCreate();
+  };
+
   const handleStatusConfirm = async () => {
+    // Check permission before updating status
+    if (!hasUpdateBrandStatusPermission) {
+      return;
+    }
+
     if (setSubmitting) setSubmitting(true);
     const { brandId, newStatus } = statusPopup;
 
@@ -169,10 +210,10 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
           showSearch={true}
           showViewToggle={false}
           
-          // --- Permissions removed ---
-          onCreate={onCreate}
+          // --- Permission-based Create Button ---
+          onCreate={handleCreateBrand}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          disableCreate={false}
+          disableCreate={!hasAddBrandPermission}
 
           showFilterButton={true}
           additionalFilters={
@@ -240,11 +281,11 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                     }`}
                   >
                     {/* Brand Name & Logo */}
-                    <td className="table-cell table-cell-text text-left align-middle px-6 py-4">
+                    <td className="table-cell text-left align-middle px-6 py-4">
                       <div className="flex items-center gap-3">
                         {/* Brand Logo */}
                         <div
-                          className={`h-10 w-10 flex items-center justify-center rounded-full border overflow-hidden ${
+                          className={`h-10 w-10 flex items-center justify-center rounded-full border-2 overflow-hidden flex-shrink-0 ${
                             !brand.IsActive
                               ? "bg-gray-100 border-gray-200"
                               : "bg-white border-gray-300"
@@ -255,7 +296,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                             <img
                               src={brand.BrandLogo[0].documentUrl}
                               alt={brand.BrandName}
-                              className={`w-full h-full object-cover ${
+                              className={`w-full h-full object-cover rounded-full ${
                                 !brand.IsActive ? "opacity-60" : ""
                               }`}
                               onError={(e) => {
@@ -276,22 +317,41 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                           )}
                         </div>
 
-                        {/* Brand Name - Conditional Link based only on Status */}
-                        {brand.editable && brand.IsActive ? (
-                          <Link
-                            to={`/browse/editbrand/${brand.BrandID}`}
-                            className="text-blue-600 hover:underline block truncate max-w-[200px] font-medium"
-                          >
-                            {brand.BrandName}
-                          </Link>
-                        ) : (
-                          <span
-                            className="block truncate max-w-[200px] font-medium text-gray-500 cursor-not-allowed"
-                            title={t("PRODUCT_SETUP.BRANDS.EDIT_DISABLED_TOOLTIP")}
-                          >
-                            {brand.BrandName}
-                          </span>
-                        )}
+                        {/* Brand Name - Simple Link with Permission Check */}
+                        <div className="relative group inline-block w-full">
+                          {brand.IsActive ? (
+                            <Tooltip
+                              text={hasEditBrandPermission ? t("TOOLTIPS.EDIT_BRAND_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
+                              position="bottom-right"
+                            >
+                              {hasEditBrandPermission ? (
+                                <Link
+                                  to={`/browse/editbrand/${brand.BrandID}`}
+                                  className="text-sm text-blue-600 hover:underline block truncate max-w-[200px] font-medium"
+                                >
+                                  {brand.BrandName}
+                                </Link>
+                              ) : (
+                                <span
+                                  className="text-sm block truncate max-w-[200px] font-medium text-gray-500 cursor-not-allowed"
+                                >
+                                  {brand.BrandName}
+                                </span>
+                              )}
+                            </Tooltip>
+                          ) : (
+                            <Tooltip
+                              text={t("PRODUCT_SETUP.BRANDS.EDIT_DISABLED_TOOLTIP")}
+                              position="bottom-right"
+                            >
+                              <span
+                                className="text-sm block truncate max-w-[200px] font-medium text-gray-500 cursor-not-allowed"
+                              >
+                                {brand.BrandName}
+                              </span>
+                            </Tooltip>
+                          )}
+                        </div>
                       </div>
                     </td>
 
@@ -312,31 +372,40 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
 
                     {/* Created At */}
                     <td
-                      className={`table-cell text-center table-cell-text align-middle px-6 py-4 ${
+                      className={`table-cell text-center align-middle px-6 py-4 ${
                         !brand.IsActive ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      {new Date(brand.CreatedAt).toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })}
+                      <span className="text-sm">
+                        {new Date(brand.CreatedAt).toLocaleString(undefined, {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </span>
                     </td>
 
-                    {/* Toggle Switch */}
-                    <td className="table-cell text-center table-cell-text align-middle px-6 py-4">
+                    {/* Toggle Switch - Simple Permission Check */}
+                    <td className="table-cell text-center align-middle px-6 py-4">
                       <div className="flex justify-center">
-                        <Switch
-                          checked={brand.IsActive}
-                          disabled={!brand.editable}
-                          onChange={() =>
-                            handleStatusChange(brand.BrandID, brand.IsActive)
-                          }
-                          // disabled prop removed
-                        />
+                        <div className="relative group inline-block">
+                          <Tooltip
+                            text={hasUpdateBrandStatusPermission ? t("TOOLTIPS.UPDATE_BRAND_STATUS_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
+                            position="left"
+                          >
+                            <Switch
+                              checked={brand.IsActive}
+                              disabled={!hasUpdateBrandStatusPermission}
+                              disableTooltip={true}
+                              onChange={() =>
+                                handleStatusChange(brand.BrandID, brand.IsActive)
+                              }
+                            />
+                          </Tooltip>
+                        </div>
                       </div>
                     </td>
                   </tr>

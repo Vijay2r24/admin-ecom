@@ -6,15 +6,16 @@ import {
   Filter,
   Plus,
   Download,
-  ChevronDown,
   X,
   Check,
+  ChevronDown,
 } from "lucide-react";
 import { Combobox } from "@headlessui/react";
 import { useTranslation } from "react-i18next";
+import Tooltip from "./Tooltip";
 import { createPortal } from "react-dom";
 import DateTimeRangePickerComponent from "./CustomDatePicker";
-import { VIEW_MODES } from "../contants/constants";
+import { VIEW_MODES, TOOLTIPSTATUS } from "../contants/constants";
 
 const OrderToolbar = ({
   searchTerm,
@@ -35,6 +36,8 @@ const OrderToolbar = ({
   createLabel,
   onExport,
   exportLabel = "Export",
+  exportDisabled = false,
+  disableCreate = false,
 }) => {
   const { t } = useTranslation();
 
@@ -168,20 +171,32 @@ const OrderToolbar = ({
         ))}
 
         {onExport && (
-          <button
-            onClick={onExport}
-            disabled={exportLabel === t("COMMON.EXPORTING")}
-            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+          <Tooltip 
+            text={exportDisabled ? t("COMMON.NO_PERMISSION") : ""} 
+            position="bottom" 
+            align="right"
+            disabled={!exportDisabled}
           >
-            <Download className="w-3.5 h-3.5" />
-            {exportLabel}
-          </button>
+            <button
+              onClick={onExport}
+              disabled={exportDisabled || exportLabel === t("COMMON.EXPORTING")}
+              className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {exportLabel}
+            </button>
+          </Tooltip>
         )}
 
         {onCreate && (
           <button
             onClick={onCreate}
-            className="inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold text-white bg-custom-bg hover:bg-bg-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-bg transition gap-1.5"
+            disabled={disableCreate}
+            className={`inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
+              disableCreate
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'text-white bg-custom-bg hover:bg-bg-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-bg'
+            }`}
           >
             <Plus className="h-3.5 w-3.5" />
             {createLabel || t("PRODUCTS.ADD_BTN")}

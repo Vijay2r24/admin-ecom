@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
 import { useTitle } from "../context/TitleContext";
 import { fetchUserDetails, clearUserDetails } from "../store/slices/allDataSlice";
+import { logout } from "../store/slices/authSlice";
+import IdleLogout from "../components/IdleLogout";
 import user from "../../assets/images/user.jpg";
 import { MOCK_NOTIFICATIONS } from "../contants/constants";
 
@@ -15,6 +17,7 @@ const Header = ({ onMenuClick }) => {
   const { title, backButton } = useTitle();
   const dispatch = useDispatch();
   const { userDetails } = useSelector((state) => state.allData);
+  const { isLoggedIn } = useSelector((state) => state.auth);
 
   const [bShowNotifications, setShowNotifications] = useState(false);
   const bellRef = useRef();
@@ -133,6 +136,14 @@ const Header = ({ onMenuClick }) => {
         </div>
 
         <div className="relative flex items-center gap-2">
+
+          <IdleLogout isLoggedIn={isLoggedIn} onLogout={() => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("userDetails");
+            dispatch(clearUserDetails());
+            dispatch(logout());
+            navigate("/");
+          }} />
 
           <button
             ref={bellRef}

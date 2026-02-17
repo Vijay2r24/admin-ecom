@@ -7,6 +7,7 @@ import { showEmsg } from "../../../utils/ShowEmsg";
 import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Switch from "../../../components/Switch";
+import Tooltip from "../../../components/Tooltip";
 import { UPDATE_ATTRIBUTE_TYPE_STATUS } from "../../../contants/apiRoutes";
 import {
   ITEMS_PER_PAGE,
@@ -15,8 +16,11 @@ import {
   STATUS_VALUES,
   STATUS_OPTIONS,
   customScrollbarStyles,
+  PERMISSIONS,
+  MODULES,
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
+import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
 import {
   fetchResource,
   updateStatusById,
@@ -45,6 +49,29 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
     AttributeTypeID: null,
     newStatus: null,
   });
+
+  // --- Permission Checks ---
+  const permissionIdForAddAttributeType = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.ADD_ATTRIBUTE_TYPE
+  );
+  const permissionIdForEditAttributeType = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.EDIT_ATTRIBUTE_TYPE
+  );
+  const permissionIdForUpdateAttributeTypeStatus = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.UPDATE_ATTRIBUTE_TYPE_STATUS
+  );
+  const permissionIdForViewAttributeTypeDetails = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.VIEW_ATTRIBUTE_TYPE_DETAILS
+  );
+
+  const hasAddAttributeTypePermission = hasPermissionId(permissionIdForAddAttributeType);
+  const hasEditAttributeTypePermission = hasPermissionId(permissionIdForEditAttributeType);
+  const hasUpdateAttributeTypeStatusPermission = hasPermissionId(permissionIdForUpdateAttributeTypeStatus);
+  const hasViewAttributeTypeDetailsPermission = hasPermissionId(permissionIdForViewAttributeTypeDetails);
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
@@ -80,11 +107,25 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
 
   // --- Status Update Handler ---
   const handleStatusChange = (AttributeTypeID, currentIsActive) => {
+    // Check permission before allowing status change
+    if (!hasUpdateAttributeTypeStatusPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     setStatusPopup({
       open: true,
       AttributeTypeID,
       newStatus: !currentIsActive,
     });
+  };
+
+  const handleCreateAttributeType = () => {
+    // Check permission before allowing attribute type creation
+    if (!hasAddAttributeTypePermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
+    onCreate();
   };
 
   const handleStatusConfirm = async () => {
@@ -174,9 +215,10 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
           showSearch={true}
           showViewToggle={false}
           showFilterButton={true}
-          onCreate={onCreate}
+          // --- Permission-based Create Button ---
+          onCreate={handleCreateAttributeType}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          disableCreate={false}
+          disableCreate={!hasAddAttributeTypePermission}
           
           additionalFilters={
             bShowFilter
@@ -246,22 +288,32 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                     }`}
                   >
                     <td className="table-cell text-left align-middle px-6 py-4">
-                      {type.IsActive && type.editable ? (
-                        <Link
-                          to={`/browse/editattributetype/${type.AttributeTypeID}`}
-                          className="text-sm font-medium text-blue-600 hover:underline block truncate max-w-[180px]"
-                          title={type.Name}
-                        >
-                          {type.Name}
-                        </Link>
-                      ) : (
-                        <span
-                          className="text-sm font-medium block truncate max-w-[180px] text-gray-500 cursor-not-allowed"
-                          title={t("PRODUCT_SETUP.ATTRIBUTE_TYPE.EDIT_DISABLED_TOOLTIP")}
-                        >
-                          {type.Name}
-                        </span>
-                      )}
+                      <div className="relative group inline-block w-full">
+                        {type.IsActive && type.editable && hasEditAttributeTypePermission ? (
+                          <Tooltip
+                            text={t("TOOLTIPS.EDIT_ATTRIBUTE_TYPE_TOOLTIP")}
+                            position="bottom-right"
+                          >
+                            <Link
+                              to={`/browse/editattributetype/${type.AttributeTypeID}`}
+                              className="text-sm font-medium text-blue-600 hover:underline block truncate max-w-[180px]"
+                            >
+                              {type.Name}
+                            </Link>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip
+                            text={!hasEditAttributeTypePermission ? t("COMMON.NO_PERMISSION_TOOLTIP") : t("PRODUCT_SETUP.ATTRIBUTE_TYPE.EDIT_DISABLED_TOOLTIP")}
+                            position="bottom-right"
+                          >
+                            <span
+                              className="text-sm font-medium block truncate max-w-[180px] text-gray-500 cursor-not-allowed"
+                            >
+                              {type.Name}
+                            </span>
+                          </Tooltip>
+                        )}
+                      </div>
                     </td>
 
                     {/* Description */}
@@ -271,7 +323,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                       }`}
                     >
                       <div
-                        className="table-cell-subtext truncate max-w-[220px] mx-auto"
+                        className="text-sm truncate max-w-[220px] mx-auto"
                         title={type.AttributeTypeDescription}
                       >
                         {type.AttributeTypeDescription}
@@ -303,18 +355,20 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                     </td>
 
                     <td className="table-cell text-center align-middle px-6 py-4">
-                      <div className="flex justify-center">
-                        <Switch
-                          checked={type.IsActive}
-                          disabled={!type.editable}
-                          onChange={() =>
-                            handleStatusChange(
-                              type.AttributeTypeID,
-                              type.IsActive
-                            )
-                          }
-                          
-                        />
+                      <div className="relative group inline-block">
+                        <Tooltip
+                          text={hasUpdateAttributeTypeStatusPermission ? t("TOOLTIPS.UPDATE_ATTRIBUTE_TYPE_STATUS_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
+                          position="left"
+                        >
+                          <Switch
+                            checked={type.IsActive}
+                            disabled={!hasUpdateAttributeTypeStatusPermission}
+                            disableTooltip={true}
+                            onChange={() =>
+                              handleStatusChange(type.AttributeTypeID, type.IsActive)
+                            }
+                          />
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>

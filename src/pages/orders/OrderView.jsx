@@ -29,7 +29,7 @@ import TextAreaWithIcon from "../../components/TextAreaWithIcon";
 import StatusBadge from "./StatusBadge";
 import { showEmsg } from "../../utils/ShowEmsg";
 import { useTitle } from "../../context/TitleContext";
-import { STATUS } from "../../contants/constants";
+import { STATUS, MODULES, PERMISSIONS, TOOLTIP_MESSAGES } from "../../contants/constants";
 import Loader from "../../components/Loader";
 import { hideLoaderWithDelay } from "../../utils/loaderUtils";
 import BackButton from "../../components/BackButton";
@@ -37,6 +37,8 @@ import { fetchResource } from "../../store/slices/allDataSlice";
 import OrderItemHistoryDialog from "./OrderItemHistoryDialog";
 import { FaHistory } from "react-icons/fa";
 import { GET_ORDER_ITEM_HISTORY_BY_ID } from "../../contants/apiRoutes";
+import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
+import Tooltip from "../../components/Tooltip";
 
 const OrderView = () => {
   const { orderId } = useParams();
@@ -56,6 +58,25 @@ const OrderView = () => {
   const [historyData, setHistoryData] = useState([]);
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
+
+  // Permission checks
+  const permissionIdForView = getPermissionCode(
+    MODULES.ORDER,
+    PERMISSIONS.VIEW_ORDER_DETAILS
+  );
+  const hasViewPermission = hasPermissionId(permissionIdForView);
+
+  const permissionIdForUpdateStatus = getPermissionCode(
+    MODULES.ORDER,
+    PERMISSIONS.UPDATE_ORDER_STATUS
+  );
+  const hasUpdateStatusPermission = hasPermissionId(permissionIdForUpdateStatus);
+
+  const permissionIdForViewHistory = getPermissionCode(
+    MODULES.ORDER,
+    PERMISSIONS.VIEW_ORDER_HISTORY
+  );
+  const hasViewHistoryPermission = hasPermissionId(permissionIdForViewHistory);
 
   // Get order statuses from Redux store
   const {
@@ -275,11 +296,23 @@ const OrderView = () => {
   );
 
   const handleOpenHistory = (id) => {
+    // Check permission before viewing history
+    if (!hasViewHistoryPermission) {
+      return;
+    }
+    
     fetchOrderItemHistory(id, setHistoryData, setLoading, setError);
     setOpen(true);
   };
 
   useEffect(() => {
+    // Check if user has permission to view order details
+    if (!hasViewPermission) {
+      setError("You don't have permission to view order details");
+      setLoading(false);
+      return;
+    }
+
     fetchDataRef.current = () => {
       fetchOrderDetails(orderId, setOrder, setLoading, t);
     };
@@ -293,9 +326,14 @@ const OrderView = () => {
       setBackButton(null);
       setTitle("");
     };
-  }, [orderId, setTitle, setBackButton, t, fetchOrderDetails]);
+  }, [orderId, setTitle, setBackButton, t, fetchOrderDetails, hasViewPermission]);
 
   const handleSaveChanges = useCallback(async () => {
+    // Check permission before updating order status
+    if (!hasUpdateStatusPermission) {
+      return;
+    }
+    
     setbSubmitting(true);
 
     const payload = {
@@ -662,21 +700,43 @@ const OrderView = () => {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-center text-xs font-medium print:px-3 print:py-2 print:text-xs">
                           <div className="flex items-center justify-center gap-3 print:gap-1">
-                            <button
-                              className="text-blue-600 hover:text-blue-800 print:hidden"
-                              title="Edit"
-                              onClick={() => openEditDialog(item.OrderItemID)} // pass only ID
+                            {hasUpdateStatusPermission && (
+                              <Tooltip text={TOOLTIP_MESSAGES.EDIT_ORDER_ITEM} position="bottom" align="center">
+                                <button
+                                  className="text-blue-600 hover:text-blue-800 print:hidden"
+                                  onClick={() => openEditDialog(item.OrderItemID)} // pass only ID
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                              </Tooltip>
+                            )}
+
+                            {!hasUpdateStatusPermission && (
+                              <Tooltip text={TOOLTIP_MESSAGES.NO_ORDER_EDIT_PERMISSION} position="bottom" align="center">
+                                <button
+                                  className="text-gray-400 cursor-not-allowed print:hidden"
+                                  disabled={true}
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                              </Tooltip>
+                            )}
+                            <Tooltip 
+                              text={!hasViewHistoryPermission ? TOOLTIP_MESSAGES.NO_HISTORY_PERMISSION : TOOLTIP_MESSAGES.VIEW_ORDER_HISTORY} 
+                              position="top" 
+                              align="right"
+                              disabled={hasViewHistoryPermission}
                             >
-                              <Edit className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleOpenHistory(item.OrderItemID);
-                              }}
-                              className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg shadow-sm transition"
-                            >
-                              <FaHistory className="text-gray-600 text-sm" />
-                            </button>
+                              <button
+                                onClick={() => {
+                                  handleOpenHistory(item.OrderItemID);
+                                }}
+                                disabled={!hasViewHistoryPermission}
+                                className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <FaHistory className="text-gray-600 text-sm" />
+                              </button>
+                            </Tooltip>
                           </div>
                         </td>
                       </tr>
@@ -856,14 +916,21 @@ const OrderView = () => {
               >
                 {t("COMMON.CANCEL")}
               </button>
-              <button
-                type="button"
-                className="btn-primary text-xs px-3 py-1.5"
-                onClick={handleSaveChanges}
-                disabled={!sEditedStatusId}
+              <Tooltip 
+                text={!hasUpdateStatusPermission ? TOOLTIP_MESSAGES.NO_SAVE_PERMISSION : TOOLTIP_MESSAGES.SAVE_ORDER_CHANGES} 
+                position="top" 
+                align="left"
+                disabled={hasUpdateStatusPermission}
               >
-                {t("COMMON.SAVE")}
-              </button>
+                <button
+                  type="button"
+                  className="btn-primary text-xs px-3 py-1.5"
+                  onClick={handleSaveChanges}
+                  disabled={!sEditedStatusId || !hasUpdateStatusPermission}
+                >
+                  {t("COMMON.SAVE")}
+                </button>
+              </Tooltip>
             </div>
           </div>
         </div>

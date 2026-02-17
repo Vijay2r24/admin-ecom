@@ -30,6 +30,7 @@ const Banners = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [nActiveMenu, setActiveMenu] = useState(null);
   const [sError, setError] = useState(null);
+  const [backendMessage, setBackendMessage] = useState(null);
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { setTitle } = useTitle();
@@ -56,29 +57,46 @@ const Banners = () => {
         oResponse.data &&
         oResponse.data.status === STATUS.SUCCESS.toUpperCase()
       ) {
-        // Map API response to expected structure
-        const bannerData = oResponse.data.data.map((banner) => ({
-          BannerID: banner.BannerId,
-          BannerName: banner.BannerName,
-          Status: banner.IsActive
-            ? STATUS_VALUE_NAMES.ACTIVE
-            : STATUS_VALUE_NAMES.INACTIVE,
-          BannerImages:
-            banner.BannerImage?.map((img) => ({
-              BannerImage: img.documentUrl,
-              sortOrder: img.sortOrder,
-              documentId: img.documentId,
-            })) || [],
-          CategoryIDs: banner.CategoryIDs,
-          Discount: banner.Discount,
-          Price: banner.Price,
-          SortOrder: banner.SortOrder,
-        }));
+        // Check if the response message indicates no banners found
+        if (oResponse.data.message === "No banners found") {
+          setBanners([]);
+          setTotalPages(1);
+          setTotalRecords(0);
+          setBackendMessage(oResponse.data.message); // Store backend message
+          setError(null); // Clear error since this is a valid response
+        } else if (oResponse.data.data && oResponse.data.data.length > 0) {
+          // Map API response to expected structure
+          const bannerData = oResponse.data.data.map((banner) => ({
+            BannerID: banner.BannerId,
+            BannerName: banner.BannerName,
+            Status: banner.IsActive
+              ? STATUS_VALUE_NAMES.ACTIVE
+              : STATUS_VALUE_NAMES.INACTIVE,
+            BannerImages:
+              banner.BannerImage?.map((img) => ({
+                BannerImage: img.documentUrl,
+                sortOrder: img.sortOrder,
+                documentId: img.documentId,
+              })) || [],
+            CategoryIDs: banner.CategoryIDs,
+            Discount: banner.Discount,
+            Price: banner.Price,
+            SortOrder: banner.SortOrder,
+          }));
 
-        setBanners(bannerData);
-        setTotalPages(oResponse.data.pagination?.totalPages || 1);
-        setTotalRecords(oResponse.data.pagination?.totalRecords || 0);
-        setError(null);
+          setBanners(bannerData);
+          setTotalPages(oResponse.data.pagination?.totalPages || 1);
+          setTotalRecords(oResponse.data.pagination?.totalRecords || 0);
+          setBackendMessage(null); // Clear backend message when banners are found
+          setError(null);
+        } else {
+          // Empty data array
+          setBanners([]);
+          setTotalPages(1);
+          setTotalRecords(0);
+          setBackendMessage(null); // Clear backend message for empty data
+          setError(null);
+        }
       } else {
         setBanners([]);
         setTotalPages(1);
@@ -201,14 +219,14 @@ const Banners = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen">
       <ToastContainer />
-      <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-50 py-3 shadow">
+      <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-0 py-3 shadow">
         <div className="flex-1" />
         <button
           type="button"
-          className="btn-secondry h-9 w-30 flex items-center gap-2"
+          className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-500 transition-all duration-200 gap-2 shadow-sm"
           onClick={handleViewActiveBanners}
         >
-          <ImageIcon className="h-5 w-5" />
+          <ImageIcon className="h-4 w-4" />
           {t("BANNER_FORM.VIEW_ACTIVE_BANNERS")}
         </button>
 
@@ -226,8 +244,21 @@ const Banners = () => {
           <div className="mb-4 text-red-500 text-center">{sError}</div>
         )}
         {paginatedBanners.length === 0 && !sError ? (
-          <div className="text-center py-8 text-gray-500">
-            {t("BANNER_FORM.NO_BANNERS_FOUND")}
+          <div className="flex flex-col items-center justify-center py-20 px-4">
+            <div className="mb-8">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center">
+                <ImageIcon className="w-10 h-10 text-indigo-400" />
+              </div>
+            </div>
+            
+            <div className="text-center max-w-lg">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
+                {backendMessage || t("BANNER_FORM.NO_BANNERS_FOUND")}
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {t("BANNER_FORM.NO_BANNERS_DESCRIPTION")}
+              </p>
+            </div>
           </div>
         ) : (
          <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto scrollbar-hide">
