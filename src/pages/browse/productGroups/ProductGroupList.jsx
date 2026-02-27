@@ -121,7 +121,6 @@ const ProductGroupList = ({ onCreate }) => {
         fetchProductGroups(params);
       }
     } catch (err) {
-      console.error("Error updating status:", err);
     } finally {
       setStatusPopup({ open: false, groupId: null, newStatus: null });
     }

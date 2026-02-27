@@ -24,7 +24,6 @@ const isLoginPage = () => {
 
 const showLogoutNotification = (message, fallbackText = INACTIVE_USER_MESSAGE) => {
   // Trigger IdleLogout behavior instead of SweetAlert2 popup
-  console.log("Triggering idle logout behavior from API error");
   
   // Create a custom event to trigger IdleLogout countdown
   const logoutEvent = new CustomEvent('triggerIdleLogout', { 
@@ -121,34 +120,6 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       config.headers.Authorization = `Bearer ${lsToken}`;
     }
     
-    // Only trigger IdleLogout on API errors, not normal calls
-    // Removed from request interceptor - only show on errors
-    // if (!isLoginPage()) {
-    //   console.log("API call detected - triggering IdleLogout");
-    //   const logoutEvent = new CustomEvent('triggerIdleLogout', { 
-    //     detail: { message: "API call triggered timeout check", fallbackText: "Session timeout warning" } 
-    //   });
-    //   console.log("Current page:", window.location.pathname);
-    //   console.log("CustomEvent available:", typeof CustomEvent);
-      
-    //   try {
-    //     const logoutEvent = new CustomEvent('triggerIdleLogout', { 
-    //       detail: { message: "API call triggered timeout check", fallbackText: "Session timeout warning" } 
-    //     });
-    //     console.log("Event created successfully:", logoutEvent);
-    //     console.log("Event type:", logoutEvent.type);
-    //     console.log("Event detail:", logoutEvent.detail);
-        
-    //     window.dispatchEvent(logoutEvent);
-    //     console.log("Event dispatched successfully");
-        
-    //     // Also try direct call to component
-    //     console.log("Window has triggerIdleLogout listener:", typeof window.addEventListener);
-        
-    //   } catch (error) {
-    //     console.error("Error creating/dispatching event:", error);
-    //   }
-    // }
     
     return config;
   });
@@ -171,7 +142,7 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
         // Check for permission denied response with customCode 1001
         if (customCode === 1001 || normalized.includes("permission")) {
           if (!isLoginPage()) {
-            console.log("Permission denied - triggering IdleLogout");
+  
             const logoutEvent = new CustomEvent('triggerIdleLogout', { 
               detail: { message: msg, fallbackText: "Permission denied - session timeout" } 
             });
@@ -183,7 +154,7 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
           normalized.includes("account has been deactivated")
         ) {
           if (!isLoginPage()) {
-            console.log("User inactive/deactivated - triggering IdleLogout");
+            e.log("User inactive/deactivated - triggering IdleLogout");
             const logoutEvent = new CustomEvent('triggerIdleLogout', { 
               detail: { message: msg, fallbackText: "Account inactive - session timeout" } 
             });
@@ -229,7 +200,6 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       // Check for permission denied responses
       if (customCode === 1001 || normalized.includes("permission")) {
         if (!isLoginPage()) {
-          console.log("Permission denied - triggering IdleLogout");
           const logoutEvent = new CustomEvent('triggerIdleLogout', { 
             detail: { message: msg, fallbackText: "Permission denied - session timeout" } 
           });
@@ -241,7 +211,6 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
         normalized.includes("account has been deactivated")
       ) {
         if (!isLoginPage()) {
-          console.log("User inactive/deactivated - triggering IdleLogout");
           const logoutEvent = new CustomEvent('triggerIdleLogout', { 
             detail: { message: msg, fallbackText: "Account inactive - session timeout" } 
           });

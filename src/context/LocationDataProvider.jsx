@@ -12,10 +12,8 @@ const LocationDataProvider = ({ children }) => {
       if (data) {
         setter(JSON.parse(data));
       } else {
-        console.warn(`No ${key} data found in localStorage`);
       }
     } catch (error) {
-      console.error(`Error parsing ${key} from localStorage:`, error);
     }
   };
  

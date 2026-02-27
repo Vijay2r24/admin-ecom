@@ -218,7 +218,6 @@ const CreateBrand = () => {
             }, 100);
           }
         } catch (error) {
-          console.error("Error fetching brand:", error);
         }
       };
       fetchBrandDetails();

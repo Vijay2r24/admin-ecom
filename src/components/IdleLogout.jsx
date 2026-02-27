@@ -10,25 +10,14 @@ const IdleLogout = ({
   const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
-    console.log("IdleLogout useEffect - isLoggedIn:", isLoggedIn);
-    
     // Listen for API calls
     const handleApiCall = (event) => {
-      console.log("=== IDLE LOGOUT EVENT RECEIVED ===");
-      console.log("Event:", event);
-      console.log("Event type:", event.type);
-      console.log("Event detail:", event.detail);
-      console.log("About to setShowWarning(true)");
       setShowWarning(true);
     };
-
-    // Listen for custom event from API
-    console.log("Adding triggerIdleLogout listener");
     window.addEventListener('triggerIdleLogout', handleApiCall);
 
     // Hide when logged out
     return () => {
-      console.log("IdleLogout cleanup - removing listener");
       window.removeEventListener('triggerIdleLogout', handleApiCall);
     };
   }, [isLoggedIn]);

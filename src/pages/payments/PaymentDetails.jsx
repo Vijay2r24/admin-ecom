@@ -55,7 +55,6 @@ const PaymentDetails = () => {
           setError(t("PAYMENTS.API_ERROR"));
         }
       } catch (err) {
-        console.error("Error fetching payment details:", err);
         setError(t("PAYMENTS.FETCH_ERROR"));
       } finally {
         setLoading(false);

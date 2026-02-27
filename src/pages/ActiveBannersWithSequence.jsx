@@ -126,7 +126,6 @@ const ActiveBannersWithSequence = () => {
         error?.message ||
         t("COMMON.API_ERROR");
       toast.error(errorMessage);
-      console.error("Error fetching banners:", error);
     } finally {
       setIsLoading(false);
     }
