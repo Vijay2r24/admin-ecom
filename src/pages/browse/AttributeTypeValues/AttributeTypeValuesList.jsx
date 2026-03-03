@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Switch from "../../../components/Switch";
+import Tooltip from "../../../components/Tooltip";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import { UPDATE_ATTRIBUTRE_VALUE_STATUS } from "../../../contants/apiRoutes";
 import {
@@ -16,15 +17,18 @@ import {
   STATUS_VALUES,
   STATUS_OPTIONS,
   customScrollbarStyles,
+  PERMISSIONS,
+  MODULES,
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
+import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
 import {
   fetchResource,
   updateStatusById,
   clearResourceError,
 } from "../../../store/slices/allDataSlice";
 
-const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
+const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
   const [sSearchQuery, setSearchQuery] = useState("");
   const [oFilters, setFilters] = useState({ status: STATUS_VALUES.ALL });
   const [bShowFilter, setShowFilter] = useState(false);
@@ -51,6 +55,29 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
     attributeId: null,
     newStatus: null,
   });
+
+  // --- Permission Checks ---
+  const permissionIdForAddAttribute = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.ADD_ATTRIBUTE
+  );
+  const permissionIdForEditAttribute = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.EDIT_ATTRIBUTE
+  );
+  const permissionIdForUpdateAttributeStatus = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.UPDATE_ATTRIBUTE_STATUS
+  );
+  const permissionIdForViewAttributeDetails = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.VIEW_ATTRIBUTE_DETAILS
+  );
+
+  const hasAddAttributePermission = hasPermissionId(permissionIdForAddAttribute);
+  const hasEditAttributePermission = hasPermissionId(permissionIdForEditAttribute);
+  const hasUpdateAttributeStatusPermission = hasPermissionId(permissionIdForUpdateAttributeStatus);
+  const hasViewAttributeDetailsPermission = hasPermissionId(permissionIdForViewAttributeDetails);
 
   const iTotalPages = Math.ceil(iTotalItems / iItemsPerPage);
 
@@ -88,6 +115,11 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
 
   // --- Status Update Handler ---
   const handleStatusChange = (attributeId, currentIsActive) => {
+    // Check permission before allowing status change
+    if (!hasUpdateAttributeStatusPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     setStatusPopup({ open: true, attributeId, newStatus: !currentIsActive });
   };
 
@@ -131,6 +163,15 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
     setStatusPopup({ open: false, attributeId: null, newStatus: null });
   };
 
+  const handleCreateAttribute = () => {
+    // Check permission before allowing attribute creation
+    if (!hasAddAttributePermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
+    onCreate();
+  };
+
   const handleFilterChange = (e, filterName) => {
     setFilters({
       ...oFilters,
@@ -141,10 +182,10 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
   const handlePageClick = (pageNumber) => setCurrentPage(pageNumber);
   const handlePrevPage = () =>
     setCurrentPage((prev) =>
-      prev > DEFAULT_PAGE ? prev - DEFAULT_PAGE : prev
+      prev > DEFAULT_PAGE ? prev - 1 : prev
     );
   const handleNextPage = () =>
-    setCurrentPage((prev) => (prev < iTotalPages ? prev + DEFAULT_PAGE : prev));
+    setCurrentPage((prev) => (prev < iTotalPages ? prev + 1 : prev));
 
   // Map STATUS_OPTIONS to the format expected by Toolbar component
   const statusFilterOptions = STATUS_OPTIONS.map((option) => ({
@@ -172,10 +213,10 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
             showViewToggle={false}
             showFilterButton={true}
             
-            // --- Permissions removed, always enabled ---
-            onCreate={onCreate}
+            // --- Permission-based Create Button ---
+            onCreate={handleCreateAttribute}
             createLabel={t("PRODUCT_SETUP.CREATE")}
-            disableCreate={false}
+            disableCreate={!hasAddAttributePermission}
             
             additionalFilters={
               bShowFilter
@@ -192,6 +233,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
             handleFilterChange={bShowFilter ? handleFilterChange : undefined}
           />
         </div>
+
         {/* Table */}
         {bLoading && (
           <div className="text-center py-8 text-gray-500">
@@ -220,7 +262,7 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                     <th className="table-head-cell-floating text-left px-6 py-4">
                       {t("PRODUCT_SETUP.ATTRIBUTES.TABLE.NAME")}
                     </th>
-                    <th className="table-head-cell-floating text-left px-6 py-4">
+                    <th className="table-head-cell-floating text-center px-6 py-4">
                       {t("COMMON.UNIT")}
                     </th>
                     <th className="table-head-cell-floating text-center px-6 py-4">
@@ -240,34 +282,44 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
                         !attribute.IsActive ? "bg-gray-50" : ""
                       }`}
                     >
-                      {/* Name Column with Conditional Link based on Active status only */}
-                      <td className="table-cell table-cell-text text-left align-middle px-6 py-4">
-                        {attribute.IsActive && attribute.editable ? (
-                          <Link
-                            to={`/browse/editattribute/${attribute.AttributeValueID}`}
-                            className="text-blue-600 hover:underline block truncate max-w-[180px] font-medium"
-                            title={attribute.Value}
-                          >
-                            {attribute.Value}
-                          </Link>
-                        ) : (
-                          <span
-                            className="block truncate max-w-[180px] font-medium text-gray-500 cursor-not-allowed"
-                            title={t("PRODUCT_SETUP.ATTRIBUTES.EDIT_DISABLED_TOOLTIP")}
-                          >
-                            {attribute.Value}
-                          </span>
-                        )}
+                      {/* Name Column with Conditional Link based on Active status and Permission */}
+                      <td className="table-cell text-left align-middle px-6 py-4">
+                        <div className="relative group inline-block w-full">
+                          {attribute.IsActive && attribute.editable && hasEditAttributePermission ? (
+                            <Tooltip
+                              text={t("TOOLTIPS.EDIT_ATTRIBUTE_TOOLTIP")}
+                              position="bottom-right"
+                            >
+                              <Link
+                                to={`/browse/editattribute/${attribute.AttributeValueID}`}
+                                className="text-sm text-blue-600 hover:underline block truncate max-w-[180px] font-medium"
+                              >
+                                {attribute.Value}
+                              </Link>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip
+                              text={!hasEditAttributePermission ? t("COMMON.NO_PERMISSION_TOOLTIP") : t("PRODUCT_SETUP.ATTRIBUTES.EDIT_DISABLED_TOOLTIP")}
+                              position="bottom-right"
+                            >
+                              <span
+                                className="text-sm block truncate max-w-[180px] font-medium text-gray-500 cursor-not-allowed"
+                              >
+                                {attribute.Value}
+                              </span>
+                            </Tooltip>
+                          )}
+                        </div>
                       </td>
 
                       {/* Unit */}
                       <td
-                        className={`table-cell table-cell-text text-left align-middle px-6 py-4 ${
+                        className={`table-cell text-left align-middle px-6 py-4 ${
                           !attribute.IsActive ? "text-gray-400" : ""
                         }`}
                       >
                         <div
-                          className="truncate max-w-[220px]"
+                          className="text-sm truncate max-w-[220px]"
                           title={attribute.Unit}
                         >
                           {attribute.Unit}
@@ -293,18 +345,23 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
 
                       {/* Update Status (Switch) */}
                       <td className="table-cell text-center align-middle px-6 py-4">
-                        <div className="flex justify-center">
-                          <Switch
-                            checked={attribute.IsActive}
-                            disabled={!attribute.editable}
-                            onChange={() =>
-                              handleStatusChange(
-                                attribute.AttributeValueID,
-                                attribute.IsActive
-                              )
-                            }
-                            // disabled prop removed
-                          />
+                        <div className="relative group inline-block">
+                          <Tooltip
+                            text={hasUpdateAttributeStatusPermission ? t("TOOLTIPS.UPDATE_ATTRIBUTE_STATUS_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
+                            position="left"
+                          >
+                            <Switch
+                              checked={attribute.IsActive}
+                              disabled={!hasUpdateAttributeStatusPermission}
+                              disableTooltip={true}
+                              onChange={() =>
+                                handleStatusChange(
+                                  attribute.AttributeValueID,
+                                  attribute.IsActive
+                                )
+                              }
+                            />
+                          </Tooltip>
                         </div>
                       </td>
                     </tr>
@@ -314,57 +371,54 @@ const AttributeTypeValueList = ({ onCreate, onBack, setSubmitting }) => {
             </div>
           </div>
         )}
-        {!bLoading && !sError && aAttributes.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
+
+        {aAttributes.length === 0 && !bLoading && !sError && (
+          <div className="text-center py-12">
             <div className="text-gray-500">
-              {t("PRODUCT_SETUP.ATTRIBUTES.EMPTY_MESSAGE")}
+              {t("PRODUCT_SETUP.ATTRIBUTES.EMPTY.MESSAGE")}
             </div>
-            {(sSearchQuery || oFilters.status !== STATUS_VALUES.ALL) && (
+            {sSearchQuery && (
               <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setFilters({ status: STATUS_VALUES.ALL });
-                }}
-                className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
+                onClick={() => setSearchQuery("")}
+                className="mt-2 text-[#5B45E0] hover:text-[#4c39c7]"
               >
-                {t("PRODUCT_SETUP.ATTRIBUTES.CLEAR_FILTERS_BTN")}
+                {t("COMMON.CLEAR_SEARCH")}
               </button>
             )}
           </div>
         )}
 
-        {/* Pagination Controls */}
-        {!bLoading && !sError && iTotalItems > 0 && (
-          <Pagination
-            itemsPerPage={iItemsPerPage}
-            totalItems={iTotalItems}
-            currentPage={iCurrentPage}
-            totalPages={iTotalPages}
-            handlePageClick={handlePageClick}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
+        {bShowErrorPopup && (
+          <FullscreenErrorPopup
+            message={sErrorMessage}
+            onClose={() => setShowErrorPopup(false)}
           />
         )}
+
+        {statusPopup.open && (
+          <FullscreenErrorPopup
+            message={
+              statusPopup.newStatus
+                ? t("PRODUCT_SETUP.ATTRIBUTES.CONFIRM_ACTIVATE")
+                : t("PRODUCT_SETUP.ATTRIBUTES.CONFIRM_DEACTIVATE")
+            }
+            onClose={handleStatusPopupClose}
+            onConfirm={handleStatusConfirm}
+          />
+        )}
+
+        <Pagination
+          currentPage={iCurrentPage}
+          totalPages={iTotalPages}
+          totalItems={iTotalItems}
+          itemsPerPage={iItemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
       </div>
-      {bShowErrorPopup && (
-        <FullscreenErrorPopup
-          message={sErrorMessage}
-          onClose={() => setShowErrorPopup(false)}
-        />
-      )}
-      {statusPopup.open && (
-        <FullscreenErrorPopup
-          message={
-            statusPopup.newStatus
-              ? t("PRODUCT_SETUP.ATTRIBUTES.CONFIRM_ACTIVATE")
-              : t("PRODUCT_SETUP.ATTRIBUTES.CONFIRM_DEACTIVATE")
-          }
-          onClose={handleStatusPopupClose}
-          onConfirm={handleStatusConfirm}
-        />
-      )}
     </div>
   );
 };
 
-export default AttributeTypeValueList;
+export default AttributeTypeValuesList;

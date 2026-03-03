@@ -17,6 +17,7 @@ import {
   UPDATE_SPECIFICATION_TYPE_STATUS,
 } from "../../../contants/apiRoutes";
 import Switch from "../../../components/Switch";
+import Tooltip from "../../../components/Tooltip";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -26,8 +27,11 @@ import {
   STATUS_OPTIONS,
   DATE_FORMAT_OPTIONS,
   customScrollbarStyles,
+  PERMISSIONS,
+  MODULES,
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
+import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
 import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
 import ActionButtons from "../../../components/ActionButtons";
 
@@ -59,6 +63,29 @@ const SpecificationTypeList = ({ setSubmitting }) => {
     specificationTypeId: null,
     newStatus: null,
   });
+
+  // --- Permission Checks ---
+  const permissionIdForAddSpecificationType = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.ADD_SPECIFICATION_TYPE
+  );
+  const permissionIdForEditSpecificationType = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.EDIT_SPECIFICATION_TYPE
+  );
+  const permissionIdForUpdateSpecificationTypeStatus = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.UPDATE_SPECIFICATION_TYPE_STATUS
+  );
+  const permissionIdForViewSpecificationTypeDetails = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.VIEW_SPECIFICATION_TYPE_DETAILS
+  );
+
+  const hasAddSpecificationTypePermission = hasPermissionId(permissionIdForAddSpecificationType);
+  const hasEditSpecificationTypePermission = hasPermissionId(permissionIdForEditSpecificationType);
+  const hasUpdateSpecificationTypeStatusPermission = hasPermissionId(permissionIdForUpdateSpecificationTypeStatus);
+  const hasViewSpecificationTypeDetailsPermission = hasPermissionId(permissionIdForViewSpecificationTypeDetails);
 
   // Create/Edit form state
   const [editForm, setEditForm] = useState({
@@ -104,6 +131,11 @@ const SpecificationTypeList = ({ setSubmitting }) => {
 
   // Open confirmation popup when toggling Active/Inactive
   const handleStatusChange = (specificationTypeId, currentStatus) => {
+    // Check permission before allowing status change
+    if (!hasUpdateSpecificationTypeStatusPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     const isCurrentlyActive = Boolean(currentStatus);
     setStatusPopup({
       open: true,
@@ -137,6 +169,11 @@ const SpecificationTypeList = ({ setSubmitting }) => {
 
   // Open "create" form
   const handleCreate = () => {
+    // Check permission before allowing specification type creation
+    if (!hasAddSpecificationTypePermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     setEditForm({
       open: true,
       mode: FORM_MODES.CREATE,
@@ -346,10 +383,10 @@ const SpecificationTypeList = ({ setSubmitting }) => {
           showViewToggle={false}
           showFilterButton={true}
           
-          // --- Permissions removed, always enabled ---
+          // --- Permission-based Create Button ---
           onCreate={handleCreate}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          disableCreate={false}
+          disableCreate={!hasAddSpecificationTypePermission}
           
           additionalFilters={
             bShowFilters
@@ -425,15 +462,15 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                         required
                       />
                     </td>
-                    <td className="table-cell text-center align-middle table-cell-text px-6 py-2">
-                      -
+                    <td className="table-cell text-center align-middle px-6 py-2">
+                      <span className="text-sm">-</span>
                     </td>
                     <td className="table-cell text-center align-middle px-6 py-2">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
                         {t("COMMON.ACTIVE")}
                       </span>
                     </td>
-                    <td className="table-cell text-center align-middle table-cell-text px-6 py-2">
+                    <td className="table-cell text-center align-middle px-6 py-2">
                       <div className="flex justify-center">
                         <Switch checked={true} disabled={true} />
                       </div>
@@ -492,7 +529,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                           />
                         ) : (
                           <div
-                            className={`block truncate max-w-[180px] font-medium ${
+                            className={`text-sm block truncate max-w-[180px] font-medium ${
                               isInactive ? "cursor-not-allowed" : ""
                             }`}
                             title={
@@ -510,18 +547,20 @@ const SpecificationTypeList = ({ setSubmitting }) => {
 
                       {/* Created At column */}
                       <td
-                        className={`table-cell text-center align-middle table-cell-text px-6 py-1 ${
+                        className={`table-cell text-center align-middle px-6 py-1 ${
                           isInactive && !editing
                             ? "text-gray-400"
                             : "text-gray-600"
                         }`}
                       >
-                        {specType.CreatedAt
-                          ? new Date(specType.CreatedAt).toLocaleString(
-                              undefined,
-                              DATE_FORMAT_OPTIONS
-                            )
-                          : "-"}
+                        <span className="text-sm">
+                          {specType.CreatedAt
+                            ? new Date(specType.CreatedAt).toLocaleString(
+                                undefined,
+                                DATE_FORMAT_OPTIONS
+                              )
+                            : "-"}
+                        </span>
                       </td>
 
                       {/* Status */}
@@ -538,19 +577,24 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                       </td>
 
                       {/* Toggle status */}
-                      <td className="table-cell text-center align-middle table-cell-text px-6 py-1">
-                        <div className="flex justify-center">
-                          <Switch
-                            checked={Boolean(currentStatus)}
-                            onChange={() =>
-                              handleStatusChange(
-                                specType.SpecificationTypeID,
-                                currentStatus
-                              )
-                            }
-                            // Disabled only if editing
-                            disabled={editing || !specType.editable}
-                          />
+                      <td className="table-cell text-center align-middle px-6 py-1">
+                        <div className="relative group inline-block">
+                          <Tooltip
+                            text={hasUpdateSpecificationTypeStatusPermission ? t("TOOLTIPS.UPDATE_SPECIFICATION_TYPE_STATUS_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
+                            position="left"
+                          >
+                            <Switch
+                              checked={Boolean(currentStatus)}
+                              disabled={!hasUpdateSpecificationTypeStatusPermission}
+                              disableTooltip={true}
+                              onChange={() =>
+                                handleStatusChange(
+                                  specType.SpecificationTypeID,
+                                  currentStatus
+                                )
+                              }
+                            />
+                          </Tooltip>
                         </div>
                       </td>
 
@@ -575,11 +619,17 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                           ) : (
                             <ActionButtons
                               id={specType.SpecificationTypeID}
-                              onEdit={() => handleEdit(specType)}
+                              onEdit={() => {
+                                if (hasEditSpecificationTypePermission) {
+                                  handleEdit(specType);
+                                } else {
+                                  showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+                                }
+                              }}
                               /* 
-                                Disable Edit button only if Item is Inactive 
+                                Disable Edit button only if Item is Inactive or no permission
                               */
-                               disableEdit={!specType.editable}
+                               disableEdit={!specType.editable || !hasEditSpecificationTypePermission}
                             />
                           )}
                         </div>

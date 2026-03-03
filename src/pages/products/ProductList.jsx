@@ -17,6 +17,8 @@ import {
   ITEMS_PER_PAGE,
   STATUS,
   STATUS_OPTIONS,
+  MODULES,
+  PERMISSIONS,
 } from "../../contants/constants.jsx";
 import {
   fetchResource,
@@ -30,6 +32,7 @@ import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import Loader from "../../components/Loader";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 
 const getStatusBadgeClass = (status) => {
   if (status === "active") return "status-active";
@@ -95,6 +98,13 @@ const ProductList = () => {
   const [exportLoading, setExportLoading] = useState(false);
   const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const dispatch = useDispatch();
+
+  // Permission check for Generate Product Report
+  const permissionIdForExport = getPermissionCode(
+    MODULES.PRODUCT,
+    PERMISSIONS.GENERATE_PRODUCT_REPORT
+  );
+  const hasExportPermission = hasPermissionId(permissionIdForExport);
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
@@ -372,6 +382,11 @@ const ProductList = () => {
   };
 
   const handleExportProducts = async () => {
+    // Check permission before exporting
+    if (!hasExportPermission) {
+      return;
+    }
+    
     setExportLoading(true);
     try {
       const isActiveFilter =
@@ -503,6 +518,7 @@ const ProductList = () => {
         onAddVariants={() => navigate("/AddVariants")}
         onExport={handleExportProducts}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
+        exportDisabled={!hasExportPermission}
       />
 
       {bLoading ? (

@@ -24,8 +24,12 @@ import { useNavigate } from "react-router-dom";
 import { GET_ALL_BANNERS, UPDATE_BANNER_SORTORDER } from "../contants/apiRoutes";
 import { apiGet, apiPatch } from "../utils/ApiUtils";
 import { toast } from "react-toastify";
+import { STATUS, MODULES, PERMISSIONS, TOOLTIP_MESSAGES } from "../contants/constants";
 import { STATUS, STATUS_VALUE_NAMES, DIRECTIONS } from "../contants/constants";
 import { ToastContainer } from "react-toastify";
+import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
+import Tooltip from "../components/Tooltip";
+
 const ActiveBannersWithSequence = () => {
   const { t } = useTranslation();
   const [activeBanners, setActiveBanners] = useState([]);
@@ -41,6 +45,13 @@ const ActiveBannersWithSequence = () => {
   const autoPlayRef = useRef(null);
   const { setTitle, setBackButton } = useTitle();
   const navigate = useNavigate();
+
+  // Permission checks
+  const permissionIdForUpdateBanner = getPermissionCode(
+    MODULES.CONTENT,
+    PERMISSIONS.UPDATE_BANNER
+  );
+  const hasUpdateBannerPermission = hasPermissionId(permissionIdForUpdateBanner);
 
   useEffect(() => {
     setTitle(t("BANNERS.TITLE"));
@@ -115,7 +126,6 @@ const ActiveBannersWithSequence = () => {
         error?.message ||
         t("COMMON.API_ERROR");
       toast.error(errorMessage);
-      console.error("Error fetching banners:", error);
     } finally {
       setIsLoading(false);
     }
@@ -208,6 +218,11 @@ const ActiveBannersWithSequence = () => {
   };
 
   const handleSubmit = async () => {
+    // Check permission before updating banner sequence
+    if (!hasUpdateBannerPermission) {
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("token");
@@ -344,21 +359,45 @@ const ActiveBannersWithSequence = () => {
               </div>
               <button
                 onClick={handlePreview}
-                className="btn-secondry flex items-center gap-2 h-9 w-30"
+                className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-500 transition-all duration-200 gap-2 shadow-sm"
               >
-                <Eye className="h-5 w-5" />
+                <Eye className="h-4 w-4" />
                 <span>{t("BANNERS.PREVIEW")}</span>
               </button>
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="btn-primary flex items-center gap-2"
-              >
-                <Save className="h-5 w-5" />
-                <span>
-                  {t("BANNERS.SAVE_SEQUENCES")}
-                </span>
-              </button>
+              {hasUpdateBannerPermission ? (
+                <Tooltip 
+                  text={TOOLTIP_MESSAGES.SAVE_ORDER_CHANGES} 
+                  position="top" 
+                  align="left"
+                >
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="btn-primary flex items-center gap-2"
+                  >
+                    <Save className="h-5 w-5" />
+                    <span>
+                      {t("BANNERS.SAVE_SEQUENCES")}
+                    </span>
+                  </button>
+                </Tooltip>
+              ) : (
+                <Tooltip 
+                  text={TOOLTIP_MESSAGES.NO_SAVE_PERMISSION} 
+                  position="top" 
+                  align="left"
+                >
+                  <button
+                    disabled={true}
+                    className="btn-primary flex items-center gap-2 opacity-50 cursor-not-allowed"
+                  >
+                    <Save className="h-5 w-5" />
+                    <span>
+                      {t("BANNERS.SAVE_SEQUENCES")}
+                    </span>
+                  </button>
+                </Tooltip>
+              )}
             </div>
           </div>
         </div>

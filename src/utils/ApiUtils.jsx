@@ -23,6 +23,18 @@ const isLoginPage = () => {
 };
 
 const showLogoutNotification = (message, fallbackText = INACTIVE_USER_MESSAGE) => {
+  // Trigger IdleLogout behavior instead of SweetAlert2 popup
+  
+  // Create a custom event to trigger IdleLogout countdown
+  const logoutEvent = new CustomEvent('triggerIdleLogout', { 
+    detail: { message, fallbackText } 
+  });
+  window.dispatchEvent(logoutEvent);
+  
+  return;
+  
+  // Original SweetAlert2 code commented out
+  /*
   const html = `
     <div style="display:flex;flex-direction:column;gap:8px;text-align:left;">
       <p style="margin:0;">${fallbackText}</p>
@@ -67,6 +79,7 @@ const showLogoutNotification = (message, fallbackText = INACTIVE_USER_MESSAGE) =
       handleLogout();
     }
   });
+  */
 };
 
 /* ------------------------------------------------------------------
@@ -106,6 +119,8 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${lsToken}`;
     }
+    
+    
     return config;
   });
 
@@ -121,14 +136,32 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       const failure = STATUS.FAILURE.toLowerCase();
       const msg = response?.data?.message || "";
       const normalized = msg.toLowerCase();
+      const customCode = response?.data?.customCode;
 
       if (status === failure) {
-        if (
+        // Check for permission denied response with customCode 1001
+        if (customCode === 1001 || normalized.includes("permission")) {
+          if (!isLoginPage()) {
+  
+            const logoutEvent = new CustomEvent('triggerIdleLogout', { 
+              detail: { message: msg, fallbackText: "Permission denied - session timeout" } 
+            });
+            window.dispatchEvent(logoutEvent);
+          }
+        } else if (
           normalized.includes("inactive") ||
           normalized.includes("deactivated") ||
           normalized.includes("account has been deactivated")
         ) {
-          if (!isLoginPage()) showLogoutNotification(msg);
+          if (!isLoginPage()) {
+            e.log("User inactive/deactivated - triggering IdleLogout");
+            const logoutEvent = new CustomEvent('triggerIdleLogout', { 
+              detail: { message: msg, fallbackText: "Account inactive - session timeout" } 
+            });
+            window.dispatchEvent(logoutEvent);
+          }
+        } else {
+          showEmsg(msg || DEFAULT_ERROR_MESSAGE, "error");
         }
         // Don't show toast here - let components handle their own error display
         return Promise.reject(new Error(msg));
@@ -152,22 +185,39 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
 
       // Safe error message extraction
       let msg = DEFAULT_ERROR_MESSAGE;
+      let customCode = null;
       try {
-        msg = error?.response?.data?.message ||
-          error?.message ||
-          DEFAULT_ERROR_MESSAGE;
+        msg = error?.response?.data?.message || 
+               error?.message || 
+               DEFAULT_ERROR_MESSAGE;
+        customCode = error?.response?.data?.customCode;
       } catch (e) {
         msg = DEFAULT_ERROR_MESSAGE;
       }
 
       const normalized = msg.toLowerCase();
 
-      if (
+      // Check for permission denied responses
+      if (customCode === 1001 || normalized.includes("permission")) {
+        if (!isLoginPage()) {
+          const logoutEvent = new CustomEvent('triggerIdleLogout', { 
+            detail: { message: msg, fallbackText: "Permission denied - session timeout" } 
+          });
+          window.dispatchEvent(logoutEvent);
+        }
+      } else if (
         normalized.includes("inactive") ||
         normalized.includes("deactivated") ||
         normalized.includes("account has been deactivated")
       ) {
-        if (!isLoginPage()) showLogoutNotification(msg);
+        if (!isLoginPage()) {
+          const logoutEvent = new CustomEvent('triggerIdleLogout', { 
+            detail: { message: msg, fallbackText: "Account inactive - session timeout" } 
+          });
+          window.dispatchEvent(logoutEvent);
+        }
+      } else {
+        showEmsg(msg, "error");
       }
       // Don't show toast here - let components handle their own error display
 

@@ -1,49 +1,53 @@
-import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { useState, useEffect } from 'react';
+import { AlertCircle, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export default function IdleLogout({
-  isLoggedIn,
-  onLogout,
-  timeout = 15 * 60 * 1000 // 15 minutes
-}) {
+const IdleLogout = ({ 
+  isLoggedIn, 
+  onLogout
+}) => {
   const navigate = useNavigate();
-  const timerRef = useRef(null);
-  const warningShownRef = useRef(false);
+  const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    // Listen for API calls
+    const handleApiCall = (event) => {
+      setShowWarning(true);
+    };
+    window.addEventListener('triggerIdleLogout', handleApiCall);
 
-    const warningTime = timeout - 10 * 1000; 
-    const events = ["mousemove", "keydown", "mousedown", "scroll", "touchstart"];
+    // Hide when logged out
+    return () => {
+      window.removeEventListener('triggerIdleLogout', handleApiCall);
+    };
+  }, [isLoggedIn]);
 
-    const resetTimer = () => {
-      clearTimeout(timerRef.current);
-      warningShownRef.current = false;
+  // Show when logged in and API call detected
+  if (!isLoggedIn || !showWarning) return null;
 
-      timerRef.current = setTimeout(() => {
-        if (!warningShownRef.current) {
-         toast.warning(t("messages.INACTIVE_USER_MESSAGE"), {
-            autoClose: 5000,
-          });
-          warningShownRef.current = true;
-        }
-
-        setTimeout(() => {
+  return (
+    <div 
+      data-idle-logout="true"
+      className="flex items-center gap-2 px-2 py-1 bg-orange-500 text-white rounded-md border border-orange-600"
+    >
+      <div className="flex items-center gap-1.5">
+        <AlertCircle className="w-4 h-4 text-yellow-300 animate-pulse" />
+        <span className="text-xs font-medium whitespace-nowrap">
+          Your permissions is updated please logout
+        </span>
+      </div>
+      
+      <button
+        onClick={() => {
           onLogout();
           navigate("/");
-        }, 10000); // logout after 10s
-      }, warningTime);
-    };
+        }}
+        className="flex items-center px-2 py-0.5 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors duration-200"
+      >
+        <LogOut className="w-3 h-3" />
+      </button>
+    </div>
+  );
+};
 
-    resetTimer();
-    events.forEach((e) => window.addEventListener(e, resetTimer));
-
-    return () => {
-      clearTimeout(timerRef.current);
-      events.forEach((e) => window.removeEventListener(e, resetTimer));
-    };
-  }, [isLoggedIn, onLogout, navigate, timeout]);
-
-  return null;
-}
+export default IdleLogout;

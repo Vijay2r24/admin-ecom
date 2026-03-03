@@ -13,6 +13,7 @@ import { showEmsg } from "../../../utils/ShowEmsg";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import { UPDATE_CATEGORY_STATUS } from "../../../contants/apiRoutes";
 import Switch from "../../../components/Switch";
+import Tooltip from "../../../components/Tooltip";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -20,8 +21,11 @@ import {
   STATUS_VALUES,
   STATUS_OPTIONS,
   customScrollbarStyles,
+  PERMISSIONS,
+  MODULES,
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
+import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
 
 const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
   const { t } = useTranslation();
@@ -48,6 +52,24 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
     categoryId: null,
     newStatus: null,
   });
+
+  // --- Permission Checks ---
+  const permissionIdForAddCategory = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.ADD_CATEGORY
+  );
+  const permissionIdForEditCategory = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.EDIT_CATEGORY
+  );
+  const permissionIdForUpdateCategoryStatus = getPermissionCode(
+    MODULES.PRODUCT_SETUP,
+    PERMISSIONS.UPDATE_CATEGORY_STATUS
+  );
+
+  const hasAddCategoryPermission = hasPermissionId(permissionIdForAddCategory);
+  const hasEditCategoryPermission = hasPermissionId(permissionIdForEditCategory);
+  const hasUpdateCategoryStatusPermission = hasPermissionId(permissionIdForUpdateCategoryStatus);
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
@@ -84,6 +106,11 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
 
   // --- Status Update Handler ---
   const handleStatusChange = (categoryId, currentStatus) => {
+    // Check permission before allowing status change
+    if (!hasUpdateCategoryStatusPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     const isCurrentlyActive = currentStatus === "Active";
     setStatusPopup({
       open: true,
@@ -92,7 +119,21 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
     });
   };
 
+  const handleCreateCategory = () => {
+    // Check permission before allowing category creation
+    if (!hasAddCategoryPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
+    onCreate();
+  };
+
   const handleStatusConfirm = async () => {
+    // Check permission before updating status
+    if (!hasUpdateCategoryStatusPermission) {
+      return;
+    }
+
     if (setSubmitting) setSubmitting(true);
     const { categoryId, newStatus } = statusPopup;
 
@@ -195,10 +236,10 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
           showViewToggle={false}
           showFilterButton={true}
           
-          // --- Permissions removed, always enabled ---
-          onCreate={onCreate}
+          // --- Permission-based Create Button ---
+          onCreate={handleCreateCategory}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          disableCreate={false}
+          disableCreate={!hasAddCategoryPermission}
 
           additionalFilters={
             bShowFilters
@@ -265,10 +306,10 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                     }`}
                   >
                     {/* Category Name & Image */}
-                    <td className="table-cell table-cell-text text-left align-middle px-6 py-4">
+                    <td className="table-cell text-left align-middle px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`h-10 w-10 flex items-center justify-center rounded-full border overflow-hidden ${
+                          className={`h-10 w-10 flex items-center justify-center rounded-full border-2 overflow-hidden flex-shrink-0 ${
                             !isCategoryActive(category)
                               ? "bg-gray-100 border-gray-200"
                               : "bg-white border-gray-300"
@@ -279,7 +320,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                             <img
                               src={category.CategoryImages[0].documentUrl}
                               alt={category.CategoryName}
-                              className={`w-full h-full object-cover ${
+                              className={`w-full h-full object-cover rounded-full ${
                                 !isCategoryActive(category) ? "opacity-60" : ""
                               }`}
                             />
@@ -296,63 +337,74 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                           )}
                         </div>
                         
-                        {/* Conditional Link based only on Active status */}
-                        {isCategoryActive(category) && category.editable ? (
-                          <Link
-                            to={`/browse/editcatagiry/${category.CategoryID}`}
-                            className="text-blue-600 hover:underline block truncate max-w-[180px] font-medium"
-                            title={category.CategoryName}
-                          >
-                            {category.CategoryName}
-                          </Link>
-                        ) : (
-                          <span
-                            className="block truncate max-w-[180px] font-medium text-gray-500 cursor-not-allowed"
-                            title={t("PRODUCT_SETUP.CATEGORIES.EDIT_DISABLED_TOOLTIP")}
-                          >
-                            {category.CategoryName}
-                          </span>
-                        )}
+                        {/* Conditional Link based on Active status and Permission */}
+                        <div className="relative group inline-block w-full">
+                          {isCategoryActive(category) && category.editable && hasEditCategoryPermission ? (
+                            <Tooltip
+                              text={t("TOOLTIPS.EDIT_CATEGORY_TOOLTIP")}
+                              position="bottom-right"
+                            >
+                              <Link
+                                to={`/browse/editcatagiry/${category.CategoryID}`}
+                                className="text-sm text-blue-600 hover:underline block truncate max-w-[180px] font-medium"
+                              >
+                                {category.CategoryName}
+                              </Link>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip
+                              text={!hasEditCategoryPermission ? t("COMMON.NO_PERMISSION_TOOLTIP") : t("PRODUCT_SETUP.CATEGORIES.EDIT_DISABLED_TOOLTIP")}
+                              position="bottom-right"
+                            >
+                              <span
+                                className="text-sm block truncate max-w-[180px] font-medium text-gray-500 cursor-not-allowed"
+                              >
+                                {category.CategoryName}
+                              </span>
+                            </Tooltip>
+                          )}
+                        </div>
                       </div>
-                    </td>
+                  </td>
 
-                    {/* Description */}
-                    <td
-                      className={`table-cell text-center align-middle px-6 py-4 max-w-[200px] ${
-                        !isCategoryActive(category) ? "text-gray-400" : ""
+                  {/* Description */}
+                  <td
+                    className={`table-cell text-center align-middle px-6 py-4 max-w-[200px] ${
+                      !isCategoryActive(category) ? "text-gray-400" : ""
+                    }`}
+                  >
+                    <div
+                      className="text-sm truncate mx-auto"
+                      title={category.CategoryDescription}
+                    >
+                      {category.CategoryDescription}
+                    </div>
+                  </td>
+
+                  {/* Status Badge */}
+                  <td className="table-cell text-center align-middle px-6 py-4">
+                    <span
+                      className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                        isCategoryActive(category)
+                          ? "bg-green-100 text-green-800 border border-green-200"
+                          : "bg-red-100 text-red-800 border border-red-200"
                       }`}
                     >
-                      <div
-                        className="truncate table-cell-subtext mx-auto"
-                        title={category.CategoryDescription}
-                      >
-                        {category.CategoryDescription}
-                      </div>
-                    </td>
+                      {t(
+                        `COMMON.${
+                          isCategoryActive(category) ? "ACTIVE" : "INACTIVE"
+                        }`
+                      )}
+                    </span>
+                  </td>
 
-                    {/* Status Badge */}
-                    <td className="table-cell text-center align-middle px-6 py-4">
-                      <span
-                        className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                          isCategoryActive(category)
-                            ? "bg-green-100 text-green-800 border border-green-200"
-                            : "bg-red-100 text-red-800 border border-red-200"
-                        }`}
-                      >
-                        {t(
-                          `COMMON.${
-                            isCategoryActive(category) ? "ACTIVE" : "INACTIVE"
-                          }`
-                        )}
-                      </span>
-                    </td>
-
-                    {/* Created At */}
-                    <td
-                      className={`table-cell table-cell-text text-center align-middle px-6 py-4 ${
-                        !isCategoryActive(category) ? "text-gray-400" : "text-gray-600"
-                      }`}
-                    >
+                  {/* Created At */}
+                  <td
+                    className={`table-cell text-center align-middle px-6 py-4 ${
+                      !isCategoryActive(category) ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    <span className="text-sm">
                       {new Date(category.CreatedAt).toLocaleString(undefined, {
                         year: "numeric",
                         month: "2-digit",
@@ -361,31 +413,39 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                         minute: "2-digit",
                         hour12: true,
                       })}
-                    </td>
+                    </span>
+                  </td>
 
-                    {/* Toggle Switch */}
-                    <td
-                      className="table-cell text-center align-middle px-6 py-4"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="flex justify-center">
-                        <Switch
-                          checked={isCategoryActive(category)}
-                          disabled={!category.editable} 
-                          onChange={() =>
-                            handleStatusChange(
-                              category.CategoryID,
-                              getStatusText(category)
-                            )
-                          }
-                          // disabled prop removed
-                        />
+                  {/* Toggle Switch */}
+                  <td
+                    className="table-cell text-center align-middle px-6 py-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex justify-center">
+                      <div className="relative group inline-block">
+                        <Tooltip
+                          text={hasUpdateCategoryStatusPermission ? t("TOOLTIPS.UPDATE_CATEGORY_STATUS_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
+                          position="left"
+                        >
+                          <Switch
+                            checked={isCategoryActive(category)}
+                            disabled={!hasUpdateCategoryStatusPermission || !category.editable}
+                            disableTooltip={true}
+                            onChange={() =>
+                              handleStatusChange(
+                                category.CategoryID,
+                                getStatusText(category)
+                              )
+                            }
+                          />
+                        </Tooltip>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           </div>
         </div>
       )}

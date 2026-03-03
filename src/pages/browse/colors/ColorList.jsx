@@ -14,6 +14,8 @@ import {
   STATUS_VALUES,
   STATUS_OPTIONS,
   customScrollbarStyles,
+  PERMISSIONS,
+  MODULES,
 } from "../../../contants/constants";
 import { getPermissionCode,hasPermissionId } from "../../../utils/permissionUtils";
 
@@ -37,8 +39,17 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
 
   // Local state for optimistic UI updates (just keeping data in sync)
   const [localColors, setLocalColors] = useState(aColors || []);
-    const permissionIdForAdd = getPermissionCode("Product Setup", "Add Colour");
-  const hasAddPermission = hasPermissionId(permissionIdForAdd);
+
+  // --- Permission Checks ---
+  const permissionIdForAddColour = getPermissionCode(MODULES.PRODUCT_SETUP, PERMISSIONS.ADD_COLOUR);
+  const permissionIdForEditColour = getPermissionCode(MODULES.PRODUCT_SETUP, PERMISSIONS.EDIT_COLOUR);
+  const permissionIdForUpdateColourStatus = getPermissionCode(MODULES.PRODUCT_SETUP, PERMISSIONS.UPDATE_COLOUR_STATUS);
+  const permissionIdForViewColourDetails = getPermissionCode(MODULES.PRODUCT_SETUP, PERMISSIONS.VIEW_COLOURS);
+
+  const hasAddColourPermission = hasPermissionId(permissionIdForAddColour);
+  const hasEditColourPermission = hasPermissionId(permissionIdForEditColour);
+  const hasUpdateColourStatusPermission = hasPermissionId(permissionIdForUpdateColourStatus);
+  const hasViewColourDetailsPermission = hasPermissionId(permissionIdForViewColourDetails);
   
 
   // Hide body scrollbar when component mounts
@@ -102,6 +113,15 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
     }
   };
 
+  const handleCreateColor = () => {
+    // Check permission before allowing color creation
+    if (!hasAddColourPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
+    onCreate();
+  };
+
   return (
     <div 
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
@@ -121,9 +141,9 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
           showSearch={true}
           showViewToggle={false}
           showFilterButton={false}
-          onCreate={hasAddPermission ? onCreate : undefined}
+          onCreate={handleCreateColor}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          disableCreate={!hasAddPermission}
+          disableCreate={!hasAddColourPermission}
           
           handleFilterChange={bShowFilters ? handleFilterChange : undefined}
         />
@@ -185,7 +205,7 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
                           className="h-4 w-4 rounded border border-gray-300"
                           style={{ backgroundColor: color.HexCode }}
                         />
-                        <span className="text-secondary font-mono text-sm">
+                        <span className="text-sm font-mono text-gray-600">
                           {color.HexCode}
                         </span>
                       </div>

@@ -5,8 +5,11 @@ import Toolbar from "../../../components/Toolbar";
 import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Switch from "../../../components/Switch";
+import Tooltip from "../../../components/Tooltip";
 import { useProductGroups } from "../../../context/AllDataContext";
-import { STATUS, STATUS_VALUES } from "../../../contants/constants";
+import { STATUS, STATUS_VALUES, PERMISSIONS, MODULES } from "../../../contants/constants";
+import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
+import { showEmsg } from "../../../utils/ShowEmsg";
 import {UPDATE_PRODUCT_GROUPSTATUS } from "../../../contants/apiRoutes";
 
 const ITEMS_PER_PAGE = 10;
@@ -17,6 +20,18 @@ const ProductGroupList = ({ onCreate }) => {
   const [bShowFilters, setShowFilters] = useState(false);
   const [oFilters, setFilters] = useState({ status: "all" });
   const [nCurrentPage, setCurrentPage] = useState(1);
+
+  // --- Permission Checks ---
+  const permissionIdForAddProductGroup = getPermissionCode(MODULES.PRODUCT_SETUP, PERMISSIONS.ADD_PRODUCT_GROUP);
+  const permissionIdForEditProductGroup = getPermissionCode(MODULES.PRODUCT_SETUP, PERMISSIONS.EDIT_PRODUCT_GROUP);
+  const permissionIdForUpdateProductGroupStatus = getPermissionCode(MODULES.PRODUCT_SETUP, PERMISSIONS.UPDATE_PRODUCT_GROUP_STATUS);
+  const permissionIdForViewProductGroupDetails = getPermissionCode(MODULES.PRODUCT_SETUP, PERMISSIONS.VIEW_PRODUCT_GROUP_DETAILS);
+
+  const hasAddProductGroupPermission = hasPermissionId(permissionIdForAddProductGroup);
+  const hasEditProductGroupPermission = hasPermissionId(permissionIdForEditProductGroup);
+  const hasUpdateProductGroupStatusPermission = hasPermissionId(permissionIdForUpdateProductGroupStatus);
+  const hasViewProductGroupDetailsPermission = hasPermissionId(permissionIdForViewProductGroupDetails);
+
   const [statusPopup, setStatusPopup] = useState({
     open: false,
     groupId: null,
@@ -58,10 +73,26 @@ const ProductGroupList = ({ onCreate }) => {
     });
   };
 
+  const handleCreateProductGroup = () => {
+    // Check permission before allowing product group creation
+    if (!hasAddProductGroupPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
+    onCreate();
+  };
+
   const handleStatusConfirm = async () => {
     try {
       const { groupId, newStatus } = statusPopup;
       if (!groupId) return;
+
+      // Check permission before updating status
+      if (!hasUpdateProductGroupStatusPermission) {
+        showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+        setStatusPopup({ open: false, groupId: null, newStatus: null });
+        return;
+      }
 
       // Create complete payload object
       const payload = {
@@ -90,7 +121,6 @@ const ProductGroupList = ({ onCreate }) => {
         fetchProductGroups(params);
       }
     } catch (err) {
-      console.error("Error updating status:", err);
     } finally {
       setStatusPopup({ open: false, groupId: null, newStatus: null });
     }
@@ -139,8 +169,9 @@ const ProductGroupList = ({ onCreate }) => {
           showSearch={true}
           showViewToggle={false}
           showFilterButton={true}
-          onCreate={onCreate}
+          onCreate={handleCreateProductGroup}
           createLabel={t("PRODUCT_SETUP.CREATE")}
+          disableCreate={!hasAddProductGroupPermission}
           additionalFilters={
             bShowFilters
               ? [
@@ -180,16 +211,28 @@ const ProductGroupList = ({ onCreate }) => {
               {filteredGroups.map((group) => (
                 <tr key={group.ProductGroupID} className="table-row">
                   <td className="table-cell">
-                    <Link
-                      to={`/browse/editgroup/${group.ProductGroupID}`}
-                      className="text-blue-600 hover:underline block truncate max-w-[180px]"
-                      title={group.ProductGroupName}
-                    >
-                      {group.ProductGroupName}
-                    </Link>
+                    <div className="relative group inline-block w-full">
+                      <Tooltip
+                        text={hasEditProductGroupPermission ? t("TOOLTIPS.EDIT_PRODUCT_GROUP_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
+                        position="bottom-right"
+                      >
+                        <Link
+                          to={`/browse/editgroup/${group.ProductGroupID}`}
+                          className="text-sm text-blue-600 hover:underline block truncate max-w-[180px]"
+                          onClick={(e) => {
+                            if (!hasEditProductGroupPermission) {
+                              e.preventDefault();
+                              showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+                            }
+                          }}
+                        >
+                          {group.ProductGroupName}
+                        </Link>
+                      </Tooltip>
+                    </div>
                   </td>
-                  <td className="table-cell table-cell-subtext">
-                    {group.ProductGroupCode}
+                  <td className="table-cell">
+                    <span className="text-sm">{group.ProductGroupCode}</span>
                   </td>
                   <td className="table-cell">
                     <span
@@ -209,15 +252,23 @@ const ProductGroupList = ({ onCreate }) => {
                     </span>
                   </td>
                   <td className="table-cell" onClick={(e) => e.stopPropagation()}>
-                    <Switch
-                      checked={group.IsActive === true || group.IsActive === STATUS_VALUES.BOOLEAN_ACTIVE}
-                      onChange={() =>
-                        handleStatusChange(
-                          group.ProductGroupID,
-                          group.IsActive === true || group.IsActive === STATUS_VALUES.BOOLEAN_ACTIVE
-                        )
-                      }
-                    />
+                    <div className="relative group inline-block">
+                      <Tooltip
+                        text={hasUpdateProductGroupStatusPermission ? t("TOOLTIPS.UPDATE_PRODUCT_GROUP_STATUS_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
+                        position="left"
+                      >
+                        <Switch
+                          checked={group.IsActive === true || group.IsActive === STATUS_VALUES.BOOLEAN_ACTIVE}
+                          disableTooltip={true}
+                          onChange={() =>
+                            handleStatusChange(
+                              group.ProductGroupID,
+                              group.IsActive === true || group.IsActive === STATUS_VALUES.BOOLEAN_ACTIVE
+                            )
+                          }
+                        />
+                      </Tooltip>
+                    </div>
                   </td>
                 </tr>
               ))}

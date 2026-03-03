@@ -12,7 +12,7 @@ import { UPDATE_STORE_STATUS, DELETE_STORE } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS } from "../contants/constants";
 import { apiDelete } from "../utils/ApiUtils";
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
@@ -67,6 +67,13 @@ const Stores = () => {
     "Edit Store"
   );
   const hasEditPermission = hasPermissionId(permissionIdForEdit);
+
+  // Permission check for Generate Store Report
+  const permissionIdForExport = getPermissionCode(
+    MODULES.STORE,
+    PERMISSIONS.GENERATE_STORE_REPORT
+  );
+  const hasExportPermission = hasPermissionId(permissionIdForExport);
 
   const statusOptions = STATUS_OPTIONS.map((opt) => ({
     value: opt.value,
@@ -282,6 +289,11 @@ const Stores = () => {
   };
 
   const handleExportStores = async () => {
+    // Check permission before exporting
+    if (!hasExportPermission) {
+      return;
+    }
+    
     setExportLoading(true);
     try {
       // Format dates for API
@@ -382,6 +394,7 @@ const Stores = () => {
         onClearFilters={handleClearFilters}
         onExport={handleExportStores}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
+        exportDisabled={!hasExportPermission}
         onCreate={() => navigate("/add-store")}
         createLabel={t("STORES.ADD_STORE")}
       />

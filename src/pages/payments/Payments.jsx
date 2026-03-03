@@ -68,6 +68,13 @@ const Payments = () => {
     PERMISSIONS.VIEW_PAYMENT_DETAILS
   );
   const hasViewPermission = hasPermissionId(permissionIdForView);
+
+  // Permission check for Generate Payment Report
+  const permissionIdForExport = getPermissionCode(
+    MODULES.PAYMENT,
+    PERMISSIONS.GENERATE_PAYMENT_REPORT
+  );
+  const hasExportPermission = hasPermissionId(permissionIdForExport);
   const paymentStatusOptions = useSelector(
     (state) =>
       state.allData.resources.paymentStatus?.data?.map((status) => ({
@@ -184,6 +191,11 @@ const Payments = () => {
   };
 
   const handleExportPayments = async () => {
+    // Check permission before exporting
+    if (!hasExportPermission) {
+      return;
+    }
+    
     setExportLoading(true);
     try {
       // Format dates for API
@@ -406,6 +418,7 @@ const Payments = () => {
         onClearFilters={handleClearFilters}
         onExport={handleExportPayments}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
+        exportDisabled={!hasExportPermission}
         showCreateButton={false}
       />
 

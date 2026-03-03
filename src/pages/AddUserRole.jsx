@@ -18,13 +18,21 @@ import {
   REGEX_CONSTANTS,
   SCROLL_CONSTANTS,
   STATUS,
+  getPermissionTooltip,
+  isViewPermissionName,
+  isEditPermissionName,
+  getViewPermissionForEdit,
+  getEditPermissionForView,
   STATUS_DROPDOWN_OPTIONS,
   STATUS_VALUES,
+  EDIT_TO_VIEW_PERMISSION_MAPPINGS,
+  VIEW_TO_EDIT_PERMISSION_MAPPINGS,
 } from "../contants/constants";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
 import SelectWithIcon from "../components/SelectWithIcon";
 import FloatingFooter from "../components/FloatingFooter";
+import Tooltip from "../components/Tooltip";
 
 const AddUserRole = () => {
   const [sRoleName, setRoleName] = useState("");
@@ -140,16 +148,6 @@ const AddUserRole = () => {
     [t]
   );
 
-  const isViewPermissionName = (name) => {
-    if (!name || typeof name !== "string") return false;
-    const lower = name.toLowerCase().trim();
-    return (
-      lower.startsWith("view") ||
-      lower.includes(" view") ||
-      /\bview\b/.test(lower)
-    );
-  };
-
   const enforceViewLogicForModule = (permissionsObj, moduleName) => {
     if (!permissionsObj || !permissionsObj[moduleName]) return permissionsObj;
 
@@ -158,25 +156,75 @@ const AddUserRole = () => {
     const updated = { ...permissionsObj };
     const perms = [...updated[moduleName]];
 
-    const viewIndex = perms.findIndex((p) =>
-      isViewPermissionName(p.Name || "")
-    );
+    // Find the master view permission (basic view like "View Users", but not "View Categories", "View Brands", "View Attribute Types", "View Attributes", "View Specification Types", or "View Colours")
+    const masterViewIndex = perms.findIndex((p) => {
+      const name = p.Name.toLowerCase().trim();
+      return name === "view users" || 
+             name === "view stores" || 
+             name === "view products" ||
+             name === "view roles" ||
+             name === "view banners" ||
+             name === "view orders" ||
+             name === "view customers" ||
+             name === "view coupons" ||
+             name === "view notifications" ||
+             name === "view pages" ||
+             (name.startsWith("view ") && !name.includes("details") && !name.includes("brands") && !name.includes("categories") && !name.includes("attribute types") && !name.includes("attributes") && !name.includes("specification types") && !name.includes("colours") && !name.includes("product groups"));
+    });
 
-    const anyNonViewSelected = perms.some(
-      (p) => !isViewPermissionName(p.Name || "") && p.IsChecked
-    );
-
-    if (anyNonViewSelected && viewIndex !== -1 && !perms[viewIndex].IsChecked) {
-      perms[viewIndex] = { ...perms[viewIndex], IsChecked: true };
-    }
-
-    if (viewIndex !== -1 && !perms[viewIndex].IsChecked) {
-      for (let i = 0; i < perms.length; i++) {
-        if (i === viewIndex) continue;
-        if (perms[i].IsChecked) {
-          perms[i] = { ...perms[i], IsChecked: false };
+    if (masterViewIndex !== -1) {
+      const masterViewPermission = perms[masterViewIndex];
+      
+      if (!masterViewPermission.IsChecked) {
+        // If master view permission is deselected, deselect ALL other permissions
+        for (let i = 0; i < perms.length; i++) {
+          if (i !== masterViewIndex && perms[i].IsChecked) {
+            perms[i] = { ...perms[i], IsChecked: false };
+          }
         }
+      } else {
+        // If master view permission is selected, enforce edit→view dependencies
+        perms.forEach((permission, index) => {
+          if (index !== masterViewIndex) {
+            // Only enforce edit→view dependencies for edit permissions, but allow view permissions to be independent
+            if (isEditPermissionName(permission.Name)) {
+              const requiredViewPermission = getViewPermissionForEdit(permission.Name);
+              if (requiredViewPermission) {
+                const viewPermissionIndex = perms.findIndex(
+                  (p) => p.Name.toLowerCase().trim() === requiredViewPermission
+                );
+                if (viewPermissionIndex !== -1) {
+                  // If edit is selected, auto-select view (but don't deselect view when edit is deselected)
+                  if (permission.IsChecked && !perms[viewPermissionIndex].IsChecked) {
+                    perms[viewPermissionIndex] = { ...perms[viewPermissionIndex], IsChecked: true };
+                  }
+                  // Remove reverse dependency - don't deselect view when edit is deselected
+                }
+              }
+            }
+          }
+        });
       }
+    } else {
+      // Fallback: If no master view permission found, enforce edit→view dependencies
+      perms.forEach((permission) => {
+        if (permission.IsChecked) {
+          // If edit permission is selected, auto-select corresponding view permission
+          if (isEditPermissionName(permission.Name)) {
+            const requiredViewPermission = getViewPermissionForEdit(permission.Name);
+            if (requiredViewPermission) {
+              const viewPermissionIndex = perms.findIndex(
+                (p) => p.Name.toLowerCase().trim() === requiredViewPermission
+              );
+              if (viewPermissionIndex !== -1 && !perms[viewPermissionIndex].IsChecked) {
+                perms[viewPermissionIndex] = { ...perms[viewPermissionIndex], IsChecked: true };
+              }
+            }
+          }
+        }
+        // Remove reverse dependency - don't deselect view when edit is deselected
+        // This allows view permissions to be independent
+      });
     }
 
     updated[moduleName] = perms;
@@ -722,32 +770,43 @@ const AddUserRole = () => {
                           </div>
                           <hr className="border-gray-300 my-4 mt-2 mb-4" />
                           {oPermissionsByModule[moduleName].map(
-                            (permission) => (
-                              <div
-                                key={permission.ID}
-                                className="flex items-center mb-2"
-                              >
-                                <label className="truncate">
-                                  <input
-                                    type="checkbox"
-                                    checked={permission.IsChecked}
-                                    onChange={() =>
-                                      handleCheckboxChange(
-                                        moduleName,
-                                        permission.ID
-                                      )
-                                    }
-                                    className={`mr-2 form-checkbox h-[12px] w-[12px] ${
-                                      isEditingAdmin
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-blue-600"
-                                    }`}
-                                    disabled={isEditingAdmin}
-                                  />
-                                  {permission.Name}
-                                </label>
-                              </div>
-                            )
+                            (permission) => {
+                              const tooltipText = getPermissionTooltip(permission, isEditingAdmin, isAdminRole(), oPermissionsByModule[moduleName], t);
+
+                              return (
+                                <div
+                                  key={permission.ID}
+                                  className="flex items-center mb-2"
+                                >
+                                  <Tooltip 
+                                    text={tooltipText}
+                                    position="top"
+                                    align="left"
+                                    showArrow={true}
+                                  >
+                                    <label className="truncate">
+                                      <input
+                                        type="checkbox"
+                                        checked={permission.IsChecked}
+                                        onChange={() =>
+                                          handleCheckboxChange(
+                                            moduleName,
+                                            permission.ID
+                                          )
+                                        }
+                                        className={`mr-2 form-checkbox h-[12px] w-[12px] ${
+                                          isEditingAdmin
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "text-blue-600"
+                                        }`}
+                                        disabled={isEditingAdmin}
+                                      />
+                                      {permission.Name}
+                                    </label>
+                                  </Tooltip>
+                                </div>
+                              );
+                            }
                           )}
                         </div>
                       );

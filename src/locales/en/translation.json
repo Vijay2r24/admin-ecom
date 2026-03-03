@@ -23,10 +23,11 @@
       "OTP_INVALID": "Invalid OTP. Please try again.",
       "OTP_VALIDATION_ERROR": "An error occurred during OTP validation.",
       "PASSWORD_RESET_FAILED": "Failed to reset password.",
-      "LOGIN_CONTAINER_ID ": "login_page_container",
-      "LOGIN_TOAST_ID": "login_error_id",
+      "LOGIN_CONTAINER_ID ":"login_page_container",
+      "LOGIN_TOAST_ID" : "login_error_id",
       "LOGIN_SUCCESS_MESSAGE": "Login Successfully"
     }
+
   },
   "OTP": {
     "SUCCESS": "OTP sent successfully.",
@@ -66,7 +67,8 @@
     "ERROR": "Please enter the correct OTP",
     "TIMER": "Resend OTP in",
     "RESEND": "Resend",
-    "OTP_EXPIRE": "OTP expired. Please resend to try again."
+    "OTP_EXPIRE": "OTP expired. Please resend to try again.",
+    "OTP_VALIDATION":"OTP must only contain digits"
   },
   "ADMIN": {
     "TITLE": "Admin Portal <br/> Management System",
@@ -101,11 +103,7 @@
     "NOTIFICATIONS": "Notifications",
     "SETTINGS": "Settings",
     "PAGES": "Profile",
-    "THEMES": "Application Settings",
-    "LOW_STOCK": "Low Stock"
-  },
-  "LOW_STOCK": {
-    "TITLE": "Low Stock Products"
+    "THEMES":"Application Settings"
   },
   "DASHBOARD": {
     "TITLE": "Dashboard",
@@ -455,24 +453,6 @@
     "PAYMENT_PROVIDER": "Payment Type",
     "CARD_NUMBER": "Card Number"
   },
-  "THEMESETTINGS": {
-    "PRIMARY_COLOR": "Primary Color",
-    "PREVIEW_TITLE": "Web Preview",
-    "TITLE": "Application Settings",
-    "RESET_AS_DEFAULT": "Reset as Default",
-    "WEB_TEXT": "ShopNow",
-    "DESCRIPTION": "What are you looking for today!",
-    "CATEGORIES": "Categories",
-    "CATEGORY": "Category",
-    "TRENDING_NOW": "Trending Now",
-    "PRODUCT": "Product",
-    "COST": "999",
-    "STORE_LOGO": "Store Logo",
-    "NO_LOGO": "No Logo",
-    "UPLOAD_LOGO": "Upload Logo",
-    "SELECT_LOGO_FIRST": "Please select a logo first",
-    "NO_LOGO_DOCUMENT_ID": "No logo document ID available. Please refresh the page."
-  },
   "ORDERS": {
     "TITLE": "Orders",
     "SUBTITLE": "View and manage all orders",
@@ -750,6 +730,7 @@
     "EDIT_USER": "Edit User",
     "ADD_NEW_USER": "Add New User",
     "EDIT_USER_DESCRIPTION": "Edit existing user account details and permissions.",
+     "DELETE_MESSAGE":"Are you sure you want to set this user as",
     "TABLE": {
       "CONTACT": "Contact",
       "LAST_ACTIVE": "Last Active"
@@ -760,8 +741,7 @@
     "FETCH_ERROR": "An error occurred while fetching users.",
     "FILTERS": {
       "USER_ROLE": "User Role",
-      "STATUS": "Status",
-      "STORE": "Store"
+      "STATUS": "Status"
     },
     "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete this user? this action cannot be undone."
   },
@@ -801,6 +781,7 @@
     "PASSWORD_WEAK": "Weak password",
     "PASSWORDS_MATCH": "Passwords must match.",
     "SUCCESS": "User created/updated successfully",
+   
     "VALIDATION": {
       "FIRST_NAME_REQUIRED": "First name is required",
       "LAST_NAME_REQUIRED": "Last name is required",
@@ -851,7 +832,34 @@
     "ROLE_NAME_MIN_LENGTH": "Role name must be at least 2 characters",
     "ROLE_NAME_MAX_LENGTH": "Role name must be less than 50 characters",
     "ROLE_NAME_INVALID": "Role name can only contain letters, numbers, spaces, hyphens and underscores",
-    "FAILED_TO_SAVE_ROLE": "Failed to save user role."
+    "FAILED_TO_SAVE_ROLE": "Failed to save user role.",
+    "PERMISSIONS_REQUIRED": "At least one permission must be selected",
+    "NO_PERMISSIONS_FOUND": "No permissions found",
+    "SAVE_SUCCESS": "Role saved successfully",
+    "TOOLTIPS": {
+      "ADMIN_ROLE_LOCKED": "Cannot modify permissions for admin roles",
+      "MASTER_PERMISSION_REQUIRED": "Required: Select '{{permissionName}}' first to enable this module",
+      "MASTER_ENABLES_ALL": "[MASTER] Enables all {{moduleName}} permissions",
+      "MASTER_UNLOCKED": "[MASTER] {{moduleName}} module unlocked",
+      "VIEW_INDEPENDENT": "[VIEW] View {{entityName}} - Independent permission",
+      "VIEW_ACTIVE": "[ACTIVE] Can view {{entityName}}",
+      "REQUIRED_FOR_EDIT": "[REQUIRED] Needed for '{{editPermission}}' - View details",
+      "DETAIL_VIEW_REQUIRED": "[ACTIVE] Detail view - Required for '{{editPermission}}'",
+      "VIEW_ALLOWS_DETAILED": "[VIEW] Allows viewing detailed data and is required for most operations",
+      "VIEW_REQUIRED_FOR_MODULE": "[ACTIVE] Required for accessing this module's detailed information",
+      "EDIT_AUTO_SELECTS": "[EDIT] Auto-selects '{{viewPermission}}' - Edit {{entityName}}",
+      "EDIT_DESELECTING_REMOVES": "[ACTIVE] Edit mode - Deselecting removes '{{viewPermission}}'",
+      "EDIT_REQUIRES_VIEW": "[EDIT] Edit access - Requires view permission",
+      "EDIT_WITH_VIEW": "[ACTIVE] Edit mode - With view access",
+      "CREATE_ENTITY": "[CREATE] Create {{entityName}}",
+      "CAN_CREATE_ENTITY": "[ACTIVE] Can create {{entityName}}",
+      "DELETE_ENTITY": "[DELETE] Delete {{entityName}}",
+      "CAN_DELETE_ENTITY": "[ACTIVE] Can delete {{entityName}}",
+      "CHANGE_STATUS": "[STATUS] Change {{entityName}} status",
+      "CAN_CHANGE_STATUS": "[ACTIVE] Can change {{entityName}} status",
+      "CLICK_TO_ENABLE": "[DISABLED] Click to enable",
+      "PERMISSION_ENABLED": "[ACTIVE] Permission enabled"
+    }
   },
   "BANNER_FORM": {
     "TITLE": "Banner Management",
@@ -872,9 +880,10 @@
     "ENTER_PRICE": "Enter price",
     "CHOOSE_IMAGE": "Choose Image",
     "CREATE_BANNER_DESCRIPTION": "Create and upload banners for your store. Add images, set categories, brands, and more.",
+    "NO_BANNERS_FOUND": "No banners found",
+    "NO_BANNERS_DESCRIPTION": "Start creating beautiful banners to showcase your promotions, announcements, and important updates. Banners help you communicate effectively with your customers.",
     "BANNER_STATUS_UPDATE_SUCCESS": "Banner status updated successfully.",
     "BANNER_STATUS_UPDATE_ERROR": "Failed to update banner status.",
-    "NO_BANNERS_FOUND": "No banners found.",
     "PAGE": "page",
     "OF": "of",
     "IMAGE_DIMENSIONS_TOO_SMALL": "Image dimensions are too small. Minimum size required is {{width}}x{{height}} pixels.",
@@ -1030,6 +1039,8 @@
     "PREVIEW_TITLE": "Banners Preview",
     "PREVIEW": "Preview",
     "NO_BANNERS_FOUND": "No banners found.",
+    "NO_ACTIVE_BANNERS": "No active banners found",
+    "NO_ACTIVE_BANNERS_DESC": "There are currently no active banners to display. Active banners will appear here once they are created and activated.",
     "PAGE": "Page",
     "UNNAMED_BANNER": "Unnamed Banner",
     "PRICE": "Price",
@@ -1170,6 +1181,7 @@
     "SELECT_ALL": "Select All",
     "VIEW_ALL": "View all",
     "API_ERROR": "API Error occurred",
+    "SUBMITTING": "Submitting...",
     "CREATE": "Create",
     "UPDATE": "Update",
     "ENTER_ZIP_CODE": "Enter ZIP code",
@@ -1179,10 +1191,6 @@
     "REQUIRED": "is required",
     "CLEAR_DATE_RANGE": "Clear date range",
     "ACCESS_DENIED_TITLE": "Access to this page is restricted",
-    "UPDATING": "Updating...",
-    "UPDATE_LOGO": "Update Logo",
-    "UPDATE_COLOUR": "Update Colour",
-    "REMOVE": "Remove",
     "ACCESS_DENIED_MESSAGE": "Please check with the site admin if you believe this is a mistake.",
     "EXPORTING": "Exporting.."
   },
@@ -1353,5 +1361,21 @@
     "SAVE_ORDER": "Save Order",
     "CLICK_TO_UPLOAD": "Click to upload images",
     "OR_DRAG_DROP": "or drag & drop"
+  },
+  "TOOLTIPS": {
+    "EDIT_BRAND_TOOLTIP": "Edit brand details",
+    "UPDATE_BRAND_STATUS_TOOLTIP": "Update brand status",
+    "EDIT_CATEGORY_TOOLTIP": "Edit category details", 
+    "UPDATE_CATEGORY_STATUS_TOOLTIP": "Update category status",
+    "EDIT_COLOUR_TOOLTIP": "Edit colour details",
+    "UPDATE_COLOUR_STATUS_TOOLTIP": "Update colour status",
+    "EDIT_ATTRIBUTE_TYPE_TOOLTIP": "Edit attribute type details",
+    "UPDATE_ATTRIBUTE_TYPE_STATUS_TOOLTIP": "Update attribute type status",
+    "EDIT_ATTRIBUTE_TOOLTIP": "Edit attribute details",
+    "UPDATE_ATTRIBUTE_STATUS_TOOLTIP": "Update attribute status",
+    "EDIT_SPECIFICATION_TYPE_TOOLTIP": "Edit specification type details",
+    "UPDATE_SPECIFICATION_TYPE_STATUS_TOOLTIP": "Update specification type status",
+    "EDIT_PRODUCT_GROUP_TOOLTIP": "Edit product group details",
+    "UPDATE_PRODUCT_GROUP_STATUS_TOOLTIP": "Update product group status"
   }
 }

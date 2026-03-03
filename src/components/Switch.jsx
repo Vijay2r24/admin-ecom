@@ -6,6 +6,7 @@ const Switch = ({
   onChange,
   label = "",
   disabled = false,
+  disableTooltip = false,
   ...props
 }) => (
   <label
@@ -47,7 +48,7 @@ const Switch = ({
       />
 
       {/* ACTIVE / INACTIVE Tooltip */}
-      {!disabled && (
+      {!disabled && !disableTooltip && (
         <span
           className="
             absolute top-1/2 left-[120%] -translate-y-1/2
@@ -61,7 +62,7 @@ const Switch = ({
       )}
 
       {/* DISABLED Tooltip */}
-      {disabled && (
+      {disabled && !disableTooltip && (
         <span
           className="
             absolute top-1/2 right-[120%] -translate-y-1/2

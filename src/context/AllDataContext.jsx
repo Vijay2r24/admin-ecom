@@ -152,7 +152,7 @@ export const AllDataProvider = ({ children }) => {
         const filteredParams = { ...params };
         if (filteredParams.pageNumber === undefined)
           delete filteredParams.pageNumber;
-        console.log("API params for", key, filteredParams);
+
         const oResponse = await apiGet(api, filteredParams, token);
         let data = [];
         let total = 0;
@@ -227,8 +227,6 @@ export const AllDataProvider = ({ children }) => {
         token
       );
 
-      console.log("User details response:", userDetailsResponse);
-
       if (
         userDetailsResponse?.data?.STATUS === STATUS.SUCCESS.toUpperCase()
       ) {
@@ -240,7 +238,6 @@ export const AllDataProvider = ({ children }) => {
         }));
       }
     } catch (err) {
-      console.error("Error fetching user details:", err);
 
       // Clear localStorage if needed
       localStorage.removeItem("userDetails");

@@ -162,6 +162,24 @@ const AddProductForm = () => {
   const categories = useSelector(
     (state) => state.allData.resources.categories?.data || []
   );
+  
+  // Filter categories to only include child categories (ParentCategoryID is not null/undefined)
+  const childCategories = [
+    {
+      value: "",
+      label: t("PRODUCT_CREATION.CATEGORY_ID_PLACEHOLDER"),
+    },
+    ...categories
+      .filter(
+        (cat) =>
+          (cat.ParentCategoryID !== null && cat.ParentCategoryID !== undefined) &&
+          cat.IsActive === true
+      )
+      .map((cat) => ({
+        value: cat.CategoryID,
+        label: cat.CategoryName,
+      }))
+  ];
   const stores = useSelector(
     (state) => state.allData.resources.stores?.data || []
   );
@@ -1466,10 +1484,7 @@ const AddProductForm = () => {
                         })
                       )
                     }
-                    options={(categories || []).map((category) => ({
-                      value: category.CategoryID,
-                      label: category.CategoryName,
-                    }))}
+                    options={childCategories}
                     Icon={Tag}
                     error={oValidationErrors.CategoryID}
                     placeholder={t("PRODUCT_CREATION.CATEGORY_ID_PLACEHOLDER")}
