@@ -17,6 +17,10 @@ import {
   ChevronDown,
   X,
   FileText,
+  Package,
+  Image as ImageIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { useSelector, useDispatch } from "react-redux";
@@ -112,6 +116,12 @@ export default function CreateVariant() {
     useState("");
   const [selectedStores, setSelectedStores] = useState([]);
   const [formData, setFormData] = useState();
+  const [imageGallery, setImageGallery] = useState({
+    isOpen: false,
+    images: [],
+    currentIndex: 0,
+  });
+  const [productDetailsOpen, setProductDetailsOpen] = useState(false);
 
   // Auto-select grouping attribute if only one exists (Create mode)
   useEffect(() => {
@@ -857,7 +867,12 @@ export default function CreateVariant() {
       const token = localStorage.getItem("token");
 
       try {
-        const params = { searchText: query, pageNumber: 1, pageSize: 10 };
+        const params = { 
+          searchText: query, 
+          pageNumber: 1, 
+          pageSize: 10,
+          isUserProductList: useStoreFilter && oFormData.StoreIDs && oFormData.StoreIDs.length > 0
+        };
 
         if (
           useStoreFilter &&
@@ -1134,6 +1149,57 @@ export default function CreateVariant() {
   const variantsExistButNoGrouping =
     aVariants.length > 0 && !groupingAttributeTypeID;
 
+  // Collect all product images from all variants
+  const getAllProductImages = useMemo(() => {
+    if (!selectedProduct?.Variants) return [];
+    const allImages = [];
+    selectedProduct.Variants.forEach((variant) => {
+      if (variant.ProductVariantImages && Array.isArray(variant.ProductVariantImages)) {
+        variant.ProductVariantImages.forEach((img) => {
+          allImages.push({
+            url: img.documentUrl || img.Url,
+            variantId: variant.VariantID,
+            sortOrder: img.sortOrder || img.SortOrder || 0,
+          });
+        });
+      }
+    });
+    // Sort by sortOrder
+    return allImages.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+  }, [selectedProduct]);
+
+  // Open image gallery
+  const openImageGallery = useCallback((index = 0) => {
+    setImageGallery({
+      isOpen: true,
+      images: getAllProductImages,
+      currentIndex: index,
+    });
+  }, [getAllProductImages]);
+
+  // Close image gallery
+  const closeImageGallery = useCallback(() => {
+    setImageGallery({
+      isOpen: false,
+      images: [],
+      currentIndex: 0,
+    });
+  }, []);
+
+  // Navigate gallery
+  const navigateGallery = useCallback((direction) => {
+    setImageGallery((prev) => {
+      if (!prev.isOpen || prev.images.length === 0) return prev;
+      let newIndex = prev.currentIndex;
+      if (direction === "next") {
+        newIndex = (prev.currentIndex + 1) % prev.images.length;
+      } else if (direction === "prev") {
+        newIndex = prev.currentIndex === 0 ? prev.images.length - 1 : prev.currentIndex - 1;
+      }
+      return { ...prev, currentIndex: newIndex };
+    });
+  }, []);
+
   const updateVariantLocalSort = (variantIndex, sortedList) => {
     setAVariants((prev) => {
       const updated = [...prev];
@@ -1264,6 +1330,9 @@ export default function CreateVariant() {
         AttributeValueIDs: a.AttributeValueIDs,
       }));
 
+      // Only include documentMetadata if there are actual images
+      const hasImages = documentMetadata.length > 0;
+
       payloadVariants.push({
         // ProductID is at root in curl, but maybe also inside variants?
         // Curl shows: data="{\"ProductID\":..., \"Variants\":[...]}"
@@ -1275,7 +1344,7 @@ export default function CreateVariant() {
         Quantity: Number(variant.Quantity) || 0,
         Attributes: attributesArray,
         StoreIDs: selectedStores, // Array of strings
-        documentMetadata,
+        ...(hasImages && { documentMetadata }),
       });
     }
 
@@ -1339,14 +1408,19 @@ export default function CreateVariant() {
         ],
       }));
 
+      // Check if variant has new images to include documentMetadata
+      const hasNewImages = variant.images && variant.images.some(img => img.file);
+      const documentMetadata = hasNewImages ? [] : undefined;
+
       payloadVariants.push({
+        ProductVariantID: variant.VariantID || variant.ProductVariantID,
         MRP: Number(variant.MRP) || 0,
         SellingPrice: Number(variant.SellingPrice) || 0,
         DiscountPercentage: Number(variant.ProductDiscount) || 0,
         Quantity: Number(variant.Quantity) || 0, // Using Quantity field we set in state
         Attributes: attributesArray,
         StoreIDs: selectedStores, // Array of strings
-        documentMetadata: [], // No new images for existing variant attach flow
+        ...(documentMetadata && { documentMetadata }),
       });
     }
 
@@ -1396,9 +1470,108 @@ export default function CreateVariant() {
     [stores]
   );
 
+  // Handle keyboard navigation in gallery
+  useEffect(() => {
+    if (!imageGallery.isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "ArrowLeft") {
+        navigateGallery("prev");
+      } else if (e.key === "ArrowRight") {
+        navigateGallery("next");
+      } else if (e.key === "Escape") {
+        closeImageGallery();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [imageGallery.isOpen, navigateGallery, closeImageGallery]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <ToastContainer />
+      {/* IMAGE GALLERY MODAL */}
+      {imageGallery.isOpen && imageGallery.images.length > 0 && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-4">
+          {/* Header */}
+          <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent">
+            <div className="text-white">
+              <h3 className="font-semibold text-lg">{selectedProduct?.ProductName}</h3>
+              <p className="text-sm text-gray-300">
+                Image {imageGallery.currentIndex + 1} of {imageGallery.images.length}
+              </p>
+            </div>
+            <button
+              onClick={closeImageGallery}
+              className="p-2 hover:bg-white/20 rounded-lg text-white transition-colors"
+              aria-label="Close gallery"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Main Image */}
+          <div className="relative flex-1 flex items-center justify-center w-full max-w-6xl mt-16 mb-24">
+            {imageGallery.images.length > 1 && (
+              <button
+                onClick={() => navigateGallery("prev")}
+                className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-sm transition-all z-10"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            )}
+
+            <div className="flex items-center justify-center w-full h-full">
+              <img
+                src={imageGallery.images[imageGallery.currentIndex]?.url}
+                alt={`Product image ${imageGallery.currentIndex + 1}`}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              />
+            </div>
+
+            {imageGallery.images.length > 1 && (
+              <button
+                onClick={() => navigateGallery("next")}
+                className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-sm transition-all z-10"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
+          </div>
+
+          {/* Thumbnail Strip */}
+          {imageGallery.images.length > 1 && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+              <div className="flex items-center justify-center gap-2 overflow-x-auto max-w-full pb-2">
+                {imageGallery.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setImageGallery((prev) => ({ ...prev, currentIndex: idx }))}
+                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      idx === imageGallery.currentIndex
+                        ? "border-white ring-2 ring-custom-bg scale-110"
+                        : "border-white/30 hover:border-white/60 opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <img
+                      src={img.url}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+              <p className="text-center text-white/80 text-xs mt-2">
+                Use arrow keys or click thumbnails to navigate
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* CROP MODAL — shared for sequential cropping */}
       {cropperModal.isOpen && (
         <ImageCropperModal
@@ -1485,74 +1658,246 @@ export default function CreateVariant() {
                   </div>
                 )}
 
-                {searchResults.length > 0 && (
-                  <div className="absolute bg-white border border-gray-200 w-full mt-2 rounded-xl shadow-xl max-h-80 overflow-y-auto z-40 animate-in fade-in zoom-in-95 duration-200">
-                    {searchResults.map((p) => (
-                      <div
-                        key={p.ProductID}
-                        className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors group/item"
-                        onClick={() => handleSelectProduct(p)}
-                      >
-                        <div className="flex items-center gap-4">
-                          {p.firstImage ? (
-                            <img
-                              src={p.firstImage}
-                              className="w-12 h-12 rounded-lg object-cover border border-gray-200 shadow-sm"
-                              alt={p.ProductName}
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded-lg bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
-                              <Tag className="h-6 w-6 text-gray-300" />
+                {!isSearching && !selectedProduct && searchText.trim().length > 2 && (
+                  <div className="absolute bg-white border border-gray-200 w-full mt-2 rounded-xl shadow-xl z-40 animate-in fade-in zoom-in-95 duration-200">
+                    {searchResults.length > 0 ? (
+                      <div className="max-h-80 overflow-y-auto">
+                        {searchResults.map((p) => (
+                          <div
+                            key={p.ProductID}
+                            className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors group/item"
+                            onClick={() => handleSelectProduct(p)}
+                          >
+                            <div className="flex items-center gap-4">
+                              {p.firstImage ? (
+                                <img
+                                  src={p.firstImage}
+                                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 shadow-sm"
+                                  alt={p.ProductName}
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
+                                  <Tag className="h-6 w-6 text-gray-300" />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-900 group-hover/item:text-custom-bg transition-colors truncate">
+                                  {p.ProductName}
+                                </p>
+                                <p className="text-xs text-gray-500 font-medium">
+                                  {p.BrandName}{" "}
+                                  <span className="mx-2 text-gray-300">•</span>{" "}
+                                  {p.CategoryName}
+                                </p>
+                              </div>
                             </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900 group-hover/item:text-custom-bg transition-colors truncate">
-                              {p.ProductName}
-                            </p>
-                            <p className="text-xs text-gray-500 font-medium">
-                              {p.BrandName}{" "}
-                              <span className="mx-2 text-gray-300">•</span>{" "}
-                              {p.CategoryName}
-                            </p>
                           </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                          <Search className="h-10 w-10 text-gray-300" />
+                          <p className="text-gray-600 font-medium">
+                            {t("ADD_VARIANT.NO_PRODUCTS_FOUND")}
+                          </p>
                         </div>
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Selected Product Highlight Card */}
+            {/* Selected Product Details Card with Accordion */}
             {selectedProduct && (
-              <div className="bg-custom-bg/5 rounded-2xl border border-custom-bg/20 p-5 flex items-center justify-between animate-in slide-in-from-left-4 duration-500">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-white rounded-xl shadow-sm border border-custom-bg/10">
-                    <Info className="h-6 w-6 text-custom-bg" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 leading-tight">
-                      {selectedProduct.ProductName}
-                    </h3>
-                    <div className="flex items-center gap-3 mt-1 text-sm font-medium text-custom-bg">
-                      <span className="bg-white/50 px-2 py-0.5 rounded border border-custom-bg/10">
-                        {selectedProduct.BrandName}
-                      </span>
-                      <span className="text-gray-400">•</span>
-                      <span className="bg-white/50 px-2 py-0.5 rounded border border-custom-bg/10">
-                        {selectedProduct.CategoryName}
-                      </span>
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-in slide-in-from-left-4 duration-500">
+                <div className="bg-gradient-to-r from-custom-bg/10 to-custom-bg/5 border-b border-custom-bg/20 p-5 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-white rounded-xl shadow-sm border border-custom-bg/10">
+                      <Package className="h-6 w-6 text-custom-bg" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 leading-tight text-lg">
+                        {selectedProduct.ProductName}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-1 text-sm font-medium text-custom-bg">
+                        <span className="bg-white/80 px-2 py-0.5 rounded border border-custom-bg/10">
+                          {selectedProduct.BrandName}
+                        </span>
+                        <span className="text-gray-400">•</span>
+                        <span className="bg-white/80 px-2 py-0.5 rounded border border-custom-bg/10">
+                          {selectedProduct.CategoryName}
+                        </span>
+                      </div>
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedProduct(null);
+                      setSearchText("");
+                      setAAttributes([]);
+                      setAVariants([]);
+                      setAttachedVariants([]);
+                    }}
+                    className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-red-500 transition-all shadow-sm"
+                    title={t("ADD_VARIANT.CHANGE_PRODUCT")}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedProduct(null)}
-                  className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-red-500 transition-all shadow-sm"
-                  title={t("ADD_VARIANT.CHANGE_PRODUCT")}
-                >
-                  <X className="h-5 w-5" />
-                </button>
+
+                {/* Accordion Button for Product Details */}
+                <div className="border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setProductDetailsOpen(!productDetailsOpen)}
+                    className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Info className="h-5 w-5 text-gray-500" />
+                      <span className="font-semibold text-gray-800">Product Details</span>
+                    </div>
+                    <ChevronDown
+                      className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${
+                        productDetailsOpen ? "rotate-180" : "rotate-0"
+                      }`}
+                    />
+                  </button>
+
+                  {productDetailsOpen && (
+                    <div className="px-6 pb-6 space-y-6 border-t border-gray-100 bg-gray-50/50">
+                    {/* Product ID */}
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className="font-semibold text-gray-600">Product ID:</span>
+                      <span className="text-gray-900 font-mono">{selectedProduct.ProductID}</span>
+                    </div>
+
+                    {/* Product Description */}
+                    {selectedProduct.ProductDescription && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-gray-500" />
+                          <span className="font-semibold text-gray-700">Description:</span>
+                        </div>
+                        <div
+                          className="text-gray-600 text-sm leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100"
+                          dangerouslySetInnerHTML={{
+                            __html: selectedProduct.ProductDescription,
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Two Column Layout: Left (Images) | Right (Attributes & Variants) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Left Column: Product Images */}
+                      <div className="space-y-3">
+                        {getAllProductImages.length > 0 ? (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <ImageIcon className="h-4 w-4 text-gray-500" />
+                              <span className="font-semibold text-gray-700">Product Images:</span>
+                              <span className="text-sm text-gray-500">
+                                ({getAllProductImages.length} {getAllProductImages.length === 1 ? "image" : "images"})
+                              </span>
+                            </div>
+                            <div className="flex gap-3 items-center flex-wrap">
+                              {getAllProductImages.slice(0, 3).map((img, idx) => (
+                                <div
+                                  key={idx}
+                                  className="relative group cursor-pointer flex-shrink-0"
+                                  onClick={() => openImageGallery(idx)}
+                                >
+                                  <img
+                                    src={img.url}
+                                    alt={`Product image ${idx + 1}`}
+                                    className="w-20 h-20 rounded-lg object-cover border border-gray-200 shadow-sm hover:shadow-lg transition-all group-hover:scale-105"
+                                  />
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-colors flex items-center justify-center">
+                                    <ImageIcon className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  </div>
+                                </div>
+                              ))}
+                              {getAllProductImages.length > 3 && (
+                                <div
+                                  onClick={() => openImageGallery(3)}
+                                  className="w-20 h-20 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-xs text-gray-600 font-medium cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-colors group flex-shrink-0"
+                                >
+                                  <span className="text-base font-bold text-custom-bg group-hover:text-custom-bg/80">
+                                    +{getAllProductImages.length - 3}
+                                  </span>
+                                  <span className="text-[10px] mt-0.5">more</span>
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <ImageIcon className="h-4 w-4" />
+                            <span className="font-semibold text-sm">Product Images:</span>
+                            <span className="text-xs">No images available</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Column: Available Attributes & Existing Variants */}
+                      <div className="space-y-6">
+                        {/* Attributes Summary */}
+                        {aAttributes && aAttributes.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Hash className="h-4 w-4 text-gray-500" />
+                              <span className="font-semibold text-gray-700">Available Attributes:</span>
+                              <span className="text-custom-bg font-bold">{aAttributes.length}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {aAttributes.map((attr, idx) => (
+                                <span
+                                  key={idx}
+                                  className="px-3 py-1 bg-custom-bg/10 text-custom-bg rounded-full text-xs font-medium border border-custom-bg/20"
+                                >
+                                  {attr.AttributeTypeName}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Variants Summary */}
+                        {selectedProduct.Variants && selectedProduct.Variants.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Layers className="h-4 w-4 text-gray-500" />
+                              <span className="font-semibold text-gray-700">Existing Variants:</span>
+                              <span className="text-custom-bg font-bold">
+                                {selectedProduct.Variants.length}
+                              </span>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                              <div className="grid grid-cols-1 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-600">Total Variants:</span>
+                                  <span className="ml-2 font-semibold text-gray-900">
+                                    {selectedProduct.Variants.length}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">Active Variants:</span>
+                                  <span className="ml-2 font-semibold text-green-600">
+                                    {selectedProduct.Variants.filter((v) => v.IsActive).length}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </section>
@@ -1651,6 +1996,13 @@ export default function CreateVariant() {
                                     updated[index].NewAttributeValueIDs =
                                       values;
                                     setAAttributes(updated);
+                                  }}
+                                  onInputChange={() => {
+                                    // Fetch all attribute values when dropdown is opened
+                                    fetchAttributeValuesForType(
+                                      attr.AttributeTypeID,
+                                      attr.AttributeTypeName
+                                    );
                                   }}
                                   multiple
                                   placeholder={t("ADD_VARIANT.PICK_VALUES_PLACEHOLDER")}

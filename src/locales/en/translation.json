@@ -1353,6 +1353,7 @@
     "MSG_SELECT_ONE_ATTR": "Please select at least one attribute value.",
     "MSG_SELECT_VARIANT_ATTACH": "Please select at least one variant to attach",
     "MSG_VALIDATION_ABORTED": "Validation aborted: Missing product or variants.",
+    "NO_PRODUCTS_FOUND": "No products found",
     "MSG_FIRST_GENERATE": "Please select a product and generate variants first."
   },
   "IMAGE_SORTING": {

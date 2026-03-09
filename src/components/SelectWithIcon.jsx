@@ -155,7 +155,18 @@ const SelectWithIcon = forwardRef(
             onClick={(e) => {
               e.stopPropagation();
               if (!disabled) {
-                setIsOpen((prev) => !prev);
+                setIsOpen((prev) => {
+                  if (!prev) {
+                    // Clear search term when opening dropdown to show all options
+                    setSearchTerm("");
+                    setHighlightedIndex(-1);
+                    // Trigger onInputChange with empty string to fetch all options
+                    if (typeof rest.onInputChange === "function") {
+                      rest.onInputChange("");
+                    }
+                  }
+                  return !prev;
+                });
               }
             }}
             tabIndex={disabled ? -1 : 0}
