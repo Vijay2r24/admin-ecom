@@ -49,6 +49,7 @@ export default function PreviewSortable({
           sensors={sensors}
           onClose={() => setOpenModal(false)}
           onSortChange={onSortChange}
+          onRemove={onRemove}
         />
       )}
     </>
@@ -85,9 +86,10 @@ export { SortableThumb };
 /* =======================================================
     SORT ORDER MODAL — INCLUDED IN SAME FILE
 ======================================================= */
-const SortOrderModal = ({ images = [], sensors, onClose, onSortChange }) => {
+const SortOrderModal = ({ images = [], sensors, onClose, onSortChange, onRemove }) => {
   const { t } = useTranslation();
   const [localImages, setLocalImages] = useState(images);
+  const [deletedImages, setDeletedImages] = useState([]); // Track deleted images
 
   const handleDragEnd = ({ active, over }) => {
     if (!over || active.id === over.id) return;
@@ -99,11 +101,26 @@ const SortOrderModal = ({ images = [], sensors, onClose, onSortChange }) => {
     setLocalImages(reordered);
   };
 
+  const handleDelete = (imgToDelete) => {
+    // Add to deleted images list
+    setDeletedImages(prev => [...prev, imgToDelete]);
+    // Remove from local images
+    setLocalImages(prev => prev.filter(i => i.id !== imgToDelete.id));
+  };
+
   const handleSave = () => {
     const result = localImages.map((img, idx) => ({
       ...img,
       sortOrder: idx + 1,
     }));
+
+    // Call onRemove for deleted images
+    deletedImages.forEach((deletedImg, index) => {
+      const originalIndex = images.findIndex(i => i.id === deletedImg.id);
+      if (onRemove && originalIndex !== -1) {
+        onRemove(originalIndex);
+      }
+    });
 
     onClose();
     onSortChange(result);
@@ -136,11 +153,7 @@ const SortOrderModal = ({ images = [], sensors, onClose, onSortChange }) => {
                   key={img.id}
                   id={img.id}
                   img={img}
-                  onDelete={() =>
-                    setLocalImages((prev) =>
-                      prev.filter((i) => i.id !== img.id)
-                    )
-                  }
+                  onDelete={() => handleDelete(img)}
                 />
               ))}
             </div>
