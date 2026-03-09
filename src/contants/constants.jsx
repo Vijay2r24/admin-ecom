@@ -710,6 +710,7 @@ export const DATE_UNITS = {
 
 export const DEFAULT_COUNTRY = "IN";
 export const FILETYPE = "image/jpeg";
+export const TYPE_GLOBAL = "global";
 export const SCROLL_CONSTANTS = {
   BEHAVIOR: "smooth",
   BLOCK: "center",

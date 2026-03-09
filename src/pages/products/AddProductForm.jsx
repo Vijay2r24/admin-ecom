@@ -5,7 +5,7 @@ import { useDropzone } from "react-dropzone";
 import TextInputWithIcon from "../../components/TextInputWithIcon";
 import SelectWithIcon from "../../components/SelectWithIcon";
 import { useTranslation } from "react-i18next";
-import { STATUS, FILETYPE } from "../../contants/constants.jsx";
+import { STATUS, FILETYPE, TYPE_GLOBAL } from "../../contants/constants.jsx";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchResource } from "../../store/slices/allDataSlice.jsx";
 import { apiPost, apiGet, apiPut } from "../../utils/ApiUtils.jsx";
@@ -926,7 +926,7 @@ const AddProductForm = () => {
           [blob],
           modal.originalFile?.name || `global-${Date.now()}.jpg`,
           {
-            type: "image/jpeg",
+            type: FILETYPE,
           }
         );
 
@@ -1073,18 +1073,6 @@ const AddProductForm = () => {
       const imgs = [...(copy[variantIndex].images || [])];
       const removed = imgs[imageIndex];
 
-      console.log('Debug - removeImage called:', {
-        variantIndex,
-        imageIndex,
-        removed: {
-          documentId: removed?.documentId,
-          isExisting: removed?.isExisting,
-          hasPreview: !!removed?.preview,
-          previewStartsWithBlob: removed?.preview?.startsWith("blob:"),
-          isGlobal: removed?.isGlobal
-        }
-      });
-
       try {
         if (
           removed?.preview?.startsWith("blob:") &&
@@ -1099,18 +1087,13 @@ const AddProductForm = () => {
         if (!copy[variantIndex].removedImages)
           copy[variantIndex].removedImages = [];
         copy[variantIndex].removedImages.push(removed);
-        console.log('Debug - Image added to removedImages:', removed.documentId);
       } else {
-        console.log('Debug - Image has no documentId, not tracking as removed');
+    
       }
 
       imgs.splice(imageIndex, 1);
       copy[variantIndex].images = imgs;
 
-      console.log('Debug - After removal:', {
-        remainingImages: copy[variantIndex].images.length,
-        removedImagesCount: copy[variantIndex].removedImages?.length || 0
-      });
 
       return copy;
     });
@@ -1215,21 +1198,6 @@ const AddProductForm = () => {
       );
       
       // Debug: Log the state to help identify the issue
-      console.log('Debug - Image state:', {
-        imagesCount: images.length,
-        removedImagesCount: removedImages.length,
-        hasNewOrUpdatedImages,
-        hasRemovedImages,
-        hasReorderedImages,
-        images: images.map(img => ({
-          isExisting: img.isExisting,
-          documentId: img.documentId,
-          hasFile: !!img.file,
-          sortOrder: img.sortOrder,
-          expectedSortOrder: images.indexOf(img) + 1
-        })),
-        removedImages: removedImages.map(img => ({ documentId: img.documentId }))
-      });
       
       // Send metadata if there are actual changes including reordering
       const hasImageChanges = hasNewOrUpdatedImages || hasRemovedImages || hasReorderedImages;
@@ -1309,11 +1277,8 @@ const AddProductForm = () => {
 
         documentMetadata = metadata;
         
-        // Debug: Log the generated metadata
-        console.log('Debug - Generated documentMetadata:', documentMetadata);
       } else {
         documentMetadata = undefined; // Don't send documentMetadata if no changes
-        console.log('Debug - No image changes detected, documentMetadata is undefined');
       }
 
       const variantPayload = {
@@ -1339,9 +1304,8 @@ const AddProductForm = () => {
       // Only include documentMetadata if there are image changes
       if (documentMetadata !== undefined) {
         variantPayload.documentMetadata = documentMetadata;
-        console.log('Debug - Added documentMetadata to variantPayload:', variantPayload.documentMetadata);
       } else {
-        console.log('Debug - documentMetadata is undefined, not adding to variantPayload');
+        variantPayload.documentMetadata = undefined;
       }
 
       return variantPayload;
@@ -1452,7 +1416,7 @@ const AddProductForm = () => {
           onQueueUpdate={setCropQueue}
           image={[
             cropperModal.image,
-            cropperModal.type === "global"
+            cropperModal.type === TYPE_GLOBAL
               ? cropperModal.groupKey
               : cropperModal.variantIndex,
           ]}

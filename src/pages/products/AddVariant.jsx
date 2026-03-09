@@ -38,7 +38,7 @@ import {
   ADD_PRODUCT_VARIANTS,
   VALIDATE_PRODUCT_VARIANTS,
 } from "../../contants/apiRoutes";
-import { STATUS } from "../../contants/constants";
+import { FILETYPE, STATUS } from "../../contants/constants";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import VariantTabs from "../../components/products/VariantTabs.jsx";
 import TextInputWithIcon from "../../components/TextInputWithIcon.jsx";
@@ -333,12 +333,12 @@ export default function CreateVariant() {
         const croppedUrl = URL.createObjectURL(blob);
         activeUrlsRef.current.add(croppedUrl);
 
-        if (modal.type === "global") {
+        if (modal.type === TYPE_GLOBAL) {
           // create file
           const croppedFile = new File(
             [blob],
             modal.originalFile?.name || `global-${Date.now()}.jpg`,
-            { type: "image/jpeg" }
+            { type: FILETYPE }
           );
 
           setGroupGlobalImages((prev) => {
@@ -1579,7 +1579,7 @@ export default function CreateVariant() {
           onQueueUpdate={setCropQueue}
           image={[
             cropperModal.image,
-            cropperModal.type === "global"
+            cropperModal.type === TYPE_GLOBAL
               ? cropperModal.groupKey
               : cropperModal.variantIndex,
           ]}
