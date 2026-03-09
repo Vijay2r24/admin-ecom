@@ -1757,7 +1757,7 @@ export default function CreateVariant() {
                   >
                     <div className="flex items-center gap-2">
                       <Info className="h-5 w-5 text-gray-500" />
-                      <span className="font-semibold text-gray-800">Product Details</span>
+                      <span className="font-semibold text-gray-800">{t("ADD_VARIANT.PRODUCT_DETAILS")}</span>
                     </div>
                     <ChevronDown
                       className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${
@@ -1770,7 +1770,7 @@ export default function CreateVariant() {
                     <div className="px-6 pb-6 space-y-6 border-t border-gray-100 bg-gray-50/50">
                     {/* Product ID */}
                     <div className="flex items-center gap-3 text-sm">
-                      <span className="font-semibold text-gray-600">Product ID:</span>
+                      <span className="font-semibold text-gray-600">{t("ADD_VARIANT.PRODUCT_ID")}:</span>
                       <span className="text-gray-900 font-mono">{selectedProduct.ProductID}</span>
                     </div>
 
@@ -1779,7 +1779,7 @@ export default function CreateVariant() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-gray-500" />
-                          <span className="font-semibold text-gray-700">Description:</span>
+                          <span className="font-semibold text-gray-700">{t("ADD_VARIANT.DESCRIPTION")}:</span>
                         </div>
                         <div
                           className="text-gray-600 text-sm leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100"
@@ -1798,9 +1798,9 @@ export default function CreateVariant() {
                           <>
                             <div className="flex items-center gap-2">
                               <ImageIcon className="h-4 w-4 text-gray-500" />
-                              <span className="font-semibold text-gray-700">Product Images:</span>
+                              <span className="font-semibold text-gray-700">{t("ADD_VARIANT.PRODUCT_IMAGES")}:</span>
                               <span className="text-sm text-gray-500">
-                                ({getAllProductImages.length} {getAllProductImages.length === 1 ? "image" : "images"})
+                                ({getAllProductImages.length} {getAllProductImages.length === 1 ? t("ADD_VARIANT.IMAGE") : t("ADD_VARIANT.IMAGES")})
                               </span>
                             </div>
                             <div className="flex gap-3 items-center flex-wrap">
@@ -1828,7 +1828,7 @@ export default function CreateVariant() {
                                   <span className="text-base font-bold text-custom-bg group-hover:text-custom-bg/80">
                                     +{getAllProductImages.length - 3}
                                   </span>
-                                  <span className="text-[10px] mt-0.5">more</span>
+                                  <span className="text-[10px] mt-0.5">{t("ADD_VARIANT.MORE")}</span>
                                 </div>
                               )}
                             </div>
@@ -1836,8 +1836,8 @@ export default function CreateVariant() {
                         ) : (
                           <div className="flex items-center gap-2 text-gray-400">
                             <ImageIcon className="h-4 w-4" />
-                            <span className="font-semibold text-sm">Product Images:</span>
-                            <span className="text-xs">No images available</span>
+                            <span className="font-semibold text-sm">{t("ADD_VARIANT.PRODUCT_IMAGES")}:</span>
+                            <span className="text-xs">{t("ADD_VARIANT.NO_IMAGES_AVAILABLE")}</span>
                           </div>
                         )}
                       </div>
@@ -1849,7 +1849,7 @@ export default function CreateVariant() {
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <Hash className="h-4 w-4 text-gray-500" />
-                              <span className="font-semibold text-gray-700">Available Attributes:</span>
+                              <span className="font-semibold text-gray-700">{t("ADD_VARIANT.AVAILABLE_ATTRIBUTES")}:</span>
                               <span className="text-custom-bg font-bold">{aAttributes.length}</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -1870,7 +1870,7 @@ export default function CreateVariant() {
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <Layers className="h-4 w-4 text-gray-500" />
-                              <span className="font-semibold text-gray-700">Existing Variants:</span>
+                              <span className="font-semibold text-gray-700">{t("ADD_VARIANT.EXISTING_VARIANTS")}:</span>
                               <span className="text-custom-bg font-bold">
                                 {selectedProduct.Variants.length}
                               </span>
@@ -1878,13 +1878,13 @@ export default function CreateVariant() {
                             <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                               <div className="grid grid-cols-1 gap-4 text-sm">
                                 <div>
-                                  <span className="text-gray-600">Total Variants:</span>
+                                  <span className="text-gray-600">{t("ADD_VARIANT.TOTAL_VARIANTS")}:</span>
                                   <span className="ml-2 font-semibold text-gray-900">
                                     {selectedProduct.Variants.length}
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-gray-600">Active Variants:</span>
+                                  <span className="text-gray-600">{t("ADD_VARIANT.ACTIVE_VARIANTS")}:</span>
                                   <span className="ml-2 font-semibold text-green-600">
                                     {selectedProduct.Variants.filter((v) => v.IsActive).length}
                                   </span>
@@ -1966,7 +1966,7 @@ export default function CreateVariant() {
                           {t("ADD_VARIANT.SPECIFY_COMBINATIONS")}
                         </h4>
                         <p className="text-xs text-gray-500 font-medium">
-                          Choose values to auto-generate variants
+                          {t("ADD_VARIANT.CHOOSE_VALUES_TO_GENERATE")}
                         </p>
                       </div>
 
@@ -2023,7 +2023,7 @@ export default function CreateVariant() {
                           <div className="py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200 mt-2">
                             <Layers className="h-10 w-10 text-gray-300 mx-auto mb-3" />
                             <p className="text-gray-500 font-medium text-sm">
-                              No attributes available for this product type
+                              {t("ADD_VARIANT.NO_ATTRIBUTES_AVAILABLE")}
                             </p>
                           </div>
                         )}
@@ -2372,8 +2372,7 @@ export default function CreateVariant() {
                 {t("ADD_VARIANT.READY_TO_ADD")}
               </h3>
               <p className="text-gray-500 max-w-sm mx-auto leading-relaxed font-medium">
-                Start by searching for a base product in the section above to
-                begin the variant configuration process.
+                {t("ADD_VARIANT.START_BY_SEARCHING")}
               </p>
             </div>
           )}

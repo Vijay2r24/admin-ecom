@@ -1354,7 +1354,22 @@
     "MSG_SELECT_VARIANT_ATTACH": "Please select at least one variant to attach",
     "MSG_VALIDATION_ABORTED": "Validation aborted: Missing product or variants.",
     "NO_PRODUCTS_FOUND": "No products found",
-    "MSG_FIRST_GENERATE": "Please select a product and generate variants first."
+    "MSG_FIRST_GENERATE": "Please select a product and generate variants first.",
+    "PRODUCT_DETAILS": "Product Details",
+    "PRODUCT_ID": "Product ID",
+    "DESCRIPTION": "Description",
+    "PRODUCT_IMAGES": "Product Images",
+    "IMAGE": "image",
+    "IMAGES": "images",
+    "MORE": "more",
+    "NO_IMAGES_AVAILABLE": "No images available",
+    "AVAILABLE_ATTRIBUTES": "Available Attributes",
+    "EXISTING_VARIANTS": "Existing Variants",
+    "TOTAL_VARIANTS": "Total Variants",
+    "ACTIVE_VARIANTS": "Active Variants",
+    "CHOOSE_VALUES_TO_GENERATE": "Choose values to auto-generate variants",
+    "NO_ATTRIBUTES_AVAILABLE": "No attributes available for this product type",
+    "START_BY_SEARCHING": "Start by searching for a base product in the section above to begin the variant configuration process."
   },
   "IMAGE_SORTING": {
     "VIEW_DELETE_REORDER": "View, Delete Images & Change sort order",
