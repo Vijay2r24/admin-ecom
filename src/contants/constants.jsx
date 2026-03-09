@@ -88,6 +88,7 @@ export const EXPORT_TYPES = {
   STORE: "store",
   PRODUCT: "product",
   PAYMENT: "payment",
+  TEMPLATE: "template",
 };
 
 export const DOWNLOAD_ICON = (
