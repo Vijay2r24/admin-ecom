@@ -30,7 +30,7 @@ import {
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { STATUS ,PASSWORD_ARIA,PASSWORD_LABELS} from "../contants/constants";
+import { STATUS } from "../contants/constants";
 import { useUserDetails } from "../../src/context/AllDataContext";
 import { useDispatch } from "react-redux";
 import {
@@ -46,7 +46,6 @@ import { loginSuccess } from "../store/slices/authSlice";
 const Login = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const [bShowPassword, setShowPassword] = useState(false);
     const dispatch = useDispatch();
     const [oFormData, setFormData] = useState({
         email: "",
@@ -72,6 +71,14 @@ const Login = () => {
     const [submitting, setSubmitting] = useState(false);
 
     const { fetchUserDetails } = useUserDetails()
+
+    // Handle Enter key press for form submission
+    const handleKeyPress = (event) => {
+        if (event.key === 'Enter' && sCurrentView === 'login') {
+            event.preventDefault();
+            loginUser();
+        }
+    };
 
     const validateEmail = (email) => {
         if (!email.trim()) return t("LOGIN.ERRORS.EMAIL_REQUIRED");
@@ -466,6 +473,21 @@ const Login = () => {
         return () => clearTimeout(timer);
     }, [bTimerActive, nTimerCount]);
 
+    // Add keyboard event listener for Enter key
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.key === 'Enter' && sCurrentView === 'login') {
+                event.preventDefault();
+                loginUser();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [sCurrentView, loginUser]);
+
     const renderLogin = () => {
         const isLoginDisabled =
             submitting ||
@@ -506,32 +528,12 @@ const Login = () => {
                             label={t("LOGIN.PASSWORD")}
                             id="password"
                             name="password"
-                            type={bShowPassword ? "text" : "password"}
+                            type="password"
                             placeholder={t("LOGIN.PASSWORD_PLACEHOLDER")}
                             value={oFormData.password}
                             onChange={(e) => handleChange("password", e.target.value)}
                             Icon={Lock}
                             required
-                            inputSlot={
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setShowPassword((v) => !v)
-                                    }
-                                    className="text-gray-500 hover:text-custom-bg"
-                                    aria-label={
-                                        bShowPassword
-                                            ? PASSWORD_ARIA.HIDE
-                                            : PASSWORD_ARIA.SHOW
-                                    }
-                                >
-                                    {
-                                        bShowPassword
-                                            ? PASSWORD_LABELS.HIDE
-                                            : PASSWORD_LABELS.SHOW
-                                    }
-                                </button>
-                            }
                         />
                         {sError.password && (
                             <p className="text-sm text-red-500 mt-1">{sError.password}</p>
