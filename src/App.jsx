@@ -307,7 +307,7 @@ const App = () => {
                 }
               />
               <Route
-                path="/application-settings"
+                path="/tenant-settings"
                 element={
                   <ProtectedRoute>
                     <ApplicationSettings />

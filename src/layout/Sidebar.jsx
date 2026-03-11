@@ -89,7 +89,7 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
       section: 'Settings',
       subItems: [
         { name: t('SIDEBAR.PAGES'), href: '/profile', icon: UserRound },
-         { name: t('SIDEBAR.THEMES'), href: '/application-settings', icon: Cog },
+         { name: t('SIDEBAR.THEMES'), href: '/tenant-settings', icon: Cog },
       ]
     },
   ], [t]);
