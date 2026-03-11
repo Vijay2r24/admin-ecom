@@ -30,7 +30,13 @@ import {
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { STATUS } from "../contants/constants";
+import {
+  ITEMS_PER_PAGE,
+  STATUS,
+  STATUS_VALUE_NAMES,
+  KEYBOARD_EVENTS,
+  LOGIN_VIEWS,
+} from "../contants/constants";
 import { useUserDetails } from "../../src/context/AllDataContext";
 import { useDispatch } from "react-redux";
 import {
@@ -74,7 +80,7 @@ const Login = () => {
 
     // Handle Enter key press for form submission
     const handleKeyPress = (event) => {
-        if (event.key === 'Enter' && sCurrentView === 'login') {
+        if (event.key === KEYBOARD_EVENTS.ENTER && sCurrentView === LOGIN_VIEWS.LOGIN) {
             event.preventDefault();
             loginUser();
         }
@@ -95,7 +101,7 @@ const Login = () => {
             value = value.replace(/\D/g, "");
         }
 
-        if (sCurrentView === "login") {
+        if (sCurrentView === LOGIN_VIEWS.LOGIN) {
             updatedFormData = { ...oFormData, [field]: value };
             setFormData(updatedFormData);
             if (field === "email") {
@@ -103,10 +109,10 @@ const Login = () => {
             } else if (field === "password") {
                 fieldError = validatePassword(value, t);
             }
-        } else if (sCurrentView === "forgotPassword" && field === "email") {
+        } else if (sCurrentView === LOGIN_VIEWS.FORGOT_PASSWORD && field === "email") {
             setForgotPasswordEmail(value);
             fieldError = validateEmail(value);
-        } else if (sCurrentView === "resetPassword") {
+        } else if (sCurrentView === LOGIN_VIEWS.RESET_PASSWORD) {
             if (field === "newPassword") {
                 setNewPassword(value);
                 fieldError = validateNewPassword(value, t);
@@ -476,15 +482,15 @@ const Login = () => {
     // Add keyboard event listener for Enter key
     useEffect(() => {
         const handleKeyDown = (event) => {
-            if (event.key === 'Enter' && sCurrentView === 'login') {
+            if (event.key === KEYBOARD_EVENTS.ENTER && sCurrentView === LOGIN_VIEWS.LOGIN) {
                 event.preventDefault();
                 loginUser();
             }
         };
 
-        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener(KEYBOARD_EVENTS.KEYDOWN, handleKeyDown);
         return () => {
-            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener(KEYBOARD_EVENTS.KEYDOWN, handleKeyDown);
         };
     }, [sCurrentView, loginUser]);
 
@@ -806,9 +812,9 @@ const Login = () => {
                 </div>
                 <div className="flex items-center justify-center p-6 lg:p-12">
                     <div className="w-full max-w-md bg-white/30 backdrop-blur-2xl border border-custom-bg/30 rounded-3xl p-10 shadow-[0_8px_32px_0_rgba(255,90,95,0.35)] transition-all hover:scale-[1.02]">
-                        {sCurrentView === "login" && renderLogin()}
-                        {sCurrentView === "forgotPassword" && renderForgotPassword()}
-                        {sCurrentView === "resetPassword" && renderResetPassword()}
+                        {sCurrentView === LOGIN_VIEWS.LOGIN && renderLogin()}
+                        {sCurrentView === LOGIN_VIEWS.FORGOT_PASSWORD && renderForgotPassword()}
+                        {sCurrentView === LOGIN_VIEWS.RESET_PASSWORD && renderResetPassword()}
                     </div>
                 </div>
                 {bShowOtpDialog && (

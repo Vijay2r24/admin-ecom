@@ -195,8 +195,8 @@ const Banners = () => {
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen">
       <ToastContainer />
       {loading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Loader height={48} width={48} color="#FF5A5F" />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <Loader height={48} width={48}  />
         </div>
       )}
       <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-0 py-3 shadow">
@@ -323,7 +323,7 @@ const Banners = () => {
 
         {/* Replace the existing pagination with the Pagination component */}
         {paginatedBanners.length > 0 && (
-          <div className="sticky bottom-0 bg-white py-3 shadow z-50">
+          <div className="sticky bottom-0 bg-white py-3 shadow z-40">
             <Pagination
               currentPage={nPage}
               totalPages={totalPages}
