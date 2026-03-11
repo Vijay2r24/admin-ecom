@@ -96,7 +96,7 @@ const BulkImages = () => {
         const uploadedBatch = batchFiles.map((file, index) => ({
           id: response.data.uploadedImages?.[index]?.id || Date.now() + batchIndex * BATCH_SIZE + index,
           name: file.name,
-          size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+          size: (file.size / 1024 / 1024).toFixed(2) + ' ' + t('BULK_IMAGES.SIZE_UNIT'),
           url: response.data.uploadedImages?.[index]?.url || URL.createObjectURL(file),
           uploadTime: new Date().toLocaleString(),
           batch: batchIndex + 1
@@ -106,7 +106,7 @@ const BulkImages = () => {
       }
     } catch (error) {
       // Show actual backend error message
-      const errorMessage = error.response?.data?.message || "Failed to upload images";
+      const errorMessage = error.response?.data?.message;
       showEmsg(errorMessage, STATUS.ERROR);
       throw error;
     }
@@ -249,12 +249,12 @@ const BulkImages = () => {
                         <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
                           <div className="text-center">
                             <div className="text-2xl font-bold text-gray-600">+{remainingCount}</div>
-                            <div className="text-xs text-gray-500">more</div>
+                            <div className="text-xs text-gray-500">{t('BULK_IMAGES.MORE')}</div>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1 truncate">Gallery</p>
+                        <p className="text-xs text-gray-600 mt-1 truncate">{t('BULK_IMAGES.GALLERY')}</p>
                         <p className="text-xs text-gray-400">
-                          {remainingCount} images
+                          {remainingCount} {t('BULK_IMAGES.IMAGES')}
                         </p>
                       </div>
                     )}

@@ -113,12 +113,12 @@ const BulkImport = () => {
         setTotalItems(response.data.pagination?.totalRecords || 0);
         
         // Show message if no data found
-        if (response.data.data?.length === 0 || response.data.message === "No product import found") {
+        if (response.data.data?.length === 0) {
           showEmsg(t('BULK_IMPORT.NO_IMPORT_DATA'), STATUS.INFO);
         }
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Failed to fetch product import list";
+      const errorMessage = error.response?.data?.message;
       setListError(errorMessage);
       showEmsg(errorMessage, STATUS.ERROR);
     } finally {
@@ -203,7 +203,7 @@ const BulkImport = () => {
     } catch (error) {
       setDownloading(false);
       showEmsg(t('BULK_IMPORT.DOWNLOAD_ERROR'), STATUS.ERROR);
-      console.error('Download error:', error);
+     
     }
   };
 
@@ -230,7 +230,7 @@ const BulkImport = () => {
         fetchProductImportList();
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Failed to upload files";
+      const errorMessage = error.response?.data?.message;
       showEmsg(errorMessage, STATUS.ERROR);
     } finally {
       setUploading(false);
@@ -244,8 +244,6 @@ const BulkImport = () => {
   };
 
   const handleUpload = async () => {
-    console.log('handleUpload called'); // Debug log
-    console.log('Toolbar props:', { onCreate: handleUpload, createLabel: t("BULK_IMPORT.UPLOAD") }); // Debug log
     // Open upload modal instead of direct upload
     setShowUploadModal(true);
   };

@@ -196,6 +196,10 @@
     "TOTAL_FILES": "Total files: {count}",
     "TOTAL_BATCHES": "Total batches: {count}",
     "BATCH_SIZE": "Batch size: {size} images",
+    "SIZE_UNIT": "MB",
+    "MORE": "more",
+    "GALLERY": "Gallery",
+    "IMAGES": "images",
     "BATCH_SUCCESS": "Batch {current}/{total} uploaded successfully ({count} images)",
     "BATCH_ERROR": "Failed to upload batch {current}/{total}",
     "BATCH": "Batch"

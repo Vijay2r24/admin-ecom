@@ -277,12 +277,8 @@ export const exportProductTemplate = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      console.log('Template download - Token:', token);
-      console.log('Template download - Endpoint:', GET_PRODUCT_TEMPLATE);
 
       const response = await apiGet(GET_PRODUCT_TEMPLATE, {}, token, "blob");
-      console.log('Template download - Response:', response);
-
       if (response.data) {
         // Handle both direct blob and axios blob response
         const blob = response.data instanceof Blob ? response.data : new Blob([response.data], {
@@ -303,8 +299,6 @@ export const exportProductTemplate = createAsyncThunk(
 
       throw new Error(i18next.t("EXPORT.NO_DATA"));
     } catch (error) {
-      console.error('Template download - Error:', error);
-      console.error('Template download - Error response:', error.response);
       
       if (error.response?.data instanceof Blob) {
         try {
