@@ -329,6 +329,9 @@ const allDataSlice = createSlice({
       })
       .addCase(fetchResource.fulfilled, (state, action) => {
         const { key, data, total, pagination } = action.payload;
+        
+        // For attributes, always replace data to ensure we get the correct type-specific attributes
+        // The tracking system in AddProductForm will handle caching per type
         state.resources[key] = {
           data,
           total,
