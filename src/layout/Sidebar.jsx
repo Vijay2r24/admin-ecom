@@ -17,7 +17,8 @@ import {
   CreditCard ,
   Palette,
   Sliders,
-  Cog,// Add CreditCard icon for Payments
+  Cog,
+  Upload,// Add CreditCard icon for Payments
 } from 'lucide-react';
 import { getPermissionCode } from '../utils/permissionUtils';
  
@@ -73,6 +74,16 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
       subItems: [
         { name: t('SIDEBAR.BANNERS'), href: '/banners', icon: Image, relatedPaths: ['/banners-create','/activeBanners'] },
         { name: t('SIDEBAR.NOTIFICATIONS'), href: '/notifications', icon: Bell },
+      ]
+    },
+    {
+      name: t('SIDEBAR.DATA_IMPORT'),
+      href: '#',
+      icon: Upload,
+      section: 'Data Import',
+      subItems: [
+        { name: t('SIDEBAR.BULK_IMPORT'), href: '/bulk-import', icon: Upload },
+        { name: t('SIDEBAR.BULK_IMAGES'), href: '/bulk-images', icon: Image },
       ]
     },
     // Add Payments menu item

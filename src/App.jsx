@@ -34,6 +34,8 @@ import UserRoles from "../src/pages/UserRolesList";
 import OrderDetailPage from "./pages/orders/OrderView";
 import CreateBrand from "./pages/browse/brands/CreateBrand";
 import CreateCategory from "./pages/browse/categories/CreateCategory";
+import BulkImport from "./pages/BulkImport";
+import BulkImages from "./pages/BulkImages";
 import CreateAttributeType from "./pages/browse/attributeTypes/CreateAttributeType";
 import CreateColor from "./pages/browse/colors/CreateColor";
 import CreateAttribute from "./pages/browse/AttributeTypeValues/CreateAttributeTypeValuesList";
@@ -391,6 +393,26 @@ const App = () => {
                 element={
                   <ProtectedRoute permissionCode={notificationsPermission}>
                     <Notifications />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Bulk Import */}
+              <Route
+                path="/bulk-import"
+                element={
+                  <ProtectedRoute permissionCode={notificationsPermission}>
+                    <BulkImport />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Bulk Images */}
+              <Route
+                path="/bulk-images"
+                element={
+                  <ProtectedRoute permissionCode={notificationsPermission}>
+                    <BulkImages />
                   </ProtectedRoute>
                 }
               />

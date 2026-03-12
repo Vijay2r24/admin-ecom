@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { apiPost } from "../../utils/ApiUtils";
+import { apiPost, apiGet } from "../../utils/ApiUtils";
 import {
   GENERATE_ORDER_REPORT,
   GET_STORE_REPORT,
   GET_PRODUCT_LIST_REPORT,
   GET_PAYMENT_REPORT,
+  GET_PRODUCT_TEMPLATE,
 } from "../../contants/apiRoutes";
 import { showEmsg } from "../../utils/ShowEmsg";
 import { EXPORT_TYPES, REPORT_FILE_NAMES, STATUS } from "../../contants/constants";
@@ -268,6 +269,53 @@ export const exportPaymentReport = createAsyncThunk(
   }
 );
 
+/**
+ * Export Product Template
+ */
+export const exportProductTemplate = createAsyncThunk(
+  "export/productTemplate",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await apiGet(GET_PRODUCT_TEMPLATE, {}, token, "blob");
+      if (response.data) {
+        // Handle both direct blob and axios blob response
+        const blob = response.data instanceof Blob ? response.data : new Blob([response.data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+        
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = 'bulk_import_template.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        return { success: true, message: i18next.t("BULK_IMPORT.DOWNLOAD_SUCCESS") };
+      }
+
+      throw new Error(i18next.t("EXPORT.NO_DATA"));
+    } catch (error) {
+      
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const errorData = JSON.parse(text);
+          return rejectWithValue(errorData.message);
+        } catch {
+          return rejectWithValue(i18next.t("BULK_IMPORT.DOWNLOAD_ERROR"));
+        }
+      }
+
+      const backendMessage = error.response?.data?.message;
+      return rejectWithValue(backendMessage || i18next.t("BULK_IMPORT.DOWNLOAD_ERROR"));
+    }
+  }
+);
+
 const exportSlice = createSlice({
   name: "export",
   initialState: {
@@ -275,6 +323,7 @@ const exportSlice = createSlice({
     storeExport: { loading: false, error: null },
     productExport: { loading: false, error: null },
     paymentExport: { loading: false, error: null },
+    templateExport: { loading: false, error: null },
   },
 
   reducers: {
@@ -284,6 +333,7 @@ const exportSlice = createSlice({
       else if (exportType === EXPORT_TYPES.STORE) state.storeExport.error = null;
       else if (exportType === EXPORT_TYPES.PRODUCT) state.productExport.error = null;
       else if (exportType === EXPORT_TYPES.PAYMENT) state.paymentExport.error = null;
+      else if (exportType === EXPORT_TYPES.TEMPLATE) state.templateExport.error = null;
     },
   },
 
@@ -318,7 +368,11 @@ const exportSlice = createSlice({
 
       .addCase(exportPaymentReport.pending, (s) => handlePending(s.paymentExport))
       .addCase(exportPaymentReport.fulfilled, (s, a) => handleFulfilled(s.paymentExport, a))
-      .addCase(exportPaymentReport.rejected, (s, a) => handleRejected(s.paymentExport, a));
+      .addCase(exportPaymentReport.rejected, (s, a) => handleRejected(s.paymentExport, a))
+
+      .addCase(exportProductTemplate.pending, (s) => handlePending(s.templateExport))
+      .addCase(exportProductTemplate.fulfilled, (s, a) => handleFulfilled(s.templateExport, a))
+      .addCase(exportProductTemplate.rejected, (s, a) => handleRejected(s.templateExport, a));
   },
 });
 
