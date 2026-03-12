@@ -20,6 +20,7 @@ import { ToastContainer, toast } from "react-toastify";
 import noImage from "../../assets/images/missing-pictur.jpg";
 import Switch from "../components/Switch";
 import Pagination from "../components/Pagination"; // Import the Pagination component
+import Loader from "../components/Loader";
 
 
 const Banners = () => {
@@ -31,6 +32,7 @@ const Banners = () => {
   const [nActiveMenu, setActiveMenu] = useState(null);
   const [sError, setError] = useState(null);
   const [backendMessage, setBackendMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { setTitle } = useTitle();
@@ -47,6 +49,7 @@ const Banners = () => {
 
   const fetchBanners = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
       const oResponse = await apiGet(
         GET_ALL_BANNERS,
@@ -109,6 +112,8 @@ const Banners = () => {
       setTotalRecords(0);
       const backendMessage = err?.response?.data?.message;
       setError(backendMessage || t("COMMON.ERROR_MESSAGE"));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -120,36 +125,6 @@ const Banners = () => {
 
   const toggleMenu = (id) => setActiveMenu(nActiveMenu === id ? null : id);
   const handleEditBanner = (id) => navigate(`/banners-edit/${id}`);
-
-  const handleDeleteBanner = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error(t("COMMON.AUTH_ERROR"));
-
-      // API call
-      const response = await apiDelete(`${DELETE_BANNER}/${id}`, token);
-
-      const success =
-        response?.data?.status === STATUS.SUCCESS.toUpperCase() ||
-        response?.status === STATUS.SUCCESS.toUpperCase();
-
-      if (success) {
-        // Update UI
-        setBanners((prev) => prev.filter((b) => b.BannerID !== id));
-        setActiveMenu(null);
-
-        toast.success(response?.data?.message || t("BANNERS.DELETE_SUCCESS"));
-      } else {
-        throw new Error(response?.data?.message || t("COMMON.API_ERROR"));
-      }
-    } catch (error) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        t("COMMON.API_ERROR");
-      toast.error(errorMessage);
-    }
-  };
 
   const handleToggleStatus = (id, currentStatus) => {
     setStatusPopup({ open: true, id, currentStatus });
@@ -219,6 +194,11 @@ const Banners = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen">
       <ToastContainer />
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <Loader height={48} width={48}  />
+        </div>
+      )}
       <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-0 py-3 shadow">
         <div className="flex-1" />
         <button
@@ -299,12 +279,6 @@ const Banners = () => {
                           >
                             {t("COMMON.EDIT")}
                           </li>
-                          <li
-                            className="px-4 py-2 hover:bg-gray-50 cursor-pointer rounded-b-xl text-red-600"
-                            onClick={() => handleDeleteBanner(project.BannerID)}
-                          >
-                            {t("COMMON.DELETE")}
-                          </li>
                         </ul>
                       </div>
                     )}
@@ -349,7 +323,7 @@ const Banners = () => {
 
         {/* Replace the existing pagination with the Pagination component */}
         {paginatedBanners.length > 0 && (
-          <div className="sticky bottom-0 bg-white py-3 shadow z-50">
+          <div className="sticky bottom-0 bg-white py-3 shadow z-40">
             <Pagination
               currentPage={nPage}
               totalPages={totalPages}

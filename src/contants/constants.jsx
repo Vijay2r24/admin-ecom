@@ -237,6 +237,25 @@ export const GENDER_OPTIONS = [
   { value: "Other", labelKey: "ADD_USER.GENDER_OTHER" },
 ];
 
+export const KEYBOARD_EVENTS = {
+  ENTER: "Enter",
+  ESCAPE: "Escape",
+  TAB: "Tab",
+  SPACE: "Space",
+  ARROW_UP: "ArrowUp",
+  ARROW_DOWN: "ArrowDown",
+  ARROW_LEFT: "ArrowLeft",
+  ARROW_RIGHT: "ArrowRight",
+  KEYDOWN: "keydown",
+};
+
+export const LOGIN_VIEWS = {
+  LOGIN: "login",
+  REGISTER: "register",
+  FORGOT_PASSWORD: "forgot_password",
+  RESET_PASSWORD: "reset_password",
+};
+
 export const VIEW_MODES = {
   TABLE: "table",
   GRID: "grid",
@@ -494,6 +513,7 @@ export const MODULES = {
   PRODUCT: "Product Management",
   PRODUCT_SETUP: "Product Setup",
   PAYMENT: "Payment Management",
+  BANNER: "Banner Management",
 };
 
 // Permission mappings for role management
@@ -552,6 +572,7 @@ export const PERMISSIONS = {
   VIEW_BANNERS: "View Banners",
   CREATE_BANNER: "Create Banner",
   UPDATE_BANNER: "Update Banner",
+  UPDATE_BANNER_SEQUENCE: "Update Banner Sequence",
   SEND_NOTIFICATION: "Send Push Notification",
   VIEW_PRODUCTS: "View Products",
   CREATE_PRODUCT: "Create Product",
