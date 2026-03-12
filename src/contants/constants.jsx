@@ -249,6 +249,7 @@ export const FILE_CONSTANTS = {
   IMAGE_SIZE_TEXT: " PNG, JPG, JPEG up to 10MB",
   IMAGE_TITLE_TEXT: "Remove image",
   UPLOAD_LOGO: "Upload Logo",
+  BULK_IMPORT_FILE_TYPES: ".xlsx,.xls,.csv",
 };
 
 export const TOOLTIPSTATUS = {

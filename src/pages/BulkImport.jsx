@@ -5,7 +5,7 @@ import { useTitle } from "../context/TitleContext";
 import Toolbar from "../components/Toolbar";
 import { showEmsg } from "../utils/ShowEmsg";
 import Loader from "../components/Loader";
-import { ITEMS_PER_PAGE, STATUS } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, FILE_CONSTANTS } from "../contants/constants";
 import { useDispatch } from "react-redux";
 import { exportProductTemplate } from "../store/slices/exportSlice";
 import { apiGet, apiPost } from "../utils/ApiUtils";
@@ -447,7 +447,7 @@ const BulkImport = () => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".xlsx,.xls,.csv"
+                accept={FILE_CONSTANTS.BULK_IMPORT_FILE_TYPES}
                 onChange={handleFileSelect}
                 className="hidden"
               />
