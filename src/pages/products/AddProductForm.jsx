@@ -73,6 +73,8 @@ const AddProductForm = () => {
   ]);
 
   const [aAttributes, setAAttributes] = useState([]);
+  const [attributesByType, setAttributesByType] = useState({}); // Store attributes per type
+  const [currentFetchingType, setCurrentFetchingType] = useState(null); // Track which type is being fetched
 
   const [oFormData, setFormData] = useState({
     ProductName: "",
@@ -514,7 +516,7 @@ const AddProductForm = () => {
   };
 
             const handleAttributeTypeChange = (index, typeId) => {
-    setAAttributes((prev) =>
+        setAAttributes((prev) =>
       prev.map((attr, i) =>
         i === index
           ? {
@@ -530,14 +532,24 @@ const AddProductForm = () => {
           : attr
       )
     );
-    // Fetch all attributes once if not already loaded
-    if (typeId && attributes.length === 0) {
+    // Always fetch attribute values for the selected attribute type
+    if (typeId) {
+            setCurrentFetchingType(typeId);
       dispatch(
         fetchResource({
           key: "attributes",
-          params: {}, // Fetch all attributes without type filter
+          params: { AttributeTypeID: typeId, attributeTypeId: typeId },
         })
-      );
+      ).then((action) => {
+        // Store the fetched attributes directly when API call succeeds
+        if (action.payload) {
+          setAttributesByType(prev => ({
+            ...prev,
+            [typeId]: action.payload.data
+          }));
+          setCurrentFetchingType(null);
+        }
+      });
     }
   };
   const handleAttributeValuesChange = (index, selectedValueIDs) => {
@@ -1589,37 +1601,37 @@ const AddProductForm = () => {
                       )}
                     />
                   </div>
-                  <div className="flex items-end gap-4">
-                    <div className="flex-1">
-                      <TextInputWithIcon
-                        label={t("PRODUCT_CREATION.SPECIFICATION_VALUE")}
-                        id={`SpecificationValue-${index}`}
-                        name={`SpecificationValue-${index}`}
-                        value={spec.Value}
-                        onChange={(e) =>
-                          handleSpecificationChange(
-                            index,
-                            "Value",
-                            e.target.value
-                          )
-                        }
-                        placeholder={t(
-                          "PRODUCT_CREATION.SPECIFICATION_VALUE_PLACEHOLDER"
-                        )}
-                        Icon={Tag}
-                        error={oValidationErrors[`spec_${index}_Value`]}
-                      />
-                    </div>
-                    {aSpecifications.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeSpecificationRow(index)}
-                        className="btn-cancel p-3 mb-1"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
+                  <>
+                  <div className="flex-1">
+                    <TextInputWithIcon
+                      label={t("PRODUCT_CREATION.SPECIFICATION_VALUE")}
+                      id={`SpecificationValue-${index}`}
+                      name={`SpecificationValue-${index}`}
+                      value={spec.Value}
+                      onChange={(e) =>
+                        handleSpecificationChange(
+                          index,
+                          "Value",
+                          e.target.value
+                        )
+                      }
+                      placeholder={t(
+                        "PRODUCT_CREATION.SPECIFICATION_VALUE_PLACEHOLDER"
+                      )}
+                      Icon={Tag}
+                      error={oValidationErrors[`spec_${index}_Value`]}
+                    />
                   </div>
+                  {aSpecifications.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeSpecificationRow(index)}
+                      className="btn-cancel p-3 mb-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </>
                 </div>
               ))}
             </div>
@@ -1701,7 +1713,14 @@ const AddProductForm = () => {
                           )
                         }
                         options={attributeTypes
-                          ?.filter((type) => type.IsActive)
+                          ?.filter((type) => {
+                            // Check if this attribute type is already selected in another row
+                            const isAlreadySelected = aAttributes.some((selectedAttr, selectedIndex) => 
+                              selectedIndex !== index && // Don't check the current attribute being edited
+                              String(selectedAttr.AttributeTypeID) === String(type.AttributeTypeID || type.attributeTypeID)
+                            );
+                                                        return type.IsActive && !isAlreadySelected;
+                          })
                           .map((type) => ({
                             value: type.AttributeTypeID || type.attributeTypeID,
                             label: type.Name || type.name,
@@ -1730,20 +1749,17 @@ const AddProductForm = () => {
                           handleAttributeValuesChange(index, selectedValues);
                         }}
                         options={(() => {
-                          const baseOptions = (attributes || [])
+                                                    // Use cached attributes for the current type, or fall back to global attributes
+                          const currentTypeAttributes = attributesByType[attr.AttributeTypeID] || [];
+                                                    const baseOptions = currentTypeAttributes
                             .filter((attribute) => {
-                              const typeId =
-                                attribute.AttributeTypeID ||
-                                attribute.attributeTypeID ||
-                                attribute.attributeTypeId;
-                              // If API doesn't return AttributeTypeID (new response), allow through because call was already scoped by typeId
-                              // Also allow attributes without typeId if they are active
-                              return (
-                                attribute.IsActive &&
-                                (!typeId ||
-                                  String(typeId) ===
-                                  String(attr.AttributeTypeID))
+                              // Check if this attribute value is already selected in ANY attribute type
+                              const attributeValueId = attribute.AttributeValueID || attribute.attributeValueID || attribute.attributeValueId;
+                              const isAlreadySelected = aAttributes.some((selectedAttr, selectedIndex) => 
+                                selectedIndex !== index && // Don't check the current attribute being edited
+                                selectedAttr.AttributeValueIDs?.includes(String(attributeValueId))
                               );
+                              return attribute.IsActive && !isAlreadySelected;
                             })
                             .map((attribute) => ({
                               value:
@@ -1755,26 +1771,32 @@ const AddProductForm = () => {
                                 : ""
                                 }`,
                             }));
-
+                          
                           // add fallback options from payload if not present in attributes list
                           const fallback =
                             attributeLabelMapRef.current?.[
                             attr.AttributeTypeID
                             ];
-                          if (!fallback) return baseOptions;
+                                                    if (!fallback) return baseOptions;
                           const merged = [...baseOptions];
                           Object.entries(fallback).forEach(([vid, label]) => {
+                            // Check if this fallback option is already selected in ANY attribute type
+                            const isAlreadySelected = aAttributes.some((selectedAttr, selectedIndex) => 
+                              selectedIndex !== index && // Don't check the current attribute being edited
+                              selectedAttr.AttributeValueIDs?.includes(String(vid))
+                            );
+                            
                             const exists = merged.some(
                               (opt) => String(opt.value) === String(vid)
                             );
-                            if (!exists) {
+                            if (!exists && !isAlreadySelected) {
                               merged.push({
                                 value: vid,
                                 label: String(label),
                               });
                             }
                           });
-                          return merged;
+                                                    return merged;
                         })()}
                         Icon={Layers}
                         error={

@@ -314,7 +314,7 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
 
                       {/* Unit */}
                       <td
-                        className={`table-cell text-left align-middle px-6 py-4 ${
+                        className={`table-cell text-center align-middle px-6 py-4 ${
                           !attribute.IsActive ? "text-gray-400" : ""
                         }`}
                       >

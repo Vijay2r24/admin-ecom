@@ -726,7 +726,10 @@ export default function CreateVariant() {
       const token = localStorage.getItem("token");
       const response = await apiGet(
         GET_ALL_ATTRIBUTES,
-        { AttributeTypeID: typeId },
+        { 
+          AttributeTypeID: typeId,
+          attributeTypeId: typeId
+        },
         token
       );
       if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
@@ -734,10 +737,13 @@ export default function CreateVariant() {
           id: val.AttributeValueID,
           label: val.Unit ? `${val.Value} (${val.Unit})` : val.Value,
         }));
-        setLocalAttributeOptions((prev) => ({
-          ...prev,
-          [typeId]: values,
-        }));
+        setLocalAttributeOptions((prev) => {
+          const updated = {
+            ...prev,
+            [typeId]: values,
+          };
+          return updated;
+        });
       }
     } catch (err) {
       // Failed to fetch attribute values silent fail for now
@@ -1031,9 +1037,19 @@ export default function CreateVariant() {
         }));
 
         // Build initial options from allAttributes (which contains the known selected values)
+        // Only include attributes that belong to their specific type
+        
         allAttributes.forEach((attr) => {
           if (attr.AttributeTypeID && attr.AttributeValueID) {
             const normalizedTypeID = attr.AttributeTypeID.toUpperCase();
+            
+            // Only add this attribute if it belongs to one of the attribute types we're using
+            const belongsToCurrentType = attrArray.some(
+              typeAttr => String(typeAttr.AttributeTypeID) === String(normalizedTypeID)
+            );
+            
+            
+            if (!belongsToCurrentType) return;
 
             if (!initialOptions[normalizedTypeID]) {
               initialOptions[normalizedTypeID] = [];
@@ -1053,15 +1069,16 @@ export default function CreateVariant() {
             }
           }
         });
+        
 
         setLocalAttributeOptions((prev) => ({ ...prev, ...initialOptions }));
 
         setAAttributes(attrArray);
 
-        // Fetch remaining attribute values for each type in PARALLEL
+        // Fetch ALL attribute values for each type in PARALLEL to ensure we have complete data
         const token = localStorage.getItem("token");
-        const fetchPromises = attrArray.map((attr) =>
-          apiGet(
+        const fetchPromises = attrArray.map((attr) => {
+          return apiGet(
             GET_ALL_ATTRIBUTES,
             {
               // Send multiple casing variations to ensure backend hit
@@ -1072,9 +1089,13 @@ export default function CreateVariant() {
             },
             token
           )
-            .then((res) => ({ typeId: attr.AttributeTypeID, res }))
-            .catch((err) => ({ typeId: attr.AttributeTypeID, error: err }))
-        );
+            .then((res) => {
+              return { typeId: attr.AttributeTypeID, res };
+            })
+            .catch((err) => {
+              return { typeId: attr.AttributeTypeID, error: err };
+            });
+        });
 
         const results = await Promise.all(fetchPromises);
 
@@ -1100,8 +1121,10 @@ export default function CreateVariant() {
               });
 
               updatedOptions[typeId] = merged;
+            } else {
             }
           });
+        
           return updatedOptions;
         });
       }
@@ -1998,7 +2021,6 @@ export default function CreateVariant() {
                                     setAAttributes(updated);
                                   }}
                                   onInputChange={() => {
-                                    // Fetch all attribute values when dropdown is opened
                                     fetchAttributeValuesForType(
                                       attr.AttributeTypeID,
                                       attr.AttributeTypeName
@@ -2006,14 +2028,16 @@ export default function CreateVariant() {
                                   }}
                                   multiple
                                   placeholder={t("ADD_VARIANT.PICK_VALUES_PLACEHOLDER")}
-                                  options={(
-                                    localAttributeOptions[
+                                  options={(() => {
+                                  const options = localAttributeOptions[
                                     attr.AttributeTypeID.toUpperCase()
-                                    ] || []
-                                  ).map((opt) => ({
+                                    ] || [];
+                                  const mappedOptions = options.map((opt) => ({
                                     value: opt.id,
                                     label: opt.label,
-                                  }))}
+                                  }));
+                                  return mappedOptions;
+                                })()}
                                   Icon={Layers}
                                 />
                               </div>
