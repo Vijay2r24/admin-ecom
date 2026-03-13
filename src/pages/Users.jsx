@@ -31,6 +31,7 @@ const Users = () => {
   const [bSubmitting, setSubmitting] = useState(false);
   const [debounceTimer, setDebounceTimer] = useState(null);
   const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+  const [initialLoading, setInitialLoading] = useState(true); // Add initial loading state
   const itemsPerPage = ITEMS_PER_PAGE;
 
   const dispatch = useDispatch();
@@ -381,6 +382,33 @@ const Users = () => {
     dispatch(fetchResource({ key: "stores" }));
   }, [dispatch]);
 
+  // Handle initial loading state
+  useEffect(() => {
+    // Show loader initially
+    setInitialLoading(true);
+    
+    // Initial fetch for users
+    const params = buildApiParams();
+    dispatch(fetchResource({
+      key: "users",
+      params: params,
+    }));
+    
+    // Hide initial loader after a minimum time to ensure it's visible
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 800); // Minimum 800ms to show loader
+    
+    return () => clearTimeout(timer);
+  }, [dispatch]);
+
+  // Update initial loading when actual loading completes
+  useEffect(() => {
+    if (!loading && initialLoading) {
+      setInitialLoading(false);
+    }
+  }, [loading, initialLoading]);
+
   // Fetch roles and stores when filter dropdown is shown
   useEffect(() => {
     if (sShowFilterDropdown) {
@@ -410,6 +438,7 @@ const Users = () => {
         handleFilterChange={handleFilterChange}
         searchPlaceholder={t("USERS.SEARCH_PLACEHOLDER")}
         onClearFilters={handleClearFilters}
+        isBrowsePage={false}
         onCreate={() => navigate("/add-user")}
         createLabel={t("USERS.ADD_USER")}
       />
@@ -421,33 +450,77 @@ const Users = () => {
             className="table-wrapper-floating"
             onScroll={handleTableScroll}
           >
-            <table className="table-base">
-              {/* Floating Header */}
-              <thead
-                className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
-                  }`}
-              >
-                <tr>
-                  <th className="table-head-cell-floating text-left">
-                    {t("COMMON.USER")}
-                  </th>
-                  <th className="table-head-cell-floating hidden sm:table-cell text-center">
-                    {t("USERS.TABLE.CONTACT")}
-                  </th>
-                  <th className="table-head-cell-floating text-center">
-                    {t("COMMON.ROLE")}
-                  </th>
-                  <th className="table-head-cell-floating text-center">
-                    {t("COMMON.STATUS")}
-                  </th>
-                  <th className="table-head-cell-floating hidden sm:table-cell text-right">
-                    {t("COMMON.ACTIONS")}
-                  </th>
-                </tr>
-              </thead>
+            {loading || initialLoading ? (
+              <table className="table-base">
+                {/* Floating Header */}
+                <thead
+                  className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                    }`}
+                >
+                  <tr>
+                    <th className="table-head-cell-floating text-left">
+                      {t("COMMON.USER")}
+                    </th>
+                    <th className="table-head-cell-floating hidden sm:table-cell text-center">
+                      {t("USERS.TABLE.CONTACT")}
+                    </th>
+                    <th className="table-head-cell-floating text-center">
+                      {t("COMMON.ROLE")}
+                    </th>
+                    <th className="table-head-cell-floating text-center">
+                      {t("COMMON.STATUS")}
+                    </th>
+                    <th className="table-head-cell-floating hidden sm:table-cell text-right">
+                      {t("COMMON.ACTIONS")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="table-body">
+                  <tr>
+                    <td colSpan="5" className="table-cell">
+                      <div className="flex justify-center items-center h-64">
+                        <Loader className="h-8 w-8" />
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            ) : error ? (
+              <div className="text-center py-8 text-red-500">
+                {t("USERS.FETCH_ERROR")}
+              </div>
+            ) : usersData.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                {t("USERS.NO_USERS_FOUND")}
+              </div>
+            ) : (
+              <table className="table-base">
+                {/* Floating Header */}
+                <thead
+                  className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                    }`}
+                >
+                  <tr>
+                    <th className="table-head-cell-floating text-left">
+                      {t("COMMON.USER")}
+                    </th>
+                    <th className="table-head-cell-floating hidden sm:table-cell text-center">
+                      {t("USERS.TABLE.CONTACT")}
+                    </th>
+                    <th className="table-head-cell-floating text-center">
+                      {t("COMMON.ROLE")}
+                    </th>
+                    <th className="table-head-cell-floating text-center">
+                      {t("COMMON.STATUS")}
+                    </th>
+                    <th className="table-head-cell-floating hidden sm:table-cell text-right">
+                      {t("COMMON.ACTIONS")}
+                    </th>
+                  </tr>
+                </thead>
 
-              <tbody className="table-body">
-                {usersData.map((user) => (
+                <tbody className="table-body">
+                  {usersData.map((user) => (
                   <tr key={user.UserID} className="table-row">
                     {/* User */}
                     <td className="table-cell text-left">
@@ -549,31 +622,40 @@ const Users = () => {
                 ))}
               </tbody>
             </table>
+            )}
           </div>
         </div>
       ) : (
         <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-hide p-4">
-          {loading ? (
-            <div className="col-span-full text-center py-8">
-              <div className="flex justify-center items-center h-32">
-                <Loader className="h-8 w-8" />
-              </div>
-            </div>
-          ) : error ? (
-            <div className="col-span-full text-center py-4 text-red-500">
-              {t("USERS.FETCH_ERROR")}
-            </div>
-          ) : usersData.length === 0 ? (
-            <div className="col-span-full text-center py-4">
-              {t("USERS.NO_USERS_FOUND")}
-            </div>
-          ) : (
-            usersData.map((user) => (
-              <div
-                key={user.UserID}
-                className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-xl transition-shadow duration-200"
-              >
+          <div 
+            className="h-full overflow-y-auto scrollbar-hide"
+            style={{
+              height: sShowFilterDropdown 
+                ? 'calc(100vh - 280px)' 
+                : 'calc(100vh - 180px)'
+            }}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+              {loading || initialLoading ? (
+                <div className="col-span-full text-center py-8">
+                  <div className="flex justify-center items-center h-32">
+                    <Loader className="h-8 w-8" />
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="col-span-full text-center py-4 text-red-500">
+                  {t("USERS.FETCH_ERROR")}
+                </div>
+              ) : usersData.length === 0 ? (
+                <div className="col-span-full text-center py-4">
+                  {t("USERS.NO_USERS_FOUND")}
+                </div>
+              ) : (
+                usersData.map((user) => (
+                  <div
+                    key={user.UserID}
+                    className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-xl transition-shadow duration-200"
+                  >
                 <div className="flex items-center gap-4 pb-2 border-b border-gray-100">
                   <div className="flex-shrink-0 h-12 w-12 bg-gray-100 rounded-full overflow-hidden">
                     {hasProfileImage(user) ? (
@@ -652,10 +734,11 @@ const Users = () => {
                     disableEdit={!hasEditPermission}
                   />
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
 

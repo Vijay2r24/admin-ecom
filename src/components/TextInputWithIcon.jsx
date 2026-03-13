@@ -28,7 +28,7 @@ const TextInputWithIcon = forwardRef(
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             {Icon && (
-              <Icon className="h-5 w-5 text-gray-400 group-hover:text-custom-bg transition-colors duration-200" />
+              <Icon className="h-4 w-4 text-gray-400 group-hover:text-custom-bg transition-colors duration-200" />
             )}
           </div>
           <input
@@ -39,8 +39,8 @@ const TextInputWithIcon = forwardRef(
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className={`block w-full pl-10 pr-3 py-2 border ${error ? "border-red-300" : "border-gray-200"
-              } rounded-lg focus:outline-none focus:border-custom-bg transition-all duration-200 group-hover:border-custom-bg bg-white shadow-sm appearance-none placeholder:text-sm ${className}`}
+            className={`block w-full pl-10 pr-3 py-2.5 border ${error ? "border-red-300" : "border-gray-200"
+              } rounded-md focus:outline-none focus:border-custom-bg transition-all duration-200 group-hover:border-custom-bg bg-white shadow-sm appearance-none placeholder:text-xs text-xs ${className}`}
             {...rest}
           />
           {inputSlot && (

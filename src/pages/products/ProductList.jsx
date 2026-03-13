@@ -69,6 +69,7 @@ const ProductList = () => {
   const [aProducts, setProducts] = useState([]);
   const [bLoading, setLoading] = useState(true);
   const [sError, setError] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true); // Add initial loading state
   const [nTotalItems, setTotalItems] = useState(0);
   const [nTotalPages, setTotalPages] = useState(0);
   const { setTitle } = useTitle();
@@ -215,6 +216,26 @@ const ProductList = () => {
       setFilterLoading(false);
     }
   }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
+
+  // Handle initial loading state
+  useEffect(() => {
+    // Show loader initially
+    setInitialLoading(true);
+    
+    // Hide initial loader after minimum time to ensure it's visible
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 800); // Minimum 800ms to show loader
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Update initial loading when actual loading completes
+  useEffect(() => {
+    if (!bLoading && initialLoading) {
+      setInitialLoading(false);
+    }
+  }, [bLoading, initialLoading]);
 
   useEffect(() => {
     fetchProducts();
@@ -468,7 +489,7 @@ const ProductList = () => {
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />
 
-      {bLoading ? (
+      {bLoading || initialLoading ? (
         <div className="text-center py-8 text-gray-500">
           {t("COMMON.LOADING")}
         </div>

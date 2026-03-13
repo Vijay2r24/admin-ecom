@@ -46,8 +46,34 @@ const OrderToolbar = ({
   onClearFiles,
   exportDisabled = false,
   disableCreate = false,
+  isBrowsePage = false, // New prop to identify browse pages
 }) => {
   const { t } = useTranslation();
+
+  // Track filter dropdown state for dynamic table height
+  useEffect(() => {
+    // Set CSS variable based on filter state and page type
+    if (isBrowsePage) {
+      // Browse pages have different layout structure - need much more aggressive height reduction
+      if (showFilterDropdown && (additionalFilters?.length > 0)) {
+        document.documentElement.style.setProperty('--table-height', 'calc(100vh - 380px)');
+      } else {
+        document.documentElement.style.setProperty('--table-height', 'calc(100vh - 280px)');
+      }
+    } else {
+      // Original pages (Users, Stores, etc.) with flex layout
+      if (showFilterDropdown && (additionalFilters?.length > 0)) {
+        document.documentElement.style.setProperty('--table-height', 'calc(100vh - 280px)');
+      } else {
+        document.documentElement.style.setProperty('--table-height', 'calc(100vh - 180px)');
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.documentElement.style.removeProperty('--table-height');
+    };
+  }, [showFilterDropdown, additionalFilters, isBrowsePage]);
 
   // Separate date vs. other filters
   const dateFilters = (additionalFilters || []).filter(
@@ -59,9 +85,10 @@ const OrderToolbar = ({
 
   // Toggle between table and grid view
   const toggleViewMode = () => {
-    setViewMode(
-      viewMode === VIEW_MODES.TABLE ? VIEW_MODES.GRID : VIEW_MODES.TABLE
-    );
+    if (typeof setViewMode === 'function') {
+      const newMode = viewMode === "table" ? "grid" : "table";
+      setViewMode(newMode);
+    }
   };
 
   // Handle dropdown/combobox value changes
@@ -117,28 +144,38 @@ const OrderToolbar = ({
           </div>
         )}
         {showViewToggle && (
-          <button
-            onClick={toggleViewMode}
-            className={`btn-toggle-view flex items-center ${viewMode === VIEW_MODES.TABLE ? "btn-highlighted" : "btn-default"
-              }`}
-            title={
-              viewMode === VIEW_MODES.TABLE
-                ? t("TOOLBAR.GRID")
-                : t("TOOLBAR.TABLE")
-            }
+          <Tooltip 
+            text={viewMode === "table" ? t("TOOLBAR.GRID") : t("TOOLBAR.TABLE")} 
+            position="bottom"
           >
-            {viewMode === VIEW_MODES.TABLE ? (
-              <>
-                <LayoutGrid className="w-3.5 h-3.5 mr-1.5" />
-                {t("TOOLBAR.GRID")}
-              </>
-            ) : (
-              <>
-                <List className="w-3.5 h-3.5 mr-1.5" />
-                {t("TOOLBAR.TABLE")}
-              </>
-            )}
-          </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleViewMode();
+              }}
+              onMouseDown={(e) => e.preventDefault()}
+              onFocus={(e) => e.target.focus()}
+              onBlur={(e) => e.target.blur()}
+              className={`btn-toggle-view flex items-center ${viewMode === "grid" ? "btn-highlighted" : "btn-default"
+                }`}
+              type="button"
+              tabIndex={0}
+              style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+            >
+              {viewMode === "table" ? (
+                <>
+                  <LayoutGrid className="w-3.5 h-3.5 mr-1.5" />
+                  {t("TOOLBAR.GRID")}
+                </>
+              ) : (
+                <>
+                  <List className="w-3.5 h-3.5 mr-1.5" />
+                  {t("TOOLBAR.TABLE")}
+                </>
+              )}
+            </button>
+          </Tooltip>
         )}
         {showFilterButton && (
           <div className="relative">
@@ -343,7 +380,7 @@ const FilterCombobox = ({ filter, handleComboboxChange, t }) => {
 
           return (
             <div className="relative" ref={comboboxRef}>
-              <div className="relative w-full cursor-default overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 focus-within:ring-2 focus-within:ring-custom-bg/20 focus-within:border-custom-bg h-9 flex items-center">
+              <div className="relative w-full cursor-default overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 focus-within:ring-2 focus-within:ring-custom-bg/20 focus-within:border-custom-bg h-8 flex items-center">
                 <div className="flex items-center w-full px-3 gap-2">
                   <Combobox.Input
                     spellCheck={false}
@@ -402,7 +439,7 @@ const FilterCombobox = ({ filter, handleComboboxChange, t }) => {
                   >
                     <Combobox.Options
                       static
-                      className="max-h-60 w-full overflow-auto py-1 text-xs focus:outline-none"
+                      className="max-h-48 w-full overflow-auto py-1 text-xs focus:outline-none"
                     >
                       {filter.multiple && filteredOptions.length > 0 && (
                         <div
