@@ -723,8 +723,6 @@ export default function CreateVariant() {
 
     // For single fetch:
     try {
-      console.log('=== Fetching Attribute Values for Type ===');
-      console.log('Fetching for typeId:', typeId, 'typeName:', typeName);
       const token = localStorage.getItem("token");
       const response = await apiGet(
         GET_ALL_ATTRIBUTES,
@@ -734,24 +732,20 @@ export default function CreateVariant() {
         },
         token
       );
-      console.log('API response:', response);
       if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
         const values = (response.data.data || []).map((val) => ({
           id: val.AttributeValueID,
           label: val.Unit ? `${val.Value} (${val.Unit})` : val.Value,
         }));
-        console.log('Processed values for type', typeId, ':', values);
         setLocalAttributeOptions((prev) => {
           const updated = {
             ...prev,
             [typeId]: values,
           };
-          console.log('Updated localAttributeOptions:', updated);
           return updated;
         });
       }
     } catch (err) {
-      console.log('Error fetching attributes for type', typeId, ':', err);
       // Failed to fetch attribute values silent fail for now
     }
   }, []);
@@ -1044,9 +1038,6 @@ export default function CreateVariant() {
 
         // Build initial options from allAttributes (which contains the known selected values)
         // Only include attributes that belong to their specific type
-        console.log('=== Building Initial Options ===');
-        console.log('All attributes from product:', allAttributes);
-        console.log('Attribute array (types we are using):', attrArray);
         
         allAttributes.forEach((attr) => {
           if (attr.AttributeTypeID && attr.AttributeValueID) {
@@ -1057,11 +1048,6 @@ export default function CreateVariant() {
               typeAttr => String(typeAttr.AttributeTypeID) === String(normalizedTypeID)
             );
             
-            console.log('Processing attribute:', { 
-              attr, 
-              normalizedTypeID, 
-              belongsToCurrentType 
-            });
             
             if (!belongsToCurrentType) return;
 
@@ -1080,13 +1066,10 @@ export default function CreateVariant() {
                 id: attr.AttributeValueID,
                 label: label,
               });
-              console.log('Added to initial options:', { normalizedTypeID, label });
             }
           }
         });
         
-        console.log('Final initial options:', initialOptions);
-        console.log('=== End Building Initial Options ===');
 
         setLocalAttributeOptions((prev) => ({ ...prev, ...initialOptions }));
 
@@ -1094,9 +1077,7 @@ export default function CreateVariant() {
 
         // Fetch ALL attribute values for each type in PARALLEL to ensure we have complete data
         const token = localStorage.getItem("token");
-        console.log('=== Fetching All Attribute Values ===');
         const fetchPromises = attrArray.map((attr) => {
-          console.log('Setting up fetch for type:', attr.AttributeTypeID);
           return apiGet(
             GET_ALL_ATTRIBUTES,
             {
@@ -1109,11 +1090,9 @@ export default function CreateVariant() {
             token
           )
             .then((res) => {
-              console.log('API response for type', attr.AttributeTypeID, ':', res);
               return { typeId: attr.AttributeTypeID, res };
             })
             .catch((err) => {
-              console.log('API error for type', attr.AttributeTypeID, ':', err);
               return { typeId: attr.AttributeTypeID, error: err };
             });
         });
@@ -1122,18 +1101,14 @@ export default function CreateVariant() {
 
         setLocalAttributeOptions((prev) => {
           const updatedOptions = { ...prev };
-          console.log('=== Processing API Results ===');
 
           results.forEach(({ typeId, res, error }) => {
-            console.log('Processing result for type:', typeId);
             if (res?.data?.status === STATUS.SUCCESS.toUpperCase()) {
               const rawData = res.data.data || [];
-              console.log('Raw data for type', typeId, ':', rawData);
               const fetchedValues = rawData.map((val) => ({
                 id: val.AttributeValueID || val.AttributeID || val.id,
                 label: val.Unit ? `${val.Value} (${val.Unit})` : val.Value,
               }));
-              console.log('Processed fetched values for type', typeId, ':', fetchedValues);
 
               // Merge with existing initialOptions, avoiding duplicates
               const existing = updatedOptions[typeId] || [];
@@ -1146,14 +1121,10 @@ export default function CreateVariant() {
               });
 
               updatedOptions[typeId] = merged;
-              console.log('Updated options for type', typeId, ':', merged);
             } else {
-              console.log('Failed response for type', typeId, ':', res?.data);
             }
           });
-          
-          console.log('Final updatedOptions:', updatedOptions);
-          console.log('=== End Processing API Results ===');
+        
           return updatedOptions;
         });
       }
@@ -2050,8 +2021,6 @@ export default function CreateVariant() {
                                     setAAttributes(updated);
                                   }}
                                   onInputChange={() => {
-                                    // Fetch attribute values for this specific type when dropdown is opened
-                                    console.log('Dropdown opened for type:', attr.AttributeTypeID);
                                     fetchAttributeValuesForType(
                                       attr.AttributeTypeID,
                                       attr.AttributeTypeName
@@ -2060,20 +2029,13 @@ export default function CreateVariant() {
                                   multiple
                                   placeholder={t("ADD_VARIANT.PICK_VALUES_PLACEHOLDER")}
                                   options={(() => {
-                                  console.log('=== AddVariant Options Calculation ===');
-                                  console.log('Current attribute:', attr);
-                                  console.log('AttributeTypeID:', attr.AttributeTypeID);
-                                  console.log('LocalAttributeOptions:', localAttributeOptions);
                                   const options = localAttributeOptions[
                                     attr.AttributeTypeID.toUpperCase()
                                     ] || [];
-                                  console.log('Options for this type:', options);
                                   const mappedOptions = options.map((opt) => ({
                                     value: opt.id,
                                     label: opt.label,
                                   }));
-                                  console.log('Final mapped options:', mappedOptions);
-                                  console.log('=== End AddVariant Options Calculation ===');
                                   return mappedOptions;
                                 })()}
                                   Icon={Layers}
