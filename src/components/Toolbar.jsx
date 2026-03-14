@@ -86,7 +86,7 @@ const OrderToolbar = ({
   // Toggle between table and grid view
   const toggleViewMode = () => {
     if (typeof setViewMode === 'function') {
-      const newMode = viewMode === "table" ? "grid" : "table";
+      const newMode = viewMode === VIEW_MODES.TABLE ? VIEW_MODES.GRID : VIEW_MODES.TABLE;
       setViewMode(newMode);
     }
   };
@@ -145,7 +145,7 @@ const OrderToolbar = ({
         )}
         {showViewToggle && (
           <Tooltip 
-            text={viewMode === "table" ? t("TOOLBAR.GRID") : t("TOOLBAR.TABLE")} 
+            text={viewMode === VIEW_MODES.TABLE ? t("TOOLBAR.GRID") : t("TOOLBAR.TABLE")} 
             position="bottom"
           >
             <button
@@ -157,13 +157,13 @@ const OrderToolbar = ({
               onMouseDown={(e) => e.preventDefault()}
               onFocus={(e) => e.target.focus()}
               onBlur={(e) => e.target.blur()}
-              className={`btn-toggle-view flex items-center ${viewMode === "grid" ? "btn-highlighted" : "btn-default"
+              className={`btn-toggle-view flex items-center ${viewMode === VIEW_MODES.GRID ? "btn-highlighted" : "btn-default"
                 }`}
               type="button"
               tabIndex={0}
               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
             >
-              {viewMode === "table" ? (
+              {viewMode === VIEW_MODES.TABLE ? (
                 <>
                   <LayoutGrid className="w-3.5 h-3.5 mr-1.5" />
                   {t("TOOLBAR.GRID")}

@@ -217,25 +217,17 @@ const ProductList = () => {
     }
   }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
 
-  // Handle initial loading state
   useEffect(() => {
-    // Show loader initially
     setInitialLoading(true);
     
-    // Hide initial loader after minimum time to ensure it's visible
     const timer = setTimeout(() => {
       setInitialLoading(false);
-    }, 800); // Minimum 800ms to show loader
+    }, 800);
     
     return () => clearTimeout(timer);
   }, []);
 
-  // Update initial loading when actual loading completes
-  useEffect(() => {
-    if (!bLoading && initialLoading) {
-      setInitialLoading(false);
-    }
-  }, [bLoading, initialLoading]);
+
 
   useEffect(() => {
     fetchProducts();
