@@ -17,6 +17,7 @@ import {
   CreditCard ,
   Palette,
   Sliders,
+  BadgeCheck,
   Cog,// Add CreditCard icon for Payments
 } from 'lucide-react';
 import { getPermissionCode } from '../utils/permissionUtils';
@@ -82,14 +83,15 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
       icon: CreditCard,
       relatedPaths: ['/payment-details']
     },
+      
     {
-      name: t('SIDEBAR.SETTINGS'),
+      name: t('SIDEBAR.TENANT_SETTINGS'),
       href: '#',
       icon: Settings,
       section: 'Settings',
       subItems: [
-        { name: t('SIDEBAR.PAGES'), href: '/profile', icon: UserRound },
-         { name: t('SIDEBAR.THEMES'), href: '/application-settings', icon: Cog },
+        { name: t('SIDEBAR.THEMES'), href: '/theme-settings', icon: Cog },
+        {name: t('SIDEBAR.SUBSCRIPTION'),href: '/subscription',icon: BadgeCheck,relatedPaths: ['/subscription']},
       ]
     },
   ], [t]);

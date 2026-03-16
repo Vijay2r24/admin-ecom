@@ -102,8 +102,14 @@
     "BANNERS": "Banners",
     "NOTIFICATIONS": "Notifications",
     "SETTINGS": "Settings",
+    "TENANT_SETTINGS":"Tenant Settings",
     "PAGES": "Profile",
-    "THEMES":"Application Settings"
+    "THEMES":"Theme Settings",
+    "SUBSCRIPTION":"Tenant Subscription"
+
+  },
+  "SUBSCRIPTIONPLANS": {
+    "TITLE": "Subscription Plans"
   },
   "DASHBOARD": {
     "TITLE": "Dashboard",

@@ -46,6 +46,7 @@ import NotFound from "./components/NotFound";
 import ScrollToTop from './components/ScrollToTop';
 import ThemeSettings from './pages/ApplicationSettings';
 import ApplicationSettings from './pages/ApplicationSettings';
+import SubscriptionPlan from './pages/subscription';
 
 const dashboardPermission = getPermissionCode(MODULES.DASHBOARD, PERMISSIONS.VIEW_DASHBOARD);
 
@@ -139,6 +140,14 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+               <Route
+                path="/subscription"
+                element={
+                  <ProtectedRoute permissionCode={notificationsPermission}>
+                    <SubscriptionPlan />
+                  </ProtectedRoute>
+                }
+                />
               <Route
                 path="/payments"
                 element={
@@ -307,7 +316,7 @@ const App = () => {
                 }
               />
               <Route
-                path="/application-settings"
+                path="/theme-settings"
                 element={
                   <ProtectedRoute>
                     <ApplicationSettings />
