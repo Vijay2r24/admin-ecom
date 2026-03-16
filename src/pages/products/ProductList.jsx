@@ -228,7 +228,6 @@ const ProductList = () => {
   }, []);
 
 
-
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -458,7 +457,7 @@ const ProductList = () => {
   };
 
   return (
-    <div 
+   <div 
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
     >
       {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
@@ -481,11 +480,7 @@ const ProductList = () => {
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />
 
-      {bLoading || initialLoading ? (
-        <div className="text-center py-8 text-gray-500">
-          {t("COMMON.LOADING")}
-        </div>
-      ) : sError ? (
+      {sError ? (
         <div className="text-center py-8 text-red-500">{sError}</div>
       ) : sViewMode === "table" ? (
         <div className="table-container-floating">
@@ -690,7 +685,7 @@ const ProductList = () => {
           )}
         </div>
       )}
-      {!bLoading && !sError && nTotalItems > 0 && (
+      {!sError && nTotalItems > 0 && (
         <Pagination
           currentPage={nCurrentPage}
           totalPages={nTotalPages}
