@@ -19,6 +19,7 @@ import {
   Sliders,
   Cog,
   Upload,// Add CreditCard icon for Payments
+  RefreshCw,
 } from 'lucide-react';
 import { getPermissionCode } from '../utils/permissionUtils';
  
@@ -48,6 +49,7 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
       subItems: [
         { name: t('SIDEBAR.PRODUCT_SETUP'), href: '/browse', icon: Settings },
         { name: t('SIDEBAR.PRODUCTS'), href: '/productList', icon: Package, relatedPaths: ['/Addproduct','/edit-product','/AddVariants','/productdetails'] },
+        { name: t('SIDEBAR.PRODUCT_INVENTORY'), href:'/InventoryList', icon:Package},
       ]
     },
     {

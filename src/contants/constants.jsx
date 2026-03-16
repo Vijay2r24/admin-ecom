@@ -511,6 +511,7 @@ export const MODULES = {
   ROLE: "Role Management",
   CONTENT: "Content Management",
   PRODUCT: "Product Management",
+  INVENTORY: "Inventory Management",
   PRODUCT_SETUP: "Product Setup",
   PAYMENT: "Payment Management",
   BANNER: "Banner Management",
@@ -683,7 +684,13 @@ export const PERMISSIONS = {
   ADD_PRODUCT_GROUP_TOOLTIP: "Add new product group",
   EDIT_PRODUCT_GROUP_TOOLTIP: "Edit product group details",
   UPDATE_PRODUCT_GROUP_STATUS_TOOLTIP: "Update product group status",
-  VIEW_PRODUCT_GROUP_DETAILS_TOOLTIP: "View product group details"
+  VIEW_PRODUCT_GROUP_DETAILS_TOOLTIP: "View product group details",
+
+  //Inventory specific permissions
+  VIEW_INVENTORY: "View Inventories",
+  EDIT_STORE_INVENTORY: "Edit Store Inventory",
+  UPDATE_STORE_INVENTORY_STATUS: "Update Store Inventory Status",
+  UPDATE_PRODUCT_VARIANT_STATUS: "Update Product Variant Status"
 };
 
 export const QUICK_FILTER_VALUES = [
@@ -703,6 +710,44 @@ export const QUICK_FILTER_LABELS = [
   "Last 2 Days",
   "Last 7 Days",
 ];
+
+// Product Inventory Level Options
+export const LEVEL_OPTIONS = [
+  { value: "product", labelKey: "COMMON.PRODUCT_LEVEL" },
+  { value: "variant", labelKey: "COMMON.VARIANT_LEVEL" },
+];
+
+// Stock Sort Options
+export const STOCK_SORT_OPTIONS = [
+  { value: "none", labelKey: "COMMON.ALL" },
+  { value: "stock_asc", labelKey: "COMMON.STOCK_LOW_TO_HIGH" },
+  { value: "stock_desc", labelKey: "COMMON.STOCK_HIGH_TO_LOW" },
+];
+
+// Product Status Badge Classes
+export const STATUS_BADGE_CLASSES = {
+  ACTIVE: "status-active",
+  OUT_OF_STOCK: "status-inactive",
+  INACTIVE: "status-inactive",
+};
+
+// Filter Values
+export const FILTER_VALUES = {
+  ALL: "all",
+  NONE: "none",
+  TRUE: "true",
+  FALSE: "false",
+};
+
+// UI Constants
+export const SCROLL_SHADOW_THRESHOLD = 10;
+
+// Product Status Values
+export const PRODUCT_STATUS_VALUES = {
+  ACTIVE: "active",
+  OUT_OF_STOCK: "out-of-stock", 
+  INACTIVE: "inactive",
+};
 
 export const MONTHS = [
   "January", "February", "March", "April", "May", "June",

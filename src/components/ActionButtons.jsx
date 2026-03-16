@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Edit, Trash, MoreVertical, Eye } from 'lucide-react';
+import { Edit, Trash, MoreVertical, Eye,Layers  } from 'lucide-react';
 import { Link } from "react-router-dom";
 import Tooltip from './Tooltip';
 
@@ -10,6 +10,8 @@ const ActionButtons = ({
   onDelete,
   onMore,
   viewLink,
+  onViewVariants,
+  variantButtonText,
   canDelete = true,
   hasViewPermission = true 
 }) => {
@@ -75,6 +77,16 @@ const ActionButtons = ({
           <MoreVertical className="h-4 w-4" />
         </button>
       )}
+      
+       {onViewVariants && (
+        <button 
+          onClick={() => onViewVariants(id)}
+          className="p-2 rounded transition text-green-600 hover:text-green-900 hover:bg-green-50"
+          title={variantButtonText || "View Variants"}
+        >
+          <Layers className="h-5 w-5" />
+        </button>
+      )}  
     </div>
   );
 };

@@ -20,6 +20,7 @@ import Users from "./pages/Users";
 import Orders from "./pages/orders/OrderList";
 import AddUser from "./pages/AddUser";
 import ProductList from "./pages/products/ProductList";
+import InventoryList from "./pages/products/ProductInventory";
 import Addproduct from "./pages/products/AddProductForm";
 import AddVariants from "./pages/products/AddVariant";
 import ProfileDetails from "./pages/ProfileDetails";
@@ -74,6 +75,8 @@ const notificationsPermission = getPermissionCode(MODULES.CONTENT, PERMISSIONS.S
 const productsPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCTS);
 const addProductPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.CREATE_PRODUCT);
 const editProductPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_PRODUCT);
+
+const inventoryPermission = getPermissionCode(MODULES.INVENTORY, PERMISSIONS.VIEW_INVENTORY);
 
 const viewBrandPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_BRANDS);
 const updateBrandPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_BRAND);
@@ -248,6 +251,14 @@ const App = () => {
                 element={
                   <ProtectedRoute permissionCode={productsPermission}>
                     <ProductList />
+                  </ProtectedRoute>
+                }
+              />
+                 <Route
+                path="/InventoryList"
+                element={
+                  <ProtectedRoute permissionCode={inventoryPermission}>
+                    <InventoryList />
                   </ProtectedRoute>
                 }
               />
