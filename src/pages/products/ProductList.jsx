@@ -217,16 +217,6 @@ const ProductList = () => {
     }
   }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
 
-  useEffect(() => {
-    setInitialLoading(true);
-    
-    const timer = setTimeout(() => {
-      setInitialLoading(false);
-    }, 800);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
 
   useEffect(() => {
     fetchProducts();
