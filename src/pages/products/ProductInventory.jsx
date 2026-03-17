@@ -25,11 +25,15 @@ import {
   SCROLL_SHADOW_THRESHOLD,
   FILTER_VALUES,
   PRODUCT_STATUS_VALUES,
+  MODULES,
+  PERMISSIONS,
 } from "../../contants/constants.jsx";
+import { X } from "lucide-react";
 import {
   fetchResource,
   updateStatusById,
 } from "../../store/slices/allDataSlice.jsx";
+import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
 import { exportProductReport } from "../../store/slices/exportSlice";
@@ -97,6 +101,15 @@ const ProductInventory = () => {
     });
   };
 
+  // Add this function to handle viewing store inventory with permission check
+  const handleViewStoreInventoryWithPermission = (productVariantId) => {
+    if (!hasViewVariantStoresPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION_TO_VIEW_VARIANT_STORES"), STATUS.ERROR);
+      return;
+    }
+    handleViewStoreInventory(productVariantId);
+  };
+
   // Add this function to close the popup
   const handleCloseVariantPopup = () => {
     setVariantPopup({
@@ -140,6 +153,24 @@ const ProductInventory = () => {
   const [exportLoading, setExportLoading] = useState(false);
   const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const dispatch = useDispatch();
+
+  // Permission checks
+  const permissionIdForViewInventory = getPermissionCode(
+    MODULES.INVENTORY,
+    PERMISSIONS.VIEW_INVENTORY
+  );
+  const permissionIdForUpdateProductVariantStatus = getPermissionCode(
+    MODULES.INVENTORY,
+    PERMISSIONS.UPDATE_PRODUCT_VARIANT_STATUS
+  );
+  const permissionIdForViewVariantStores = getPermissionCode(
+    MODULES.PRODUCT,
+    PERMISSIONS.VIEW_VARIANT_STORES
+  );
+
+  const hasViewInventoryPermission = hasPermissionId(permissionIdForViewInventory);
+  const hasUpdateProductVariantStatusPermission = hasPermissionId(permissionIdForUpdateProductVariantStatus);
+  const hasViewVariantStoresPermission = hasPermissionId(permissionIdForViewVariantStores);
 
   const levelOptions = LEVEL_OPTIONS.map((opt) => ({
     value: opt.value,
@@ -449,6 +480,11 @@ const ProductInventory = () => {
 
   // --- Status Update Handlers ---
   const handleStatusChange = (productId, currentIsActive) => {
+    if (!hasUpdateProductVariantStatusPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
+
     // Check if view level is product - show variants popup instead of confirmation
     if (oFilters.level === "product") {
       handleOpenVariantStatusPopup(productId);
@@ -510,7 +546,21 @@ const ProductInventory = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       <ToastContainer />
-      <Toolbar
+      {!hasViewInventoryPermission ? (
+        <div className="text-center py-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+            <X className="h-8 w-8 text-red-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {t("COMMON.ACCESS_DENIED")}
+          </h3>
+          <p className="text-gray-600">
+            {t("COMMON.NO_PERMISSION_TO_VIEW_INVENTORY")}
+          </p>
+        </div>
+      ) : (
+        <>
+          <Toolbar
         searchTerm={sSearchTerm}
         setSearchTerm={setSearchTerm}
         viewMode={sViewMode}
@@ -660,6 +710,7 @@ const ProductInventory = () => {
                               product.IsActive,
                             )
                           }
+                          disabled={!hasUpdateProductVariantStatusPermission}
                         />
                       </td>
 
@@ -671,7 +722,7 @@ const ProductInventory = () => {
                             oFilters.level === "product"
                               ? () => handleViewVariants(product.ProductID)
                               : () =>
-                                  handleViewStoreInventory(
+                                  handleViewStoreInventoryWithPermission(
                                     product.ProductVariantID,
                                   )
                           }
@@ -679,6 +730,9 @@ const ProductInventory = () => {
                             oFilters.level === "product"
                               ? t("PRODUCT_INVENTORY.VIEW_VARIANTS")
                               : t("PRODUCT_INVENTORY.VIEW_STORES")
+                          }
+                          disableVariantButton={
+                            oFilters.level === "variant" && !hasViewVariantStoresPermission
                           }
                         />
                       </td>
@@ -744,6 +798,7 @@ const ProductInventory = () => {
                             product.IsActive,
                           )
                         }
+                        disabled={!hasUpdateProductVariantStatusPermission}
                       />
                     </div>
                   </div>
@@ -816,7 +871,7 @@ const ProductInventory = () => {
                           oFilters.level === "product"
                             ? () => handleViewVariants(product.ProductID)
                             : () =>
-                                handleViewStoreInventory(
+                                handleViewStoreInventoryWithPermission(
                                   product.ProductVariantID,
                                 )
                         }
@@ -824,6 +879,9 @@ const ProductInventory = () => {
                           oFilters.level === "product"
                             ? t("PRODUCT_INVENTORY.VIEW_VARIANTS")
                             : t("PRODUCT_INVENTORY.VIEW_STORES")
+                        }
+                        disableVariantButton={
+                          oFilters.level === "variant" && !hasViewVariantStoresPermission
                         }
                       />
                     </div>
@@ -879,6 +937,8 @@ const ProductInventory = () => {
           onConfirm={handleStatusConfirm}
           isSubmitting={bSubmitting}
         />
+      )}
+        </>
       )}
     </div>
   );

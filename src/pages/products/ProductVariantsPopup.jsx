@@ -11,7 +11,6 @@ import noImage from "../../../assets/images/missing-pictur.jpg";
 import Loader from "../../components/Loader";
 import {
   X,
-  ExternalLink,
   Package,
   Store,
   Tag,
@@ -19,7 +18,6 @@ import {
   ChevronRight,
   ShoppingBag,
   MapPin,
-  DollarSign,
   Percent,
   Edit,
   Check,
@@ -27,8 +25,9 @@ import {
 } from "lucide-react";
 import Switch from "../../components/Switch.jsx";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
-import { STATUS } from "../../contants/constants.jsx";
+import { STATUS, MODULES, PERMISSIONS } from "../../contants/constants.jsx";
 import { showEmsg } from "../../utils/ShowEmsg";
+import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 const ProductVariantsPopup = ({ productId, onClose }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
@@ -52,6 +51,24 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
   });
   const [bSubmitting, setSubmitting] = useState(false);
   const isMounted = useRef(true);
+
+  // Permission checks
+  const permissionIdForEditStoreInventory = getPermissionCode(
+    MODULES.INVENTORY,
+    PERMISSIONS.EDIT_STORE_INVENTORY
+  );
+  const permissionIdForUpdateStoreInventoryStatus = getPermissionCode(
+    MODULES.INVENTORY,
+    PERMISSIONS.UPDATE_STORE_INVENTORY_STATUS
+  );
+  const permissionIdForUpdateProductVariantStatus = getPermissionCode(
+    MODULES.INVENTORY,
+    PERMISSIONS.UPDATE_PRODUCT_VARIANT_STATUS
+  );
+
+  const hasEditStoreInventoryPermission = hasPermissionId(permissionIdForEditStoreInventory);
+  const hasUpdateStoreInventoryStatusPermission = hasPermissionId(permissionIdForUpdateStoreInventoryStatus);
+  const hasUpdateProductVariantStatusPermission = hasPermissionId(permissionIdForUpdateProductVariantStatus);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -163,6 +180,10 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
   };
 
   const handleEditInventory = (inventory) => {
+    if (!hasEditStoreInventoryPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     setEditingInventoryId(inventory.StoreID);
     setEditedInventory({
       Quantity: inventory.Quantity || 0,
@@ -172,6 +193,10 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
   };
 
   const handleVariantStatusChange = (variantId, currentStatus) => {
+    if (!hasUpdateProductVariantStatusPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     setStatusPopup({ open: true, variantId, newStatus: !currentStatus });
   };
 
@@ -229,6 +254,11 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
   };
 
   const handleSaveInventory = async (variantId, storeId) => {
+    if (!hasEditStoreInventoryPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
+
     try {
       setSaving(true);
       const token = localStorage.getItem("token");
@@ -325,6 +355,10 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
   };
 
   const handleToggleActive = (storeId, variantId, currentStatus) => {
+    if (!hasUpdateStoreInventoryStatusPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     setStoreStatusPopup({
       open: true,
       storeId,
@@ -699,6 +733,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
                                           variant.IsActive,
                                         )
                                       }
+                                      disabled={!hasUpdateProductVariantStatusPermission}
                                     />
                                   </div>
                                 </td>
@@ -884,6 +919,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
                                       }
                                       size="sm"
                                       label=""
+                                      disabled={!hasUpdateStoreInventoryStatusPermission}
                                     />
                                   </div>
 
@@ -931,8 +967,9 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
                                   ) : (
                                     <button
                                       onClick={() => handleEditInventory(inv)}
-                                      className="p-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                                      title="Edit"
+                                      disabled={!hasEditStoreInventoryPermission}
+                                      className="p-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                      title={hasEditStoreInventoryPermission ? "Edit" : t("COMMON.NO_PERMISSION")}
                                     >
                                       <Edit className="h-4 w-4" />
                                     </button>

@@ -12,6 +12,7 @@ const ActionButtons = ({
   viewLink,
   onViewVariants,
   variantButtonText,
+  disableVariantButton,
   canDelete = true,
   hasViewPermission = true 
 }) => {
@@ -81,8 +82,13 @@ const ActionButtons = ({
        {onViewVariants && (
         <button 
           onClick={() => onViewVariants(id)}
-          className="p-2 rounded transition text-green-600 hover:text-green-900 hover:bg-green-50"
-          title={variantButtonText || "View Variants"}
+          disabled={disableVariantButton}
+          className={`p-2 rounded transition ${
+            disableVariantButton
+              ? "cursor-not-allowed text-gray-400 opacity-50"
+              : "text-green-600 hover:text-green-900 hover:bg-green-50"
+          }`}
+          title={disableVariantButton ? t('COMMON.NO_PERMISSION') : (variantButtonText || "View Variants")}
         >
           <Layers className="h-5 w-5" />
         </button>

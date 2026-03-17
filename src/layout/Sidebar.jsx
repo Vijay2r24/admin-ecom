@@ -20,6 +20,7 @@ import {
   Cog,
   Upload,// Add CreditCard icon for Payments
   RefreshCw,
+  Warehouse,
 } from 'lucide-react';
 import { getPermissionCode } from '../utils/permissionUtils';
  
@@ -49,7 +50,7 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
       subItems: [
         { name: t('SIDEBAR.PRODUCT_SETUP'), href: '/browse', icon: Settings },
         { name: t('SIDEBAR.PRODUCTS'), href: '/productList', icon: Package, relatedPaths: ['/Addproduct','/edit-product','/AddVariants','/productdetails'] },
-        { name: t('SIDEBAR.PRODUCT_INVENTORY'), href:'/InventoryList', icon:Package},
+        { name: t('SIDEBAR.PRODUCT_INVENTORY'), href:'/InventoryList', icon:Warehouse},
       ]
     },
     {
@@ -143,6 +144,7 @@ const allowedPermissionCodes = useMemo(() => {
     '/pages': getPermissionCode('Menu Management', 'Pages'),
     '/browse': getPermissionCode('Menu Management', 'Products'),
     '/productList': getPermissionCode('Menu Management', 'Products'),
+    '/InventoryList': getPermissionCode('Menu Management', 'Inventory'),
     // Add Payments permission code
     '/payments': getPermissionCode('Menu Management', 'Payments'),
   }), []);

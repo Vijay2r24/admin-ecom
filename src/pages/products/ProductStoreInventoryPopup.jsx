@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { apiGet, apiPut, apiPatch } from "../../utils/ApiUtils.jsx";
 import { GET_PRODUCT_VARIANT, UPDATE_STORE_INVENTORY, UPDATE_STORE_INVENTORY_STATUS } from "../../contants/apiRoutes";
 import Loader from "../../components/Loader";
-import { STATUS } from "../../contants/constants.jsx";
+import { STATUS, MODULES, PERMISSIONS } from "../../contants/constants.jsx";
 import {
   X,
   Package,
@@ -22,6 +22,7 @@ import {
 import { showEmsg } from "../../utils/ShowEmsg";
 import Switch from "../../components/Switch.jsx";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
+import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
   const { t } = useTranslation();
   const [inventoryData, setInventoryData] = useState([]);
@@ -42,6 +43,19 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
   const [debouncedSearchText, setDebouncedSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const searchInputRef = useRef(null);
+
+  // Permission checks
+  const permissionIdForEditStoreInventory = getPermissionCode(
+    MODULES.INVENTORY,
+    PERMISSIONS.EDIT_STORE_INVENTORY
+  );
+  const permissionIdForUpdateStoreInventoryStatus = getPermissionCode(
+    MODULES.INVENTORY,
+    PERMISSIONS.UPDATE_STORE_INVENTORY_STATUS
+  );
+
+  const hasEditStoreInventoryPermission = hasPermissionId(permissionIdForEditStoreInventory);
+  const hasUpdateStoreInventoryStatusPermission = hasPermissionId(permissionIdForUpdateStoreInventoryStatus);
 
   // Debounce search text to avoid excessive API calls
   useEffect(() => {
@@ -142,6 +156,10 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
 
   // Handle editing inventory
   const handleEditInventory = (inventory) => {
+    if (!hasEditStoreInventoryPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     setEditingInventoryId(inventory.StoreID);
     setEditedInventory({
       Quantity: parseInt(inventory.Quantity) || 0,
@@ -151,6 +169,11 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
 
   // Handle saving inventory changes
   const handleSaveInventory = async (storeId) => {
+    if (!hasEditStoreInventoryPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
+
     try {
       setSaving(true);
       const token = localStorage.getItem("token");
@@ -209,6 +232,10 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
 
   // Handle store status toggle
   const handleToggleActive = (storeId, currentStatus) => {
+    if (!hasUpdateStoreInventoryStatusPermission) {
+      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+      return;
+    }
     setStoreStatusPopup({
       open: true,
       storeId,
@@ -620,6 +647,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
                               }
                               size="sm"
                               label=""
+                              disabled={!hasUpdateStoreInventoryStatusPermission}
                             />
                           </div>
 
@@ -660,8 +688,9 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
                             ) : (
                               <button
                                 onClick={() => handleEditInventory(inventory)}
-                                className="p-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors flex-shrink-0"
-                                title="Edit"
+                                disabled={!hasEditStoreInventoryPermission}
+                                className="p-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={hasEditStoreInventoryPermission ? "Edit" : t("COMMON.NO_PERMISSION")}
                               >
                                 <Edit className="h-4 w-4" />
                               </button>

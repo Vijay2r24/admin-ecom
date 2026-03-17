@@ -690,7 +690,8 @@ export const PERMISSIONS = {
   VIEW_INVENTORY: "View Inventories",
   EDIT_STORE_INVENTORY: "Edit Store Inventory",
   UPDATE_STORE_INVENTORY_STATUS: "Update Store Inventory Status",
-  UPDATE_PRODUCT_VARIANT_STATUS: "Update Product Variant Status"
+  UPDATE_PRODUCT_VARIANT_STATUS: "Update Product Variant Status",
+  VIEW_VARIANT_STORES: "View Variant Stores"
 };
 
 export const QUICK_FILTER_VALUES = [
