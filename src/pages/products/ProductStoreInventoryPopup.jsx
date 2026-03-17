@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { apiGet, apiPut, apiPatch } from "../../utils/ApiUtils.jsx";
 import { GET_PRODUCT_VARIANT, UPDATE_STORE_INVENTORY, UPDATE_STORE_INVENTORY_STATUS } from "../../contants/apiRoutes";
 import Loader from "../../components/Loader";
-import { STATUS, MODULES, PERMISSIONS } from "../../contants/constants.jsx";
+import { STATUS, MODULES, PERMISSIONS, LOCALES } from "../../contants/constants.jsx";
 import {
   X,
   Package,
@@ -510,7 +510,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
                       {t("PRODUCT_CREATION.MRP")}
                     </p>
                     <p className="text-xs font-bold text-indigo-900">
-                      ₹{mrp.toLocaleString("en-IN")}
+                      ₹{mrp.toLocaleString(LOCALES.ENGLISH_INDIA)}
                     </p>
                   </div>
                 </div>
@@ -628,7 +628,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
                                     : "bg-red-100 text-red-700"
                                 }`}
                               >
-                                {isActive ? "Active" : "Inactive"}
+                                {isActive ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")}
                               </span>
                             </div>
                             <p className="text-[10px] text-gray-500">
@@ -654,7 +654,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
                           <div className="text-right mr-1">
                             <div className="text-sm font-bold text-blue-600">
                               ₹
-                              {Math.round(finalPrice).toLocaleString("en-IN")}
+                              {Math.round(finalPrice).toLocaleString(LOCALES.ENGLISH_INDIA)}
                             </div>
                             <div className="text-[10px] text-gray-500">
                               {t("PRODUCTS.FINAL_PRICE")}
@@ -680,7 +680,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
                                   onClick={handleCancelEdit}
                                   disabled={saving}
                                   className="p-0.5 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors flex-shrink-0"
-                                  title="Cancel"
+                                  title={t("COMMON.CANCEL")}
                                 >
                                   <XIcon className="h-4 w-4" />
                                 </button>
@@ -742,13 +742,13 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
                           <div className="text-xs font-semibold text-gray-900">
                             ₹
                             {isEditing 
-                              ? Math.round(getDiscountedPrice(mrp, editedInventory.DiscountPercentage || 0)).toLocaleString("en-IN")
-                              : Math.round(parseFloat(inventory.SellingPrice || 0)).toLocaleString("en-IN")
+                              ? Math.round(getDiscountedPrice(mrp, editedInventory.DiscountPercentage || 0)).toLocaleString(LOCALES.ENGLISH_INDIA)
+                              : Math.round(parseFloat(inventory.SellingPrice || 0)).toLocaleString(LOCALES.ENGLISH_INDIA)
                             }
                           </div>
                           {isEditing && (
                             <div className="text-[8px] text-gray-500">
-                              {t("PRODUCT_CREATION.MRP")}: ₹{Math.round(mrp).toLocaleString("en-IN")}
+                              {t("PRODUCT_CREATION.MRP")}: ₹{Math.round(mrp).toLocaleString(LOCALES.ENGLISH_INDIA)}
                             </div>
                           )}
                         </div>
@@ -785,7 +785,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
                                 {t("COMMON.SAVE")}: ₹
                                 {Math.round(
                                   (mrp * parseFloat(inventory.DiscountPercentage)) / 100
-                                ).toLocaleString("en-IN")}
+                                ).toLocaleString(LOCALES.ENGLISH_INDIA)}
                               </div>
                             </div>
                           ) : (
@@ -795,7 +795,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
                           )}
                           {isEditing && editedInventory.DiscountPercentage > 0 && (
                             <div className="text-[8px] text-green-600 mt-0.5">
-                             {t("COMMON.SAVE")}: ₹{Math.round((mrp * (editedInventory.DiscountPercentage || 0)) / 100).toLocaleString("en-IN")}
+                             {t("COMMON.SAVE")}: ₹{Math.round((mrp * (editedInventory.DiscountPercentage || 0)) / 100).toLocaleString(LOCALES.ENGLISH_INDIA)}
                             </div>
                           )}
                         </div>

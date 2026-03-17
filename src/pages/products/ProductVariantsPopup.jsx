@@ -891,7 +891,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
                                             : "bg-red-100 text-red-700"
                                         }`}
                                       >
-                                        {isInvActive ? "Active" : "Inactive"}
+                                        {isInvActive ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")}
                                       </span>
                                     </div>
                                     <p className="text-[10px] text-gray-500">

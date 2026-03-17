@@ -88,7 +88,7 @@ const ActionButtons = ({
               ? "cursor-not-allowed text-gray-400 opacity-50"
               : "text-green-600 hover:text-green-900 hover:bg-green-50"
           }`}
-          title={disableVariantButton ? t('COMMON.NO_PERMISSION') : (variantButtonText || "View Variants")}
+          title={disableVariantButton ? t('COMMON.NO_PERMISSION') : (variantButtonText || t('PRODUCT_INVENTORY.VIEW_VARIANTS'))}
         >
           <Layers className="h-5 w-5" />
         </button>

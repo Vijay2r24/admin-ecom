@@ -37,7 +37,7 @@ const ProductVariantsStatusPopup = ({ productId, onClose, onVariantStatusUpdate 
         setProductData(response.data.data);
         setError(null);
       } else {
-        setError(response.data.message || "Failed to load product details");
+        setError(response.data.message || t("COMMON.API_ERROR"));
       }
     } catch (err) {
       setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
