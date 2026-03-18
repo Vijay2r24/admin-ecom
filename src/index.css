@@ -263,6 +263,13 @@ code {
     transition: max-height 0.3s ease-in-out; /* Smooth height transitions */
   }
 
+  .grid-wrapper-floating {
+    @apply overflow-y-auto overflow-x-hidden relative !important;
+    max-height: var(--table-height, calc(100vh - 220px)); /* Dynamic height controlled by JavaScript */
+    min-height: 200px; /* Further reduced minimum height for better space utilization */
+    transition: max-height 0.3s ease-in-out; /* Smooth height transitions */
+  }
+
   .table-head-floating {
     @apply sticky top-0 z-10 bg-gray-50 transition-all duration-200;
   }
