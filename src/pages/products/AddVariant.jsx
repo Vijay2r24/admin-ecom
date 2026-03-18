@@ -1169,6 +1169,18 @@ export default function CreateVariant() {
     fetchProductDetails(p.ProductID);
   };
 
+  const handleRemoveProduct = () => {
+    setSelectedProduct(null);
+    setSearchText("");
+    setSearchResults([]);
+    setFormData({});
+    setAAttributes([]);
+    setAVariants([]);
+    setAttachedVariants([]);
+    setGroupingAttributeTypeID("");
+    setExistingGroupingAttributeTypeID("");
+  };
+
   const variantsExistButNoGrouping =
     aVariants.length > 0 && !groupingAttributeTypeID;
 
@@ -1670,15 +1682,35 @@ export default function CreateVariant() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5 group-focus-within:text-custom-bg transition-colors" />
                 <input
                   type="text"
-                  className="w-full border border-gray-200 pl-12 pr-4 py-3.5 rounded-xl focus:ring-2 focus:ring-custom-bg/20 focus:border-custom-bg outline-none transition-all placeholder:text-gray-400 text-gray-900 shadow-sm"
-                  placeholder={t("ADD_VARIANT.SEARCH_PLACEHOLDER")}
+                  className={`w-full border pl-12 pr-12 py-3.5 rounded-xl focus:ring-2 focus:ring-custom-bg/20 focus:border-custom-bg outline-none transition-all placeholder:text-gray-400 shadow-sm ${
+                    selectedProduct 
+                      ? 'border-green-300 bg-green-50 text-green-900 placeholder-green-700' 
+                      : 'border-gray-200 text-gray-900'
+                  }`}
+                  placeholder={selectedProduct ? t("ADD_VARIANT.PRODUCT_SELECTED") : t("ADD_VARIANT.SEARCH_PLACEHOLDER")}
                   value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  onChange={(e) => {
+                    if (selectedProduct) {
+                      handleRemoveProduct();
+                    }
+                    setSearchText(e.target.value);
+                  }}
+                  readOnly={!!selectedProduct}
                 />
                 {isSearching && (
                   <div className="absolute right-4 top-1/2 -translate-y-1/2">
                     <div className="animate-spin rounded-full h-5 w-5 border-2 border-custom-bg/20 border-t-custom-bg"></div>
                   </div>
+                )}
+
+                {!isSearching && selectedProduct && (
+                  <button
+                    onClick={handleRemoveProduct}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-full transition-colors"
+                    title={t("ADD_VARIANT.REMOVE_PRODUCT")}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 )}
 
                 {!isSearching && !selectedProduct && searchText.trim().length > 2 && (
@@ -1755,20 +1787,6 @@ export default function CreateVariant() {
                       </div>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedProduct(null);
-                      setSearchText("");
-                      setAAttributes([]);
-                      setAVariants([]);
-                      setAttachedVariants([]);
-                    }}
-                    className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-red-500 transition-all shadow-sm"
-                    title={t("ADD_VARIANT.CHANGE_PRODUCT")}
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
                 </div>
 
                 {/* Accordion Button for Product Details */}

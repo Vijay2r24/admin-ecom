@@ -392,6 +392,7 @@ const Stores = () => {
         handleFilterChange={handleFilterChange}
         searchPlaceholder={t("STORES.SEARCH_PLACEHOLDER")}
         onClearFilters={handleClearFilters}
+        isBrowsePage={false}
         onExport={handleExportStores}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
         exportDisabled={!hasExportPermission}
@@ -533,7 +534,15 @@ const Stores = () => {
         </div>
       ) : (
         <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-hide p-4">
+          <div 
+            className="h-full overflow-y-auto scrollbar-hide"
+            style={{
+              height: bShowFilterDropdown 
+                ? 'calc(100vh - 280px)' 
+                : 'calc(100vh - 180px)'
+            }}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
           {bFilterLoading || storesLoading ? (
             <div className="col-span-full flex justify-center py-8">
               <Loader size="medium" />
@@ -602,7 +611,8 @@ const Stores = () => {
               </div>
             ))
           )}
-        </div>
+            </div>
+          </div>
         </div>
       )}
 

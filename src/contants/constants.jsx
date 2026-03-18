@@ -41,7 +41,7 @@ export const STATUS_OPTIONS = [
   { value: "false", labelKey: "COMMON.INACTIVE" },
 ];
 
-export const ITEMS_PER_PAGE = 20;
+export const ITEMS_PER_PAGE = 10;
 export const LOCALE = "en-US";
 export const CURRENCY = "INR";
 export const ORDER_STATUS = {

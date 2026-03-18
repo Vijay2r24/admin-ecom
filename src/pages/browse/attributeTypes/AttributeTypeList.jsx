@@ -214,6 +214,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
           )}
           showSearch={true}
           showViewToggle={false}
+          isBrowsePage={true}
           showFilterButton={true}
           // --- Permission-based Create Button ---
           onCreate={handleCreateAttributeType}
@@ -250,7 +251,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
       {!bLoading && !sError && (
         <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
           <div
-            className="table-scroll-container overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)]"
+            className="table-scroll-container overflow-x-auto overflow-y-auto"
             onScroll={handleTableScroll}
           >
             <table className="table-base w-full">
