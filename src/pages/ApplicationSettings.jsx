@@ -16,6 +16,8 @@ import { apiPatch, apiGet } from "../utils/ApiUtils";
 import { UPDATE_TENANT_THEME, UPDATE_TENANT_LOGO, GET_TENANT_SETTINGS } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import Loader from "../components/Loader";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ThemeSettings = () => {
   const { t } = useTranslation()
@@ -53,14 +55,24 @@ const ThemeSettings = () => {
     try {
       setLoading(true);
       const tenantId = getTenantId();
+      
       const response = await apiPatch(
         `${UPDATE_TENANT_THEME}/${tenantId}`,
         { ThemeColour: primaryColor }
       );
       
-      showEmsg(response?.data?.message , STATUS.SUCCESS);
+      // Check if response exists and has data
+      if (response && response.data) {
+        const message = response.data.message;
+        
+        // Try with different duration and position
+        showEmsg(message, STATUS.SUCCESS); // 5 seconds duration
+      } else {
+        showEmsg(response.data.message, STATUS.SUCCESS); // 5 seconds duration
+      }
     } catch (error) {
-      showEmsg(error.message , STATUS.ERROR);
+      const errorMessage = error?.message;
+      showEmsg(errorMessage, STATUS.ERROR); // 5 seconds duration
     } finally {
       setLoading(false);
     }
@@ -97,9 +109,16 @@ const ThemeSettings = () => {
         true
       );
       
-      showEmsg(response?.data?.message , STATUS.SUCCESS);
+      // Check if response exists and has data
+      if (response && response.data) {
+        const message = response.data.message;
+        showEmsg(message, STATUS.SUCCESS);
+      } else {
+        showEmsg(response.data.message, STATUS.SUCCESS);
+      }
     } catch (error) {
-      showEmsg(error.message , STATUS.ERROR);
+      const errorMessage = error?.message;
+      showEmsg(errorMessage, STATUS.ERROR);
     } finally {
       setLoading(false);
     }
@@ -121,13 +140,18 @@ const ThemeSettings = () => {
 
   const getTenantSettings = async () => {
     try {
-      const response = await apiGet(GET_TENANT_SETTINGS);
+      const tenantId = getTenantId();
+      if (!tenantId) {
+        return;
+      }
+      
+      const response = await apiGet(`${GET_TENANT_SETTINGS}/${tenantId}`);
       
       // Handle different response structures
       let settings = null;
       if (response?.data) {
         // Check if data is directly the settings object
-        if (response.data.ThemeColour || response.data.LogoUrl) {
+        if (response.data.ThemeColour || response.data.Logo) {
           settings = response.data;
         } else if (response.data.data) {
           settings = response.data.data;
@@ -140,10 +164,10 @@ const ThemeSettings = () => {
           setPrimaryColor(settings.ThemeColour);
         }
         
-        // Set logo if available - LogoUrl is an array, get the first one or find one with sortOrder 1
-        if (settings.LogoUrl && settings.LogoUrl.length > 0) {
+        // Set logo if available - Logo is an array, get the first one or find one with sortOrder 1
+        if (settings.Logo && settings.Logo.length > 0) {
           // Find logo with sortOrder 1 or take the first one
-          const logo = settings.LogoUrl.find(logo => logo.sortOrder === 1) || settings.LogoUrl[0];
+          const logo = settings.Logo.find(logo => logo.sortOrder === 1) || settings.Logo[0];
           if (logo && logo.documentUrl) {
             setLogo(logo.documentUrl);
             // Store the current documentId for updates
@@ -243,14 +267,14 @@ const ThemeSettings = () => {
               disabled={loading}
               className="flex-1 bg-custom-bg hover:bg-bg-hover disabled:opacity-50 rounded-lg py-2 text-sm text-white font-semibold transition-colors shadow-sm"
             >
-              {loading ? t("COMMON.UPDATING") : t("COMMON.UPDATE_COLOUR")}
+              {t("COMMON.UPDATE_COLOUR")}
             </button>
             <button
               onClick={updateLogo}
               disabled={loading || !logoFile}
               className="flex-1 bg-custom-bg hover:bg-bg-hover disabled:opacity-50 rounded-lg py-2 text-sm text-white font-semibold transition-colors shadow-sm"
             >
-               {loading ? t("COMMON.UPDATING") : t("COMMON.UPDATE_LOGO")}
+               {t("COMMON.UPDATE_LOGO")}
             </button>
           </div>
           <button
@@ -354,6 +378,18 @@ const ThemeSettings = () => {
         </div>
         </div>
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={1400}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </React.Fragment>
   );
 };

@@ -247,10 +247,10 @@ const makeApiCall = async (apiCall) => {
   }
 };
 
-export const apiGet = async (endpoint, oParams = {}, token = null) => {
+export const apiGet = async (endpoint, oParams = {}, token = null, responseType = "json") => {
   return makeApiCall(async () => {
     const api = oCreateApiInstance(token, false, endpoint);
-    const response = await api.get(endpoint, { params: oParams });
+    const response = await api.get(endpoint, { params: oParams, responseType });
     return response;
   });
 };

@@ -534,6 +534,9 @@ const OrderList = () => {
         handleFilterChange={handleFilterChange}
         searchPlaceholder={t("ORDERS.SEARCH_PLACEHOLDER")}
         onClearFilters={handleClearFilters}
+        isBrowsePage={false}
+        showCreateButton={false}
+        showViewToggle={true}
         onExport={handleExportOrders}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
         exportDisabled={!hasExportPermission}
@@ -542,7 +545,7 @@ const OrderList = () => {
       {sViewMode === "table" ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 relative">
           <div
-            className="overflow-x-auto max-h-[calc(100vh-170px)]"
+            className="table-wrapper-floating overflow-x-auto overflow-y-auto"
             onScroll={handleTableScroll}
           >
             <table className="table-base">

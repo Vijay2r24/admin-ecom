@@ -41,7 +41,7 @@ export const STATUS_OPTIONS = [
   { value: "false", labelKey: "COMMON.INACTIVE" },
 ];
 
-export const ITEMS_PER_PAGE = 20;
+export const ITEMS_PER_PAGE = 10;
 export const LOCALE = "en-US";
 export const CURRENCY = "INR";
 export const ORDER_STATUS = {
@@ -88,6 +88,7 @@ export const EXPORT_TYPES = {
   STORE: "store",
   PRODUCT: "product",
   PAYMENT: "payment",
+  TEMPLATE: "template",
 };
 
 export const DOWNLOAD_ICON = (
@@ -236,6 +237,25 @@ export const GENDER_OPTIONS = [
   { value: "Other", labelKey: "ADD_USER.GENDER_OTHER" },
 ];
 
+export const KEYBOARD_EVENTS = {
+  ENTER: "Enter",
+  ESCAPE: "Escape",
+  TAB: "Tab",
+  SPACE: "Space",
+  ARROW_UP: "ArrowUp",
+  ARROW_DOWN: "ArrowDown",
+  ARROW_LEFT: "ArrowLeft",
+  ARROW_RIGHT: "ArrowRight",
+  KEYDOWN: "keydown",
+};
+
+export const LOGIN_VIEWS = {
+  LOGIN: "login",
+  REGISTER: "register",
+  FORGOT_PASSWORD: "forgot_password",
+  RESET_PASSWORD: "reset_password",
+};
+
 export const VIEW_MODES = {
   TABLE: "table",
   GRID: "grid",
@@ -248,6 +268,7 @@ export const FILE_CONSTANTS = {
   IMAGE_SIZE_TEXT: " PNG, JPG, JPEG up to 10MB",
   IMAGE_TITLE_TEXT: "Remove image",
   UPLOAD_LOGO: "Upload Logo",
+  BULK_IMPORT_FILE_TYPES: ".xlsx,.xls,.csv",
 };
 
 export const TOOLTIPSTATUS = {
@@ -492,6 +513,7 @@ export const MODULES = {
   PRODUCT: "Product Management",
   PRODUCT_SETUP: "Product Setup",
   PAYMENT: "Payment Management",
+  BANNER: "Banner Management",
 };
 
 // Permission mappings for role management
@@ -535,8 +557,7 @@ export const VIEW_TO_EDIT_PERMISSION_MAPPINGS = {
 };
 
 export const PERMISSIONS = {
-  EDIT_ROLE: "00000103-0000-0000-0000-000000000103",
-  EDIT_STORE: "00000104-0000-0000-0000-000000000104",
+  EDIT_STORE: "Edit Store",
   VIEW_DASHBOARD: "View Dashboard",
   VIEW_ORDERS: "View Orders",
   VIEW_STORE: "View Store",
@@ -551,6 +572,7 @@ export const PERMISSIONS = {
   VIEW_BANNERS: "View Banners",
   CREATE_BANNER: "Create Banner",
   UPDATE_BANNER: "Update Banner",
+  UPDATE_BANNER_SEQUENCE: "Update Banner Sequence",
   SEND_NOTIFICATION: "Send Push Notification",
   VIEW_PRODUCTS: "View Products",
   CREATE_PRODUCT: "Create Product",
@@ -711,6 +733,7 @@ export const DATE_UNITS = {
 
 export const DEFAULT_COUNTRY = "IN";
 export const FILETYPE = "image/jpeg";
+export const TYPE_GLOBAL = "global";
 export const SCROLL_CONSTANTS = {
   BEHAVIOR: "smooth",
   BLOCK: "center",

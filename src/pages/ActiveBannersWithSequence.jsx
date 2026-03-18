@@ -47,8 +47,8 @@ const ActiveBannersWithSequence = () => {
 
   // Permission checks
   const permissionIdForUpdateBanner = getPermissionCode(
-    MODULES.CONTENT,
-    PERMISSIONS.UPDATE_BANNER
+    MODULES.BANNER,
+    PERMISSIONS.UPDATE_BANNER_SEQUENCE
   );
   const hasUpdateBannerPermission = hasPermissionId(permissionIdForUpdateBanner);
 

@@ -17,8 +17,6 @@ import {
   ITEMS_PER_PAGE,
   STATUS,
   STATUS_OPTIONS,
-  MODULES,
-  PERMISSIONS,
 } from "../../contants/constants.jsx";
 import {
   fetchResource,
@@ -32,7 +30,6 @@ import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import Loader from "../../components/Loader";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 
 const getStatusBadgeClass = (status) => {
   if (status === "active") return "status-active";
@@ -61,14 +58,6 @@ const getBrandName = (product) => {
   return product.BrandName || "N/A";
 };
 
-const EMPTY_ARRAY = [];
-const DEFAULT_FILTERS = {
-  category: [],
-  brand: [],
-  store: [],
-  status: "all",
-};
-
 const ProductList = () => {
   const [sSearchTerm, setSearchTerm] = useState("");
   const [sViewMode, setViewMode] = useState("table");
@@ -80,6 +69,7 @@ const ProductList = () => {
   const [aProducts, setProducts] = useState([]);
   const [bLoading, setLoading] = useState(true);
   const [sError, setError] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true); // Add initial loading state
   const [nTotalItems, setTotalItems] = useState(0);
   const [nTotalPages, setTotalPages] = useState(0);
   const { setTitle } = useTitle();
@@ -99,17 +89,10 @@ const ProductList = () => {
   const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const dispatch = useDispatch();
 
-  // Permission check for Generate Product Report
-  const permissionIdForExport = getPermissionCode(
-    MODULES.PRODUCT,
-    PERMISSIONS.GENERATE_PRODUCT_REPORT
-  );
-  const hasExportPermission = hasPermissionId(permissionIdForExport);
-
   // Hide body scrollbar when component mounts
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-
+    
     // Re-enable scrollbar when component unmounts
     return () => {
       document.body.style.overflow = 'unset';
@@ -123,13 +106,13 @@ const ProductList = () => {
 
   // Fetch categories, brands, and stores from Redux
   const categories = useSelector(
-    (state) => state.allData.resources.categories?.data || EMPTY_ARRAY
+    (state) => state.allData.resources.categories?.data || []
   );
   const brands = useSelector(
-    (state) => state.allData.resources.brands?.data || EMPTY_ARRAY
+    (state) => state.allData.resources.brands?.data || []
   );
   const stores = useSelector(
-    (state) => state.allData.resources.stores?.data || EMPTY_ARRAY
+    (state) => state.allData.resources.stores?.data || []
   );
 
   // Fetch categories, brands, and stores when filter dropdown is opened
@@ -141,10 +124,16 @@ const ProductList = () => {
     }
   }, [bShowFilterDropdown, dispatch]);
 
-  const [oFilters, setFilters] = useState(DEFAULT_FILTERS);
+  const defaultFilters = {
+    category: "all",
+    brand: "all",
+    store: "all",
+    status: "all",
+  };
+  const [oFilters, setFilters] = useState(defaultFilters);
 
   const handleClearFilters = () => {
-    setFilters(DEFAULT_FILTERS);
+    setFilters(defaultFilters);
     setCurrentPage(1);
   };
 
@@ -162,43 +151,26 @@ const ProductList = () => {
         pageNumber: nCurrentPage,
         pageSize: itemsPerPage,
         searchText: sSearchTerm,
+        isUserProductList: true
       };
 
       if (oFilters.status && oFilters.status !== "all") {
         params.IsActive = oFilters.status === "true";
       }
 
-      // Map selected brand names to IDs
-      if (oFilters.brand && oFilters.brand.length > 0) {
-        const selectedBrandIds = brands
-          .filter((b) => oFilters.brand.includes(b.BrandName))
-          .map((b) => b.BrandID);
-
-        if (selectedBrandIds.length > 0) {
-          params.brandId = selectedBrandIds;
-        }
+      // Map selected brand name to ID only when needed
+      if (oFilters.brand && oFilters.brand !== "all") {
+        const selectedBrand = brands.find(
+          (b) => b.BrandName === oFilters.brand
+        );
+        if (selectedBrand) params.brandId = [selectedBrand.BrandID];
       }
 
-      // Map selected category names to IDs
-      if (oFilters.category && oFilters.category.length > 0) {
-        const selectedCategoryIds = categories
-          .filter((c) => oFilters.category.includes(c.CategoryName))
-          .map((c) => c.CategoryID);
-
-        if (selectedCategoryIds.length > 0) {
-          params.categoryId = selectedCategoryIds;
-        }
-      }
-
-      // Map selected store names to IDs
-      if (oFilters.store && oFilters.store.length > 0) {
-        const selectedStoreIds = stores
-          .filter((s) => oFilters.store.includes(s.StoreName))
-          .map((s) => s.StoreID);
-
-        if (selectedStoreIds.length > 0) {
-          params.storeId = selectedStoreIds;
-        }
+      if (oFilters.category && oFilters.category !== "all") {
+        const selectedCategory = categories.find(
+          (c) => c.CategoryName === oFilters.category
+        );
+        if (selectedCategory) params.categoryId = [selectedCategory.CategoryID];
       }
 
       const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
@@ -220,7 +192,7 @@ const ProductList = () => {
             firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
             status:
               product.IsActive &&
-                getTotalStock(firstVariant.Inventory || []) > 0
+              getTotalStock(firstVariant.Inventory || []) > 0
                 ? "active"
                 : "out-of-stock",
           };
@@ -243,7 +215,8 @@ const ProductList = () => {
       setLoading(false);
       setFilterLoading(false);
     }
-  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t, brands, categories, stores]);
+  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
+
 
   useEffect(() => {
     fetchProducts();
@@ -254,6 +227,7 @@ const ProductList = () => {
   }, [setTitle, t]);
 
   const categoryOptions = [
+    { value: "all", label: t("COMMON.ALL") },
     ...categories.map((cat) => ({
       value: cat.CategoryName,
       label: cat.CategoryName,
@@ -261,6 +235,7 @@ const ProductList = () => {
   ];
 
   const brandOptions = [
+    { value: "all", label: t("COMMON.ALL") },
     ...brands.map((brand) => ({
       value: brand.BrandName,
       label: brand.BrandName,
@@ -268,6 +243,7 @@ const ProductList = () => {
   ];
 
   const storeOptions = [
+    { value: "all", label: t("COMMON.ALL") },
     ...stores.map((store) => ({
       value: store.StoreName,
       label: store.StoreName,
@@ -321,7 +297,6 @@ const ProductList = () => {
       options: categoryOptions,
       placeholder: t("PRODUCT_SETUP.TABS.CATEGORIES"),
       searchable: true,
-      multiple: true,
       searchPlaceholder: t("COMMON.SEARCH_CATEGORY"),
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "category"),
@@ -333,7 +308,6 @@ const ProductList = () => {
       options: brandOptions,
       placeholder: t("PRODUCT_SETUP.TABS.BRANDS"),
       searchable: true,
-      multiple: true,
       searchPlaceholder: t("COMMON.SEARCH_BRAND"),
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "brand"),
@@ -344,7 +318,6 @@ const ProductList = () => {
       value: oFilters.status,
       options: statusOptions,
     },
-    // Store filter can be added here if needed, following the same pattern
   ];
 
   const handleFilterChange = (e, filterName) => {
@@ -382,44 +355,23 @@ const ProductList = () => {
   };
 
   const handleExportProducts = async () => {
-    // Check permission before exporting
-    if (!hasExportPermission) {
-      return;
-    }
-    
     setExportLoading(true);
     try {
+      // Find the brand and category IDs from the Redux state
+      const brand = brands.find((b) => b.BrandName === oFilters.brand);
+      const category = categories.find(
+        (c) => c.CategoryName === oFilters.category
+      );
+
       const isActiveFilter =
         oFilters.status === "all" ? undefined : oFilters.status === "true";
-
-      const brandIds =
-        oFilters.brand && oFilters.brand.length > 0
-          ? brands
-            .filter((b) => oFilters.brand.includes(b.BrandName))
-            .map((b) => b.BrandID)
-          : undefined;
-
-      const categoryIds =
-        oFilters.category && oFilters.category.length > 0
-          ? categories
-            .filter((c) => oFilters.category.includes(c.CategoryName))
-            .map((c) => c.CategoryID)
-          : undefined;
-
-      const storeIds =
-        oFilters.store && oFilters.store.length > 0
-          ? stores
-            .filter((s) => oFilters.store.includes(s.StoreName))
-            .map((s) => s.StoreID)
-          : undefined;
 
       await dispatch(
         exportProductReport({
           searchText: sSearchTerm,
           isActive: isActiveFilter,
-          brandId: brandIds,
-          categoryId: categoryIds,
-          storeId: storeIds,
+          brandId: brand ? [brand.BrandID] : undefined,
+          categoryId: category ? [category.CategoryID] : undefined,
         })
       ).unwrap();
 
@@ -444,10 +396,8 @@ const ProductList = () => {
   };
 
   useEffect(() => {
-    if (sSearchTerm) {
-      setCurrentPage(1);
-    }
-  }, [sSearchTerm]);
+    setCurrentPage(1);
+  }, [sSearchTerm, oFilters]);
 
   // --- Status Update Handlers ---
   const handleStatusChange = (productId, currentIsActive) => {
@@ -497,11 +447,11 @@ const ProductList = () => {
   };
 
   return (
-    <div
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col"
+   <div 
+      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
     >
       {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
-
+      
       <ToastContainer />
       <Toolbar
         searchTerm={sSearchTerm}
@@ -518,14 +468,9 @@ const ProductList = () => {
         onAddVariants={() => navigate("/AddVariants")}
         onExport={handleExportProducts}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
-        exportDisabled={!hasExportPermission}
       />
 
-      {bLoading ? (
-        <div className="text-center py-8 text-gray-500">
-          {t("COMMON.LOADING")}
-        </div>
-      ) : sError ? (
+      {sError ? (
         <div className="text-center py-8 text-red-500">{sError}</div>
       ) : sViewMode === "table" ? (
         <div className="table-container-floating">
@@ -536,8 +481,9 @@ const ProductList = () => {
             <table className="table-base">
               {/* Floating Header */}
               <thead
-                className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
-                  }`}
+                className={`table-head-floating ${
+                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                }`}
               >
                 <tr>
                   <th className="table-head-cell-floating text-left">
@@ -650,8 +596,7 @@ const ProductList = () => {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 h-full overflow-y-auto scrollbar-hide p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {bFilterLoading ? (
             <div className="col-span-full flex justify-center py-8">
               <Loader size="medium" />
@@ -729,20 +674,17 @@ const ProductList = () => {
             ))
           )}
         </div>
-        </div>
       )}
-      {!bLoading && !sError && nTotalItems > 0 && (
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-          <Pagination
-            currentPage={nCurrentPage}
-            totalPages={nTotalPages}
-            totalItems={nTotalItems}
-            itemsPerPage={itemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
-        </div>
+      {!sError && nTotalItems > 0 && (
+        <Pagination
+          currentPage={nCurrentPage}
+          totalPages={nTotalPages}
+          totalItems={nTotalItems}
+          itemsPerPage={itemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
       )}
 
       {statusPopup.open && (

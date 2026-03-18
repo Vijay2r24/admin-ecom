@@ -5,7 +5,7 @@ import { useDropzone } from "react-dropzone";
 import TextInputWithIcon from "../../components/TextInputWithIcon";
 import SelectWithIcon from "../../components/SelectWithIcon";
 import { useTranslation } from "react-i18next";
-import { STATUS, FILETYPE } from "../../contants/constants.jsx";
+import { STATUS, FILETYPE, TYPE_GLOBAL } from "../../contants/constants.jsx";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchResource } from "../../store/slices/allDataSlice.jsx";
 import { apiPost, apiGet, apiPut } from "../../utils/ApiUtils.jsx";
@@ -73,6 +73,8 @@ const AddProductForm = () => {
   ]);
 
   const [aAttributes, setAAttributes] = useState([]);
+  const [attributesByType, setAttributesByType] = useState({}); // Store attributes per type
+  const [currentFetchingType, setCurrentFetchingType] = useState(null); // Track which type is being fetched
 
   const [oFormData, setFormData] = useState({
     ProductName: "",
@@ -513,34 +515,43 @@ const AddProductForm = () => {
     });
   };
 
-  const handleAttributeTypeChange = (index, typeId) => {
-    setAAttributes((prev) =>
+            const handleAttributeTypeChange = (index, typeId) => {
+        setAAttributes((prev) =>
       prev.map((attr, i) =>
         i === index
           ? {
-            ...attr,
-            AttributeTypeID: typeId,
-            AttributeValueIDs: [],
-            valueLabels: [],
-            typeName:
-              attributeTypes.find(
-                (t) => String(t.AttributeTypeID) === String(typeId)
-              )?.Name || "",
-          }
+              ...attr,
+              AttributeTypeID: typeId,
+              AttributeValueIDs: [],
+              valueLabels: [],
+              typeName:
+                attributeTypes.find(
+                  (t) => String(t.AttributeTypeID) === String(typeId)
+                )?.Name || "",
+            }
           : attr
       )
     );
+    // Always fetch attribute values for the selected attribute type
     if (typeId) {
+            setCurrentFetchingType(typeId);
       dispatch(
         fetchResource({
           key: "attributes",
-          // Ensure API receives the selected AttributeTypeID
           params: { AttributeTypeID: typeId, attributeTypeId: typeId },
         })
-      );
+      ).then((action) => {
+        // Store the fetched attributes directly when API call succeeds
+        if (action.payload) {
+          setAttributesByType(prev => ({
+            ...prev,
+            [typeId]: action.payload.data
+          }));
+          setCurrentFetchingType(null);
+        }
+      });
     }
   };
-
   const handleAttributeValuesChange = (index, selectedValueIDs) => {
     setAAttributes((prev) =>
       prev.map((attr, i) => {
@@ -927,7 +938,7 @@ const AddProductForm = () => {
           [blob],
           modal.originalFile?.name || `global-${Date.now()}.jpg`,
           {
-            type: "image/jpeg",
+            type: FILETYPE,
           }
         );
 
@@ -1088,10 +1099,13 @@ const AddProductForm = () => {
         if (!copy[variantIndex].removedImages)
           copy[variantIndex].removedImages = [];
         copy[variantIndex].removedImages.push(removed);
+      } else {
+    
       }
 
       imgs.splice(imageIndex, 1);
       copy[variantIndex].images = imgs;
+
 
       return copy;
     });
@@ -1188,20 +1202,27 @@ const AddProductForm = () => {
         ? variant.removedImages
         : [];
 
-      // Check if images have been modified (new images, updated existing images, removed images)
+      // Check if images have been modified (new images, updated existing images, removed images, or reordered)
       const hasNewOrUpdatedImages = images.some((img) => img.file);
       const hasRemovedImages = removedImages.length > 0;
-      const hasImageChanges = hasNewOrUpdatedImages || hasRemovedImages;
+      const hasReorderedImages = images.some((img, index) => 
+        img.isExisting && Number(img.sortOrder) !== (index + 1)
+      );
+      
+      // Debug: Log the state to help identify the issue
+      
+      // Send metadata if there are actual changes including reordering
+      const hasImageChanges = hasNewOrUpdatedImages || hasRemovedImages || hasReorderedImages;
 
       // Build documentMetadata only if there are image changes
       // Rules:
       // 1) Delete existing image:
       //    [{ DocumentID: "123" }]
       // 2) Update existing image:
-      //    [{ DocumentID: "123", image: "product-image", sortOrder: 1 }]
-      //    sortOrder = existing image sortOrder
+      //    [{ DocumentID: "123", "image":"product-image", "sortOrder":1}]
+      //    sortOrder = existing image sortOrder (current position after reordering)
       // 3) Upload new image:
-      //    [{ image: "product-image", sortOrder: 2 }]
+      //    [{ "image":"product-image", "sortOrder":1}]
       //    sortOrder = subsequent sortOrder after existing images
       let documentMetadata;
 
@@ -1236,19 +1257,27 @@ const AddProductForm = () => {
 
         // 2) updates & 3) new uploads
         images.forEach((img, index) => {
-          if (!img.file) return; // unchanged existing image
-
           const imageKey = `images_${vIndex}_${index + 1}`;
 
           if (img.isExisting && img.documentId) {
-            // 2) update existing image - keep existing sortOrder
+            // 2) update existing image - ONLY include image key if file exists (actual image update)
             const sortOrder = Number(img.sortOrder) || 0;
-            metadata.push({
-              DocumentID: img.documentId,
-              image: imageKey,
-              sortOrder,
-            });
-          } else {
+            if (img.file) {
+              // Existing image with new file - include image key
+              metadata.push({
+                DocumentID: img.documentId,
+                image: imageKey,
+                sortOrder,
+              });
+            } else if (hasReorderedImages) {
+              // Just reordered - only update sortOrder, no image key
+              metadata.push({
+                DocumentID: img.documentId,
+                sortOrder,
+              });
+            }
+            // If no file and no reordering, don't include anything (unchanged existing image)
+          } else if (img.file) {
             // 3) new image - assign subsequent sortOrder
             nextSortOrder += 1;
             metadata.push({
@@ -1259,6 +1288,7 @@ const AddProductForm = () => {
         });
 
         documentMetadata = metadata;
+        
       } else {
         documentMetadata = undefined; // Don't send documentMetadata if no changes
       }
@@ -1286,6 +1316,8 @@ const AddProductForm = () => {
       // Only include documentMetadata if there are image changes
       if (documentMetadata !== undefined) {
         variantPayload.documentMetadata = documentMetadata;
+      } else {
+        variantPayload.documentMetadata = undefined;
       }
 
       return variantPayload;
@@ -1396,7 +1428,7 @@ const AddProductForm = () => {
           onQueueUpdate={setCropQueue}
           image={[
             cropperModal.image,
-            cropperModal.type === "global"
+            cropperModal.type === TYPE_GLOBAL
               ? cropperModal.groupKey
               : cropperModal.variantIndex,
           ]}
@@ -1569,37 +1601,37 @@ const AddProductForm = () => {
                       )}
                     />
                   </div>
-                  <div className="flex items-end gap-4">
-                    <div className="flex-1">
-                      <TextInputWithIcon
-                        label={t("PRODUCT_CREATION.SPECIFICATION_VALUE")}
-                        id={`SpecificationValue-${index}`}
-                        name={`SpecificationValue-${index}`}
-                        value={spec.Value}
-                        onChange={(e) =>
-                          handleSpecificationChange(
-                            index,
-                            "Value",
-                            e.target.value
-                          )
-                        }
-                        placeholder={t(
-                          "PRODUCT_CREATION.SPECIFICATION_VALUE_PLACEHOLDER"
-                        )}
-                        Icon={Tag}
-                        error={oValidationErrors[`spec_${index}_Value`]}
-                      />
-                    </div>
-                    {aSpecifications.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeSpecificationRow(index)}
-                        className="btn-cancel p-3 mb-1"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
+                  <>
+                  <div className="flex-1">
+                    <TextInputWithIcon
+                      label={t("PRODUCT_CREATION.SPECIFICATION_VALUE")}
+                      id={`SpecificationValue-${index}`}
+                      name={`SpecificationValue-${index}`}
+                      value={spec.Value}
+                      onChange={(e) =>
+                        handleSpecificationChange(
+                          index,
+                          "Value",
+                          e.target.value
+                        )
+                      }
+                      placeholder={t(
+                        "PRODUCT_CREATION.SPECIFICATION_VALUE_PLACEHOLDER"
+                      )}
+                      Icon={Tag}
+                      error={oValidationErrors[`spec_${index}_Value`]}
+                    />
                   </div>
+                  {aSpecifications.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeSpecificationRow(index)}
+                      className="btn-cancel p-3 mb-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </>
                 </div>
               ))}
             </div>
@@ -1681,7 +1713,14 @@ const AddProductForm = () => {
                           )
                         }
                         options={attributeTypes
-                          ?.filter((type) => type.IsActive)
+                          ?.filter((type) => {
+                            // Check if this attribute type is already selected in another row
+                            const isAlreadySelected = aAttributes.some((selectedAttr, selectedIndex) => 
+                              selectedIndex !== index && // Don't check the current attribute being edited
+                              String(selectedAttr.AttributeTypeID) === String(type.AttributeTypeID || type.attributeTypeID)
+                            );
+                                                        return type.IsActive && !isAlreadySelected;
+                          })
                           .map((type) => ({
                             value: type.AttributeTypeID || type.attributeTypeID,
                             label: type.Name || type.name,
@@ -1710,19 +1749,17 @@ const AddProductForm = () => {
                           handleAttributeValuesChange(index, selectedValues);
                         }}
                         options={(() => {
-                          const baseOptions = (attributes || [])
+                                                    // Use cached attributes for the current type, or fall back to global attributes
+                          const currentTypeAttributes = attributesByType[attr.AttributeTypeID] || [];
+                                                    const baseOptions = currentTypeAttributes
                             .filter((attribute) => {
-                              const typeId =
-                                attribute.AttributeTypeID ||
-                                attribute.attributeTypeID ||
-                                attribute.attributeTypeId;
-                              // If API doesn't return AttributeTypeID (new response), allow through because call was already scoped by typeId
-                              return (
-                                attribute.IsActive &&
-                                (!typeId ||
-                                  String(typeId) ===
-                                  String(attr.AttributeTypeID))
+                              // Check if this attribute value is already selected in ANY attribute type
+                              const attributeValueId = attribute.AttributeValueID || attribute.attributeValueID || attribute.attributeValueId;
+                              const isAlreadySelected = aAttributes.some((selectedAttr, selectedIndex) => 
+                                selectedIndex !== index && // Don't check the current attribute being edited
+                                selectedAttr.AttributeValueIDs?.includes(String(attributeValueId))
                               );
+                              return attribute.IsActive && !isAlreadySelected;
                             })
                             .map((attribute) => ({
                               value:
@@ -1734,26 +1771,32 @@ const AddProductForm = () => {
                                 : ""
                                 }`,
                             }));
-
+                          
                           // add fallback options from payload if not present in attributes list
                           const fallback =
                             attributeLabelMapRef.current?.[
                             attr.AttributeTypeID
                             ];
-                          if (!fallback) return baseOptions;
+                                                    if (!fallback) return baseOptions;
                           const merged = [...baseOptions];
                           Object.entries(fallback).forEach(([vid, label]) => {
+                            // Check if this fallback option is already selected in ANY attribute type
+                            const isAlreadySelected = aAttributes.some((selectedAttr, selectedIndex) => 
+                              selectedIndex !== index && // Don't check the current attribute being edited
+                              selectedAttr.AttributeValueIDs?.includes(String(vid))
+                            );
+                            
                             const exists = merged.some(
                               (opt) => String(opt.value) === String(vid)
                             );
-                            if (!exists) {
+                            if (!exists && !isAlreadySelected) {
                               merged.push({
                                 value: vid,
                                 label: String(label),
                               });
                             }
                           });
-                          return merged;
+                                                    return merged;
                         })()}
                         Icon={Layers}
                         error={
@@ -1763,6 +1806,7 @@ const AddProductForm = () => {
                           "PRODUCT_CREATION.ATTRIBUTE_VALUES_PLACEHOLDER"
                         )}
                         multiple
+                        maxVisibleItems={10}
                         disabled={!attr.AttributeTypeID || !!productId}
                       />
 
