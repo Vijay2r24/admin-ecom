@@ -595,7 +595,7 @@ export const PERMISSIONS = {
   VIEW_PAYMENT_DETAILS: "View Payment Details",
   VIEW_ORDER_DETAILS: "View Order Details",
   UPDATE_ORDER_STATUS: "Update Order Status",
-  VIEW_ORDER_HISTORY: "View Order History",
+  VIEW_ORDER_HISTORY: "View Order Item Status",
   GENERATE_ORDER_REPORT: "Generate Order Report",
   GENERATE_STORE_REPORT: "Generate Store Report",
   GENERATE_PRODUCT_REPORT: "Generate Product Report",

@@ -315,7 +315,7 @@ const OrderView = () => {
   useEffect(() => {
     // Check if user has permission to view order details
     if (!hasViewPermission) {
-      setError("You don't have permission to view order details");
+      setError(t("TOOLTIP_MESSAGES.NO_PERMISSION"));
       setLoading(false);
       return;
     }

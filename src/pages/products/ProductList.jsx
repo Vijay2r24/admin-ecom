@@ -217,6 +217,25 @@ const ProductList = () => {
     }
   }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
 
+  // Handle initial loading state
+  useEffect(() => {
+    // Show loader initially
+    setInitialLoading(true);
+    
+    // Hide initial loader after minimum time to ensure it's visible
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 800); // Minimum 800ms to show loader
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Update initial loading when actual loading completes
+  useEffect(() => {
+    if (!bLoading && initialLoading) {
+      setInitialLoading(false);
+    }
+  }, [bLoading, initialLoading]);
 
   useEffect(() => {
     fetchProducts();
@@ -470,7 +489,50 @@ const ProductList = () => {
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />
 
-      {sError ? (
+      {bLoading || initialLoading ? (
+        <div className="table-container-floating">
+          <div
+            className="table-wrapper-floating"
+            onScroll={handleTableScroll}
+          >
+            <table className="table-base">
+              {/* Floating Header */}
+              <thead
+                className={`table-head-floating ${
+                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                }`}
+              >
+                <tr>
+                  <th className="table-head-cell-floating text-left">
+                    {t("PRODUCTS.TITLE")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("COMMON.CATEGORY")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("PRODUCTS.BRAND")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("COMMON.ACTIONS")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="table-body">
+                <tr>
+                  <td colSpan={5} className="py-8 text-center">
+                    <div className="flex justify-center">
+                      <Loader size="small" />
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : sError ? (
         <div className="text-center py-8 text-red-500">{sError}</div>
       ) : sViewMode === "table" ? (
         <div className="table-container-floating">

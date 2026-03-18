@@ -157,9 +157,6 @@
     "view_logs": "View logs",
     "no_logs": "No logs",
     "TOOLBAR_TITLE": "Selected {count} files",
-    "UPLOAD": "Import",
-    "DOWNLOAD": "Download Sample File",
-    "DOWNLOADING": "Downloading...",
     "SEARCH_PLACEHOLDER": "Search files...",
     "EXPORT_SUCCESS": "Files exported successfully",
     "EXPORT_ERROR": "Failed to export files",
@@ -624,6 +621,7 @@
     "PAYMENT_TYPE": "Payment Type",
     "ORDER_ITEM_HISTORY": "Order Item History",
     "ORDER_DATE_TIME": "Order Date & time",
+    "NO_HISTORY_AVAILABLE": "No history available",
     "TABLE": {
       "STATUS": "status",
       "TOTAL": "Total"
@@ -1283,6 +1281,7 @@
     "DESELECT_ALL": "Deselect All",
     "SELECT_ALL": "Select All",
     "VIEW_ALL": "View all",
+    "CLEAR_HISTORY": "Clear History",
     "API_ERROR": "API Error occurred",
     "SUBMITTING": "Submitting...",
     "CREATE": "Create",

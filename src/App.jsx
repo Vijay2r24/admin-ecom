@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { TitleProvider } from "./context/TitleContext";
 import { AllDataProvider } from "./context/AllDataContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import LocationDataProvider from "./context/LocationDataProvider";
 import ProtectedRoute from './components/ProtectedRoute';
 import NotAuthorized from './pages/NotAuthorized';
@@ -117,6 +118,7 @@ const PublicRoute = ({ children }) => {
 };
 const App = () => {
   const location = useLocation();
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -168,10 +170,11 @@ const App = () => {
     <Provider store={store}>
       <AllDataProvider>
         <TitleProvider>
-          <LocationDataProvider>
-            {/* Removed Suspense wrapper since we're not using lazy loading anymore */}
-            <ScrollToTop />
-            <Routes>
+          <NotificationProvider>
+            <LocationDataProvider>
+              {/* Removed Suspense wrapper since we're not using lazy loading anymore */}
+              <ScrollToTop />
+              <Routes>
               <Route path="/" element={<Login />} />
 
               {/* Dashboard */}
@@ -484,9 +487,10 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </LocationDataProvider>
-        </TitleProvider>
-      </AllDataProvider>
-      <ToastContainer
+        </NotificationProvider>
+      </TitleProvider>
+    </AllDataProvider>
+    <ToastContainer
         position="top-right"
         autoClose={1400}
         hideProgressBar={false}

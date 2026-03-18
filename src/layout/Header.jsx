@@ -1,20 +1,21 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Bell, Menu, Dot } from "lucide-react";
+import { Bell, Menu, Dot, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
 import { useTitle } from "../context/TitleContext";
+import { useNotifications } from "../context/NotificationContext";
 import { fetchUserDetails, clearUserDetails } from "../store/slices/allDataSlice";
 import { logout } from "../store/slices/authSlice";
 import IdleLogout from "../components/IdleLogout";
 import user from "../../assets/images/user.jpg";
-import { MOCK_NOTIFICATIONS } from "../contants/constants";
 
 
 
 const Header = ({ onMenuClick }) => {
   const { t } = useTranslation();
   const { title, backButton } = useTitle();
+  const { notifications, unreadCount, removeNotification, clearNotifications, hasUnreadNotifications, markAsRead } = useNotifications();
   const dispatch = useDispatch();
   const { userDetails } = useSelector((state) => state.allData);
   const { isLoggedIn } = useSelector((state) => state.auth);
@@ -148,11 +149,20 @@ const Header = ({ onMenuClick }) => {
           <button
             ref={bellRef}
             className="relative p-1.5 text-gray-500 hover:text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
-            onClick={() => setShowNotifications((v) => !v)}
+            onClick={() => {
+              setShowNotifications((v) => !v);
+              if (!bShowNotifications) {
+                markAsRead(); // Mark as read when opening dropdown
+              }
+            }}
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4" />
-            <span className="absolute top-0.5 right-0.5 h-1.5 w-1.5 bg-red-500 rounded-full" />
+            {hasUnreadNotifications && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
 
           {/* Notification Dropdown */}
@@ -167,36 +177,58 @@ const Header = ({ onMenuClick }) => {
                 {t("HEADER.NOTIFICATIONS")}
               </div>
               <ul className="max-h-64 overflow-y-auto divide-y divide-gray-100">
-                {MOCK_NOTIFICATIONS.length === 0 ? (
+                {notifications.length === 0 ? (
                   <li className="p-3 text-gray-500 text-xs">
                     {t("HEADER.NO_NOTIFICATIONS")}
                   </li>
                 ) : (
-                  MOCK_NOTIFICATIONS.map((n) => (
+                  notifications.map((notification) => (
                     <li
-                      key={n.id}
-                      className="flex items-start gap-2.5 p-2.5 hover:bg-blue-50/60 transition-colors cursor-pointer"
+                      key={notification.id}
+                      className="flex items-start gap-2.5 p-2.5 hover:bg-blue-50/60 transition-colors cursor-pointer relative group"
                     >
-                      <Dot className="h-4 w-4 text-blue-400 mt-0.5" />
+                      <Dot className={`h-4 w-4 mt-0.5 ${
+                        notification.type === 'success' ? 'text-green-400' :
+                        notification.type === 'error' ? 'text-red-400' :
+                        notification.type === 'warning' ? 'text-yellow-400' :
+                        'text-blue-400'
+                      }`} />
                       <div className="flex-1">
                         <div className="text-xs font-semibold text-gray-900">
-                          {n.title}
+                          {notification.title}
                         </div>
                         <div className="text-xs text-gray-400 mt-0.5">
-                          {n.time}
+                          {notification.time}
                         </div>
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeNotification(notification.id);
+                        }}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-gray-200 rounded"
+                      >
+                        <X className="h-3 w-3 text-gray-400" />
+                      </button>
                     </li>
                   ))
                 )}
               </ul>
-              <div className="p-2 text-center border-t border-gray-200 bg-gray-50 rounded-b-md">
+              <div className="p-2 text-center border-t border-gray-200 bg-gray-50 rounded-b-md flex justify-between items-center">
                 <a
                   href="/notifications"
                   className="text-blue-600 text-xs font-semibold hover:underline"
                 >
                   {t("COMMON.VIEW_ALL")}
                 </a>
+                {notifications.length > 0 && (
+                  <button
+                    onClick={clearNotifications}
+                    className="text-red-600 text-xs font-semibold hover:underline"
+                  >
+                    {t("COMMON.CLEAR_HISTORY")}
+                  </button>
+                )}
               </div>
             </div>
           )}

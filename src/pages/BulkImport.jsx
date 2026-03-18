@@ -341,7 +341,21 @@ const BulkImport = () => {
             </thead>
             
             <tbody className="table-body">
-              {productImportList.length === 0 ? (
+              {listLoading ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center">
+                    <div className="flex justify-center">
+                      <Loader size="small" />
+                    </div>
+                  </td>
+                </tr>
+              ) : listError ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-red-500">
+                    {listError}
+                  </td>
+                </tr>
+              ) : productImportList.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-gray-500">
                     <FileSpreadsheet className="mx-auto h-12 w-12 text-gray-300 mb-3" />

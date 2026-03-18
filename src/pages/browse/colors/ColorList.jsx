@@ -8,6 +8,7 @@ import Toolbar from "../../../components/Toolbar";
 import { useTranslation } from "react-i18next";
 import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
+import Loader from "../../../components/Loader";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -151,8 +152,35 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
       </div>
 
       {bLoading ? (
-        <div className="text-center py-8 text-gray-500">
-          {t("COMMON.LOADING")}
+        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+          <div className="table-scroll-container overflow-x-auto overflow-y-auto">
+            <table className="table-base w-full">
+              {/* Floating Header */}
+              <thead
+                className={`table-head-floating sticky top-0 z-10 ${
+                  tableScrollTop > 10 ? "shadow-sm" : ""
+                }`}
+              >
+                <tr>
+                  <th className="table-head-cell-floating text-left px-6 py-4">
+                    {t("PRODUCT_SETUP.COLORS.TABLE.COLOR")}
+                  </th>
+                  <th className="table-head-cell-floating text-center px-6 py-4">
+                    {t("PRODUCT_SETUP.COLORS.TABLE.HEX_CODE")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="table-body">
+                <tr>
+                  <td colSpan={2} className="py-8 text-center">
+                    <div className="flex justify-center">
+                      <Loader size="small" />
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : sError ? (
         <FullscreenErrorPopup

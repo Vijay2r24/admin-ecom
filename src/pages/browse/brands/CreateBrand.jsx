@@ -716,13 +716,6 @@ const CreateBrand = () => {
                             >
                               <X className="h-3 w-3" />
                             </button>
-                            {oFieldValid.BrandLogo && (
-                              <div className="absolute -top-2 -left-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg z-10">
-                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              </div>
-                            )}
                           </div>
                           <p className="text-xs text-gray-500 mt-2">
                             {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}
