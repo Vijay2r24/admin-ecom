@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { TitleProvider } from "./context/TitleContext";
 import { AllDataProvider } from "./context/AllDataContext";
-import { NotificationProvider } from "./context/NotificationContext";
 import LocationDataProvider from "./context/LocationDataProvider";
 import ProtectedRoute from './components/ProtectedRoute';
 import NotAuthorized from './pages/NotAuthorized';
@@ -170,22 +169,21 @@ const App = () => {
     <Provider store={store}>
       <AllDataProvider>
         <TitleProvider>
-          <NotificationProvider>
-            <LocationDataProvider>
-              {/* Removed Suspense wrapper since we're not using lazy loading anymore */}
-              <ScrollToTop />
-              <Routes>
-              <Route path="/" element={<Login />} />
+          <LocationDataProvider>
+            {/* Removed Suspense wrapper since we're not using lazy loading anymore */}
+            <ScrollToTop />
+            <Routes>
+            <Route path="/" element={<Login />} />
 
-              {/* Dashboard */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute permissionCode={dashboardPermission}>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Dashboard */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute permissionCode={dashboardPermission}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
               {/* Browse/Product Setup */}
               <Route
@@ -487,9 +485,8 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </LocationDataProvider>
-        </NotificationProvider>
-      </TitleProvider>
-    </AllDataProvider>
+        </TitleProvider>
+      </AllDataProvider>
     <ToastContainer
         position="top-right"
         autoClose={1400}

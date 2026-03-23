@@ -255,6 +255,10 @@ code {
     @apply bg-white rounded-xl shadow-sm border border-gray-100 relative;
   }
 
+  .grid-container-floating {
+    @apply rounded-xl shadow-sm border border-gray-100 relative;
+  }
+
   .table-wrapper-floating,
 .table-scroll-container {
     @apply overflow-x-auto overflow-y-auto relative !important;

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
 import { useTitle } from "../context/TitleContext";
-import { useNotifications } from "../context/NotificationContext";
+import { useNotifications } from "../hooks/useNotifications";
 import { fetchUserDetails, clearUserDetails } from "../store/slices/allDataSlice";
 import { logout } from "../store/slices/authSlice";
 import IdleLogout from "../components/IdleLogout";
@@ -15,10 +15,19 @@ import user from "../../assets/images/user.jpg";
 const Header = ({ onMenuClick }) => {
   const { t } = useTranslation();
   const { title, backButton } = useTitle();
-  const { notifications, unreadCount, removeNotification, clearNotifications, hasUnreadNotifications, markAsRead } = useNotifications();
+  const { notifications, unreadCount, removeNotification, clearNotifications, hasUnreadNotifications, markAsRead, initializeNotifications } = useNotifications();
   const dispatch = useDispatch();
   const { userDetails } = useSelector((state) => state.allData);
   const { isLoggedIn } = useSelector((state) => state.auth);
+
+  // Initialize notifications on mount - only run once
+  const [isInitialized, setIsInitialized] = useState(false);
+  useEffect(() => {
+    if (!isInitialized) {
+      initializeNotifications();
+      setIsInitialized(true);
+    }
+  }, [isInitialized, initializeNotifications]);
 
   const [bShowNotifications, setShowNotifications] = useState(false);
   const bellRef = useRef();
