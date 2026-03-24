@@ -19,12 +19,12 @@ const SubscriptionPlan = () => {
     
     // Get user email and tenant details from localStorage
     try {
-      const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
-      const email = userDetails.Email || userDetails.email || "";
+      const userDetails = JSON.parse(localStorage.getItem("userDetails") );
+      const email = userDetails.Email || userDetails.email ;
       setUserEmail(email);
       console.log("User email:", email); // Debug log
     } catch (error) {
-      console.error("Error parsing userDetails:", error);
+      
     }
 
     return () => setTitle("");
@@ -155,29 +155,7 @@ const SubscriptionPlan = () => {
     <div className="bg-gray-50 py-18 px-4">
       <div className="max-w-7xl mx-auto">
         
-        {/* Tenant Details Card */}
-        {/* <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200 -mt-2">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {tenantDetails.name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800">{tenantDetails.name}</h2>
-                <p className="text-sm text-gray-600">{tenantDetails.email}</p>
-                <p className="text-xs text-gray-500 mt-1">Tenant ID: {tenantDetails.tenantID}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                {currentUserPlan ? `${currentUserPlan} Plan` : "No Active Plan"}
-              </div>
-            </div>
-          </div>
-        </div> */}
+     
 
         {/* Subscription Info Banner */}
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-8">

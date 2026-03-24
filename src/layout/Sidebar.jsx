@@ -18,9 +18,8 @@ import {
   Palette,
   Sliders,
   BadgeCheck,
-  Cog,// Add CreditCard icon for Payments
   Cog,
-  Upload,// Add CreditCard icon for Payments
+  Upload,
 } from 'lucide-react';
 import { getPermissionCode } from '../utils/permissionUtils';
  
