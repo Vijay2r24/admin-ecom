@@ -15,19 +15,10 @@ import user from "../../assets/images/user.jpg";
 const Header = ({ onMenuClick }) => {
   const { t } = useTranslation();
   const { title, backButton } = useTitle();
-  const { notifications, unreadCount, removeNotification, clearNotifications, hasUnreadNotifications, markAsRead, initializeNotifications } = useNotifications();
+  const { notifications, unreadCount, removeNotification, clearNotifications, hasUnreadNotifications, markAsRead } = useNotifications();
   const dispatch = useDispatch();
   const { userDetails } = useSelector((state) => state.allData);
   const { isLoggedIn } = useSelector((state) => state.auth);
-
-  // Initialize notifications on mount - only run once
-  const [isInitialized, setIsInitialized] = useState(false);
-  useEffect(() => {
-    if (!isInitialized) {
-      initializeNotifications();
-      setIsInitialized(true);
-    }
-  }, [isInitialized, initializeNotifications]);
 
   const [bShowNotifications, setShowNotifications] = useState(false);
   const bellRef = useRef();

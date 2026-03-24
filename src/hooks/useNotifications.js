@@ -52,17 +52,6 @@ export const useNotifications = () => {
   const hasUnreadNotifications = useSelector(state => state.notifications.hasUnreadNotifications);
   const unreadCount = useSelector(state => state.notifications.unreadCount);
 
-  // Initialize notifications from localStorage - only run once
-  const initializeNotificationsOnce = () => {
-    const storedNotifications = getStoredNotifications();
-    // Update time formats for stored notifications
-    const updatedNotifications = storedNotifications.map(notif => ({
-      ...notif,
-      time: formatTimeAgo(notif.timestamp)
-    }));
-    dispatch(initializeNotifications(updatedNotifications));
-  };
-
   // Add notification to Redux and localStorage
   const addNotificationToStore = (message, type = 'info') => {
     dispatch(addNotification({ message, type }));
@@ -100,7 +89,6 @@ export const useNotifications = () => {
     clearNotifications: clearAllNotifications,
     hasUnreadNotifications,
     unreadCount,
-    initializeNotifications: initializeNotificationsOnce,
     updateNotificationTimes
   };
 };
