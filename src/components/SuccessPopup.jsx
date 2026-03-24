@@ -32,7 +32,7 @@ const SuccessPopup = ({ message, onClose, title, autoClose = false, duration = 3
           </p>
           {adminEmail && (
             <div className="bg-custom-bg/10 border border-custom-bg/30 rounded-lg p-3 mb-4">
-              <p className="text-sm text-gray-700 mb-1 font-medium">Contact Admin:</p>
+              <p className="text-sm text-gray-700 mb-1 font-medium">{t('COMMON.CONTACT_ADMIN')}</p>
               <a 
                 href={`mailto:${adminEmail}`}
                 className="text-custom-bg hover:text-custom-bg font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
@@ -50,7 +50,7 @@ const SuccessPopup = ({ message, onClose, title, autoClose = false, duration = 3
               className="px-8 py-2.5 bg-custom-bg text-white rounded-full hover:bg-bg-hover transition-all shadow-md hover:shadow-lg font-medium"
               onClick={onClose}
             >
-              {t('COMMON.OK') || 'OK'}
+              {t('COMMON.OK') }
             </button>
           </div>
         </div>

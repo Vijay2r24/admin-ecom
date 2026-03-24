@@ -146,62 +146,6 @@ export const PASSWORD_ARIA = {
   SHOW: "Show password",
   HIDE: "Hide password",
 };
-export const monthlyPlans = [
-    {
-      name: "Basic",
-      price: "10,000",
-      period: "per monthly",
-      color: "blue",
-      features: [
-        { text: "Max Product Creation (100)", enabled: true },
-        { text: "Max Role Creation (20)", enabled: true },
-        { text: "Show Dashboard Total Orders", enabled: true },
-        { text: "Show Dashboard Total Customers", enabled: true },
-        { text: "Show Dashboard Recent Orders", enabled: false },
-        { text: "Show Dashboard Top Products", enabled: false },
-        { text: "Max Store Creation (26)", enabled: true },
-        { text: "Show Dashboard Total Revenue", enabled: false },
-        { text: "Report Generation Access", enabled: false },
-      ],
-    },
-    {
-      name: "Premium",
-      price: "15,000",
-      period: "per monthly",
-      color: "purple",
-      features: [
-        { text: "Max Product Creation (500)", enabled: true },
-        { text: "Max Store Creation (200)", enabled: true },
-        { text: "Max Role Creation (50)", enabled: true },
-        { text: "Show Dashboard Total Revenue", enabled: true },
-        { text: "Show Dashboard Total Orders", enabled: true },
-        { text: "Show Dashboard Total Customers", enabled: true },
-        { text: "Show Dashboard Recent Orders", enabled: true },
-        { text: "Show Dashboard Top Products", enabled: false },
-        { text: "Report Generation Access", enabled: false },
-      ],
-    },
-  ];
-
-   export const yearlyPlans = [
-    {
-      name: "Pro",
-      price: "30,000",
-      period: "per yearly",
-      color: "yellow",
-      features: [
-        { text: "Max Product Creation (1000)", enabled: true },
-        { text: "Max Store Creation (500)", enabled: true },
-        { text: "Max Role Creation (100)", enabled: true },
-        { text: "Show Dashboard Total Revenue", enabled: true },
-        { text: "Show Dashboard Total Orders", enabled: true },
-        { text: "Show Dashboard Total Customers", enabled: true },
-        { text: "Show Dashboard Recent Orders", enabled: true },
-        { text: "Show Dashboard Top Products", enabled: true },
-        { text: "Report Generation Access", enabled: true },
-      ],
-    },
-  ];
 
   
 
@@ -1148,3 +1092,9 @@ export const getPermissionTooltip = (permission, isEditingAdmin, isAdminRole, mo
     return t("CREATE_USER_ROLE.TOOLTIPS.PERMISSION_ENABLED");
   }
 };
+
+export const PLAN_EMAIL_MAP = [
+  { email: "b2yinfy@gmail.com", plan: "Basic" },
+  { email: "vinayvinuus132@gmail.com", plan: "Premium" },
+  { email: "astratechadmin@gmail.com", plan: "Pro" },
+];
