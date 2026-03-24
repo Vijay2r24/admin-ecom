@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTitle } from "../context/TitleContext";
 import { useTranslation } from "react-i18next";
 import SuccessPopup from "../components/SuccessPopup";
+import { monthlyPlans,yearlyPlans } from "../contants/constants";
 
 const SubscriptionPlan = () => {
   const [billingCycle, setBillingCycle] = useState("monthly");
@@ -34,12 +35,12 @@ const SubscriptionPlan = () => {
   // Get tenant details from localStorage
   const getTenantDetails = () => {
     try {
-      const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
-      const tenantID = localStorage.getItem("tenantID") || "N/A";
+      const userDetails = JSON.parse(localStorage.getItem("userDetails") );
+      const tenantID = localStorage.getItem("tenantID") ;
       return {
-        email: userDetails.Email || userDetails.email || "N/A",
+        email: userDetails.Email || userDetails.email ,
         tenantID: tenantID,
-        name: userDetails.Name || userDetails.name || "User"
+        name: userDetails.Name || userDetails.name || "User",
       };
     } catch (error) {
       return { email: "N/A", tenantID: "N/A", name: "User" };
@@ -63,74 +64,10 @@ const SubscriptionPlan = () => {
 
   const currentUserPlan = getUserPlan();
 
-  const monthlyPlans = [
-    {
-      name: "Basic",
-      price: "10,000",
-      period: "per monthly",
-      color: "blue",
-      features: [
-        { text: "Max Product Creation (100)", enabled: true },
-        { text: "Max Role Creation (20)", enabled: true },
-        { text: "Show Dashboard Total Orders", enabled: true },
-        { text: "Show Dashboard Total Customers", enabled: true },
-        { text: "Show Dashboard Recent Orders", enabled: false },
-        { text: "Show Dashboard Top Products", enabled: false },
-        { text: "Max Store Creation (26)", enabled: true },
-        { text: "Show Dashboard Total Revenue", enabled: false },
-        { text: "Report Generation Access", enabled: false },
-      ],
-    },
-    {
-      name: "Premium",
-      price: "15,000",
-      period: "per monthly",
-      color: "purple",
-      features: [
-        { text: "Max Product Creation (500)", enabled: true },
-        { text: "Max Store Creation (200)", enabled: true },
-        { text: "Max Role Creation (50)", enabled: true },
-        { text: "Show Dashboard Total Revenue", enabled: true },
-        { text: "Show Dashboard Total Orders", enabled: true },
-        { text: "Show Dashboard Total Customers", enabled: true },
-        { text: "Show Dashboard Recent Orders", enabled: true },
-        { text: "Show Dashboard Top Products", enabled: false },
-        { text: "Report Generation Access", enabled: false },
-      ],
-    },
-  ];
-
-  const yearlyPlans = [
-    {
-      name: "Pro",
-      price: "30,000",
-      period: "per yearly",
-      color: "yellow",
-      features: [
-        { text: "Max Product Creation (1000)", enabled: true },
-        { text: "Max Store Creation (500)", enabled: true },
-        { text: "Max Role Creation (100)", enabled: true },
-        { text: "Show Dashboard Total Revenue", enabled: true },
-        { text: "Show Dashboard Total Orders", enabled: true },
-        { text: "Show Dashboard Total Customers", enabled: true },
-        { text: "Show Dashboard Recent Orders", enabled: true },
-        { text: "Show Dashboard Top Products", enabled: true },
-        { text: "Report Generation Access", enabled: true },
-      ],
-    },
-  ];
-
   const currentPlans = billingCycle === "monthly" ? monthlyPlans : yearlyPlans;
   const availablePlans = currentPlans;
 
-  const getCardStyle = (color) => {
-    const styles = {
-      blue: "bg-blue-50 border-blue-200",
-      purple: "bg-purple-50 border-purple-200",
-      yellow: "bg-yellow-50 border-yellow-200",
-    };
-    return styles[color] || styles.blue;
-  };
+
 
   const getBadgeStyle = (color) => {
     const styles = {
@@ -164,9 +101,9 @@ const SubscriptionPlan = () => {
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
             <div>
-              <h3 className="text-sm font-semibold text-gray-800 mb-1">Choose the Perfect Plan for Your Business</h3>
+              <h3 className="text-sm font-semibold text-gray-800 mb-1">{t("SUBSCRIPTIONPLANS.CHOOSE_PLAN_TITLE")}</h3>
               <p className="text-sm text-gray-600">
-                Select a subscription plan that fits your needs. Upgrade anytime to unlock more features and grow your business without limits.
+                {t("SUBSCRIPTIONPLANS.CHOOSE_PLAN_DESC")}
               </p>
             </div>
           </div>
@@ -182,7 +119,7 @@ const SubscriptionPlan = () => {
                 : "text-gray-600 hover:text-gray-900"
                 }`}
             >
-              Monthly
+              {t("SUBSCRIPTIONPLANS.BILLING_MONTHLY")}
             </button>
             <button
               onClick={() => setBillingCycle("yearly")}
@@ -191,7 +128,7 @@ const SubscriptionPlan = () => {
                 : "text-gray-600 hover:text-gray-900"
                 }`}
             >
-              Yearly
+              {t("SUBSCRIPTIONPLANS.BILLING_YEARLY")}
             </button>
           </div>
         </div>
@@ -211,7 +148,7 @@ const SubscriptionPlan = () => {
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Active
+                {t("SUBSCRIPTIONPLANS.ACTIVE")}
                 </div>
               )}
 
@@ -228,7 +165,7 @@ const SubscriptionPlan = () => {
               {/* Price */}
               <div className="text-center mb-2">
                 <span className="text-3xl font-bold text-gray-900">
-                  INR {plan.price}
+                  {t("SUBSCRIPTIONPLANS.CURRENCY")} {plan.price}
                 </span>
               </div>
               <p className="text-center text-sm text-gray-600 mb-4">{plan.period}</p>
@@ -236,7 +173,7 @@ const SubscriptionPlan = () => {
               {/* Free Trial Badge */}
               <div className="flex justify-center mb-6">
                 <span className={`text-xs font-medium px-3 py-1 rounded-full ${getBadgeStyle(plan.color)}`}>
-                  7 days free trial
+                  {t("SUBSCRIPTIONPLANS.FREE_TRIAL")}
                 </span>
               </div>
 
@@ -288,7 +225,7 @@ const SubscriptionPlan = () => {
                 disabled={currentUserPlan === plan.name}
                 onClick={() => handleUpgradePlan(plan.name, plan.price, plan.period)}
               >
-                {currentUserPlan === plan.name ? "Your Current Plan" : "Upgrade Plan"}
+                {currentUserPlan === plan.name ? t("SUBSCRIPTIONPLANS.CURRENT_PLAN") : t("SUBSCRIPTIONPLANS.UPGRADE_PLAN")}
               </button>
             </div>
           ))}
@@ -314,8 +251,8 @@ const SubscriptionPlan = () => {
       {/* Success Popup */}
       {showSuccessPopup && (
         <SuccessPopup
-          title="Plan Upgrade Request"
-          message={`To upgrade your plan to ${upgradedPlan}, please contact the administrator for assistance.`}
+          title={t("SUBSCRIPTIONPLANS.UPGRADE_REQUEST_TITLE")}
+          message={t("SUBSCRIPTIONPLANS.UPGRADE_REQUEST_MSG", { plan: upgradedPlan })}
           onClose={handleClosePopup}
           autoClose={false}
           adminEmail="b2y@gmail.com"
