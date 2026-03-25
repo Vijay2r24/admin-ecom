@@ -7,6 +7,7 @@ import { useTitle } from "../context/TitleContext";
 import { useNotifications } from "../hooks/useNotifications";
 import { fetchUserDetails, clearUserDetails } from "../store/slices/allDataSlice";
 import { logout } from "../store/slices/authSlice";
+import { NOTIFICATION_TYPES } from "../contants/constants";
 import IdleLogout from "../components/IdleLogout";
 import user from "../../assets/images/user.jpg";
 
@@ -188,9 +189,9 @@ const Header = ({ onMenuClick }) => {
                       className="flex items-start gap-2.5 p-2.5 hover:bg-blue-50/60 transition-colors cursor-pointer relative group"
                     >
                       <Dot className={`h-4 w-4 mt-0.5 ${
-                        notification.type === 'success' ? 'text-green-400' :
-                        notification.type === 'error' ? 'text-red-400' :
-                        notification.type === 'warning' ? 'text-yellow-400' :
+                        notification.type === NOTIFICATION_TYPES.SUCCESS ? 'text-green-400' :
+                        notification.type === NOTIFICATION_TYPES.ERROR ? 'text-red-400' :
+                        notification.type === NOTIFICATION_TYPES.WARNING ? 'text-yellow-400' :
                         'text-blue-400'
                       }`} />
                       <div className="flex-1">

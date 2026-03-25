@@ -18,6 +18,8 @@ import {
   STATUS,
   STATUS_OPTIONS,
 } from "../../contants/constants.jsx";
+import { MODULES, PERMISSIONS } from "../../contants/constants";
+import { PRODUCT_STATUS, PRODUCT_STATUS_LABELS } from "../../contants/constants";
 import {
   fetchResource,
   updateStatusById,
@@ -681,7 +683,7 @@ const ProductList = () => {
                           product.status
                         )}`}
                       >
-                        {product.status === "active" ? "Active" : "Out of Stock"}
+                        {product.status === PRODUCT_STATUS.ACTIVE ? PRODUCT_STATUS_LABELS.ACTIVE : PRODUCT_STATUS_LABELS.OUT_OF_STOCK}
                       </span>
 
                       {/* Status Switch */}
