@@ -8,6 +8,7 @@ import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Switch from "../../../components/Switch";
 import Tooltip from "../../../components/Tooltip";
+import Loader from "../../../components/Loader";
 import { UPDATE_ATTRIBUTE_TYPE_STATUS } from "../../../contants/apiRoutes";
 import {
   ITEMS_PER_PAGE,
@@ -236,19 +237,51 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
           handleFilterChange={bShowFilter ? handleFilterChange : undefined}
         />
       </div>
-      {bLoading && (
-        <div className="text-center py-8 text-gray-500">
-          {t("COMMON.LOADING")}
+      {bLoading ? (
+        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+          <div className="table-scroll-container overflow-x-auto overflow-y-auto">
+            <table className="table-base w-full">
+              {/* Floating Header */}
+              <thead
+                className={`table-head-floating sticky top-0 z-10 ${
+                  tableScrollTop > 10 ? "shadow-sm" : ""
+                }`}
+              >
+                <tr>
+                  <th className="table-head-cell-floating text-left px-6 py-4">
+                    {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.NAME")}
+                  </th>
+                  <th className="table-head-cell-floating text-center px-6 py-4">
+                    {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.DESCRIPTION_LABEL")}
+                  </th>
+                  <th className="table-head-cell-floating text-center px-6 py-4">
+                    {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.ATTRIBUTES")}
+                  </th>
+                  <th className="table-head-cell-floating text-center px-6 py-4">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell-floating text-center px-6 py-4">
+                    {t("COMMON.UPDATE_STATUS")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="table-body">
+                <tr>
+                  <td colSpan={5} className="py-8 text-center">
+                    <div className="flex justify-center">
+                      <Loader size="small" />
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      )}
-
-      {sError && !bLoading && (
+      ) : sError ? (
         <div className="text-center py-8 text-red-500">
           {t("COMMON.ERROR")}: {sError}
         </div>
-      )}
-
-      {!bLoading && !sError && (
+      ) : (
         <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
           <div
             className="table-scroll-container overflow-x-auto overflow-y-auto"

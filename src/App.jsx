@@ -117,6 +117,7 @@ const PublicRoute = ({ children }) => {
 };
 const App = () => {
   const location = useLocation();
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -172,17 +173,17 @@ const App = () => {
             {/* Removed Suspense wrapper since we're not using lazy loading anymore */}
             <ScrollToTop />
             <Routes>
-              <Route path="/" element={<Login />} />
+            <Route path="/" element={<Login />} />
 
-              {/* Dashboard */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute permissionCode={dashboardPermission}>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Dashboard */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute permissionCode={dashboardPermission}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
               {/* Browse/Product Setup */}
               <Route
@@ -486,7 +487,7 @@ const App = () => {
           </LocationDataProvider>
         </TitleProvider>
       </AllDataProvider>
-      <ToastContainer
+    <ToastContainer
         position="top-right"
         autoClose={1400}
         hideProgressBar={false}

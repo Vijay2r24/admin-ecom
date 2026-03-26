@@ -470,7 +470,7 @@ const Users = () => {
                     <th className="table-head-cell-floating text-center">
                       {t("COMMON.STATUS")}
                     </th>
-                    <th className="table-head-cell-floating hidden sm:table-cell text-right">
+                    <th className="table-head-cell-floating hidden sm:table-cell text-center">
                       {t("COMMON.ACTIONS")}
                     </th>
                   </tr>
@@ -513,7 +513,7 @@ const Users = () => {
                     <th className="table-head-cell-floating text-center">
                       {t("COMMON.STATUS")}
                     </th>
-                    <th className="table-head-cell-floating hidden sm:table-cell text-right">
+                    <th className="table-head-cell-floating hidden sm:table-cell text-center">
                       {t("COMMON.ACTIONS")}
                     </th>
                   </tr>
@@ -611,7 +611,7 @@ const Users = () => {
                     </td>
 
                     {/* Actions */}
-                    <td className="table-cell text-right">
+                    <td className="table-cell text-center">
                       <ActionButtons
                         id={user.UserID}
                         viewLink={`/editUser/${user.UserID}`}

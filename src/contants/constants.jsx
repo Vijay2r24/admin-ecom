@@ -12,6 +12,33 @@ export const STATUS = {
   CANCELLED: "cancelled",
 };
 
+export const NOTIFICATION_TYPES = {
+  SUCCESS: "success",
+  ERROR: "error", 
+  WARNING: "warning",
+  INFO: "info"
+};
+
+export const NOTIFICATION_MESSAGES = {
+  LOGOUT_SUCCESS: "Logged out successfully",
+  LOGIN_SUCCESS: "Logged in successfully",
+  PROFILE_UPDATED: "Profile updated successfully",
+  SETTINGS_SAVED: "Settings saved successfully",
+  OPERATION_SUCCESS: "Operation completed successfully"
+};
+
+export const PRODUCT_STATUS = {
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+  OUT_OF_STOCK: "out_of_stock"
+};
+
+export const PRODUCT_STATUS_LABELS = {
+  ACTIVE: "Active",
+  INACTIVE: "Inactive", 
+  OUT_OF_STOCK: "Out of Stock"
+};
+
 export const DEFAULT_COLOR = "#000000";
 
 export const COLORS = {
@@ -595,7 +622,7 @@ export const PERMISSIONS = {
   VIEW_PAYMENT_DETAILS: "View Payment Details",
   VIEW_ORDER_DETAILS: "View Order Details",
   UPDATE_ORDER_STATUS: "Update Order Status",
-  VIEW_ORDER_HISTORY: "View Order History",
+  VIEW_ORDER_HISTORY: "View Order Item Status",
   GENERATE_ORDER_REPORT: "Generate Order Report",
   GENERATE_STORE_REPORT: "Generate Store Report",
   GENERATE_PRODUCT_REPORT: "Generate Product Report",
@@ -830,6 +857,7 @@ export const DIRECTIONS = {
 export const DATA_TYPES = {
   OBJECT: "object",
   STRING: "string",
+  NUMBER:"number",
 };
 
 export const COUNTRY_CODES = {

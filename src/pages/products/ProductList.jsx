@@ -18,6 +18,8 @@ import {
   STATUS,
   STATUS_OPTIONS,
 } from "../../contants/constants.jsx";
+import { MODULES, PERMISSIONS } from "../../contants/constants";
+import { PRODUCT_STATUS, PRODUCT_STATUS_LABELS } from "../../contants/constants";
 import {
   fetchResource,
   updateStatusById,
@@ -217,6 +219,25 @@ const ProductList = () => {
     }
   }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
 
+  // Handle initial loading state
+  useEffect(() => {
+    // Show loader initially
+    setInitialLoading(true);
+    
+    // Hide initial loader after minimum time to ensure it's visible
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 800); // Minimum 800ms to show loader
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Update initial loading when actual loading completes
+  useEffect(() => {
+    if (!bLoading && initialLoading) {
+      setInitialLoading(false);
+    }
+  }, [bLoading, initialLoading]);
 
   useEffect(() => {
     fetchProducts();
@@ -470,7 +491,50 @@ const ProductList = () => {
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />
 
-      {sError ? (
+      {bLoading || initialLoading ? (
+        <div className="table-container-floating">
+          <div
+            className="table-wrapper-floating"
+            onScroll={handleTableScroll}
+          >
+            <table className="table-base">
+              {/* Floating Header */}
+              <thead
+                className={`table-head-floating ${
+                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                }`}
+              >
+                <tr>
+                  <th className="table-head-cell-floating text-left">
+                    {t("PRODUCTS.TITLE")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("COMMON.CATEGORY")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("PRODUCTS.BRAND")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("COMMON.ACTIONS")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="table-body">
+                <tr>
+                  <td colSpan={5} className="py-8 text-center">
+                    <div className="flex justify-center">
+                      <Loader size="small" />
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : sError ? (
         <div className="text-center py-8 text-red-500">{sError}</div>
       ) : sViewMode === "table" ? (
         <div className="table-container-floating">
@@ -596,83 +660,87 @@ const ProductList = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {bFilterLoading ? (
-            <div className="col-span-full flex justify-center py-8">
-              <Loader size="medium" />
-            </div>
-          ) : aProducts.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-gray-500">
-              {t("PRODUCTS.NO_PRODUCTS")}
-            </div>
-          ) : (
-            aProducts.map((product) => (
-              <div
-                key={product.ProductID}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200"
-              >
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`px-2 py-0.5 inline-flex text-[10px] leading-4 font-semibold rounded-full ${getStatusBadgeClass(
-                      product.status
-                    )}`}
-                  >
-                    {product.status === "active" ? "Active" : "Out of Stock"}
-                  </span>
-
-                  {/* Status Switch */}
-                  <Switch
-                    checked={product.IsActive}
-                    onChange={() =>
-                      handleStatusChange(product.ProductID, product.IsActive)
-                    }
-                  />
+        <div className="grid-container-floating">
+          <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              {bFilterLoading ? (
+                <div className="col-span-full flex justify-center py-8">
+                  <Loader size="medium" />
                 </div>
-                <div className="flex items-center gap-3 mt-2">
-                  <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-                    <img
-                      src={product.firstImage}
-                      alt={product.ProductName}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = noImage;
-                        e.target.classList.remove("object-cover");
-                        e.target.classList.add("object-contain", "bg-white");
-                      }}
+              ) : aProducts.length === 0 ? (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  {t("PRODUCTS.NO_PRODUCTS")}
+                </div>
+              ) : (
+                aProducts.map((product) => (
+                  <div
+                    key={product.ProductID}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`px-2 py-0.5 inline-flex text-[10px] leading-4 font-semibold rounded-full ${getStatusBadgeClass(
+                          product.status
+                        )}`}
+                      >
+                        {product.status === PRODUCT_STATUS.ACTIVE ? PRODUCT_STATUS_LABELS.ACTIVE : PRODUCT_STATUS_LABELS.OUT_OF_STOCK}
+                      </span>
+
+                      {/* Status Switch */}
+                      <Switch
+                        checked={product.IsActive}
+                        onChange={() =>
+                          handleStatusChange(product.ProductID, product.IsActive)
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 mt-2">
+                      <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={product.firstImage}
+                          alt={product.ProductName}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = noImage;
+                            e.target.classList.remove("object-cover");
+                            e.target.classList.add("object-contain", "bg-white");
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div
+                          className="text-xs font-medium text-gray-900 ellipsis-text"
+                          title={product.ProductName}
+                        >
+                          {product.ProductName}
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className="text-xs text-gray-700 mt-2 ellipsis-text"
+                      title={product.subCategory}
+                    >
+                      <span className="font-medium">{t("COMMON.CATEGORY")}</span>{" "}
+                      {product.subCategory}
+                    </div>
+                    <div
+                      className="text-xs text-gray-700 mt-2 ellipsis-text"
+                      title={product.brandName}
+                    >
+                      <span className="font-medium">{t("PRODUCTS.BRAND")}</span>{" "}
+                      {product.brandName}
+                    </div>
+                    <ActionButtons
+                      id={product.ProductID}
+                      onEdit={handleEdit}
+                      viewLink={`/productdetails/${product.ProductID}`}
                     />
                   </div>
-                  <div className="flex-1">
-                    <div
-                      className="text-xs font-medium text-gray-900 ellipsis-text"
-                      title={product.ProductName}
-                    >
-                      {product.ProductName}
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="text-xs text-gray-700 mt-2 ellipsis-text"
-                  title={product.subCategory}
-                >
-                  <span className="font-medium">{t("COMMON.CATEGORY")}</span>{" "}
-                  {product.subCategory}
-                </div>
-                <div
-                  className="text-xs text-gray-700 ellipsis-text"
-                  title={product.brandName}
-                >
-                  <span className="font-medium">{t("PRODUCTS.BRAND")}</span>{" "}
-                  {product.brandName}
-                </div>
-                <ActionButtons
-                  id={product.ProductID}
-                  onEdit={handleEdit}
-                  viewLink={`/productdetails/${product.ProductID}`}
-                />
-              </div>
-            ))
-          )}
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
       {!sError && nTotalItems > 0 && (
