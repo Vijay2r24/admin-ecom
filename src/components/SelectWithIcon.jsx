@@ -20,6 +20,7 @@ const SelectWithIcon = forwardRef(
       maxVisibleItems = 3,
       disabled = false,
       className = "",
+      onInputChange,
       ...rest
     },
     ref
@@ -162,8 +163,8 @@ const SelectWithIcon = forwardRef(
                     setSearchTerm("");
                     setHighlightedIndex(-1);
                     // Trigger onInputChange with empty string to fetch all options
-                    if (typeof rest.onInputChange === "function") {
-                      rest.onInputChange("");
+                    if (typeof onInputChange === "function") {
+                      onInputChange("");
                     }
                   }
                   return !prev;
@@ -267,8 +268,8 @@ const SelectWithIcon = forwardRef(
                       onChange={(e) => {
                         setSearchTerm(e.target.value);
                         setHighlightedIndex(-1);
-                        if (typeof rest.onInputChange === "function") {
-                          rest.onInputChange(e.target.value);
+                        if (typeof onInputChange === "function") {
+                          onInputChange(e.target.value);
                         }
                       }}
                     />

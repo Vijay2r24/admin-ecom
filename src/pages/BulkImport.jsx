@@ -118,9 +118,8 @@ const BulkImport = () => {
         }
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message;
-      setListError(errorMessage);
-      showEmsg(errorMessage, STATUS.ERROR);
+      setListError(error?.response?.data?.message || error?.message);
+      // ApiUtils interceptor already shows the error toast
     } finally {
       setListLoading(false);
     }
@@ -229,9 +228,8 @@ const BulkImport = () => {
         // Refresh the import list
         fetchProductImportList();
       }
-    } catch (error) {
-      const errorMessage = error.response?.data?.message;
-      showEmsg(errorMessage, STATUS.ERROR);
+    } catch {
+      // ApiUtils interceptor already shows the error toast
     } finally {
       setUploading(false);
     }
@@ -280,9 +278,8 @@ const BulkImport = () => {
 
         showEmsg(t('BULK_IMPORT.DOWNLOAD_SUCCESS'), STATUS.SUCCESS);
       }
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || "Failed to download failure report";
-      showEmsg(errorMessage, STATUS.ERROR);
+    } catch {
+      // ApiUtils interceptor already shows the error toast
     }
   };
 
@@ -450,7 +447,11 @@ const BulkImport = () => {
             </div>
 
             {/* File Upload Area */}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mb-4 bg-gray-50">
+            <div
+              className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mb-4 bg-gray-50"
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
               <FileSpreadsheet className="mx-auto h-8 w-8 text-gray-400 mb-3" />
               <p className="text-xs text-gray-600 mb-2">
                 {t('BULK_IMPORT.DRAG_DROP_FILES')}

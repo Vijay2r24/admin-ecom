@@ -578,7 +578,7 @@ const OrderList = () => {
               </thead>
 
               <tbody className="table-body">
-                {bFilterLoading ? (
+                {bLoading || bFilterLoading ? (
                   <tr>
                     <td colSpan={8} className="py-8 text-center">
                       <div className="flex justify-center">

@@ -515,16 +515,19 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
 
         <div className="flex items-center gap-1">
           {isDateSelected ? (
-            <button
+            <span
+              role="button"
+              tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
                 handleClearAll();
               }}
-              className="p-0.5 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); handleClearAll(); } }}
+              className="p-0.5 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 cursor-pointer"
               title={t("CLEAR_DATE_RANGE")}
             >
               <X size={12} className="text-gray-500 hover:text-gray-700" />
-            </button>
+            </span>
           ) : (
             <ChevronDown size={12} className={STYLES.textColor.secondary} />
           )}

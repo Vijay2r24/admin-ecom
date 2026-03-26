@@ -554,16 +554,14 @@ const Users = () => {
                             <Image className="h-5 w-5 text-gray-400" />
                           </div>
                         )}
-                        <div className="ml-4">
-                          <div className="table-cell-text">
-                            <span className="ellipsis-text">
-                              {user.FirstName} {user.LastName}
-                            </span>
+                        <div className="ml-4 min-w-0">
+                          <div className="table-cell-text max-w-[160px] truncate" title={`${user.FirstName} ${user.LastName}`}>
+                            {user.FirstName} {user.LastName}
                           </div>
-                          <div className="table-cell-subtext sm:hidden text-xs font-semibold text-gray-900">
+                          <div className="table-cell-subtext sm:hidden text-xs font-semibold text-gray-900 max-w-[160px] truncate" title={user.Email}>
                             {user.Email}
                           </div>
-                          <div className="table-cell-subtext lg:hidden">
+                          <div className="table-cell-subtext lg:hidden max-w-[160px] truncate" title={getStoresString(user)}>
                             {getStoresString(user)}
                           </div>
                         </div>
@@ -573,18 +571,18 @@ const Users = () => {
                     {/* Contact */}
                     <td className="table-cellhidden sm:table-cell text-center">
                       <div className="flex flex-col items-center space-y-1">
-                        <div className="flex flex-col items-start space-y-1 w-full max-w-[150px]">
-                          {" "}
-                          {/* adjust max-w as needed */}
-                          <div className="table-cell-subtext flex items-center justify-start">
-                            <Mail className="h-4 w-4 mr-2 text-gray-500" />
-                            <span className="ellipsis-text text-xs font-semibold text-gray-900">
+                        <div className="flex flex-col items-start space-y-1 w-full max-w-[180px]">
+                          <div className="table-cell-subtext flex items-center justify-start w-full">
+                            <Mail className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
+                            <span className="text-xs font-semibold text-gray-900 truncate" title={user.Email}>
                               {user.Email}
                             </span>
                           </div>
-                          <div className="table-cell-subtext flex items-center justify-start">
-                            <Phone className="h-4 w-4 mr-2" />
-                            {user.CountryCode ? `${user.CountryCode} ${user.PhoneNumber}` : user.PhoneNumber}
+                          <div className="table-cell-subtext flex items-center justify-start w-full">
+                            <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span className="truncate" title={user.CountryCode ? `${user.CountryCode} ${user.PhoneNumber}` : user.PhoneNumber}>
+                              {user.CountryCode ? `${user.CountryCode} ${user.PhoneNumber}` : user.PhoneNumber}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -593,9 +591,9 @@ const Users = () => {
                     {/* Role */}
                     <td className="table-cell text-center">
                       <div className="flex items-center justify-center">
-                        <Shield className="h-4 w-4 mr-2 text-gray-400" />
-                        <span className="status-badge bg-blue-100 text-blue-800">
-                          <span className="ellipsis-text">{user.RoleName}</span>
+                        <Shield className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                        <span className="status-badge bg-blue-100 text-blue-800 max-w-[120px] truncate" title={user.RoleName}>
+                          {user.RoleName}
                         </span>
                       </div>
                     </td>
