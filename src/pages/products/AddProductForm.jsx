@@ -301,6 +301,11 @@ const AddProductForm = () => {
                 "",
             });
 
+            // Set groupingAttributeTypeID from product metadata if exists
+            if (product.Metadata?.GroupBy) {
+              setGroupingAttributeTypeID(product.Metadata.GroupBy);
+            }
+
             setSpecifications(
               mappedSpecifications.length
                 ? mappedSpecifications
@@ -1333,6 +1338,11 @@ const AddProductForm = () => {
       IsActive: true,
       Specifications,
       Variants,
+      ...(groupingAttributeTypeID && {
+        Metadata: {
+          GroupBy: groupingAttributeTypeID
+        }
+      })
     };
 
     const formData = new FormData();
