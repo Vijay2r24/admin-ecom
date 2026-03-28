@@ -24,6 +24,7 @@ import {
 } from "../../contants/apiRoutes";
 import { apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
+import SkeletonLoader from "../../components/SkeletonLoader";
 import {
   LOCALE,
   ORDER_STATUS,
@@ -565,9 +566,99 @@ const generateComparisonText = (startDate, endDate) => {
   if (isLoading) {
     return (
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <Loader className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
+        {/* Header Skeleton */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-8 bg-gray-200 rounded animate-pulse w-48" />
+          <div className="h-10 bg-gray-200 rounded animate-pulse w-72" />
+        </div>
+
+        {/* Metrics Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, index) => (
+            <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2" />
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-16" />
+                </div>
+                <div className="h-10 w-10 bg-gray-200 rounded-lg animate-pulse" />
+              </div>
+              <div className="mt-4 flex items-center">
+                <div className="h-3 w-3 bg-gray-200 rounded animate-pulse" />
+                <div className="h-3 bg-gray-200 rounded animate-pulse w-12 ml-2" />
+                <div className="h-3 bg-gray-200 rounded animate-pulse w-16 ml-2" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Main Content Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Top Products Skeleton */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
+            </div>
+            <div className="flex flex-col gap-2 p-3 flex-1">
+              {[...Array(5)].map((_, index) => (
+                <div key={index} className="flex items-center bg-white rounded-lg shadow-sm px-3 py-2 min-h-[70px]">
+                  <div className="h-10 w-10 bg-gray-200 rounded animate-pulse mr-4" />
+                  <div className="flex-1 min-w-0">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mb-2" />
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-16" />
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-12" />
+                    </div>
+                  </div>
+                  <div className="h-6 w-12 bg-gray-200 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Orders Skeleton */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
+            </div>
+            <div className="flex-1 w-full overflow-x-auto">
+              <table className="w-full min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left">
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-16" />
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-16" />
+                    </th>
+                    <th className="px-4 py-3 text-right">
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-12" />
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-12" />
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {[...Array(5)].map((_, index) => (
+                    <tr key={index}>
+                      <td className="px-4 py-3">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-20" />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-16 ml-auto" />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="h-6 bg-gray-200 rounded-full animate-pulse w-16" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Loader from "../../../components/Loader";
+import SkeletonLoader from "../../../components/SkeletonLoader";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -171,13 +172,7 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
                 </tr>
               </thead>
               <tbody className="table-body">
-                <tr>
-                  <td colSpan={2} className="py-8 text-center">
-                    <div className="flex justify-center">
-                      <Loader size="small" />
-                    </div>
-                  </td>
-                </tr>
+                <SkeletonLoader type="color-table" rows={6} />
               </tbody>
             </table>
           </div>
@@ -268,6 +263,9 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
 
       {/* Pagination Controls - Fixed at bottom */}
       {iTotalItems > 0 && (
+        bLoading ? (
+          <SkeletonLoader type="pagination" />
+        ) : (
           <Pagination
             currentPage={nCurrentPage}
             totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
@@ -277,6 +275,7 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
             handleNextPage={handleNextPage}
             handlePageClick={handlePageClick}
           />
+        )
       )}
     </div>
   );

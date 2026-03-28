@@ -15,6 +15,7 @@ import { ToastContainer } from "react-toastify";
 import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS } from "../contants/constants";
 import { apiDelete } from "../utils/ApiUtils";
 import Loader from "../components/Loader";
+import SkeletonLoader from "../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
 import { fetchResource, updateStatusById } from "../store/slices/allDataSlice";
@@ -442,13 +443,7 @@ const Stores = () => {
 
               <tbody className="table-body">
                 {bFilterLoading || storesLoading ? (
-                  <tr>
-                    <td colSpan={4} className="py-8 text-center">
-                      <div className="flex justify-center">
-                        <Loader size="small" />
-                      </div>
-                    </td>
-                  </tr>
+                  <SkeletonLoader type="store-table" rows={6} />
                 ) : aStores.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-gray-500">
@@ -544,9 +539,7 @@ const Stores = () => {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
           {bFilterLoading || storesLoading ? (
-            <div className="col-span-full flex justify-center py-8">
-              <Loader size="medium" />
-            </div>
+            <SkeletonLoader type="store-grid" rows={6} className="p-4" />
           ) : aStores.length === 0 ? (
             <div className="col-span-full text-center py-8 text-gray-500">
               {t("STORES.NO_STORES_FOUND")}
@@ -640,15 +633,19 @@ const Stores = () => {
 
       {/* FIX: Pass correct pagination props */}
       <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+        {bFilterLoading || storesLoading ? (
+          <SkeletonLoader type="pagination" />
+        ) : (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        )}
       </div>
     </div>
   );

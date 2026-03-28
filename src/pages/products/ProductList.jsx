@@ -30,6 +30,7 @@ import { exportProductReport } from "../../store/slices/exportSlice";
 import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import Loader from "../../components/Loader";
+import SkeletonLoader from "../../components/SkeletonLoader";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 
@@ -491,52 +492,7 @@ const ProductList = () => {
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />
 
-      {bLoading || initialLoading ? (
-        <div className="table-container-floating">
-          <div
-            className="table-wrapper-floating"
-            onScroll={handleTableScroll}
-          >
-            <table className="table-base">
-              {/* Floating Header */}
-              <thead
-                className={`table-head-floating ${
-                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
-                }`}
-              >
-                <tr>
-                  <th className="table-head-cell-floating text-left">
-                    {t("PRODUCTS.TITLE")}
-                  </th>
-                  <th className="table-head-cell-floating text-center">
-                    {t("COMMON.CATEGORY")}
-                  </th>
-                  <th className="table-head-cell-floating text-center">
-                    {t("PRODUCTS.BRAND")}
-                  </th>
-                  <th className="table-head-cell-floating text-center">
-                    {t("COMMON.STATUS")}
-                  </th>
-                  <th className="table-head-cell-floating text-center">
-                    {t("COMMON.ACTIONS")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="table-body">
-                <tr>
-                  <td colSpan={5} className="py-8 text-center">
-                    <div className="flex justify-center">
-                      <Loader size="small" />
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : sError ? (
-        <div className="text-center py-8 text-red-500">{sError}</div>
-      ) : sViewMode === "table" ? (
+      {sViewMode === "table" ? (
         <div className="table-container-floating">
           <div
             className="table-wrapper-floating"
@@ -569,12 +525,12 @@ const ProductList = () => {
               </thead>
 
               <tbody className="table-body">
-                {bFilterLoading ? (
+                {bLoading || initialLoading || bFilterLoading ? (
+                  <SkeletonLoader type="product-table" rows={8} />
+                ) : sError ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center">
-                      <div className="flex justify-center">
-                        <Loader size="small" />
-                      </div>
+                    <td colSpan={5} className="py-8 text-center text-red-500">
+                      {sError}
                     </td>
                   </tr>
                 ) : aProducts.length === 0 ? (
@@ -664,9 +620,7 @@ const ProductList = () => {
           <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
               {bFilterLoading ? (
-                <div className="col-span-full flex justify-center py-8">
-                  <Loader size="medium" />
-                </div>
+                <SkeletonLoader type="product-grid" rows={6} className="p-4" />
               ) : aProducts.length === 0 ? (
                 <div className="col-span-full text-center py-8 text-gray-500">
                   {t("PRODUCTS.NO_PRODUCTS")}
@@ -744,15 +698,19 @@ const ProductList = () => {
         </div>
       )}
       {!sError && nTotalItems > 0 && (
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={nTotalPages}
-          totalItems={nTotalItems}
-          itemsPerPage={itemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+        (bLoading || bFilterLoading) ? (
+          <SkeletonLoader type="pagination" />
+        ) : (
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={nTotalPages}
+            totalItems={nTotalItems}
+            itemsPerPage={itemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        )
       )}
 
       {statusPopup.open && (

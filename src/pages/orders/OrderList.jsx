@@ -16,6 +16,7 @@ import {
   PERMISSIONS,
 } from "../../contants/constants";
 import Loader from "../../components/Loader";
+import SkeletonLoader from "../../components/SkeletonLoader";
 import { fetchResource } from "../../store/slices/allDataSlice";
 import { exportOrderReport } from "../../store/slices/exportSlice";
 import { ToastContainer } from "react-toastify";
@@ -578,14 +579,8 @@ const OrderList = () => {
               </thead>
 
               <tbody className="table-body">
-                {bFilterLoading ? (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center">
-                      <div className="flex justify-center">
-                        <Loader size="small" />
-                      </div>
-                    </td>
-                  </tr>
+                {bLoading || bFilterLoading ? (
+                  <SkeletonLoader type="order-table" rows={8} />
                 ) : sError ? (
                   <tr>
                     <td colSpan={8} className="text-center py-8 text-gray-600">
@@ -732,13 +727,9 @@ const OrderList = () => {
           <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
           {bLoading ? (
-            <div className="col-span-full text-center py-8 text-gray-500">
-              {t("COMMON.LOADING")}
-            </div>
+            <SkeletonLoader type="order-grid" rows={6} className="p-4" />
           ) : bFilterLoading ? (
-            <div className="col-span-full flex justify-center py-8">
-              <Loader size="medium" />
-            </div>
+            <SkeletonLoader type="order-grid" rows={6} className="p-4" />
           ) : sError ? (
             <div className="col-span-full text-center py-8 text-gray-600">
               {sError}
@@ -838,15 +829,19 @@ const OrderList = () => {
 
       {aOrders.length > 0 && (
         <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-          <Pagination
-            currentPage={nCurrentPage}
-            totalPages={sTotalPages}
-            totalItems={nTotalRecords}
-            itemsPerPage={nProductsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
+          {bLoading || bFilterLoading ? (
+            <SkeletonLoader type="pagination" />
+          ) : (
+            <Pagination
+              currentPage={nCurrentPage}
+              totalPages={sTotalPages}
+              totalItems={nTotalRecords}
+              itemsPerPage={nProductsPerPage}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handlePageClick={handlePageClick}
+            />
+          )}
         </div>
       )}
     </div>

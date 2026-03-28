@@ -12,6 +12,7 @@ import { ToastContainer } from "react-toastify";
 import { ITEMS_PER_PAGE, STATUS, MODULES, PERMISSIONS } from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
+import SkeletonLoader from "../../components/SkeletonLoader";
 import {
   getPermissionCode,
   hasPermissionId,
@@ -466,13 +467,7 @@ const Payments = () => {
               </thead>
               <tbody className="table-body">
                 {bFilterLoading || paymentsLoading ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center">
-                      <div className="flex justify-center">
-                        <Loader size="small" />
-                      </div>
-                    </td>
-                  </tr>
+                  <SkeletonLoader type="payment-table" rows={6} />
                 ) : payments.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-gray-500">
@@ -679,15 +674,19 @@ const Payments = () => {
 
       {totalPages > 1 && (
         <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
+          {bFilterLoading || paymentsLoading ? (
+            <SkeletonLoader type="pagination" />
+          ) : (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handlePageClick={handlePageClick}
+            />
+          )}
         </div>
       )}
     </div>
