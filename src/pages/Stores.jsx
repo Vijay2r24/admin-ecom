@@ -7,6 +7,7 @@ import Pagination from "../components/Pagination";
 import ActionButtons from "../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../context/TitleContext";
+import { SKELETON_TYPES } from "../contants/constants";
 import Switch from "../components/Switch";
 import { UPDATE_STORE_STATUS, DELETE_STORE } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
@@ -443,7 +444,7 @@ const Stores = () => {
 
               <tbody className="table-body">
                 {bFilterLoading || storesLoading ? (
-                  <SkeletonLoader type="store-table" rows={6} />
+                  <SkeletonLoader type={SKELETON_TYPES.STORE_TABLE} rows={6} />
                 ) : aStores.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-gray-500">
@@ -539,7 +540,7 @@ const Stores = () => {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
           {bFilterLoading || storesLoading ? (
-            <SkeletonLoader type="store-grid" rows={6} className="p-4" />
+            <SkeletonLoader type={SKELETON_TYPES.STORE_GRID} rows={6} className="p-4" />
           ) : aStores.length === 0 ? (
             <div className="col-span-full text-center py-8 text-gray-500">
               {t("STORES.NO_STORES_FOUND")}

@@ -10,6 +10,7 @@ import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Loader from "../../../components/Loader";
 import SkeletonLoader from "../../../components/SkeletonLoader";
+import { SKELETON_TYPES } from "../../../contants/constants";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -172,7 +173,7 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
                 </tr>
               </thead>
               <tbody className="table-body">
-                <SkeletonLoader type="color-table" rows={6} />
+                <SkeletonLoader type={SKELETON_TYPES.COLOR_TABLE} rows={6} />
               </tbody>
             </table>
           </div>
@@ -264,7 +265,7 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
       {/* Pagination Controls - Fixed at bottom */}
       {iTotalItems > 0 && (
         bLoading ? (
-          <SkeletonLoader type="pagination" />
+          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
         ) : (
           <Pagination
             currentPage={nCurrentPage}

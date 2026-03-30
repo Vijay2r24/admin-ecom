@@ -11,6 +11,7 @@ import Tooltip from "../../../components/Tooltip";
 import Loader from "../../../components/Loader";
 import SkeletonLoader from "../../../components/SkeletonLoader";
 import { UPDATE_ATTRIBUTE_TYPE_STATUS } from "../../../contants/apiRoutes";
+import { SKELETON_TYPES } from "../../../contants/constants";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -272,7 +273,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
 
             <tbody className="table-body">
               {bLoading ? (
-                <SkeletonLoader type="attribute-type-table" rows={6} />
+                <SkeletonLoader type={SKELETON_TYPES.ATTRIBUTE_TYPE_TABLE} rows={6} />
               ) : sError ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-red-500">
@@ -398,7 +399,7 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
       {/* Pagination Controls */}
       {iTotalItems > 0 && (
         bLoading ? (
-          <SkeletonLoader type="pagination" />
+          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
         ) : (
           <Pagination
             currentPage={iCurrentPage}

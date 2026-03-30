@@ -7,11 +7,12 @@ import { useNavigate } from "react-router-dom";
 import { apiPost } from "../utils/ApiUtils";
 import { UPDATEUSERPASSWORD } from "../contants/apiRoutes";
 import md5 from "md5";
-import { PASSWORD_LABELS, PASSWORD_VISIBILITY, STATUS } from "../contants/constants";
+import { PASSWORD_LABELS, PASSWORD_VISIBILITY, STATUS, SKELETON_TYPES } from "../contants/constants";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
 import { useTitle } from "../context/TitleContext";
 import Loader from "../components/Loader";
+import SkeletonLoader from "../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserDetails, clearUserDetailsError } from "../store/slices/allDataSlice";
@@ -353,6 +354,11 @@ const ProfileDetails = () => {
 
   if (userDetailsError) return <div>Error: {userDetailsError}</div>;
   if (!user) return <div>No user data found</div>;
+
+  // Show skeleton loader while loading
+  if (userDetailsLoading) {
+    return <SkeletonLoader type={SKELETON_TYPES.PROFILE} />;
+  }
 
   return (
     <div className="max-w-8xl mx-auto mt-2">

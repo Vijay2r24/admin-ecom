@@ -7,6 +7,7 @@ import ActionButtons from "../components/ActionButtons";
 import NotFoundMessage from "../components/NotFoundMessage";
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../context/TitleContext";
+import { SKELETON_TYPES } from "../contants/constants";
 import Switch from "../components/Switch";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { UPDATE_ROLE_STATUS } from "../contants/apiRoutes";
@@ -281,7 +282,7 @@ const UserRolesList = () => {
               </thead>
               <tbody className="table-body">
                 {bLoading || bFilterLoading ? (
-                  <SkeletonLoader type="user-roles-table" rows={6} />
+                  <SkeletonLoader type={SKELETON_TYPES.USER_ROLES_TABLE} rows={6} />
                 ) : nError ? (
                   <tr>
                     <td colSpan={3} className="text-center py-4 text-muted">

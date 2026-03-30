@@ -6,6 +6,7 @@ import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiDelete, apiPost } from "../../utils/ApiUtils.jsx";
+import { SKELETON_TYPES } from "../../contants/constants";
 import {
   GETPRODUCTDETAILS,
   DELETE_PRODUCT_WITH_IMAGES,
@@ -526,7 +527,7 @@ const ProductList = () => {
 
               <tbody className="table-body">
                 {bLoading || initialLoading || bFilterLoading ? (
-                  <SkeletonLoader type="product-table" rows={8} />
+                  <SkeletonLoader type={SKELETON_TYPES.PRODUCT_TABLE} rows={8} />
                 ) : sError ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-red-500">
@@ -620,7 +621,7 @@ const ProductList = () => {
           <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
               {bFilterLoading ? (
-                <SkeletonLoader type="product-grid" rows={6} className="p-4" />
+                <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={6} className="p-4" />
               ) : aProducts.length === 0 ? (
                 <div className="col-span-full text-center py-8 text-gray-500">
                   {t("PRODUCTS.NO_PRODUCTS")}

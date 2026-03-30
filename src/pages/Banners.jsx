@@ -8,6 +8,7 @@ import {
   UPDATE_BANNER_STATUS,
   DELETE_BANNER,
 } from "../contants/apiRoutes";
+import { SKELETON_TYPES } from "../contants/constants";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
 import {
@@ -220,7 +221,7 @@ const Banners = () => {
           <div className="mb-4 text-red-500 text-center">{sError}</div>
         )}
         {loading ? (
-          <SkeletonLoader type="banner-grid" rows={6} className="mt-4" />
+          <SkeletonLoader type={SKELETON_TYPES.BANNER_GRID} rows={6} className="mt-4" />
         ) : paginatedBanners.length === 0 && !sError ? (
           <div className="flex flex-col items-center justify-center py-20 px-4">
             <div className="mb-8">

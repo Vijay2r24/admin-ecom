@@ -6,7 +6,7 @@ import Toolbar from "../components/Toolbar";
 import { showEmsg } from "../utils/ShowEmsg";
 import Loader from "../components/Loader";
 import SkeletonLoader from "../components/SkeletonLoader";
-import { ITEMS_PER_PAGE, STATUS, FILE_CONSTANTS } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, FILE_CONSTANTS, SKELETON_TYPES } from "../contants/constants";
 import { useDispatch } from "react-redux";
 import { exportProductTemplate } from "../store/slices/exportSlice";
 import { apiGet, apiPost } from "../utils/ApiUtils";
@@ -343,7 +343,7 @@ const BulkImport = () => {
             
             <tbody className="table-body">
               {listLoading ? (
-                <SkeletonLoader type="bulk-import-table" rows={6} />
+                <SkeletonLoader type={SKELETON_TYPES.BULK_IMPORT_TABLE} rows={6} />
               ) : listError ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-red-500">

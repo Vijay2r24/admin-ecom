@@ -1,9 +1,10 @@
 import React from 'react';
+import { SKELETON_TYPES } from '../contants/constants';
 
-const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
+const SkeletonLoader = ({ type = SKELETON_TYPES.DEFAULT, rows = 3, className = '' }) => {
   const renderSkeleton = () => {
     switch (type) {
-      case 'product-table':
+      case SKELETON_TYPES.PRODUCT_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -36,7 +37,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'payment-table':
+      case SKELETON_TYPES.PAYMENT_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -84,26 +85,11 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'bulk-import-table':
+      case SKELETON_TYPES.BULK_IMPORT_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
               <tr key={rowIndex} className="table-row">
-                <td className="table-cell w-1/4">
-                  <div className="flex items-center">
-                    <div className="h-5 w-5 bg-gray-200 rounded animate-pulse mr-2" />
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
-                  </div>
-                </td>
-                <td className="table-cell w-1/5 text-center">
-                  <div className="h-6 bg-gray-200 rounded-full animate-pulse w-20 mx-auto" />
-                </td>
-                <td className="table-cell w-1/6 text-center">
-                  <div className="flex items-center justify-center">
-                    <div className="h-4 w-4 bg-gray-200 rounded animate-pulse mr-1" />
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
-                  </div>
-                </td>
                 <td className="table-cell w-1/6 text-center">
                   <div className="flex items-center justify-center">
                     <div className="h-4 w-4 bg-gray-200 rounded animate-pulse mr-1" />
@@ -118,7 +104,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'attribute-type-table':
+      case SKELETON_TYPES.ATTRIBUTE_TYPE_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -143,7 +129,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'attribute-table':
+      case SKELETON_TYPES.ATTRIBUTE_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -165,7 +151,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'category-table':
+      case SKELETON_TYPES.CATEGORY_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -193,7 +179,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'brand-table':
+      case SKELETON_TYPES.BRAND_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -218,7 +204,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'specification-type-table':
+      case SKELETON_TYPES.SPECIFICATION_TYPE_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -246,7 +232,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'color-table':
+      case SKELETON_TYPES.COLOR_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -268,7 +254,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'product-grid':
+      case SKELETON_TYPES.PRODUCT_GRID:
         return (
           <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}>
             {[...Array(rows)].map((_, i) => (
@@ -299,7 +285,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </div>
         );
 
-      case 'user-table':
+      case SKELETON_TYPES.USER_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -344,7 +330,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'user-grid':
+      case SKELETON_TYPES.USER_GRID:
         return (
           <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}>
             {[...Array(rows)].map((_, i) => (
@@ -383,7 +369,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </div>
         );
 
-      case 'store-table':
+      case SKELETON_TYPES.STORE_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -423,7 +409,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'store-grid':
+      case SKELETON_TYPES.STORE_GRID:
         return (
           <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}>
             {[...Array(rows)].map((_, i) => (
@@ -457,7 +443,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </div>
         );
 
-      case 'order-table':
+      case SKELETON_TYPES.ORDER_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -495,7 +481,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'order-grid':
+      case SKELETON_TYPES.ORDER_GRID:
         return (
           <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${className}`}>
             {[...Array(rows)].map((_, i) => (
@@ -524,7 +510,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </div>
         );
 
-      case 'banner-grid':
+      case SKELETON_TYPES.BANNER_GRID:
         return (
           <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}>
             {[...Array(rows)].map((_, i) => (
@@ -552,7 +538,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </div>
         );
 
-      case 'user-roles-table':
+      case SKELETON_TYPES.USER_ROLES_TABLE:
         return (
           <>
             {[...Array(rows)].map((_, rowIndex) => (
@@ -581,7 +567,7 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
           </>
         );
 
-      case 'pagination':
+      case SKELETON_TYPES.PAGINATION:
         return (
           <div className="sticky bottom-0 bg-white z-10">
             <div className="px-4 py-2.5 bg-gray-100">
@@ -600,6 +586,54 @@ const SkeletonLoader = ({ type = 'default', rows = 3, className = '' }) => {
                   </div>
                   <div className="h-8 bg-gray-200 rounded animate-pulse w-16" />
                 </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case SKELETON_TYPES.PROFILE:
+        return (
+          <div className={`max-w-4xl mx-auto p-6 ${className}`}>
+            {/* Profile Header */}
+            <div className="flex items-center space-x-6 mb-8">
+              <div className="h-24 w-24 bg-gray-200 rounded-full animate-pulse" />
+              <div className="flex-1">
+                <div className="h-8 bg-gray-200 rounded animate-pulse w-48 mb-3" />
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mb-2" />
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-40" />
+              </div>
+              <div className="h-10 bg-gray-200 rounded animate-pulse w-24" />
+            </div>
+
+            {/* Profile Info Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="space-y-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2" />
+                <div className="h-10 bg-gray-200 rounded animate-pulse w-full" />
+                <div className="h-10 bg-gray-200 rounded animate-pulse w-full" />
+                <div className="h-10 bg-gray-200 rounded animate-pulse w-full" />
+              </div>
+              <div className="space-y-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2" />
+                <div className="h-10 bg-gray-200 rounded animate-pulse w-full" />
+                <div className="h-10 bg-gray-200 rounded animate-pulse w-full" />
+                <div className="h-10 bg-gray-200 rounded animate-pulse w-full" />
+              </div>
+            </div>
+
+            {/* Password Section */}
+            <div className="border-t pt-6">
+              <div className="h-6 bg-gray-200 rounded animate-pulse w-32 mb-4" />
+              <div className="space-y-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mb-2" />
+                <div className="h-10 bg-gray-200 rounded animate-pulse w-full" />
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mb-2" />
+                <div className="h-10 bg-gray-200 rounded animate-pulse w-full" />
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mb-2" />
+                <div className="h-10 bg-gray-200 rounded animate-pulse w-full" />
+              </div>
+              <div className="flex justify-end mt-6">
+                <div className="h-10 bg-gray-200 rounded animate-pulse w-24" />
               </div>
             </div>
           </div>

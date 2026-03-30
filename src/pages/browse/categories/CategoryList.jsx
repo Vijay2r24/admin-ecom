@@ -8,6 +8,7 @@ import {
 import Toolbar from "../../../components/Toolbar";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { SKELETON_TYPES } from "../../../contants/constants";
 import Pagination from "../../../components/Pagination";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
@@ -294,7 +295,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
 
             <tbody className="table-body">
               {bLoading ? (
-                <SkeletonLoader type="category-table" rows={6} />
+                <SkeletonLoader type={SKELETON_TYPES.CATEGORY_TABLE} rows={6} />
               ) : sError ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-red-500">
@@ -473,7 +474,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
       {/* Pagination Controls */}
       {iTotalItems > 0 && (
           bLoading ? (
-            <SkeletonLoader type="pagination" />
+            <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
           ) : (
             <Pagination
               currentPage={nCurrentPage}

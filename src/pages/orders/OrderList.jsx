@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { apiGet } from "../../utils/ApiUtils";
 import { GETALLORDERS_API } from "../../contants/apiRoutes";
 import { useTitle } from "../../context/TitleContext";
+import { SKELETON_TYPES } from "../../contants/constants";
 import {
   DATE_FORMAT_OPTIONS,
   LOCALES,
@@ -580,7 +581,7 @@ const OrderList = () => {
 
               <tbody className="table-body">
                 {bLoading || bFilterLoading ? (
-                  <SkeletonLoader type="order-table" rows={8} />
+                  <SkeletonLoader type={SKELETON_TYPES.ORDER_TABLE} rows={8} />
                 ) : sError ? (
                   <tr>
                     <td colSpan={8} className="text-center py-8 text-gray-600">
@@ -727,9 +728,9 @@ const OrderList = () => {
           <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
           {bLoading ? (
-            <SkeletonLoader type="order-grid" rows={6} className="p-4" />
+            <SkeletonLoader type={SKELETON_TYPES.ORDER_GRID} rows={6} className="p-4" />
           ) : bFilterLoading ? (
-            <SkeletonLoader type="order-grid" rows={6} className="p-4" />
+            <SkeletonLoader type={SKELETON_TYPES.ORDER_GRID} rows={6} className="p-4" />
           ) : sError ? (
             <div className="col-span-full text-center py-8 text-gray-600">
               {sError}
@@ -830,7 +831,7 @@ const OrderList = () => {
       {aOrders.length > 0 && (
         <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
           {bLoading || bFilterLoading ? (
-            <SkeletonLoader type="pagination" />
+            <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
           ) : (
             <Pagination
               currentPage={nCurrentPage}

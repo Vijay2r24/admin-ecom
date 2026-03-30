@@ -8,6 +8,7 @@ import {
 import CreateBrand from "./CreateBrand";
 import Toolbar from "../../../components/Toolbar";
 import { useTranslation } from "react-i18next";
+import { SKELETON_TYPES } from "../../../contants/constants";
 import { Link } from "react-router-dom";
 import Pagination from "../../../components/Pagination";
 import { showEmsg } from "../../../utils/ShowEmsg";
@@ -266,7 +267,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
 
             <tbody className="table-body">
               {bLoading ? (
-                <SkeletonLoader type="brand-table" rows={6} />
+                <SkeletonLoader type={SKELETON_TYPES.BRAND_TABLE} rows={6} />
               ) : aBrands.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-gray-500">
@@ -441,7 +442,7 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       {/* Pagination Controls */}
       {iTotalItems > 0 && (
         bLoading ? (
-          <SkeletonLoader type="pagination" />
+          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
         ) : (
           <Pagination
             currentPage={nCurrentPage}

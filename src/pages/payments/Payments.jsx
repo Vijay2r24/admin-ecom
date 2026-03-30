@@ -8,6 +8,7 @@ import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
+import { SKELETON_TYPES } from "../../contants/constants";
 import { ToastContainer } from "react-toastify";
 import { ITEMS_PER_PAGE, STATUS, MODULES, PERMISSIONS } from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
@@ -467,7 +468,7 @@ const Payments = () => {
               </thead>
               <tbody className="table-body">
                 {bFilterLoading || paymentsLoading ? (
-                  <SkeletonLoader type="payment-table" rows={6} />
+                  <SkeletonLoader type={SKELETON_TYPES.PAYMENT_TABLE} rows={6} />
                 ) : payments.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-gray-500">

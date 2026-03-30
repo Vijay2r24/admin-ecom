@@ -10,6 +10,7 @@ import Switch from "../../../components/Switch";
 import Tooltip from "../../../components/Tooltip";
 import Loader from "../../../components/Loader";
 import SkeletonLoader from "../../../components/SkeletonLoader";
+import { SKELETON_TYPES } from "../../../contants/constants";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import { UPDATE_ATTRIBUTRE_VALUE_STATUS } from "../../../contants/apiRoutes";
 import {
@@ -268,7 +269,7 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
 
               <tbody className="table-body">
                 {bLoading ? (
-                  <SkeletonLoader type="attribute-table" rows={6} />
+                  <SkeletonLoader type={SKELETON_TYPES.ATTRIBUTE_TABLE} rows={6} />
                 ) : sError ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-red-500">

@@ -7,7 +7,7 @@ import ActionButtons from "../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { USER_ACTIVE_STATUS } from "../contants/apiRoutes";
 import { useTitle } from "../context/TitleContext";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS, SKELETON_TYPES } from "../contants/constants";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
@@ -480,7 +480,7 @@ const Users = () => {
               {/* Conditional Body */}
               <tbody className="table-body">
                 {loading || initialLoading ? (
-                  <SkeletonLoader type="user-table" rows={8} />
+                  <SkeletonLoader type={SKELETON_TYPES.USER_TABLE} rows={8} />
                 ) : usersData.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-gray-500">
@@ -609,7 +609,7 @@ const Users = () => {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
               {loading || initialLoading ? (
-                <SkeletonLoader type="user-grid" rows={6} className="p-4" />
+                <SkeletonLoader type={SKELETON_TYPES.USER_GRID} rows={6} className="p-4" />
               ) : usersData.length === 0 ? (
                 <div className="col-span-full text-center py-4 text-gray-500">
                   {t("USERS.NO_USERS_FOUND")}
