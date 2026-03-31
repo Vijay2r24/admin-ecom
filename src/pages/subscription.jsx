@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useTitle } from "../context/TitleContext";
 import { useTranslation } from "react-i18next";
 import SuccessPopup from "../components/SuccessPopup";
-import { PLAN_EMAIL_MAP } from "../contants/constants";
+import { PLAN_EMAIL_MAP, TENANT_DEFAULTS } from "../contants/constants";
 import { FiInfo, FiCheckCircle, FiCheck, FiX } from "react-icons/fi";
 import planData from "./data.json";
 
@@ -28,7 +28,7 @@ const SubscriptionPlan = () => {
       const userDetails = JSON.parse(localStorage.getItem("userDetails"));
       const email = userDetails.Email || userDetails.email;
       setUserEmail(email);
-      console.log("User email:", email); // Debug log
+     
     } catch (error) {
 
     }
@@ -45,10 +45,10 @@ const SubscriptionPlan = () => {
       return {
         email: userDetails.Email || userDetails.email,
         tenantID: tenantID,
-        name: userDetails.Name || userDetails.name || "User",
+        name: userDetails.Name || userDetails.name || TENANT_DEFAULTS.NAME,
       };
     } catch (error) {
-      return { email: "N/A", tenantID: "N/A", name: "User" };
+      return { email: TENANT_DEFAULTS.EMAIL, tenantID: TENANT_DEFAULTS.TENANT_ID, name: TENANT_DEFAULTS.NAME };
     }
   };
 

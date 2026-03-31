@@ -1093,6 +1093,12 @@ export const getPermissionTooltip = (permission, isEditingAdmin, isAdminRole, mo
   }
 };
 
+export const TENANT_DEFAULTS = {
+  EMAIL: "N/A",
+  TENANT_ID: "N/A",
+  NAME: "User",
+};
+
 export const PLAN_EMAIL_MAP = [
   { email: "b2yinfy@gmail.com", plan: "Basic" },
   { email: "vinayvinuus132@gmail.com", plan: "Premium" },
