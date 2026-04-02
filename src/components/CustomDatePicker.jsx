@@ -499,40 +499,39 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
 
   return (
     <div className="relative" ref={calendarRef}>
-      <button
-        onClick={() => setShowDropdown((prev) => !prev)}
-        className={`flex items-center justify-between gap-1.5 w-full px-2.5 py-1.5 border border-gray-300 rounded-md bg-white ${STYLES.backgroundColor.hover} transition-colors focus:outline-none ${STYLES.border.focus} h-full`}
+      <div
+        className={`flex items-center justify-between gap-1.5 w-full px-2.5 py-1.5 border border-gray-300 rounded-md bg-white ${STYLES.backgroundColor.hover} transition-colors focus:outline-none ${STYLES.border.focus} h-full cursor-pointer`}
         style={{ minWidth: "320px" }}
+        onClick={() => setShowDropdown((prev) => !prev)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter') setShowDropdown((prev) => !prev); }}
       >
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <Calendar size={12} className={STYLES.textColor.secondary} />
-          <span
-            className="text-gray-700 whitespace-nowrap font-medium flex-1 text-left text-xs"
-          >
+          <span className="text-gray-700 whitespace-nowrap font-medium flex-1 text-left text-xs">
             {displayText || t("SELECT_DATE_TIME")}
           </span>
         </div>
 
         <div className="flex items-center gap-1">
           {isDateSelected ? (
-            <span
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 handleClearAll();
               }}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); handleClearAll(); } }}
-              className="p-0.5 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 cursor-pointer"
+              className="p-0.5 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
               title={t("CLEAR_DATE_RANGE")}
             >
               <X size={12} className="text-gray-500 hover:text-gray-700" />
-            </span>
+            </button>
           ) : (
             <ChevronDown size={12} className={STYLES.textColor.secondary} />
           )}
         </div>
-      </button>
+      </div>
 
       {showDropdown && (
         <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">

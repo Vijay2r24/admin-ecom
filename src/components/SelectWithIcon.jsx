@@ -159,13 +159,9 @@ const SelectWithIcon = forwardRef(
               if (!disabled) {
                 setIsOpen((prev) => {
                   if (!prev) {
-                    // Clear search term when opening dropdown to show all options
                     setSearchTerm("");
                     setHighlightedIndex(-1);
-                    // Trigger onInputChange with empty string to fetch all options
-                    if (typeof onInputChange === "function") {
-                      onInputChange("");
-                    }
+                    onInputChange?.("");
                   }
                   return !prev;
                 });
@@ -268,9 +264,7 @@ const SelectWithIcon = forwardRef(
                       onChange={(e) => {
                         setSearchTerm(e.target.value);
                         setHighlightedIndex(-1);
-                        if (typeof onInputChange === "function") {
-                          onInputChange(e.target.value);
-                        }
+                        onInputChange?.(e.target.value);
                       }}
                     />
                     {sSearchTerm && (
