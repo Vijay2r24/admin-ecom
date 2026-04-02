@@ -8,6 +8,7 @@ import {
 import CreateBrand from "./CreateBrand";
 import Toolbar from "../../../components/Toolbar";
 import { useTranslation } from "react-i18next";
+import { SKELETON_TYPES } from "../../../contants/constants";
 import { Link } from "react-router-dom";
 import Pagination from "../../../components/Pagination";
 import { showEmsg } from "../../../utils/ShowEmsg";
@@ -16,6 +17,7 @@ import { UPDATE_BRAND_STATUS } from "../../../contants/apiRoutes";
 import Switch from "../../../components/Switch";
 import Tooltip from "../../../components/Tooltip";
 import Loader from "../../../components/Loader";
+import SkeletonLoader from "../../../components/SkeletonLoader";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -235,80 +237,57 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       </div>
 
       {/* Loading, Error, or Table */}
-      {bLoading ? (
-        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
-          <div className="table-scroll-container overflow-x-auto overflow-y-auto">
-            <table className="table-base w-full">
-              {/* Floating Header */}
-              <thead
-                className={`table-head-floating sticky top-0 z-10 ${
-                  tableScrollTop > 10 ? "shadow-sm" : ""
-                }`}
-              >
+      <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+        <div
+          className="table-scroll-container overflow-x-auto overflow-y-auto"
+          onScroll={handleTableScroll}
+        >
+          <table className="table-base w-full">
+            {/* Floating Header */}
+            <thead
+              className={`table-head-floating sticky top-0 z-10 ${
+                tableScrollTop > 10 ? "shadow-sm" : ""
+              }`}
+            >
+              <tr>
+                <th className="table-head-cell-floating text-left px-6 py-4">
+                  {t("PRODUCT_SETUP.BRANDS.TABLE.NAME")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.STATUS")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("PRODUCT_SETUP.BRANDS.TABLE.CREATED_AT")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.UPDATE_STATUS")}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="table-body">
+              {bLoading ? (
+                <SkeletonLoader type={SKELETON_TYPES.BRAND_TABLE} rows={6} />
+              ) : aBrands.length === 0 ? (
                 <tr>
-                  <th className="table-head-cell-floating text-left px-6 py-4">
-                    {t("PRODUCT_SETUP.BRANDS.TABLE.NAME")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.STATUS")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("PRODUCT_SETUP.BRANDS.TABLE.CREATED_AT")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.UPDATE_STATUS")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="table-body">
-                <tr>
-                  <td colSpan={4} className="py-8 text-center">
-                    <div className="flex justify-center">
-                      <Loader size="small" />
+                  <td colSpan={4} className="py-8 text-center text-gray-500">
+                    <div>
+                      <p className="text-lg mb-4">
+                        {t("PRODUCT_SETUP.BRANDS.NO_BRANDS_FOUND")}
+                      </p>
+                      {sSearchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
+                        >
+                          {t("COMMON.CLEAR_SEARCH")}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : sError ? (
-        <FullscreenErrorPopup
-          message={sError}
-          onClose={() => dispatch(clearResourceError("brands"))}
-          showConfirmButton={false}
-        />
-      ) : (
-        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
-          <div
-            className="table-scroll-container overflow-x-auto overflow-y-auto"
-            onScroll={handleTableScroll}
-          >
-            <table className="table-base w-full">
-              {/* Floating Header */}
-              <thead
-                className={`table-head-floating sticky top-0 z-10 ${
-                  tableScrollTop > 10 ? "shadow-sm" : ""
-                }`}
-              >
-                <tr>
-                  <th className="table-head-cell-floating text-left px-6 py-4">
-                    {t("PRODUCT_SETUP.BRANDS.TABLE.NAME")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.STATUS")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("PRODUCT_SETUP.BRANDS.TABLE.CREATED_AT")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.UPDATE_STATUS")}
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="table-body">
-                {aBrands.map((brand) => (
+              ) : (
+                aBrands.map((brand) => (
                   <tr
                     key={brand.BrandID}
                     className={`table-row items-center hover:bg-gray-50 ${
@@ -444,43 +423,37 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
-      {/* No Results Message */}
-      {bLoading === false && aBrands.length === 0 && (
-        <div className="text-center py-12 text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100">
-          <p className="text-lg mb-4">
-            {t("PRODUCT_SETUP.BRANDS.NO_BRANDS_FOUND")}
-          </p>
-          {sSearchQuery && (
-            <div>
-              <button
-                onClick={() => setSearchQuery("")}
-                className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
-              >
-                {t("COMMON.CLEAR_SEARCH")}
-              </button>
-            </div>
-          )}
-        </div>
+      {/* Error Popup */}
+      {sError && (
+        <FullscreenErrorPopup
+          message={sError}
+          onClose={() => dispatch(clearResourceError("brands"))}
+          showConfirmButton={false}
+        />
       )}
 
       {/* Pagination Controls */}
       {iTotalItems > 0 && (
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-          totalItems={iTotalItems}
-          itemsPerPage={iItemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+        bLoading ? (
+          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
+        ) : (
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+            totalItems={iTotalItems}
+            itemsPerPage={iItemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        )
       )}
 
       {/* Confirmation Popup */}

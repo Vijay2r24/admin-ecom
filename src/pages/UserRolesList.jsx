@@ -7,6 +7,7 @@ import ActionButtons from "../components/ActionButtons";
 import NotFoundMessage from "../components/NotFoundMessage";
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../context/TitleContext";
+import { SKELETON_TYPES } from "../contants/constants";
 import Switch from "../components/Switch";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { UPDATE_ROLE_STATUS } from "../contants/apiRoutes";
@@ -20,6 +21,7 @@ import {
   PERMISSIONS,
 } from "../contants/constants.jsx";
 import Loader from "../components/Loader";
+import SkeletonLoader from "../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
 import { useDispatch, useSelector } from "react-redux";
@@ -280,13 +282,7 @@ const UserRolesList = () => {
               </thead>
               <tbody className="table-body">
                 {bLoading || bFilterLoading ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-4">
-                      <div className="flex justify-center">
-                        <Loader size="small" />
-                      </div>
-                    </td>
-                  </tr>
+                  <SkeletonLoader type={SKELETON_TYPES.USER_ROLES_TABLE} rows={6} />
                 ) : nError ? (
                   <tr>
                     <td colSpan={3} className="text-center py-4 text-muted">
@@ -450,15 +446,19 @@ const UserRolesList = () => {
           </div>
         </div>
       )}
-      <Pagination
-        currentPage={nCurrentPage}
-        totalPages={nTotalPages}
-        totalItems={total}
-        itemsPerPage={itemsPerPage}
-        handlePrevPage={handlePrevPage}
-        handleNextPage={handleNextPage}
-        handlePageClick={handlePageClick}
-      />
+      {bLoading || bFilterLoading ? (
+        <SkeletonLoader type="pagination" />
+      ) : (
+        <Pagination
+          currentPage={nCurrentPage}
+          totalPages={nTotalPages}
+          totalItems={total}
+          itemsPerPage={itemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
+      )}
       {statusPopup.open && (
         <FullscreenErrorPopup
           message={t("USER_ROLES_LIST.STATUS_CONFIRM_MESSAGE", {

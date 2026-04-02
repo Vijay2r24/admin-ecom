@@ -8,6 +8,7 @@ import {
 import Toolbar from "../../../components/Toolbar";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { SKELETON_TYPES } from "../../../contants/constants";
 import Pagination from "../../../components/Pagination";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
@@ -15,6 +16,7 @@ import { UPDATE_CATEGORY_STATUS } from "../../../contants/apiRoutes";
 import Switch from "../../../components/Switch";
 import Tooltip from "../../../components/Tooltip";
 import Loader from "../../../components/Loader";
+import SkeletonLoader from "../../../components/SkeletonLoader";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -259,84 +261,65 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
         />
       </div>
 
-      {bLoading ? (
-        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
-          <div className="table-scroll-container overflow-x-auto overflow-y-auto">
-            <table className="table-base w-full">
-              {/* Floating Header */}
-              <thead
-                className={`table-head-floating sticky top-0 z-10 ${
-                  tableScrollTop > 10 ? "shadow-sm" : ""
-                }`}
-              >
+      {/* Loading/Error states or Table */}
+      <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+        <div
+          className="table-scroll-container overflow-x-auto overflow-y-auto"
+          onScroll={handleTableScroll}
+        >
+          <table className="table-base w-full">
+            {/* Floating Header */}
+            <thead
+              className={`table-head-floating sticky top-0 z-10 ${
+                tableScrollTop > 10 ? "shadow-sm" : ""
+              }`}
+            >
+              <tr>
+                <th className="table-head-cell-floating text-left px-6 py-4">
+                  {t("PRODUCT_SETUP.CATEGORIES.TABLE.NAME")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.DESCRIPTION")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.STATUS")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.CREATED_AT")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.UPDATE_STATUS")}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="table-body">
+              {bLoading ? (
+                <SkeletonLoader type={SKELETON_TYPES.CATEGORY_TABLE} rows={6} />
+              ) : sError ? (
                 <tr>
-                  <th className="table-head-cell-floating text-left px-6 py-4">
-                    {t("PRODUCT_SETUP.CATEGORIES.TABLE.NAME")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.DESCRIPTION")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.STATUS")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.CREATED_AT")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.UPDATE_STATUS")}
-                  </th>
+                  <td colSpan={5} className="py-8 text-center text-red-500">
+                    {t("COMMON.ERROR")}: {sError}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="table-body">
+              ) : aCategories.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center">
-                    <div className="flex justify-center">
-                      <Loader size="small" />
+                  <td colSpan={5} className="py-8 text-center text-gray-500">
+                    <div>
+                      {t("PRODUCT_SETUP.CATEGORIES.EMPTY.MESSAGE")}
+                      {sSearchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
+                        >
+                          {t("COMMON.CLEAR_SEARCH")}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : sError ? (
-        <div className="text-center py-8 text-red-500">
-          {t("COMMON.ERROR")}: {sError}
-        </div>
-      ) : (
-        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
-          <div
-            className="table-scroll-container overflow-x-auto overflow-y-auto"
-            onScroll={handleTableScroll}
-          >
-            <table className="table-base w-full">
-              {/* Floating Header */}
-              <thead
-                className={`table-head-floating sticky top-0 z-10 ${
-                  tableScrollTop > 10 ? "shadow-sm" : ""
-                }`}
-              >
-                <tr>
-                  <th className="table-head-cell-floating text-left px-6 py-4">
-                    {t("PRODUCT_SETUP.CATEGORIES.TABLE.NAME")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.DESCRIPTION")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.STATUS")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.CREATED_AT")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.UPDATE_STATUS")}
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="table-body">
-                {aCategories.map((category) => (
+              ) : (
+                aCategories.map((category) => (
                   <tr
                     key={category.CategoryID}
                     className={`table-row items-center hover:bg-gray-50 ${
@@ -403,117 +386,106 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
                           )}
                         </div>
                       </div>
-                  </td>
+                    </td>
 
-                  {/* Description */}
-                  <td
-                    className={`table-cell text-center align-middle px-6 py-4 max-w-[200px] ${
-                      !isCategoryActive(category) ? "text-gray-400" : ""
-                    }`}
-                  >
-                    <div
-                      className="text-sm truncate mx-auto"
-                      title={category.CategoryDescription}
-                    >
-                      {category.CategoryDescription}
-                    </div>
-                  </td>
-
-                  {/* Status Badge */}
-                  <td className="table-cell text-center align-middle px-6 py-4">
-                    <span
-                      className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                        isCategoryActive(category)
-                          ? "bg-green-100 text-green-800 border border-green-200"
-                          : "bg-red-100 text-red-800 border border-red-200"
+                    {/* Description */}
+                    <td
+                      className={`table-cell text-center align-middle px-6 py-4 max-w-[200px] ${
+                        !isCategoryActive(category) ? "text-gray-400" : ""
                       }`}
                     >
-                      {t(
-                        `COMMON.${
-                          isCategoryActive(category) ? "ACTIVE" : "INACTIVE"
-                        }`
-                      )}
-                    </span>
-                  </td>
-
-                  {/* Created At */}
-                  <td
-                    className={`table-cell text-center align-middle px-6 py-4 ${
-                      !isCategoryActive(category) ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    <span className="text-sm">
-                      {new Date(category.CreatedAt).toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })}
-                    </span>
-                  </td>
-
-                  {/* Toggle Switch */}
-                  <td
-                    className="table-cell text-center align-middle px-6 py-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex justify-center">
-                      <div className="relative group inline-block">
-                        <Tooltip
-                          text={hasUpdateCategoryStatusPermission ? t("TOOLTIPS.UPDATE_CATEGORY_STATUS_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
-                          position="left"
-                        >
-                          <Switch
-                            checked={isCategoryActive(category)}
-                            disabled={!hasUpdateCategoryStatusPermission || !category.editable}
-                            disableTooltip={true}
-                            onChange={() =>
-                              handleStatusChange(
-                                category.CategoryID,
-                                getStatusText(category)
-                              )
-                            }
-                          />
-                        </Tooltip>
+                      <div
+                        className="text-sm truncate mx-auto"
+                        title={category.CategoryDescription}
+                      >
+                        {category.CategoryDescription}
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+
+                    {/* Status Badge */}
+                    <td className="table-cell text-center align-middle px-6 py-4">
+                      <span
+                        className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                          isCategoryActive(category)
+                            ? "bg-green-100 text-green-800 border border-green-200"
+                            : "bg-red-100 text-red-800 border border-red-200"
+                        }`}
+                      >
+                        {t(
+                          `COMMON.${
+                            isCategoryActive(category) ? "ACTIVE" : "INACTIVE"
+                          }`
+                        )}
+                      </span>
+                    </td>
+
+                    {/* Created At */}
+                    <td
+                      className={`table-cell text-center align-middle px-6 py-4 ${
+                        !isCategoryActive(category) ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      <span className="text-sm">
+                        {new Date(category.CreatedAt).toLocaleString(undefined, {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </span>
+                    </td>
+
+                    {/* Toggle Switch */}
+                    <td
+                      className="table-cell text-center align-middle px-6 py-4"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex justify-center">
+                        <div className="relative group inline-block">
+                          <Tooltip
+                            text={hasUpdateCategoryStatusPermission ? t("TOOLTIPS.UPDATE_CATEGORY_STATUS_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
+                            position="left"
+                          >
+                            <Switch
+                              checked={isCategoryActive(category)}
+                              disabled={!hasUpdateCategoryStatusPermission || !category.editable}
+                              disableTooltip={true}
+                              onChange={() =>
+                                handleStatusChange(
+                                  category.CategoryID,
+                                  getStatusText(category)
+                                )
+                              }
+                            />
+                          </Tooltip>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
-          </div>
         </div>
-      )}
-      {!bLoading && !sError && aCategories.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="text-gray-500">
-            {t("PRODUCT_SETUP.CATEGORIES.EMPTY.MESSAGE")}
-          </div>
-          {sSearchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
-            >
-              {t("COMMON.CLEAR_SEARCH")}
-            </button>
-          )}
-        </div>
-      )}
+      </div>
 
       {/* Pagination Controls */}
       {iTotalItems > 0 && (
-          <Pagination
-            currentPage={nCurrentPage}
-            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-            totalItems={iTotalItems}
-            itemsPerPage={iItemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
+          bLoading ? (
+            <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
+          ) : (
+            <Pagination
+              currentPage={nCurrentPage}
+              totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+              totalItems={iTotalItems}
+              itemsPerPage={iItemsPerPage}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handlePageClick={handlePageClick}
+            />
+          )
       )}
       {statusPopup.open && (
         <FullscreenErrorPopup

@@ -874,7 +874,34 @@ export const MOCK_NOTIFICATIONS = [
   { id: 1, title: "Order #1234 delivered", time: "2 min ago" },
   { id: 2, title: "New user registered", time: "10 min ago" },
   { id: 3, title: "Stock running low for Laptop", time: "1 hour ago" },
+  { id: 4, title: "New order placed", time: "30 min ago" },
+  { id: 5, title: "Product out of stock", time: "1 hour ago" },
 ];
+
+export const SKELETON_TYPES = {
+  PRODUCT_TABLE: 'product-table',
+  PAYMENT_TABLE: 'payment-table',
+  BULK_IMPORT_TABLE: 'bulk-import-table',
+  ATTRIBUTE_TYPE_TABLE: 'attribute-type-table',
+  ATTRIBUTE_TABLE: 'attribute-table',
+  CATEGORY_TABLE: 'category-table',
+  BRAND_TABLE: 'brand-table',
+  SPECIFICATION_TYPE_TABLE: 'specification-type-table',
+  COLOR_TABLE: 'color-table',
+  PRODUCT_GRID: 'product-grid',
+  USER_TABLE: 'user-table',
+  USER_GRID: 'user-grid',
+  STORE_TABLE: 'store-table',
+  STORE_GRID: 'store-grid',
+  ORDER_TABLE: 'order-table',
+  ORDER_GRID: 'order-grid',
+  BANNER_GRID: 'banner-grid',
+  USER_ROLES_TABLE: 'user-roles-table',
+  PAGINATION: 'pagination',
+  PROFILE: 'profile',
+  DEFAULT: 'default',
+  NEW_SKELETON_TYPE: 'new-skeleton-type',
+};
 
 export const customScrollbarStyles = `
   .max-w-8xl::-webkit-scrollbar {
