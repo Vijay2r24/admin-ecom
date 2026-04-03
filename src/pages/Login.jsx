@@ -25,6 +25,7 @@ import {
     VALIDATE_OTP,
     GET_ALL_PERMISSIONS,
     GET_USER_BY_ID,
+    RESET_USER_PASSWORD, // Add this import
 } from "../contants/apiRoutes";
 
 import { showEmsg } from "../utils/ShowEmsg";
@@ -49,6 +50,17 @@ import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { loginSuccess } from "../store/slices/authSlice";
 
+// Add these constants
+const PASSWORD_LABELS = {
+    SHOW: "Show",
+    HIDE: "Hide"
+};
+
+const PASSWORD_ARIA = {
+    SHOW: "Show password",
+    HIDE: "Hide password"
+};
+
 const Login = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -61,6 +73,9 @@ const Login = () => {
         email: "",
         password: "",
         submit: "",
+        otp: "",
+        newPassword: "",
+        confirmPassword: "",
     });
 
     const [sCurrentView, setCurrentView] = useState("login");
@@ -76,7 +91,43 @@ const Login = () => {
     const [bShowConfirmPassword, setShowConfirmPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    const { fetchUserDetails } = useUserDetails()
+    const { fetchUserDetails } = useUserDetails();
+
+    // Add OTP validation function
+    const validateOtp = (otp) => {
+        if (!otp || otp.trim() === "") {
+            return t("LOGIN.ERRORS.OTP_REQUIRED");
+        }
+        if (otp.length !== 6) {
+            return t("LOGIN.ERRORS.OTP_INVALID_LENGTH");
+        }
+        return "";
+    };
+
+    // Add OTP input handlers
+    const handleOtpInputChange = (index, value) => {
+        if (value && !/^\d+$/.test(value)) return;
+        
+        const newOtp = sOtp.split('');
+        newOtp[index] = value;
+        const updatedOtp = newOtp.join('');
+        setOtp(updatedOtp);
+        
+        // Auto-focus next input
+        if (value && index < 5) {
+            const nextInput = document.getElementById(`otp-input-${index + 1}`);
+            if (nextInput) nextInput.focus();
+        }
+        
+        setError(prev => ({ ...prev, otp: "" }));
+    };
+
+    const handleOtpInputKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !sOtp[index] && index > 0) {
+            const prevInput = document.getElementById(`otp-input-${index - 1}`);
+            if (prevInput) prevInput.focus();
+        }
+    };
 
     // Handle Enter key press for form submission
     const handleKeyPress = (event) => {
@@ -129,22 +180,17 @@ const Login = () => {
         setError((prev) => ({ ...prev, [field]: fieldError, submit: "" }));
     };
 
-
-
-
     const fetchUserDetailsDirectly = async (userId, token) => {
         try {
             const response = await apiGet(`${GET_USER_BY_ID}/${userId}`, {}, token);
 
-            if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+            if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
                 const userData = response.data.data;
                 localStorage.setItem("userDetails", JSON.stringify(userData));
-
-
                 return userData;
             } else {
                 throw new Error(
-                    response?.data?.message ||  t("messages.USER_ERROR_MESSAGE")
+                    response?.data?.message || t("messages.USER_ERROR_MESSAGE")
                 );
             }
         } catch (err) {
@@ -211,7 +257,6 @@ const Login = () => {
                     containerId: t("LOGIN_CONTAINER_ID")
                 });
 
-
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("userId", data.UserID);
                 localStorage.setItem("tenantID", data.TenantID);
@@ -238,14 +283,14 @@ const Login = () => {
                         {},
                         data.token
                     );
-                    if (permResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+                    if (permResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
                         localStorage.setItem(
                             "AllPermissions",
                             JSON.stringify(permResponse.data.data)
                         );
                     }
                 } catch (e) {
-                   
+                    console.error("Failed to fetch permissions:", e);
                 }
 
                 try {
@@ -255,10 +300,8 @@ const Login = () => {
                     } else {
                         userData = await fetchUserDetailsDirectly(data.UserID, data.token);
                     }
-
-
                 } catch (error) {
-                   
+                    console.error("Failed to fetch user details:", error);
                 }
 
                 setTimeout(() => {
@@ -278,7 +321,6 @@ const Login = () => {
             hideLoaderWithDelay(setSubmitting);
         }
     };
-
 
     const handleForgotPasswordClick = () => {
         setCurrentView("forgotPassword");
@@ -309,14 +351,14 @@ const Login = () => {
                 false
             );
             const message = oResponse?.data?.message;
-            if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
+            if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
                 showToastMessage(message, STATUS.SUCCESS);
                 setbShowOtpDialog(true);
                 setTimerCount(60);
                 setTimerActive(true);
                 setResendEnabled(false);
                 setOtp("");
-                setError({ email: "", password: "", submit: "" });
+                setError({ email: "", password: "", submit: "", otp: "", newPassword: "", confirmPassword: "" });
             } else {
                 showToastMessage(message || t("OTP.ERROR"), STATUS.ERROR);
             }
@@ -330,15 +372,10 @@ const Login = () => {
 
     const handleVerifyOtp = async () => {
         if (submitting) return;
-        if (!sOtp.trim()) {
-            setError((prev) => ({ ...prev, otp: t("LOGIN.ERRORS.OTP_REQUIRED") }));
-            return;
-        }
-        if (sOtp.length !== 6) {
-            setError((prev) => ({
-                ...prev,
-                otp: t("LOGIN.ERRORS.OTP_INVALID_LENGTH"),
-            }));
+        const otpError = validateOtp(sOtp);
+        
+        if (otpError) {
+            setError((prev) => ({ ...prev, otp: otpError }));
             return;
         }
 
@@ -348,105 +385,70 @@ const Login = () => {
                 email: sForgotPasswordEmail,
                 OTP: Number(sOtp),
             };
-            const oResponse = await apiPost(VALIDATE_OTP, oPayload, null, false);
-            const message = oResponse?.data?.message;
-
-            if (
-                oResponse.data &&
-                oResponse.data.status === STATUS.SUCCESS.toUpperCase()
-            ) {
-                showToastMessage(message, STATUS.SUCCESS);
-                setbShowOtpDialog(false);
-                setTimerActive(false);
-                setOtp("");
-                setCurrentView("resetPassword");
-                setError({
-                    email: "",
-                    password: "",
-                    submit: "",
-                    otp: "",
-                    newPassword: "",
-                    confirmPassword: "",
-                });
-            } else {
-                const errMsg = message || t("LOGIN.ERRORS.OTP_INVALID");
-                showToastMessage(errMsg, STATUS.ERROR);
-                setError((prev) => ({ ...prev, otp: message }));
-                setOtp("");
-            }
-        } catch (error) {
-            const errMsg = error?.response?.data?.MESSAGE;
-            showToastMessage(errMsg, STATUS.ERROR);
-            setError((prev) => ({ ...prev, otp: errMsg }));
-            setOtp("");
-        } finally {
-            hideLoaderWithDelay(setSubmitting);
-        }
-    };
-
-    const handleOtpInputChange = (index, value) => {
-        if (value && !/^\d*$/.test(value)) {
-            setError((prev) => ({ ...prev, otp: t("OTP_DIALOG.OTP_VALIDATION") }));
-            return;
-        }
-        setError((prev) => ({ ...prev, otp: "" }));
-        const newOtp = sOtp.split("");
-        newOtp[index] = value;
-        setOtp(newOtp.join(""));
-        if (value !== "" && index < 5) {
-            const nextInput = document.getElementById(`otp-input-${index + 1}`);
-            if (nextInput) nextInput.focus();
-        }
-    };
-
-    const handleOtpInputKeyDown = (index, e) => {
-        if (e.key === "Backspace" && sOtp[index] === "" && index > 0) {
-            const prevInput = document.getElementById(`otp-input-${index - 1}`);
-            if (prevInput) prevInput.focus();
-        }
-    };
-
-    const handlePasswordReset = async () => {
-        if (submitting) return;
-        const newPasswordError = validateNewPassword(sNewPassword, t);
-        const confirmPasswordError = validateConfirmPassword(
-            sConfirmPassword,
-            sNewPassword,
-            t
-        );
-        if (newPasswordError || confirmPasswordError) {
-            setError((prev) => ({
-                ...prev,
-                newPassword: newPasswordError,
-                confirmPassword: confirmPasswordError,
-            }));
-            return;
-        }
-        setSubmitting(true);
-        try {
-            const hashedNewPassword = md5(sNewPassword);
-            const hashedConfirmPassword = md5(sConfirmPassword);
-            const oPayload = {
-                email: sForgotPasswordEmail,
-                NewPassword: hashedNewPassword,
-                ConfirmPassword: hashedConfirmPassword,
-            };
+            
             const oResponse = await apiPost(
-                VALIDATE_UPDATE_PASSWORD,
+                VALIDATE_OTP,
                 oPayload,
                 null,
                 false
             );
             const message = oResponse?.data?.message;
-            if (
-                oResponse.data &&
-                oResponse.data.status === STATUS.SUCCESS.toUpperCase()
-            ) {
-                showToastMessage(message, STATUS.SUCCESS);
+            if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
+                showToastMessage(message || t("OTP.VERIFY_SUCCESS"), STATUS.SUCCESS);
+                setbShowOtpDialog(false);
+                setCurrentView(LOGIN_VIEWS.RESET_PASSWORD);
+                setOtp("");
+                setError({ ...sError, otp: "" });
+            } else {
+                showToastMessage(message || t("OTP.VERIFY_ERROR"), STATUS.ERROR);
+            }
+        } catch (error) {
+            const errMsg = error?.response?.data?.message;
+            showToastMessage(errMsg || t("OTP.VERIFY_ERROR"), STATUS.ERROR);
+        } finally {
+            hideLoaderWithDelay(setSubmitting);
+        }
+    };
+
+    const handlePasswordReset = async () => {
+        if (submitting) return;
+        const emailError = validateEmail(sForgotPasswordEmail);
+        const otpError = validateOtp(sOtp);
+        const passwordError = validateNewPassword(sNewPassword, t);
+        const confirmPasswordError = validateConfirmPassword(sConfirmPassword, sNewPassword, t);
+
+        if (emailError || otpError || passwordError || confirmPasswordError) {
+            setError({
+                email: emailError || "",
+                password: passwordError || confirmPasswordError || "",
+                submit: "",
+                otp: otpError || "",
+                newPassword: passwordError || "",
+                confirmPassword: confirmPasswordError || "",
+            });
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const oPayload = {
+                email: sForgotPasswordEmail,
+                OTP: Number(sOtp),
+                NewPassword: sNewPassword,
+                ConfirmPassword: sConfirmPassword,
+            };
+
+            const oResponse = await apiPost(
+                `${RESET_USER_PASSWORD}`,
+                oPayload,
+                null,
+                false
+            );
+            const message = oResponse?.data?.message;
+            if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
+                showToastMessage(message || t("LOGIN.SUCCESS"), STATUS.SUCCESS);
+                setbShowOtpDialog(false);
                 setCurrentView("login");
-                setForgotPasswordEmail("");
-                setNewPassword("");
-                setConfirmPassword("");
                 setError({
                     email: "",
                     password: "",
@@ -455,6 +457,10 @@ const Login = () => {
                     newPassword: "",
                     confirmPassword: "",
                 });
+                setForgotPasswordEmail("");
+                setSNewPassword("");
+                setConfirmPassword("");
+                setOtp("");
             } else {
                 showToastMessage(message || t("LOGIN.ERRORS.PASSWORD_RESET_FAILED"), STATUS.ERROR);
             }
@@ -764,7 +770,6 @@ const Login = () => {
                 containerId={t("LOGIN_CONTAINER_ID")}
                 autoClose={3000}
             />
-
 
             {submitting && (
                 <div className="global-loader-overlay">

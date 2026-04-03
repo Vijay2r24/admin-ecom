@@ -195,7 +195,7 @@ const CreateCategory = () => {
           token
         );
 
-        if (data.status === STATUS.SUCCESS.toUpperCase()) {
+        if (data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           const categoryData = data.data;
 
           if (categoryData) {
@@ -549,7 +549,7 @@ const CreateCategory = () => {
         );
       }
 
-      if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
+      if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(oResponse.data.message, STATUS.SUCCESS, 3000, () => {
           navigate("/browse", { state: { fromCategoryEdit: true } });
         });

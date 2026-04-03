@@ -45,9 +45,28 @@ const SelectWithIcon = forwardRef(
         ? placeholder
         : selectedOptionLabels[0];
 
-    const filteredOptions = options.filter((option) =>
-      (option.label || "").toString().toLowerCase().includes(sSearchTerm.toLowerCase())
-    );
+    const filteredOptions = (() => {
+      const baseFiltered = options.filter((option) =>
+        (option.label || "").toString().toLowerCase().includes(sSearchTerm.toLowerCase())
+      );
+      
+      // Always include the currently selected value in filtered options
+      if (!multiple && value && !baseFiltered.some(option => String(option.value) === String(value))) {
+        const selectedOption = options.find(option => String(option.value) === String(value));
+        if (selectedOption) {
+          return [selectedOption, ...baseFiltered];
+        } else if (value) {
+          // If the selected option is not in the options array at all (due to API filtering),
+          // create a fallback option to ensure it remains visible
+          return [{
+            value: value,
+            label: selectedOptionLabels[0] || value,
+          }, ...baseFiltered];
+        }
+      }
+      
+      return baseFiltered;
+    })();
     const shouldShowSelectAll = multiple && filteredOptions.length > 2;
 
     const allSelected =

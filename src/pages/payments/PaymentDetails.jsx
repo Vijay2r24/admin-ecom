@@ -49,7 +49,7 @@ const PaymentDetails = () => {
         setLoading(true);
         const response = await apiGet(`${GET_PAYMENT_BYID}/${id}`, {}, token);
 
-        if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+        if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           setPayment(response.data.data);
         } else {
           setError(t("PAYMENTS.API_ERROR"));

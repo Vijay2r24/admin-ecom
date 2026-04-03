@@ -180,7 +180,7 @@ const ProductList = () => {
       const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
       const resData = oResponse?.data;
 
-      if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const rawProducts = Array.isArray(resData.data) ? resData.data : [];
         const transformedProducts = rawProducts.map((product) => {
           const firstVariant =

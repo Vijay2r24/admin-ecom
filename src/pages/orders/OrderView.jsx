@@ -359,7 +359,7 @@ const OrderView = () => {
         false
       );
 
-      if (oResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(oResponse.data.message, STATUS.SUCCESS);
         if (fetchDataRef.current) await fetchDataRef.current();
         closeEditDialog();

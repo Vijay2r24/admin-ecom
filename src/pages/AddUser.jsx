@@ -839,7 +839,7 @@ const AddUser = () => {
       const oResponse = await apiGet(`${GET_USER_BY_ID}/${id}`, {}, token);
       const resData = oResponse.data;
 
-      if (resData?.status === STATUS.SUCCESS.toUpperCase() && resData.data) {
+      if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase() && resData.data) {
         const user = resData.data;
 
         let formattedPhone = "";
@@ -1285,7 +1285,7 @@ const AddUser = () => {
 
         const resData = oResponse?.data;
 
-        if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+        if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           setRemovedDocumentIds([]);
           // Reset edit states after successful submission
           if (id) {

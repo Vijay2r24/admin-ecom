@@ -308,7 +308,7 @@ const AddUserRole = () => {
           token
         );
         const roleData = rolePermRes?.data;
-        if (roleData?.status === STATUS.SUCCESS.toUpperCase()) {
+        if (roleData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           if (Array.isArray(roleData.data?.result)) {
             permissionsArr = roleData.data.result;
           } else if (
@@ -334,7 +334,7 @@ const AddUserRole = () => {
         const res = await apiGet(GET_ALL_PERMISSIONS, {}, token);
         const resData = res?.data;
 
-        if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+        if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           if (Array.isArray(resData.data)) {
             permissionsArr = resData.data;
           } else if (Array.isArray(resData.data?.result)) {
@@ -613,7 +613,7 @@ const AddUserRole = () => {
         }
 
         const resData = res?.data;
-        if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+        if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           showEmsg(
             resData.message || t("CREATE_USER_ROLE.SAVE_SUCCESS"),
             STATUS.SUCCESS,

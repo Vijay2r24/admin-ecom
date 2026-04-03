@@ -99,7 +99,7 @@ export const fetchResource = createAsyncThunk(
       let pagination = {};
 
       // Your specific API response structure
-      if (response.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         data = response.data.data || [];
         pagination = response.data.pagination || {};
         total = pagination.totalRecords || data.length;
@@ -144,7 +144,7 @@ export const updateStatusById = createAsyncThunk(
       const payload = { IsActive: newStatus ? true : false };
       const response = await apiPatch(`${apiRoute}/${id}`, payload, token);
 
-      if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         return { key, id, idField, payload, message: response.data.message };
       } else {
         throw new Error(response?.data?.message);
@@ -165,7 +165,7 @@ export const fetchUserDetails = createAsyncThunk(
       const token = localStorage.getItem("token");
       const response = await apiGet(`${GET_USER_BY_ID}/${userId}`, {}, token);
 
-      if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const userData = response.data.data;
         localStorage.setItem("userDetails", JSON.stringify(userData));
         return userData;
@@ -192,7 +192,7 @@ export const fetchStatesByCountryId = createAsyncThunk(
       let data = [];
 
       // Handle the new response format: { status: "SUCCESS", data: [...] }
-      if (response.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         data = Array.isArray(response.data.data) ? response.data.data : [];
       } else if (Array.isArray(response.data)) {
         data = response.data;
@@ -237,7 +237,7 @@ export const fetchCitiesByStateId = createAsyncThunk(
       let data = [];
 
       // Handle the new response format: { status: "SUCCESS", data: [...] }
-      if (response.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         data = Array.isArray(response.data.data) ? response.data.data : [];
       } else if (Array.isArray(response.data)) {
         data = response.data;

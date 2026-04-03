@@ -387,7 +387,7 @@ const Notifications = () => {
         data.append("type", "notification");
         
         const oResponse = await apiPost(SEND_NOTIFICATIONS, data, token, true);
-        if (oResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+        if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           showEmsg(oResponse?.data?.message, STATUS.SUCCESS);
           resetForm();
         } else {
@@ -423,7 +423,7 @@ const Notifications = () => {
           false // Important: false for JSON, not FormData
         );
         
-        if (oResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+        if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           showEmsg(oResponse?.data?.message, STATUS.SUCCESS);
           resetForm();
         } else {

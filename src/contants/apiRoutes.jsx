@@ -3,6 +3,7 @@ export const LOGIN = `/adminlogin`;
 export const FORGOT_USER_PASSWORD = `/forgotUserPassword`;
 export const VALIDATE_OTP = `/validateUserOtp`;
 export const VALIDATE_UPDATE_PASSWORD = `/validateOtpAndUpdateUserPassword`;
+export const RESET_USER_PASSWORD = `/resetUserPassword`;
 export const GETALL_CATEGORY = `/getAllCategories`;
 export const GETALL_BRANDS = `/getAllBrands`;
 export const deleteBrand = `/deleteBrand`;

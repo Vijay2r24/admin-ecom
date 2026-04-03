@@ -198,7 +198,7 @@ const CreateColor = () => {
     try {
       const response = await apiPost(CREATE_COLOUR, payload, token);
 
-      if (response.data.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(response.data.message, STATUS.SUCCESS, 3000, () => {
           navigate("/browse", { state: { fromColorEdit: true } })
         });
