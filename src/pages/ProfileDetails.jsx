@@ -170,7 +170,7 @@ const ProfileDetails = () => {
         false
       );
 
-      if (response.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(response.data.message, STATUS.SUCCESS);
         setSuccess(response.data.message);
         setModalType(null);

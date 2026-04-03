@@ -199,7 +199,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
         token
       );
 
-      if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         setEditForm({
           open: true,
           mode: FORM_MODES.EDIT,
@@ -259,7 +259,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
         response = await apiPost(CREATE_SPECIFICATION_TYPE, payload, token);
       }
 
-      if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const successMessage =
           response?.data?.message ||
           (editForm.mode === FORM_MODES.CREATE

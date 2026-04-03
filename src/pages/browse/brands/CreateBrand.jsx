@@ -164,8 +164,8 @@ const CreateBrand = () => {
           const brand = res?.data?.data;
 
           if (
-            (res?.data?.STATUS === STATUS.SUCCESS.toUpperCase() ||
-              res?.data?.status === STATUS.SUCCESS.toUpperCase()) &&
+            (res?.data?.STATUS?.toUpperCase() === STATUS.SUCCESS.toUpperCase() ||
+              res?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) &&
             brand
           ) {
             // Determine existing logo ID and URL from either documentMetadata or BrandLogo

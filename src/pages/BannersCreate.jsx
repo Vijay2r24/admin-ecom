@@ -283,7 +283,7 @@ const BannerForm = () => {
         token
       );
 
-      if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const bannerData = response.data.data;
         const firstImage = bannerData.BannerImage?.[0] || {};
 
@@ -552,7 +552,7 @@ const BannerForm = () => {
         response = await apiPost(CREATE_BANNER, data, token, true);
       }
 
-      if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         toast.success(response?.data?.message || t("BANNER_FORM.SAVE_SUCCESS"));
         setTimeout(() => navigate("/banners"), 2000);
       } else {

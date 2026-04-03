@@ -172,7 +172,7 @@ const CreateAttribute = () => {
         token
       );
       if (
-        response.data.status === STATUS.SUCCESS.toUpperCase() &&
+        response.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase() &&
         response.data.data
       ) {
         const attributeData = response.data.data;
@@ -320,7 +320,7 @@ const CreateAttribute = () => {
       response = await apiPost(CREATE_ATTRIBUTE_VALUE, payload, token);
     }
 
-    if (response.data.status === STATUS.SUCCESS.toUpperCase()) {
+    if (response.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
       showEmsg(response.data.message, STATUS.SUCCESS, 3000, goBackToBrowse);
     } else {
       showEmsg(response.data.message || t("COMMON.ERROR"), STATUS.ERROR);

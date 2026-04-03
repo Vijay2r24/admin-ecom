@@ -92,7 +92,7 @@ const ActiveBannersWithSequence = () => {
         token
       );
       // Check different possible response structures
-      const success = response?.data?.status === STATUS.SUCCESS.toUpperCase()|| response?.status === STATUS.SUCCESS.toUpperCase();
+      const success = response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase() || response?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase();
 
       if (success) {
         // Extract data from response - handle both response structures
@@ -240,7 +240,7 @@ const ActiveBannersWithSequence = () => {
       const response = await apiPatch(UPDATE_BANNER_SORTORDER, payload, token);
 
       // Check response success
-      const success = response?.data?.status === STATUS.SUCCESS.toUpperCase() || response?.status === STATUS.SUCCESS.toUpperCase();
+      const success = response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase() || response?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase();
 
       if (success) {
         toast.success(response?.data?.message || t("BANNERS.SAVE_SUCCESS"));

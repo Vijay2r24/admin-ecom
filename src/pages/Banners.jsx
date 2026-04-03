@@ -60,7 +60,7 @@ const Banners = () => {
       );
       if (
         oResponse.data &&
-        oResponse.data.status === STATUS.SUCCESS.toUpperCase()
+        oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()
       ) {
         // Check if the response message indicates no banners found
         if (oResponse.data.message === "No banners found") {
@@ -145,7 +145,7 @@ const Banners = () => {
       );
       if (
         oResponse.data &&
-        oResponse.data.status === STATUS.SUCCESS.toUpperCase()
+        oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()
       ) {
         showEmsg(
           oResponse.data.message || t("BANNER_FORM.STATUS_UPDATED"),
