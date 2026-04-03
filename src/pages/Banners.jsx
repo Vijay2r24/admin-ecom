@@ -8,6 +8,7 @@ import {
   UPDATE_BANNER_STATUS,
   DELETE_BANNER,
 } from "../contants/apiRoutes";
+import { SKELETON_TYPES } from "../contants/constants";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
 import {
@@ -21,6 +22,7 @@ import noImage from "../../assets/images/missing-pictur.jpg";
 import Switch from "../components/Switch";
 import Pagination from "../components/Pagination"; // Import the Pagination component
 import Loader from "../components/Loader";
+import SkeletonLoader from "../components/SkeletonLoader";
 
 
 const Banners = () => {
@@ -222,6 +224,7 @@ const Banners = () => {
           <div className="flex items-center justify-center py-20">
             <Loader height={48} width={48} />
           </div>
+          <SkeletonLoader type={SKELETON_TYPES.BANNER_GRID} rows={6} className="mt-4" />
         ) : paginatedBanners.length === 0 && !sError ? (
           <div className="flex flex-col items-center justify-center py-20 px-4">
             <div className="mb-8">

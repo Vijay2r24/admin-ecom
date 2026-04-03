@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
-import { useDispatch } from 'react-redux';
 import { addNotification } from '../store/slices/notificationSlice';
 import { DATA_TYPES, NOTIFICATION_TYPES } from '../contants/constants';
+import { store } from '../store/index';
 
 export const showEmsg = (
   message,
@@ -9,14 +9,18 @@ export const showEmsg = (
   duration = 1400,
   onCloseCallback = null
 ) => {
-  // Add to Redux store
+  // Convert type to uppercase for consistent comparison
+  const normalizedType = type?.toUpperCase();
+  
+  // Determine notification type
   let notificationType = NOTIFICATION_TYPES.INFO;
-  if (type === NOTIFICATION_TYPES.SUCCESS || type === NOTIFICATION_TYPES.SUCCESS.toUpperCase()) notificationType = NOTIFICATION_TYPES.SUCCESS;
-  else if (type === NOTIFICATION_TYPES.ERROR || type === NOTIFICATION_TYPES.ERROR.toUpperCase()) notificationType = NOTIFICATION_TYPES.ERROR;
-  else if (type === NOTIFICATION_TYPES.WARNING || type === NOTIFICATION_TYPES.WARNING.toUpperCase()) notificationType = NOTIFICATION_TYPES.WARNING;
-
-  const dispatch = useDispatch();
-  dispatch(addNotification({ message, type: notificationType }));
+  if (normalizedType === NOTIFICATION_TYPES.SUCCESS.toUpperCase()) {
+    notificationType = NOTIFICATION_TYPES.SUCCESS;
+  } else if (normalizedType === NOTIFICATION_TYPES.ERROR.toUpperCase()) {
+    notificationType = NOTIFICATION_TYPES.ERROR;
+  } else if (normalizedType === NOTIFICATION_TYPES.WARNING.toUpperCase()) {
+    notificationType = NOTIFICATION_TYPES.WARNING;
+  }
 
   const safeDuration =
     typeof duration === DATA_TYPES.NUMBER && duration > 0 ? duration : 3000;
@@ -32,16 +36,27 @@ export const showEmsg = (
     onClose: onCloseCallback || undefined,
   };
 
-  switch (type) {
+  // Show toast first
+  let toastResult;
+  switch (notificationType) {
     case NOTIFICATION_TYPES.SUCCESS:
-      return toast.success(message, options);
+      toastResult = toast.success(message, options);
+      break;
     case NOTIFICATION_TYPES.ERROR:
-      return toast.error(message, options);
+      toastResult = toast.error(message, options);
+      break;
     case NOTIFICATION_TYPES.INFO:
-      return toast.info(message, options);
+      toastResult = toast.info(message, options);
+      break;
     case NOTIFICATION_TYPES.WARNING:
-      return toast.warn(message, options);
+      toastResult = toast.warn(message, options);
+      break;
     default:
-      return toast(message, options);
+      toastResult = toast(message, options);
   }
+
+  // Add to Redux store using store.dispatch directly
+  store.dispatch(addNotification({ message, type: notificationType }));
+
+  return toastResult;
 };

@@ -5,7 +5,8 @@ import { useTitle } from "../context/TitleContext";
 import Toolbar from "../components/Toolbar";
 import { showEmsg } from "../utils/ShowEmsg";
 import Loader from "../components/Loader";
-import { ITEMS_PER_PAGE, STATUS, FILE_CONSTANTS } from "../contants/constants";
+import SkeletonLoader from "../components/SkeletonLoader";
+import { ITEMS_PER_PAGE, STATUS, FILE_CONSTANTS, SKELETON_TYPES } from "../contants/constants";
 import { useDispatch } from "react-redux";
 import { exportProductTemplate } from "../store/slices/exportSlice";
 import { apiGet, apiPost } from "../utils/ApiUtils";
@@ -339,13 +340,7 @@ const BulkImport = () => {
             
             <tbody className="table-body">
               {listLoading ? (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center">
-                    <div className="flex justify-center">
-                      <Loader size="small" />
-                    </div>
-                  </td>
-                </tr>
+                <SkeletonLoader type={SKELETON_TYPES.BULK_IMPORT_TABLE} rows={6} />
               ) : listError ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-red-500">
@@ -418,15 +413,19 @@ const BulkImport = () => {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            itemsPerPage={pageSize}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
+          {listLoading ? (
+            <SkeletonLoader type="pagination" />
+          ) : (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={pageSize}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handlePageClick={handlePageClick}
+            />
+          )}
         </div>
       )}
 
