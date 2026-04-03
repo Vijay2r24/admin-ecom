@@ -47,6 +47,7 @@ function DateTimeRangePickerComponent({
     const handleClickOutside = (event) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
         setShowCalendar(false);
+        setShowDropdown(false); // Also close the main dropdown
         setView(DATE_UNITS.DAYS);
         setValidationError(null);
       }

@@ -168,6 +168,7 @@ const ProductGroupList = ({ onCreate }) => {
           searchPlaceholder={t("PRODUCT_SETUP.PRODUCT_GROUPS.SEARCH_PLACEHOLDER")}
           showSearch={true}
           showViewToggle={false}
+          isBrowsePage={true}
           showFilterButton={true}
           onCreate={handleCreateProductGroup}
           createLabel={t("PRODUCT_SETUP.CREATE")}

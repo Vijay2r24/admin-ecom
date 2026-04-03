@@ -7,9 +7,13 @@ import {
 } from "../../../store/slices/allDataSlice";
 import Toolbar from "../../../components/Toolbar";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { SKELETON_TYPES } from "../../../contants/constants";
 import Pagination from "../../../components/Pagination";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
+import Loader from "../../../components/Loader";
+import SkeletonLoader from "../../../components/SkeletonLoader";
 import {
   CREATE_SPECIFICATION_TYPE,
   GET_SPECIFICATION_TYPE_ID,
@@ -381,6 +385,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
           )}
           showSearch={true}
           showViewToggle={false}
+          isBrowsePage={true}
           showFilterButton={true}
           
           // --- Permission-based Create Button ---
@@ -404,276 +409,278 @@ const SpecificationTypeList = ({ setSubmitting }) => {
         />
       </div>
 
-      {/* Loading/Error states */}
-      {bLoading ? (
-        <div className="text-center py-8 text-gray-500">
-          {t("COMMON.LOADING")}
-        </div>
-      ) : sError ? (
-        <div className="text-center py-8 text-red-500">
-          {t("COMMON.ERROR")}: {sError}
-        </div>
-      ) : (
-        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
-          <div
-            className="table-scroll-container overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)]"
-            onScroll={handleTableScroll}
-          >
-            <table className="table-base w-full">
-              {/* Floating Header */}
-              <thead
-                className={`table-head-floating sticky top-0 z-10 ${
-                  tableScrollTop > 10 ? "shadow-sm" : ""
-                }`}
-              >
+      {/* Loading/Error states or Table */}
+      <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+        <div
+          className="table-scroll-container overflow-x-auto overflow-y-auto"
+          onScroll={handleTableScroll}
+        >
+          <table className="table-base w-full">
+            {/* Floating Header */}
+            <thead
+              className={`table-head-floating sticky top-0 z-10 ${
+                tableScrollTop > 10 ? "shadow-sm" : ""
+              }`}
+            >
+              <tr>
+                <th className="table-head-cell-floating text-left px-6 py-4">
+                  {t("PRODUCT_SETUP.SPECIFICATION_TYPES.TABLE.NAME")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.CREATED_AT")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.STATUS")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.UPDATE_STATUS")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.ACTIONS")}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="table-body">
+              {bLoading ? (
+                <SkeletonLoader type={SKELETON_TYPES.SPECIFICATION_TYPE_TABLE} rows={6} />
+              ) : sError ? (
                 <tr>
-                  <th className="table-head-cell-floating text-left px-6 py-4">
-                    {t("PRODUCT_SETUP.SPECIFICATION_TYPES.TABLE.NAME")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.CREATED_AT")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.STATUS")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.UPDATE_STATUS")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.ACTIONS")}
-                  </th>
+                  <td colSpan={5} className="py-8 text-center text-red-500">
+                    {t("COMMON.ERROR")}: {sError}
+                  </td>
                 </tr>
-              </thead>
-
-              <tbody className="table-body">
-                {/* Create row */}
-                {editForm.open && editForm.mode === FORM_MODES.CREATE && (
-                  <tr className="table-row bg-blue-50 hover:bg-blue-100">
-                    <td className="table-cell text-left align-middle px-6 py-2">
-                      <input
-                        type="text"
-                        name="name"
-                        value={editForm.name}
-                        onChange={handleFormChange}
-                        className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder={t(
-                          "PRODUCT_SETUP.SPECIFICATION_TYPES.NAME_PLACEHOLDER"
-                        )}
-                        required
-                      />
-                    </td>
-                    <td className="table-cell text-center align-middle px-6 py-2">
-                      <span className="text-sm">-</span>
-                    </td>
-                    <td className="table-cell text-center align-middle px-6 py-2">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                        {t("COMMON.ACTIVE")}
-                      </span>
-                    </td>
-                    <td className="table-cell text-center align-middle px-6 py-2">
-                      <div className="flex justify-center">
-                        <Switch checked={true} disabled={true} />
-                      </div>
-                    </td>
-                    <td className="table-cell text-center align-middle px-6 py-2">
-                      <div className="flex items-center justify-center gap-2">
+              ) : aSpecificationTypes.length === 0 && !editForm.open ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-gray-500">
+                    <div>
+                      {t("PRODUCT_SETUP.SPECIFICATION_TYPES.EMPTY.MESSAGE")}
+                      {sSearchQuery && (
                         <button
-                          onClick={handleFormSubmit}
-                          className="btn-primary py-1 px-3 text-sm"
+                          onClick={() => setSearchQuery("")}
+                          className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
                         >
-                          {t("COMMON.SAVE")}
+                          {t("COMMON.CLEAR_SEARCH")}
                         </button>
-                        <button
-                          onClick={handleFormCancel}
-                          className="btn-cancel py-1 px-3 text-sm"
-                        >
-                          {t("COMMON.CANCEL")}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-
-                {/* List all specification types */}
-                {aSpecificationTypes.map((specType) => {
-                  const editing = isEditing(specType.SpecificationTypeID);
-                  const currentStatus = editing
-                    ? getCurrentStatus(specType.SpecificationTypeID)
-                    : specType.IsActive;
-                  const isInactive = !currentStatus;
-
-                  return (
-                    <tr
-                      key={specType.SpecificationTypeID}
-                      className={`table-row items-center hover:bg-gray-50 ${
-                        editing ? "bg-blue-50" : ""
-                      } ${isInactive && !editing ? "bg-gray-50" : ""}`}
-                    >
-                      {/* Name column */}
-                      <td
-                        className={`table-cell text-left align-middle px-6 py-1 ${
-                          isInactive && !editing ? "text-gray-500" : ""
-                        }`}
-                      >
-                        {editing ? (
-                          <input
-                            type="text"
-                            name="name"
-                            value={editForm.name}
-                            onChange={handleFormChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder={t(
-                              "PRODUCT_SETUP.SPECIFICATION_TYPES.NAME_PLACEHOLDER"
-                            )}
-                            required
-                          />
-                        ) : (
-                          <div
-                            className={`text-sm block truncate max-w-[180px] font-medium ${
-                              isInactive ? "cursor-not-allowed" : ""
-                            }`}
-                            title={
-                              isInactive
-                                ? t(
-                                    "PRODUCT_SETUP.SPECIFICATION_TYPES.EDIT_DISABLED_TOOLTIP"
-                                  )
-                                : specType.Name
-                            }
-                          >
-                            {specType.Name}
-                          </div>
-                        )}
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                <>
+                  {/* Create row */}
+                  {editForm.open && editForm.mode === FORM_MODES.CREATE && (
+                    <tr className="table-row bg-blue-50 hover:bg-blue-100">
+                      <td className="table-cell text-left align-middle px-6 py-2">
+                        <input
+                          type="text"
+                          name="name"
+                          value={editForm.name}
+                          onChange={handleFormChange}
+                          className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder={t(
+                            "PRODUCT_SETUP.SPECIFICATION_TYPES.NAME_PLACEHOLDER"
+                          )}
+                          required
+                        />
                       </td>
-
-                      {/* Created At column */}
-                      <td
-                        className={`table-cell text-center align-middle px-6 py-1 ${
-                          isInactive && !editing
-                            ? "text-gray-400"
-                            : "text-gray-600"
-                        }`}
-                      >
-                        <span className="text-sm">
-                          {specType.CreatedAt
-                            ? new Date(specType.CreatedAt).toLocaleString(
-                                undefined,
-                                DATE_FORMAT_OPTIONS
-                              )
-                            : "-"}
+                      <td className="table-cell text-center align-middle px-6 py-2">
+                        <span className="text-sm">-</span>
+                      </td>
+                      <td className="table-cell text-center align-middle px-6 py-2">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                          {t("COMMON.ACTIVE")}
                         </span>
                       </td>
-
-                      {/* Status */}
-                      <td className="table-cell text-center align-middle px-6 py-1">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                            currentStatus
-                              ? "bg-green-100 text-green-800 border border-green-200"
-                              : "bg-red-100 text-red-800 border border-red-200"
-                          }`}
-                        >
-                          {t(`COMMON.${currentStatus ? "ACTIVE" : "INACTIVE"}`)}
-                        </span>
-                      </td>
-
-                      {/* Toggle status */}
-                      <td className="table-cell text-center align-middle px-6 py-1">
-                        <div className="relative group inline-block">
-                          <Tooltip
-                            text={hasUpdateSpecificationTypeStatusPermission ? t("TOOLTIPS.UPDATE_SPECIFICATION_TYPE_STATUS_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
-                            position="left"
-                          >
-                            <Switch
-                              checked={Boolean(currentStatus)}
-                              disabled={!hasUpdateSpecificationTypeStatusPermission}
-                              disableTooltip={true}
-                              onChange={() =>
-                                handleStatusChange(
-                                  specType.SpecificationTypeID,
-                                  currentStatus
-                                )
-                              }
-                            />
-                          </Tooltip>
+                      <td className="table-cell text-center align-middle px-6 py-2">
+                        <div className="flex justify-center">
+                          <Switch checked={true} disabled={true} />
                         </div>
                       </td>
-
-                      {/* Actions */}
-                      <td className="table-cell text-center align-middle px-6 py-1">
+                      <td className="table-cell text-center align-middle px-6 py-2">
                         <div className="flex items-center justify-center gap-2">
-                          {editing ? (
-                            <>
-                              <button
-                                onClick={handleFormSubmit}
-                                className="btn-primary py-1 px-3 text-sm"
-                              >
-                                {t("COMMON.SAVE")}
-                              </button>
-                              <button
-                                onClick={handleFormCancel}
-                                className="btn-cancel py-1 px-3 text-sm"
-                              >
-                                {t("COMMON.CANCEL")}
-                              </button>
-                            </>
-                          ) : (
-                            <ActionButtons
-                              id={specType.SpecificationTypeID}
-                              onEdit={() => {
-                                if (hasEditSpecificationTypePermission) {
-                                  handleEdit(specType);
-                                } else {
-                                  showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
-                                }
-                              }}
-                              /* 
-                                Disable Edit button only if Item is Inactive or no permission
-                              */
-                               disableEdit={!specType.editable || !hasEditSpecificationTypePermission}
-                            />
-                          )}
+                          <button
+                            onClick={handleFormSubmit}
+                            className="btn-primary py-1 px-3 text-sm"
+                          >
+                            {t("COMMON.SAVE")}
+                          </button>
+                          <button
+                            onClick={handleFormCancel}
+                            className="btn-cancel py-1 px-3 text-sm"
+                          >
+                            {t("COMMON.CANCEL")}
+                          </button>
                         </div>
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                  )}
 
-      {/* Empty state */}
-      {!bLoading &&
-        !sError &&
-        aSpecificationTypes.length === 0 &&
-        !editForm.open && (
-          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="text-gray-500">
-              {t("PRODUCT_SETUP.SPECIFICATION_TYPES.EMPTY.MESSAGE")}
-            </div>
-            {sSearchQuery && ( 
-              <button
-                onClick={() => setSearchQuery("")}
-                className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
-              >
-                {t("COMMON.CLEAR_SEARCH")}
-              </button>
-            )}
-          </div>
-        )}
+                  {/* List all specification types */}
+                  {aSpecificationTypes.map((specType) => {
+                    const editing = isEditing(specType.SpecificationTypeID);
+                    const currentStatus = editing
+                      ? getCurrentStatus(specType.SpecificationTypeID)
+                      : specType.IsActive;
+                    const isInactive = !currentStatus;
+
+                    return (
+                      <tr
+                        key={specType.SpecificationTypeID}
+                        className={`table-row items-center hover:bg-gray-50 ${
+                          editing ? "bg-blue-50" : ""
+                        } ${isInactive && !editing ? "bg-gray-50" : ""}`}
+                      >
+                        {/* Name column */}
+                        <td
+                          className={`table-cell text-left align-middle px-6 py-1 ${
+                            isInactive && !editing ? "text-gray-500" : ""
+                          }`}
+                        >
+                          {editing ? (
+                            <input
+                              type="text"
+                              name="name"
+                              value={editForm.name}
+                              onChange={handleFormChange}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder={t(
+                                "PRODUCT_SETUP.SPECIFICATION_TYPES.NAME_PLACEHOLDER"
+                              )}
+                              required
+                            />
+                          ) : (
+                            <div
+                              className={`text-sm block truncate max-w-[180px] font-medium ${
+                                isInactive ? "cursor-not-allowed" : ""
+                              }`}
+                              title={
+                                isInactive
+                                  ? t(
+                                      "PRODUCT_SETUP.SPECIFICATION_TYPES.EDIT_DISABLED_TOOLTIP"
+                                    )
+                                  : specType.Name
+                              }
+                            >
+                              {specType.Name}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Created At column */}
+                        <td
+                          className={`table-cell text-center align-middle px-6 py-1 ${
+                            isInactive && !editing
+                              ? "text-gray-400"
+                              : "text-gray-600"
+                          }`}
+                        >
+                          <span className="text-sm">
+                            {specType.CreatedAt
+                              ? new Date(specType.CreatedAt).toLocaleString(
+                                  undefined,
+                                  DATE_FORMAT_OPTIONS
+                                )
+                              : "-"}
+                          </span>
+                        </td>
+
+                        {/* Status */}
+                        <td className="table-cell text-center align-middle px-6 py-1">
+                          <span
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                              currentStatus
+                                ? "bg-green-100 text-green-800 border border-green-200"
+                                : "bg-red-100 text-red-800 border border-red-200"
+                            }`}
+                          >
+                            {t(`COMMON.${currentStatus ? "ACTIVE" : "INACTIVE"}`)}
+                          </span>
+                        </td>
+
+                        {/* Toggle status */}
+                        <td className="table-cell text-center align-middle px-6 py-1">
+                          <div className="relative group inline-block">
+                            <Tooltip
+                              text={hasUpdateSpecificationTypeStatusPermission ? t("TOOLTIPS.UPDATE_SPECIFICATION_TYPE_STATUS_TOOLTIP") : t("COMMON.NO_PERMISSION_TOOLTIP")}
+                              position="left"
+                            >
+                              <Switch
+                                checked={Boolean(currentStatus)}
+                                disabled={!hasUpdateSpecificationTypeStatusPermission}
+                                disableTooltip={true}
+                                onChange={() =>
+                                  handleStatusChange(
+                                    specType.SpecificationTypeID,
+                                    currentStatus
+                                  )
+                                }
+                              />
+                            </Tooltip>
+                          </div>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="table-cell text-center align-middle px-6 py-1">
+                          <div className="flex items-center justify-center gap-2">
+                            {editing ? (
+                              <>
+                                <button
+                                  onClick={handleFormSubmit}
+                                  className="btn-primary py-1 px-3 text-sm"
+                                >
+                                  {t("COMMON.SAVE")}
+                                </button>
+                                <button
+                                  onClick={handleFormCancel}
+                                  className="btn-cancel py-1 px-3 text-sm"
+                                >
+                                  {t("COMMON.CANCEL")}
+                                </button>
+                              </>
+                            ) : (
+                              <ActionButtons
+                                id={specType.SpecificationTypeID}
+                                onEdit={() => {
+                                  if (hasEditSpecificationTypePermission) {
+                                    handleEdit(specType);
+                                  } else {
+                                    showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+                                  }
+                                }}
+                                /* 
+                                  Disable Edit button only if Item is Inactive or no permission
+                                */
+                                 disableEdit={!specType.editable || !hasEditSpecificationTypePermission}
+                              />
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Pagination - Fixed at bottom */}
       {iTotalItems > 0 && (
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-          totalItems={iTotalItems}
-          itemsPerPage={iItemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+        bLoading ? (
+          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
+        ) : (
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+            totalItems={iTotalItems}
+            itemsPerPage={iItemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        )
       )} 
 
       {/* Confirmation popup for status change */}

@@ -12,6 +12,20 @@ import { MODULES, PERMISSIONS } from './contants/constants';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// Remove all title attributes to prevent white tooltips
+const removeTitleAttributes = () => {
+  const elementsWithTitle = document.querySelectorAll('[title]');
+  elementsWithTitle.forEach(element => {
+    const title = element.getAttribute('title');
+    if (title) {
+      // Store title in data attribute for potential future use
+      element.setAttribute('data-original-title', title);
+      // Remove the title attribute to prevent browser tooltip
+      element.removeAttribute('title');
+    }
+  });
+};
+
 // Direct imports instead of lazy loading
 import Layout from "./layout/Layout";
 import Browse from "./pages/browse/Browse";
@@ -106,6 +120,7 @@ const PublicRoute = ({ children }) => {
 };
 const App = () => {
   const location = useLocation();
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -113,6 +128,44 @@ const App = () => {
     const timer = setTimeout(() => setLoading(false), 600);
     return () => clearTimeout(timer);
   }, [location]);
+
+  // Remove all title attributes to prevent white tooltips
+  useEffect(() => {
+    // Initial removal
+    removeTitleAttributes();
+    
+    // Set up MutationObserver to catch dynamically added elements
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === 1) { // Element node
+            // Check the added node itself
+            if (node.hasAttribute && node.hasAttribute('title')) {
+              const title = node.getAttribute('title');
+              node.setAttribute('data-original-title', title);
+              node.removeAttribute('title');
+            }
+            // Check all child elements
+            const elementsWithTitle = node.querySelectorAll && node.querySelectorAll('[title]');
+            elementsWithTitle.forEach(element => {
+              const title = element.getAttribute('title');
+              element.setAttribute('data-original-title', title);
+              element.removeAttribute('title');
+            });
+          }
+        });
+      });
+    });
+
+    // Start observing the document body
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // Cleanup observer on unmount
+    return () => observer.disconnect();
+  }, []);
 
 
   return (
@@ -123,17 +176,17 @@ const App = () => {
             {/* Removed Suspense wrapper since we're not using lazy loading anymore */}
             <ScrollToTop />
             <Routes>
-              <Route path="/" element={<Login />} />
+            <Route path="/" element={<Login />} />
 
-              {/* Dashboard */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute permissionCode={dashboardPermission}>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Dashboard */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute permissionCode={dashboardPermission}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
               {/* Browse/Product Setup */}
               <Route
@@ -445,7 +498,7 @@ const App = () => {
           </LocationDataProvider>
         </TitleProvider>
       </AllDataProvider>
-      <ToastContainer
+    <ToastContainer
         position="top-right"
         autoClose={1400}
         hideProgressBar={false}

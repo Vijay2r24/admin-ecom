@@ -19,6 +19,7 @@ const SelectWithIcon = forwardRef(
       multiple = false,
       maxVisibleItems = 3,
       disabled = false,
+      className = "",
       ...rest
     },
     ref
@@ -146,12 +147,12 @@ const SelectWithIcon = forwardRef(
         <div className="relative group" ref={selectRef}>
           <div
             ref={ref}
-            className={`relative w-full pl-10 pr-3 py-2 text-sm border ${error ? "border-red-300" : "border-gray-200"
-              } rounded-lg transition-all duration-200 flex items-center justify-between
+            className={`relative w-full pl-10 pr-3 py-2.5 text-xs border ${error ? "border-red-300" : "border-gray-200"
+              } rounded-md transition-all duration-200 flex items-center justify-between
             ${disabled
                 ? "bg-gray-100 cursor-not-allowed opacity-75"
-                : "bg-white cursor-pointer group-hover:border-custom-bg focus:ring-2 focus:ring-custom-bg focus:border-custom-bg placeholder:text-sm"
-              }`}
+                : "bg-white hover:border-custom-bg cursor-pointer shadow-sm"
+            } ${className}`}
             onClick={(e) => {
               e.stopPropagation();
               if (!disabled) {
@@ -175,7 +176,7 @@ const SelectWithIcon = forwardRef(
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               {Icon && (
                 <Icon
-                  className={`h-5 w-5 transition-colors duration-200 ${disabled
+                  className={`h-4 w-4 transition-colors duration-200 ${disabled
                     ? "text-gray-400"
                     : "text-gray-400 group-hover:text-custom-bg"
                     }`}
@@ -185,8 +186,7 @@ const SelectWithIcon = forwardRef(
 
             <div
               ref={selectedItemsRef}
-              className={`flex flex-nowrap gap-2 w-full pr-6 overflow-x-auto items-center [&::-webkit-scrollbar]:hidden ${multiple && value.length > 0 ? "py-0.5" : ""
-                }`}
+              className={`flex flex-nowrap gap-2 w-full pr-6 overflow-x-auto items-center [&::-webkit-scrollbar]:hidden`}
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {multiple && Array.isArray(value) && value.length > 0 ? (
@@ -198,7 +198,7 @@ const SelectWithIcon = forwardRef(
                     return itemLabel ? (
                       <span
                         key={itemValue}
-                        className={`flex items-center text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${disabled
+                        className={`flex items-center text-xs font-medium px-2 py-0.25 rounded-full flex-shrink-0 ${disabled
                           ? "bg-gray-300 text-gray-600"
                           : "bg-custom-bg text-white"
                           }`}
@@ -212,7 +212,7 @@ const SelectWithIcon = forwardRef(
                     ) : null;
                   })}
                   {remainingCount > 0 && (
-                    <span className="flex items-center bg-gray-300 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0">
+                    <span className="flex items-center bg-gray-300 text-gray-700 text-xs font-medium px-2 py-0.25 rounded-full flex-shrink-0">
                       +{remainingCount} more
                     </span>
                   )}
@@ -262,7 +262,7 @@ const SelectWithIcon = forwardRef(
                       ref={inputRef}
                       type="text"
                       placeholder={t("SELECT.SEARCH_PLACEHOLDER")}
-                      className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-custom-bg focus:border-custom-bg text-sm"
+                      className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-custom-bg focus:border-custom-bg text-xs"
                       value={sSearchTerm}
                       onChange={(e) => {
                         setSearchTerm(e.target.value);

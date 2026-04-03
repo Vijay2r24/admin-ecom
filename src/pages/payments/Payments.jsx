@@ -8,10 +8,12 @@ import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
+import { SKELETON_TYPES } from "../../contants/constants";
 import { ToastContainer } from "react-toastify";
 import { ITEMS_PER_PAGE, STATUS, MODULES, PERMISSIONS } from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
+import SkeletonLoader from "../../components/SkeletonLoader";
 import {
   getPermissionCode,
   hasPermissionId,
@@ -64,15 +66,15 @@ const Payments = () => {
 
   // Permission check for View Payment Details
   const permissionIdForView = getPermissionCode(
-    MODULES.PAYMENT,
-    PERMISSIONS.VIEW_PAYMENT_DETAILS
+    "Payments Management", // Changed to match API
+    "View Payment Details"
   );
   const hasViewPermission = hasPermissionId(permissionIdForView);
 
   // Permission check for Generate Payment Report
   const permissionIdForExport = getPermissionCode(
-    MODULES.PAYMENT,
-    PERMISSIONS.GENERATE_PAYMENT_REPORT
+    "Payments Management", // Changed to match API
+    "Generate Payment Report"
   );
   const hasExportPermission = hasPermissionId(permissionIdForExport);
   const paymentStatusOptions = useSelector(
@@ -161,6 +163,12 @@ const Payments = () => {
       return;
     }
     setDeletePopup({ open: true, paymentId });
+  };
+
+  const handleEdit = (paymentId) => {
+    // Navigate to edit payment page if needed in the future
+    // For now, payments might not be editable, so this can be left empty
+    // navigate(`/edit-payment/${paymentId}`);
   };
 
   const handleClearFilters = () => {
@@ -416,6 +424,7 @@ const Payments = () => {
         handleFilterChange={handleFilterChange}
         searchPlaceholder={t("PAYMENTS.SEARCH_PLACEHOLDER")}
         onClearFilters={handleClearFilters}
+        isBrowsePage={false}
         onExport={handleExportPayments}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
         exportDisabled={!hasExportPermission}
@@ -459,13 +468,7 @@ const Payments = () => {
               </thead>
               <tbody className="table-body">
                 {bFilterLoading || paymentsLoading ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center">
-                      <div className="flex justify-center">
-                        <Loader size="small" />
-                      </div>
-                    </td>
-                  </tr>
+                  <SkeletonLoader type={SKELETON_TYPES.PAYMENT_TABLE} rows={6} />
                 ) : payments.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-gray-500">
@@ -546,8 +549,9 @@ const Payments = () => {
                             id={payment.PaymentID}
                             viewLink={`/payment-details/${payment.PaymentID}`}
                             hasViewPermission={hasViewPermission}
-                            onDelete={handleDelete}
-                            canDelete={hasDeletePermission}
+                            onEdit={hasEditPermission ? handleEdit : undefined}
+                            disableEdit={!hasEditPermission}
+                            // Delete button removed
                           />
                         </div>
                       </td>
@@ -560,7 +564,15 @@ const Payments = () => {
         </div>
       ) : (
         <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 h-full overflow-y-auto scrollbar-hide p-4">
+          <div 
+            className="h-full overflow-y-auto scrollbar-hide"
+            style={{
+              height: bShowFilterDropdown 
+                ? 'calc(100vh - 280px)' 
+                : 'calc(100vh - 180px)'
+            }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 auto-rows-min">
           {bFilterLoading || paymentsLoading ? (
             <div className="col-span-full flex justify-center py-8">
               <Loader size="medium" />
@@ -573,66 +585,82 @@ const Payments = () => {
             payments.map((payment) => (
               <div
                 key={payment.PaymentID}
-                className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-xl transition-shadow duration-200"
+                className="bg-white rounded-xl shadow-md border border-gray-200 p-4 hover:shadow-lg transition-all duration-200 min-h-[200px] flex flex-col"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center min-w-0">
-                    <CreditCard className="h-6 w-6 text-blue-600 mr-2 flex-shrink-0" />
-                    <span className="font-semibold truncate">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center min-w-0 flex-1">
+                    <CreditCard className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" />
+                    <span className="font-semibold text-sm truncate">
                       {payment.PaymentRefID}
                     </span>
                   </div>
                   <span
-                    className={`status-badge ${payment.PaymentStatus?.PaymentStatusID === 1
-                      ? "status-pending"
+                    className={`status-badge text-xs px-2 py-1 rounded-full ${payment.PaymentStatus?.PaymentStatusID === 1
+                      ? "bg-yellow-100 text-yellow-800"
                       : payment.PaymentStatus?.PaymentStatusID === 2
-                        ? "status-active"
-                        : "status-inactive"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
                       }`}
                   >
                     {payment.PaymentStatus?.PaymentStatusName}
                   </span>
                 </div>
-                <div className="text-sm text-gray-600">
-                  <div className="flex items-center mb-1">
-                    <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span className="truncate">
+
+                {/* Payment Details */}
+                <div className="flex-1 space-y-2 text-sm">
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                    <span className="text-gray-600">
                       {formatDate(payment.PaymentDate)}
                     </span>
                   </div>
-                  <div className="flex items-center mb-1">
-                    <FileText className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span className="truncate">Order: {payment.OrderID}</span>
-                  </div>
-                  <div className="flex items-center mb-1">
-                    <CreditCard className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span className="truncate">
-                      Type: {payment.PaymentType?.PaymentTypeName || "N/A"}
+                  
+                  <div className="flex items-center">
+                    <FileText className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                    <span className="text-gray-600 truncate">
+                      Order: {payment.OrderID || "N/A"}
                     </span>
                   </div>
+                  
+                  <div className="flex items-center">
+                    <CreditCard className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                    <span className="text-gray-600 truncate">
+                      {payment.PaymentType?.PaymentTypeName || "N/A"}
+                    </span>
+                  </div>
+                  
                   {payment.PaymentMethod && (
-                    <div className="flex items-center mb-1">
-                      <CreditCard className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span className="truncate">
-                        Method: {payment.PaymentMethod?.PaymentMethodName}
+                    <div className="flex items-center">
+                      <CreditCard className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                      <span className="text-gray-600 truncate">
+                        {payment.PaymentMethod?.PaymentMethodName}
                       </span>
                     </div>
                   )}
-                  <div className="text-lg font-bold text-gray-900 text-right mt-2">
-                    {formatCurrency(payment.Amount)}
+                </div>
+
+                {/* Amount and Actions */}
+                <div className="mt-auto pt-3 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div className="text-lg font-bold text-gray-900">
+                      {formatCurrency(payment.Amount)}
+                    </div>
+                    <ActionButtons
+                      id={payment.PaymentID}
+                      viewLink={`/payment-details/${payment.PaymentID}`}
+                      hasViewPermission={hasViewPermission}
+                      onEdit={hasEditPermission ? handleEdit : undefined}
+                      disableEdit={!hasEditPermission}
+                      // Delete button removed
+                    />
                   </div>
                 </div>
-                <ActionButtons
-                  id={payment.PaymentID}
-                  viewLink={`/payment-details/${payment.PaymentID}`}
-                  hasViewPermission={hasViewPermission}
-                  onDelete={handleDelete}
-                  canDelete={hasDeletePermission}
-                />
               </div>
             ))
           )}
-        </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -647,15 +675,19 @@ const Payments = () => {
 
       {totalPages > 1 && (
         <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
+          {bFilterLoading || paymentsLoading ? (
+            <SkeletonLoader type="pagination" />
+          ) : (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handlePageClick={handlePageClick}
+            />
+          )}
         </div>
       )}
     </div>
