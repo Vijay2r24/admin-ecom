@@ -538,6 +538,7 @@ export const MODULES = {
   ROLE: "Role Management",
   CONTENT: "Content Management",
   PRODUCT: "Product Management",
+  INVENTORY: "Inventory Management",
   PRODUCT_SETUP: "Product Setup",
   PAYMENT: "Payment Management",
   BANNER: "Banner Management",
@@ -710,7 +711,14 @@ export const PERMISSIONS = {
   ADD_PRODUCT_GROUP_TOOLTIP: "Add new product group",
   EDIT_PRODUCT_GROUP_TOOLTIP: "Edit product group details",
   UPDATE_PRODUCT_GROUP_STATUS_TOOLTIP: "Update product group status",
-  VIEW_PRODUCT_GROUP_DETAILS_TOOLTIP: "View product group details"
+  VIEW_PRODUCT_GROUP_DETAILS_TOOLTIP: "View product group details",
+
+  //Inventory specific permissions
+  VIEW_INVENTORY: "View Inventories",
+  EDIT_STORE_INVENTORY: "Edit Store Inventory",
+  UPDATE_STORE_INVENTORY_STATUS: "Update Store Inventory Status",
+  UPDATE_PRODUCT_VARIANT_STATUS: "Update Product Variant Status",
+  VIEW_VARIANT_STORES: "View Variant Stores"
 };
 
 export const QUICK_FILTER_VALUES = [
@@ -730,6 +738,55 @@ export const QUICK_FILTER_LABELS = [
   "Last 2 Days",
   "Last 7 Days",
 ];
+
+// Product Inventory Level Options
+export const VIEW_LEVELS = {
+  PRODUCT: "product",
+  VARIANT: "variant",
+};
+
+export const LEVEL_OPTIONS = [
+  { value: VIEW_LEVELS.PRODUCT, labelKey: "COMMON.PRODUCT_LEVEL" },
+  { value: VIEW_LEVELS.VARIANT, labelKey: "COMMON.VARIANT_LEVEL" },
+];
+
+// Stock Sort Options
+export const STOCK_SORT_OPTIONS = [
+  { value: "none", labelKey: "COMMON.ALL" },
+  { value: "stock_asc", labelKey: "COMMON.STOCK_LOW_TO_HIGH" },
+  { value: "stock_desc", labelKey: "COMMON.STOCK_HIGH_TO_LOW" },
+];
+
+// Product Status Badge Classes
+export const STATUS_BADGE_CLASSES = {
+  ACTIVE: "status-active",
+  OUT_OF_STOCK: "status-inactive",
+  INACTIVE: "status-inactive",
+};
+
+// Filter Values
+export const FILTER_VALUES = {
+  ALL: "all",
+  NONE: "none",
+  TRUE: "true",
+  FALSE: "false",
+};
+
+// UI Constants
+export const SCROLL_SHADOW_THRESHOLD = 10;
+
+// Product Status Values
+export const PRODUCT_STATUS_VALUES = {
+  ACTIVE: "active",
+  OUT_OF_STOCK: "out-of-stock", 
+  INACTIVE: "inactive",
+};
+
+// Product ID Field Names
+export const PRODUCT_ID_FIELDS = {
+  PRODUCT_ID: "ProductID",
+  PRODUCT_VARIANT_ID: "ProductVariantID",
+};
 
 export const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -764,6 +821,11 @@ export const TYPE_GLOBAL = "global";
 export const SCROLL_CONSTANTS = {
   BEHAVIOR: "smooth",
   BLOCK: "center",
+};
+
+export const BODY_OVERFLOW = {
+  HIDDEN: "hidden",
+  UNSET: "unset",
 };
 
 export const DEFAULT_PROPS = {

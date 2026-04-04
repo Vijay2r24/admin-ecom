@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Edit, Trash, MoreVertical, Eye } from 'lucide-react';
+import { Edit, Trash, MoreVertical, Eye,Layers  } from 'lucide-react';
 import { Link } from "react-router-dom";
 import Tooltip from './Tooltip';
 
@@ -10,6 +10,9 @@ const ActionButtons = ({
   onDelete,
   onMore,
   viewLink,
+  onViewVariants,
+  variantButtonText,
+  disableVariantButton,
   canDelete = true,
   hasViewPermission = true 
 }) => {
@@ -79,6 +82,21 @@ const ActionButtons = ({
           </button>
         </Tooltip>
       )}
+      
+       {onViewVariants && (
+        <button 
+          onClick={() => onViewVariants(id)}
+          disabled={disableVariantButton}
+          className={`p-2 rounded transition ${
+            disableVariantButton
+              ? "cursor-not-allowed text-gray-400 opacity-50"
+              : "text-green-600 hover:text-green-900 hover:bg-green-50"
+          }`}
+          title={disableVariantButton ? t('COMMON.NO_PERMISSION') : (variantButtonText || t('PRODUCT_INVENTORY.VIEW_VARIANTS'))}
+        >
+          <Layers className="h-5 w-5" />
+        </button>
+      )}  
     </div>
   );
 };
