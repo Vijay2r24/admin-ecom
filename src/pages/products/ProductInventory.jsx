@@ -29,6 +29,7 @@ import {
   PERMISSIONS,
   BODY_OVERFLOW,
   VIEW_LEVELS,
+  PRODUCT_ID_FIELDS,
 } from "../../contants/constants.jsx";
 import { X } from "lucide-react";
 import {
@@ -505,7 +506,7 @@ const ProductInventory = () => {
       const apiRoute = isVariantLevel
         ? UPDATE_PRODUCT_VARIANT_STATUS
         : UPDATE_PRODUCT_STATUS;
-      const idField = isVariantLevel ? "ProductVariantID" : "ProductID";
+      const idField = isVariantLevel ? PRODUCT_ID_FIELDS.PRODUCT_VARIANT_ID : PRODUCT_ID_FIELDS.PRODUCT_ID;
 
       // Dispatch async status update request
       const result = await dispatch(

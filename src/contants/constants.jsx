@@ -782,6 +782,12 @@ export const PRODUCT_STATUS_VALUES = {
   INACTIVE: "inactive",
 };
 
+// Product ID Field Names
+export const PRODUCT_ID_FIELDS = {
+  PRODUCT_ID: "ProductID",
+  PRODUCT_VARIANT_ID: "ProductVariantID",
+};
+
 export const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
