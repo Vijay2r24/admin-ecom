@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPut, apiPatch } from "../../utils/ApiUtils.jsx";
 import {
@@ -8,7 +8,8 @@ import {
   UPDATE_PRODUCT_VARIANT_STATUS,
 } from "../../contants/apiRoutes";
 import noImage from "../../../assets/images/missing-pictur.jpg";
-import SkeletonLoader from "../../components/SkeletonLoader";
+const SkeletonLoader = lazy(() => import("../../components/SkeletonLoader"));
+const Loader = lazy(() => import("../../components/Loader"));
 import { SKELETON_TYPES } from "../../contants/constants.jsx";
 import {
   X,
@@ -24,8 +25,8 @@ import {
   Check,
   X as XIcon,
 } from "lucide-react";
-import Switch from "../../components/Switch.jsx";
-import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
+const Switch = lazy(() => import("../../components/Switch.jsx"));
+const FullscreenErrorPopup = lazy(() => import("../../components/FullscreenErrorPopup"));
 import { STATUS, MODULES, PERMISSIONS } from "../../contants/constants.jsx";
 import { showEmsg } from "../../utils/ShowEmsg";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
@@ -477,12 +478,13 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
   const summary = calculateInventorySummary(productData?.Variants);
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 animate-fadeIn">
-      <div
-        className={`bg-white rounded-lg shadow-2xl w-full max-h-[95vh] overflow-hidden animate-slideUp ${
-          inventoryPanelOpen ? "max-w-8xl" : "max-w-6xl"
-        }`}
-      >
+    <Suspense fallback={<div className="flex items-center justify-center fixed inset-0 bg-black/70 backdrop-blur-sm z-50"><div className="text-center"><Loader /></div></div>}>
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 animate-fadeIn">
+        <div
+          className={`bg-white rounded-lg shadow-2xl w-full max-h-[95vh] overflow-hidden animate-slideUp ${
+            inventoryPanelOpen ? "max-w-8xl" : "max-w-6xl"
+          }`}
+        >
         {/* Header - Compact */}
         <div className="sticky top-0 bg-custom-bg/20 px-6 py-3 border-b border-gray-200 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -1171,6 +1173,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
         />
       )}
     </div>
+    </Suspense>
   );
 };
 

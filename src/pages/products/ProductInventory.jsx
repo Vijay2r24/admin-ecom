@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import Toolbar from "../../components/Toolbar";
-import Pagination from "../../components/Pagination";
-import ActionButtons from "../../components/ActionButtons";
+const Toolbar = lazy(() => import("../../components/Toolbar"));
+const Pagination = lazy(() => import("../../components/Pagination"));
+const ActionButtons = lazy(() => import("../../components/ActionButtons"));
 import { useTranslation } from "react-i18next";
 import { apiGet } from "../../utils/ApiUtils.jsx";
 import {
@@ -11,7 +11,7 @@ import {
   UPDATE_PRODUCT_STATUS,
   UPDATE_PRODUCT_VARIANT_STATUS,
 } from "../../contants/apiRoutes";
-import Switch from "../../components/Switch.jsx";
+const Switch = lazy(() => import("../../components/Switch.jsx"));
 import { useTitle } from "../../context/TitleContext";
 import {
   ITEMS_PER_PAGE,
@@ -36,17 +36,18 @@ import {
   updateStatusById,
 } from "../../store/slices/allDataSlice.jsx";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
-import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
+const FullscreenErrorPopup = lazy(() => import("../../components/FullscreenErrorPopup"));
 import { ToastContainer } from "react-toastify";
 import { exportProductReport } from "../../store/slices/exportSlice";
 import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
-import SkeletonLoader from "../../components/SkeletonLoader";
+const SkeletonLoader = lazy(() => import("../../components/SkeletonLoader"));
+const Loader =lazy(() => import("../../components/Loader.jsx"));
 import { SKELETON_TYPES } from "../../contants/constants.jsx";
 import { hideLoaderWithDelay } from "../../utils/loaderUtils";
-import ProductVariantsPopup from "../../pages/products/ProductVariantsPopup.jsx";
-import ProductVariantsStatusPopup from "../../pages/products/ProductVariantsStatusPopup.jsx";
-import ProductStoreInventoryPopup from "../../pages/products/ProductStoreInventoryPopup.jsx";
+const ProductVariantsPopup = lazy(() => import("../../pages/products/ProductVariantsPopup.jsx"));
+const ProductVariantsStatusPopup = lazy(() => import("../../pages/products/ProductVariantsStatusPopup.jsx"));
+const ProductStoreInventoryPopup = lazy(() => import("../../pages/products/ProductStoreInventoryPopup.jsx"));
 const getStatusBadgeClass = (status) => {
   if (status === PRODUCT_STATUS_VALUES.ACTIVE) return STATUS_BADGE_CLASSES.ACTIVE;
   if (status === PRODUCT_STATUS_VALUES.OUT_OF_STOCK) return STATUS_BADGE_CLASSES.OUT_OF_STOCK;
@@ -546,7 +547,7 @@ const ProductInventory = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       <ToastContainer />
-        <>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader /></div>}>
           <Toolbar
         searchTerm={sSearchTerm}
         setSearchTerm={setSearchTerm}
@@ -910,7 +911,7 @@ const ProductInventory = () => {
           isSubmitting={bSubmitting}
         />
       )}
-        </>
+      </Suspense>
     </div>
   );
 };

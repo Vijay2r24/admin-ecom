@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPatch } from "../../utils/ApiUtils.jsx";
 import { GET_PRODUCT_BY_ID, UPDATE_PRODUCT_VARIANT_STATUS, UPDATE_PRODUCT_STATUS } from "../../contants/apiRoutes";
 import noImage from "../../../assets/images/missing-pictur.jpg";
-import SkeletonLoader from "../../components/SkeletonLoader";
+const SkeletonLoader = lazy(() => import("../../components/SkeletonLoader"));
+const Loader = lazy(() => import("../../components/Loader"));
 import { SKELETON_TYPES } from "../../contants/constants.jsx";
 import { X, Package, ToggleLeft, ToggleRight } from "lucide-react";
 import { toast } from "react-toastify";
-import Switch from "../../components/Switch.jsx";
-import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
+const Switch = lazy(() => import("../../components/Switch.jsx"));
+const FullscreenErrorPopup = lazy(() => import("../../components/FullscreenErrorPopup"));
 import { STATUS } from "../../contants/constants.jsx";
 
 const ProductVariantsStatusPopup = ({ productId, onClose, onVariantStatusUpdate }) => {
@@ -189,8 +190,9 @@ const ProductVariantsStatusPopup = ({ productId, onClose, onVariantStatusUpdate 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden animate-slideUp">
+    <Suspense fallback={<div className="flex items-center justify-center fixed inset-0 bg-black/70 backdrop-blur-sm z-50"><div className="text-center"><Loader /></div></div>}>
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+        <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden animate-slideUp">
         {/* Header */}
         <div className="sticky top-0 bg-custom-bg/20 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -482,6 +484,7 @@ const ProductVariantsStatusPopup = ({ productId, onClose, onVariantStatusUpdate 
         />
       )}
     </div>
+    </Suspense>
   );
 };
 

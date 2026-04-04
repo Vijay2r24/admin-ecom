@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPut, apiPatch } from "../../utils/ApiUtils.jsx";
 import { GET_PRODUCT_VARIANT, UPDATE_STORE_INVENTORY, UPDATE_STORE_INVENTORY_STATUS } from "../../contants/apiRoutes";
-import Loader from "../../components/Loader";
+const Loader = lazy(() => import("../../components/Loader"));
 import { STATUS, MODULES, PERMISSIONS, LOCALES } from "../../contants/constants.jsx";
 import {
   X,
@@ -20,8 +20,8 @@ import {
   Search,
 } from "lucide-react";
 import { showEmsg } from "../../utils/ShowEmsg";
-import Switch from "../../components/Switch.jsx";
-import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
+const Switch = lazy(() => import("../../components/Switch.jsx"));
+const FullscreenErrorPopup = lazy(() => import("../../components/FullscreenErrorPopup"));
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
   const { t } = useTranslation();
@@ -350,8 +350,9 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
   const summary = calculateSummary(filteredInventoryData);
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 animate-fadeIn">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden animate-slideUp">
+    <Suspense fallback={<div className="flex items-center justify-center fixed inset-0 bg-black/70 backdrop-blur-sm z-50"><div className="text-center"><Loader /></div></div>}>
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 animate-fadeIn">
+        <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden animate-slideUp">
         {/* Header - Compact */}
         <div className="sticky top-0 bg-custom-bg/20 px-6 py-3 border-b border-gray-200 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -855,6 +856,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
         />
       )}
     </div>
+    </Suspense>
   );
 };
 
