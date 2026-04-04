@@ -95,7 +95,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
 
       if (!isMounted.current) return;
 
-      if (response.data.status === STATUS.SUCCESS?.toUpperCase()) {
+      if (response.data.status.toUpperCase() === STATUS.SUCCESS?.toUpperCase()) {
         const newData = response.data.data;
         setProductData(newData);
 
@@ -218,7 +218,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
         token,
       );
 
-      if (response.data.status === STATUS.SUCCESS?.toUpperCase()) {
+      if (response.data.status.toUpperCase() === STATUS.SUCCESS?.toUpperCase()) {
         // Optimistic update
         setProductData((prev) => ({
           ...prev,
@@ -287,7 +287,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
 
       const response = await apiPut(UPDATE_STORE_INVENTORY, payload, token);
 
-      if (response.data.status === STATUS.SUCCESS?.toUpperCase()) {
+      if (response.data.status.toUpperCase() === STATUS.SUCCESS?.toUpperCase()) {
         // Optimistic update
         setProductData((prevData) => {
           const updatedVariants = prevData.Variants.map((variant) => {
@@ -384,7 +384,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
         token,
       );
 
-      if (response.data.status === STATUS.SUCCESS?.toUpperCase()) {
+      if (response.data.status.toUpperCase() === STATUS.SUCCESS?.toUpperCase()) {
         // Optimistic update
         setProductData((prevData) => ({
           ...prevData,

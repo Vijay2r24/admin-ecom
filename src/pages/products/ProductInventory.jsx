@@ -294,7 +294,7 @@ const ProductInventory = () => {
       const oResponse = await apiGet(GET_INVENTORY_LIST, params, token);
       const resData = oResponse?.data;
 
-      if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (resData?.status.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const rawProducts = Array.isArray(resData.data) ? resData.data : [];
 
         const transformedProducts = rawProducts.map((product) => ({

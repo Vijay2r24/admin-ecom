@@ -35,7 +35,7 @@ const ProductVariantsStatusPopup = ({ productId, onClose, onVariantStatusUpdate 
       const token = localStorage.getItem("token");
       const response = await apiGet(`${GET_PRODUCT_BY_ID}/${productId}`, {}, token);
 
-      if (response.data.status === "SUCCESS") {
+      if (response.data.status.toUpperCase() === STATUS.SUCCESS?.toUpperCase()) {
         setProductData(response.data.data);
         setError(null);
       } else {
@@ -93,7 +93,7 @@ const ProductVariantsStatusPopup = ({ productId, onClose, onVariantStatusUpdate 
         token
       );
 
-      if (response.data.status === "SUCCESS") {
+      if (response.data.status.toUpperCase() === STATUS.SUCCESS?.toUpperCase()) {
         // Update local state
         setProductData((prev) => ({
           ...prev,
@@ -145,7 +145,7 @@ const ProductVariantsStatusPopup = ({ productId, onClose, onVariantStatusUpdate 
         token
       );
 
-      if (productResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
+      if (productResponse.data.status.toUpperCase() === STATUS.SUCCESS?.toUpperCase()) {
         // Update all variants to match the product status
         const variantUpdatePromises = productData.Variants.map(variant =>
           apiPatch(

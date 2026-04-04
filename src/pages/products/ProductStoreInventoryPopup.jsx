@@ -89,7 +89,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
           token
         );
 
-        if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+        if (response?.data?.status.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           const data = response.data.data;
           // Handle typo in API response - "Invenory" instead of "Inventory"
           setInventoryData(data.Inventory || data.Invenory || []);
@@ -192,7 +192,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
 
       const response = await apiPut(UPDATE_STORE_INVENTORY, payload, token);
 
-      if (response.data.status === STATUS.SUCCESS?.toUpperCase()) {
+      if (response.data.status.toUpperCase() === STATUS.SUCCESS?.toUpperCase()) {
         // Optimistic update
         setInventoryData((prevData) => 
           prevData.map((inv) => {
@@ -259,7 +259,7 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
         token
       );
 
-      if (response.data.status === STATUS.SUCCESS?.toUpperCase()) {
+      if (response.data.status.toUpperCase() === STATUS.SUCCESS?.toUpperCase()) {
         // Optimistic update
         setInventoryData((prevData) =>
           prevData.map((inv) =>
