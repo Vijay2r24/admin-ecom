@@ -740,9 +740,14 @@ export const QUICK_FILTER_LABELS = [
 ];
 
 // Product Inventory Level Options
+export const VIEW_LEVELS = {
+  PRODUCT: "product",
+  VARIANT: "variant",
+};
+
 export const LEVEL_OPTIONS = [
-  { value: "product", labelKey: "COMMON.PRODUCT_LEVEL" },
-  { value: "variant", labelKey: "COMMON.VARIANT_LEVEL" },
+  { value: VIEW_LEVELS.PRODUCT, labelKey: "COMMON.PRODUCT_LEVEL" },
+  { value: VIEW_LEVELS.VARIANT, labelKey: "COMMON.VARIANT_LEVEL" },
 ];
 
 // Stock Sort Options
@@ -810,6 +815,11 @@ export const TYPE_GLOBAL = "global";
 export const SCROLL_CONSTANTS = {
   BEHAVIOR: "smooth",
   BLOCK: "center",
+};
+
+export const BODY_OVERFLOW = {
+  HIDDEN: "hidden",
+  UNSET: "unset",
 };
 
 export const DEFAULT_PROPS = {

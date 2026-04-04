@@ -8,7 +8,8 @@ import {
   UPDATE_PRODUCT_VARIANT_STATUS,
 } from "../../contants/apiRoutes";
 import noImage from "../../../assets/images/missing-pictur.jpg";
-import Loader from "../../components/Loader";
+import SkeletonLoader from "../../components/SkeletonLoader";
+import { SKELETON_TYPES } from "../../contants/constants.jsx";
 import {
   X,
   Package,
@@ -607,14 +608,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
             }`}
           >
             <div className="h-full overflow-y-auto">
-              {loading ? (
-                <div className="flex flex-col items-center justify-center py-10">
-                  <Loader size="medium" />
-                  <p className="mt-2 text-xs text-gray-600">
-                    {t("PRODUCTS.LOADING_DETAILS")}
-                  </p>
-                </div>
-              ) : error ? (
+              {error ? (
                 <div className="text-center py-8">
                   <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-red-100 mb-2">
                     <X className="h-5 w-5 text-red-600" />
@@ -658,7 +652,10 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {productData?.Variants?.map((variant, index) => {
+                          {loading ? (
+                            <SkeletonLoader type={SKELETON_TYPES.PRODUCT_TABLE} rows={5} />
+                          ) : (
+                            productData?.Variants?.map((variant, index) => {
                             const totalStock = getTotalStock(
                               variant.Inventory || [],
                             );
@@ -752,7 +749,8 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
                                 </td>
                               </tr>
                             );
-                          })}
+                          })
+                          )}
                         </tbody>
                       </table>
                     </div>

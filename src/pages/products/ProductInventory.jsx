@@ -27,6 +27,8 @@ import {
   PRODUCT_STATUS_VALUES,
   MODULES,
   PERMISSIONS,
+  BODY_OVERFLOW,
+  VIEW_LEVELS,
 } from "../../contants/constants.jsx";
 import { X } from "lucide-react";
 import {
@@ -39,7 +41,8 @@ import { ToastContainer } from "react-toastify";
 import { exportProductReport } from "../../store/slices/exportSlice";
 import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
-import Loader from "../../components/Loader";
+import SkeletonLoader from "../../components/SkeletonLoader";
+import { SKELETON_TYPES } from "../../contants/constants.jsx";
 import { hideLoaderWithDelay } from "../../utils/loaderUtils";
 import ProductVariantsPopup from "../../pages/products/ProductVariantsPopup.jsx";
 import ProductVariantsStatusPopup from "../../pages/products/ProductVariantsStatusPopup.jsx";
@@ -182,13 +185,10 @@ const ProductInventory = () => {
     label: t(opt.labelKey),
   }));
 
-  // Hide body scrollbar when component mounts
   useEffect(() => {
-    document.body.style.overflow = "hidden";
-
-    // Re-enable scrollbar when component unmounts
+    document.body.style.overflow = BODY_OVERFLOW.HIDDEN;
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = BODY_OVERFLOW.UNSET;
     };
   }, []);
 
@@ -218,7 +218,7 @@ const ProductInventory = () => {
   }, [bShowFilterDropdown, dispatch]);
 
   const defaultFilters = {
-    level: "product",
+    level: VIEW_LEVELS.PRODUCT,
     category: FILTER_VALUES.ALL,
     brand: FILTER_VALUES.ALL,
     store: FILTER_VALUES.ALL,
@@ -249,7 +249,7 @@ const ProductInventory = () => {
       };
 
       // View level - always send since we only have product/variant options
-      params.viewLevel = oFilters.level; // product | variant
+      params.viewLevel = oFilters.level; // VIEW_LEVELS.PRODUCT | VIEW_LEVELS.VARIANT
 
       // Stock sorting
       if (oFilters.stockSort === "stock_asc") {
@@ -486,7 +486,7 @@ const ProductInventory = () => {
     }
 
     // Check if view level is product - show variants popup instead of confirmation
-    if (oFilters.level === "product") {
+    if (oFilters.level === VIEW_LEVELS.PRODUCT) {
       handleOpenVariantStatusPopup(productId);
     } else {
       // For variant level, show confirmation popup as before
@@ -500,7 +500,7 @@ const ProductInventory = () => {
 
     try {
       // Use different API route and ID field based on view level
-      const isVariantLevel = oFilters.level === "variant";
+      const isVariantLevel = oFilters.level === VIEW_LEVELS.VARIANT;
       const apiRoute = isVariantLevel
         ? UPDATE_PRODUCT_VARIANT_STATUS
         : UPDATE_PRODUCT_STATUS;
@@ -546,19 +546,6 @@ const ProductInventory = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       <ToastContainer />
-      {!hasViewInventoryPermission ? (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
-            <X className="h-8 w-8 text-red-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            {t("COMMON.ACCESS_DENIED")}
-          </h3>
-          <p className="text-gray-600">
-            {t("COMMON.NO_PERMISSION_TO_VIEW_INVENTORY")}
-          </p>
-        </div>
-      ) : (
         <>
           <Toolbar
         searchTerm={sSearchTerm}
@@ -575,11 +562,7 @@ const ProductInventory = () => {
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />
 
-      {bLoading ? (
-        <div className="col-span-full flex justify-center py-8">
-          <Loader size="medium" />
-        </div>
-      ) : sError ? (
+      {sError ? (
         <div className="text-center py-8 text-red-500">{sError}</div>
       ) : sViewMode === VIEW_MODES.TABLE ? (
         <div className="table-container-floating">
@@ -598,7 +581,7 @@ const ProductInventory = () => {
                   <th className="table-head-cell-floating text-center">
                     {t("COMMON.QUANTITY")}
                   </th>
-                  {oFilters.level === "variant" && (
+                  {oFilters.level === VIEW_LEVELS.VARIANT && (
                     <th className="table-head-cell-floating text-center">
                       {t("COMMON.STORES")}
                     </th>
@@ -613,21 +596,12 @@ const ProductInventory = () => {
               </thead>
 
               <tbody className="table-body">
-                {bFilterLoading ? (
-                  <tr>
-                    <td
-                      colSpan={oFilters.level === "variant" ? 6 : 4}
-                      className="py-8 text-center"
-                    >
-                      <div className="flex justify-center">
-                        <Loader size="small" />
-                      </div>
-                    </td>
-                  </tr>
+                {bLoading || bFilterLoading ? (
+                  <SkeletonLoader type={SKELETON_TYPES.PRODUCT_TABLE} rows={itemsPerPage} />
                 ) : aProducts.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={oFilters.level === "variant" ? 6 : 4}
+                      colSpan={oFilters.level === VIEW_LEVELS.VARIANT ? 6 : 4}
                       className="py-8 text-center text-gray-500"
                     >
                       {t("PRODUCT_INVENTORY.NO_PRODUCTS")}
@@ -637,7 +611,7 @@ const ProductInventory = () => {
                   aProducts.map((product) => (
                     <tr
                       key={
-                        oFilters.level === "variant"
+                        oFilters.level === VIEW_LEVELS.VARIANT
                           ? product.ProductVariantID
                           : product.ProductID
                       }
@@ -683,7 +657,7 @@ const ProductInventory = () => {
                       </td>
 
                       {/* Stores - only for variant level */}
-                      {oFilters.level === "variant" && (
+                      {oFilters.level === VIEW_LEVELS.VARIANT && (
                         <td className="table-cell text-center align-middle">
                           <div
                             className="ellipsis-text text-xs"
@@ -704,7 +678,7 @@ const ProductInventory = () => {
                           checked={product.IsActive}
                           onChange={() =>
                             handleStatusChange(
-                              oFilters.level === "variant"
+                              oFilters.level === VIEW_LEVELS.VARIANT
                                 ? product.ProductVariantID
                                 : product.ProductID,
                               product.IsActive,
@@ -719,7 +693,7 @@ const ProductInventory = () => {
                         <ActionButtons
                           id={product.ProductID}
                           onViewVariants={
-                            oFilters.level === "product"
+                            oFilters.level === VIEW_LEVELS.PRODUCT
                               ? () => handleViewVariants(product.ProductID)
                               : () =>
                                   handleViewStoreInventoryWithPermission(
@@ -727,12 +701,12 @@ const ProductInventory = () => {
                                   )
                           }
                           variantButtonText={
-                            oFilters.level === "product"
+                            oFilters.level === VIEW_LEVELS.PRODUCT
                               ? t("PRODUCT_INVENTORY.VIEW_VARIANTS")
                               : t("PRODUCT_INVENTORY.VIEW_STORES")
                           }
                           disableVariantButton={
-                            oFilters.level === "variant" && !hasViewVariantStoresPermission
+                            oFilters.level === VIEW_LEVELS.VARIANT && !hasViewVariantStoresPermission
                           }
                         />
                       </td>
@@ -746,10 +720,8 @@ const ProductInventory = () => {
       ) : (
         <div className="table-wrapper-floating">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {bFilterLoading ? (
-              <div className="col-span-full flex justify-center py-8">
-                <Loader size="medium" />
-              </div>
+            {bLoading || bFilterLoading ? (
+              <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={itemsPerPage} />
             ) : aProducts.length === 0 ? (
               <div className="col-span-full text-center py-8 text-gray-500">
                 {t("PRODUCT_INVENTORY.NO_PRODUCTS")}
@@ -758,7 +730,7 @@ const ProductInventory = () => {
               aProducts.map((product) => (
                 <div
                   key={
-                    oFilters.level === "variant"
+                    oFilters.level === VIEW_LEVELS.VARIANT
                       ? product.ProductVariantID
                       : product.ProductID
                   }
@@ -792,7 +764,7 @@ const ProductInventory = () => {
                         checked={product.IsActive}
                         onChange={() =>
                           handleStatusChange(
-                            oFilters.level === "variant"
+                            oFilters.level === VIEW_LEVELS.VARIANT
                               ? product.ProductVariantID
                               : product.ProductID,
                             product.IsActive,
@@ -831,7 +803,7 @@ const ProductInventory = () => {
                       </div>
 
                       {/* SKU - only for variant level */}
-                      {oFilters.level === "variant" && (
+                      {oFilters.level === VIEW_LEVELS.VARIANT && (
                         <div
                           className="text-xs text-gray-700 line-clamp-1"
                           title={product.SKU}
@@ -844,7 +816,7 @@ const ProductInventory = () => {
                       )}
 
                       {/* Stores - only for variant level */}
-                      {oFilters.level === "variant" && (
+                      {oFilters.level === VIEW_LEVELS.VARIANT && (
                         <div
                           className="text-xs text-gray-700 line-clamp-1"
                           title={product.Stores?.map((s) => s.StoreName).join(
@@ -868,7 +840,7 @@ const ProductInventory = () => {
                         onEdit={handleEdit}
                         viewLink={`/productdetails/${product.ProductID}`}
                         onViewVariants={
-                          oFilters.level === "product"
+                          oFilters.level === VIEW_LEVELS.PRODUCT
                             ? () => handleViewVariants(product.ProductID)
                             : () =>
                                 handleViewStoreInventoryWithPermission(
@@ -876,12 +848,12 @@ const ProductInventory = () => {
                                 )
                         }
                         variantButtonText={
-                          oFilters.level === "product"
+                          oFilters.level === VIEW_LEVELS.PRODUCT
                             ? t("PRODUCT_INVENTORY.VIEW_VARIANTS")
                             : t("PRODUCT_INVENTORY.VIEW_STORES")
                         }
                         disableVariantButton={
-                          oFilters.level === "variant" && !hasViewVariantStoresPermission
+                          oFilters.level === VIEW_LEVELS.VARIANT && !hasViewVariantStoresPermission
                         }
                       />
                     </div>
@@ -939,7 +911,6 @@ const ProductInventory = () => {
         />
       )}
         </>
-      )}
     </div>
   );
 };

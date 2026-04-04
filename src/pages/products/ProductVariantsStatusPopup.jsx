@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { apiGet, apiPatch } from "../../utils/ApiUtils.jsx";
 import { GET_PRODUCT_BY_ID, UPDATE_PRODUCT_VARIANT_STATUS, UPDATE_PRODUCT_STATUS } from "../../contants/apiRoutes";
 import noImage from "../../../assets/images/missing-pictur.jpg";
-import Loader from "../../components/Loader";
+import SkeletonLoader from "../../components/SkeletonLoader";
+import { SKELETON_TYPES } from "../../contants/constants.jsx";
 import { X, Package, ToggleLeft, ToggleRight } from "lucide-react";
 import { toast } from "react-toastify";
 import Switch from "../../components/Switch.jsx";
@@ -216,14 +217,7 @@ const ProductVariantsStatusPopup = ({ productId, onClose, onVariantStatusUpdate 
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Loader size="medium" />
-              <p className="mt-4 text-sm text-gray-600">
-                {t("COMMON.LOADING_PRODUCT_DETAILS")}
-              </p>
-            </div>
-          ) : error ? (
+          {error ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4">
                 <X className="h-6 w-6 text-red-600" />
@@ -341,7 +335,10 @@ const ProductVariantsStatusPopup = ({ productId, onClose, onVariantStatusUpdate 
                           </tr>
                         </thead>
                         <tbody className="table-body">
-                          {productData.Variants.map((variant, index) => {
+                          {loading ? (
+                            <SkeletonLoader type={SKELETON_TYPES.PRODUCT_TABLE} rows={5} />
+                          ) : (
+                            productData.Variants.map((variant, index) => {
                             const totalStock = getTotalStock(variant.Inventory || []);
                             const storeCount = variant.Inventory?.length || 0;
 
@@ -432,7 +429,8 @@ const ProductVariantsStatusPopup = ({ productId, onClose, onVariantStatusUpdate 
                                 </td>
                               </tr>
                             );
-                          })}
+                          })
+                          )}
                         </tbody>
                       </table>
                     </div>
