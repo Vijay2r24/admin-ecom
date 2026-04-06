@@ -134,7 +134,7 @@ const CreateAttributeType = () => {
       );
       const data = response?.data?.data;
 
-      if (response.data.status === STATUS.SUCCESS.toUpperCase() && data) {
+      if (response.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase() && data) {
         setFormData({
           Name: data.Name || "",
           AttributeTypeDescription: data.AttributeTypeDescription || "",
@@ -289,7 +289,7 @@ const CreateAttributeType = () => {
           );
         }
 
-        if (response.data.status === STATUS.SUCCESS.toUpperCase()) {
+        if (response.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           showEmsg(response.data.message, STATUS.SUCCESS, 3000, navigateBack);
         } else {
           showEmsg(response.data.message, STATUS.WARNING);

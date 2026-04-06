@@ -12,6 +12,33 @@ export const STATUS = {
   CANCELLED: "cancelled",
 };
 
+export const NOTIFICATION_TYPES = {
+  SUCCESS: "success",
+  ERROR: "error", 
+  WARNING: "warning",
+  INFO: "info"
+};
+
+export const NOTIFICATION_MESSAGES = {
+  LOGOUT_SUCCESS: "Logged out successfully",
+  LOGIN_SUCCESS: "Logged in successfully",
+  PROFILE_UPDATED: "Profile updated successfully",
+  SETTINGS_SAVED: "Settings saved successfully",
+  OPERATION_SUCCESS: "Operation completed successfully"
+};
+
+export const PRODUCT_STATUS = {
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+  OUT_OF_STOCK: "out_of_stock"
+};
+
+export const PRODUCT_STATUS_LABELS = {
+  ACTIVE: "Active",
+  INACTIVE: "Inactive", 
+  OUT_OF_STOCK: "Out of Stock"
+};
+
 export const DEFAULT_COLOR = "#000000";
 
 export const COLORS = {
@@ -513,6 +540,7 @@ export const MODULES = {
   ROLE: "Role Management",
   CONTENT: "Content Management",
   PRODUCT: "Product Management",
+  INVENTORY: "Inventory Management",
   PRODUCT_SETUP: "Product Setup",
   PAYMENT: "Payment Management",
   BANNER: "Banner Management",
@@ -597,7 +625,7 @@ export const PERMISSIONS = {
   VIEW_PAYMENT_DETAILS: "View Payment Details",
   VIEW_ORDER_DETAILS: "View Order Details",
   UPDATE_ORDER_STATUS: "Update Order Status",
-  VIEW_ORDER_HISTORY: "View Order History",
+  VIEW_ORDER_HISTORY: "View Order Item Status",
   GENERATE_ORDER_REPORT: "Generate Order Report",
   GENERATE_STORE_REPORT: "Generate Store Report",
   GENERATE_PRODUCT_REPORT: "Generate Product Report",
@@ -685,7 +713,14 @@ export const PERMISSIONS = {
   ADD_PRODUCT_GROUP_TOOLTIP: "Add new product group",
   EDIT_PRODUCT_GROUP_TOOLTIP: "Edit product group details",
   UPDATE_PRODUCT_GROUP_STATUS_TOOLTIP: "Update product group status",
-  VIEW_PRODUCT_GROUP_DETAILS_TOOLTIP: "View product group details"
+  VIEW_PRODUCT_GROUP_DETAILS_TOOLTIP: "View product group details",
+
+  //Inventory specific permissions
+  VIEW_INVENTORY: "View Inventories",
+  EDIT_STORE_INVENTORY: "Edit Store Inventory",
+  UPDATE_STORE_INVENTORY_STATUS: "Update Store Inventory Status",
+  UPDATE_PRODUCT_VARIANT_STATUS: "Update Product Variant Status",
+  VIEW_VARIANT_STORES: "View Variant Stores"
 };
 
 export const QUICK_FILTER_VALUES = [
@@ -705,6 +740,55 @@ export const QUICK_FILTER_LABELS = [
   "Last 2 Days",
   "Last 7 Days",
 ];
+
+// Product Inventory Level Options
+export const VIEW_LEVELS = {
+  PRODUCT: "product",
+  VARIANT: "variant",
+};
+
+export const LEVEL_OPTIONS = [
+  { value: VIEW_LEVELS.PRODUCT, labelKey: "COMMON.PRODUCT_LEVEL" },
+  { value: VIEW_LEVELS.VARIANT, labelKey: "COMMON.VARIANT_LEVEL" },
+];
+
+// Stock Sort Options
+export const STOCK_SORT_OPTIONS = [
+  { value: "none", labelKey: "COMMON.ALL" },
+  { value: "stock_asc", labelKey: "COMMON.STOCK_LOW_TO_HIGH" },
+  { value: "stock_desc", labelKey: "COMMON.STOCK_HIGH_TO_LOW" },
+];
+
+// Product Status Badge Classes
+export const STATUS_BADGE_CLASSES = {
+  ACTIVE: "status-active",
+  OUT_OF_STOCK: "status-inactive",
+  INACTIVE: "status-inactive",
+};
+
+// Filter Values
+export const FILTER_VALUES = {
+  ALL: "all",
+  NONE: "none",
+  TRUE: "true",
+  FALSE: "false",
+};
+
+// UI Constants
+export const SCROLL_SHADOW_THRESHOLD = 10;
+
+// Product Status Values
+export const PRODUCT_STATUS_VALUES = {
+  ACTIVE: "active",
+  OUT_OF_STOCK: "out-of-stock", 
+  INACTIVE: "inactive",
+};
+
+// Product ID Field Names
+export const PRODUCT_ID_FIELDS = {
+  PRODUCT_ID: "ProductID",
+  PRODUCT_VARIANT_ID: "ProductVariantID",
+};
 
 export const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -739,6 +823,11 @@ export const TYPE_GLOBAL = "global";
 export const SCROLL_CONSTANTS = {
   BEHAVIOR: "smooth",
   BLOCK: "center",
+};
+
+export const BODY_OVERFLOW = {
+  HIDDEN: "hidden",
+  UNSET: "unset",
 };
 
 export const DEFAULT_PROPS = {
@@ -832,6 +921,7 @@ export const DIRECTIONS = {
 export const DATA_TYPES = {
   OBJECT: "object",
   STRING: "string",
+  NUMBER:"number",
 };
 
 export const COUNTRY_CODES = {
@@ -848,7 +938,34 @@ export const MOCK_NOTIFICATIONS = [
   { id: 1, title: "Order #1234 delivered", time: "2 min ago" },
   { id: 2, title: "New user registered", time: "10 min ago" },
   { id: 3, title: "Stock running low for Laptop", time: "1 hour ago" },
+  { id: 4, title: "New order placed", time: "30 min ago" },
+  { id: 5, title: "Product out of stock", time: "1 hour ago" },
 ];
+
+export const SKELETON_TYPES = {
+  PRODUCT_TABLE: 'product-table',
+  PAYMENT_TABLE: 'payment-table',
+  BULK_IMPORT_TABLE: 'bulk-import-table',
+  ATTRIBUTE_TYPE_TABLE: 'attribute-type-table',
+  ATTRIBUTE_TABLE: 'attribute-table',
+  CATEGORY_TABLE: 'category-table',
+  BRAND_TABLE: 'brand-table',
+  SPECIFICATION_TYPE_TABLE: 'specification-type-table',
+  COLOR_TABLE: 'color-table',
+  PRODUCT_GRID: 'product-grid',
+  USER_TABLE: 'user-table',
+  USER_GRID: 'user-grid',
+  STORE_TABLE: 'store-table',
+  STORE_GRID: 'store-grid',
+  ORDER_TABLE: 'order-table',
+  ORDER_GRID: 'order-grid',
+  BANNER_GRID: 'banner-grid',
+  USER_ROLES_TABLE: 'user-roles-table',
+  PAGINATION: 'pagination',
+  PROFILE: 'profile',
+  DEFAULT: 'default',
+  NEW_SKELETON_TYPE: 'new-skeleton-type',
+};
 
 export const customScrollbarStyles = `
   .max-w-8xl::-webkit-scrollbar {

@@ -8,6 +8,7 @@ import {
   UPDATE_BANNER_STATUS,
   DELETE_BANNER,
 } from "../contants/apiRoutes";
+import { SKELETON_TYPES } from "../contants/constants";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
 import {
@@ -21,6 +22,7 @@ import noImage from "../../assets/images/missing-pictur.jpg";
 import Switch from "../components/Switch";
 import Pagination from "../components/Pagination"; // Import the Pagination component
 import Loader from "../components/Loader";
+import SkeletonLoader from "../components/SkeletonLoader";
 
 
 const Banners = () => {
@@ -58,7 +60,7 @@ const Banners = () => {
       );
       if (
         oResponse.data &&
-        oResponse.data.status === STATUS.SUCCESS.toUpperCase()
+        oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()
       ) {
         // Check if the response message indicates no banners found
         if (oResponse.data.message === "No banners found") {
@@ -143,7 +145,7 @@ const Banners = () => {
       );
       if (
         oResponse.data &&
-        oResponse.data.status === STATUS.SUCCESS.toUpperCase()
+        oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()
       ) {
         showEmsg(
           oResponse.data.message || t("BANNER_FORM.STATUS_UPDATED"),
@@ -194,11 +196,6 @@ const Banners = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen">
       <ToastContainer />
-      {loading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-          <Loader height={48} width={48}  />
-        </div>
-      )}
       <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-0 py-3 shadow">
         <div className="flex-1" />
         <button
@@ -223,7 +220,9 @@ const Banners = () => {
         {sError && (
           <div className="mb-4 text-red-500 text-center">{sError}</div>
         )}
-        {paginatedBanners.length === 0 && !sError ? (
+        {loading ? (
+          <SkeletonLoader type={SKELETON_TYPES.BANNER_GRID} rows={6} className="mt-4" />
+        ) : paginatedBanners.length === 0 && !sError ? (
           <div className="flex flex-col items-center justify-center py-20 px-4">
             <div className="mb-8">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center">

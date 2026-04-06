@@ -195,7 +195,7 @@ const CreateCategory = () => {
           token
         );
 
-        if (data.status === STATUS.SUCCESS.toUpperCase()) {
+        if (data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           const categoryData = data.data;
 
           if (categoryData) {
@@ -549,7 +549,7 @@ const CreateCategory = () => {
         );
       }
 
-      if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
+      if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(oResponse.data.message, STATUS.SUCCESS, 3000, () => {
           navigate("/browse", { state: { fromCategoryEdit: true } });
         });
@@ -777,23 +777,6 @@ const CreateCategory = () => {
                             >
                               <X className="h-3 w-3" />
                             </button>
-                            {oFieldValid.CategoryImage && (
-                              <div className="absolute -top-2 -left-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg">
-                                <svg
-                                  className="h-3 w-3"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                              </div>
-                            )}
                           </div>
                           <p className="text-xs text-gray-500 mt-2">
                             {t("COMMON.REMOVE_OR_UPLOAD_IMAGE")}

@@ -34,6 +34,7 @@ import Users from "./pages/Users";
 import Orders from "./pages/orders/OrderList";
 import AddUser from "./pages/AddUser";
 import ProductList from "./pages/products/ProductList";
+import InventoryList from "./pages/products/ProductInventory";
 import Addproduct from "./pages/products/AddProductForm";
 import AddVariants from "./pages/products/AddVariant";
 import ProfileDetails from "./pages/ProfileDetails";
@@ -90,6 +91,8 @@ const productsPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_P
 const addProductPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.CREATE_PRODUCT);
 const editProductPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_PRODUCT);
 
+const inventoryPermission = getPermissionCode(MODULES.INVENTORY, PERMISSIONS.VIEW_INVENTORY);
+
 const viewBrandPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_BRANDS);
 const updateBrandPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_BRAND);
 
@@ -118,6 +121,7 @@ const PublicRoute = ({ children }) => {
 };
 const App = () => {
   const location = useLocation();
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -173,17 +177,17 @@ const App = () => {
             {/* Removed Suspense wrapper since we're not using lazy loading anymore */}
             <ScrollToTop />
             <Routes>
-              <Route path="/" element={<Login />} />
+            <Route path="/" element={<Login />} />
 
-              {/* Dashboard */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute permissionCode={dashboardPermission}>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Dashboard */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute permissionCode={dashboardPermission}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
               {/* Browse/Product Setup */}
               <Route
@@ -309,6 +313,14 @@ const App = () => {
                 element={
                   <ProtectedRoute permissionCode={productsPermission}>
                     <ProductList />
+                  </ProtectedRoute>
+                }
+              />
+                 <Route
+                path="/InventoryList"
+                element={
+                  <ProtectedRoute permissionCode={inventoryPermission}>
+                    <InventoryList />
                   </ProtectedRoute>
                 }
               />
@@ -495,7 +507,7 @@ const App = () => {
           </LocationDataProvider>
         </TitleProvider>
       </AllDataProvider>
-      <ToastContainer
+    <ToastContainer
         position="top-right"
         autoClose={1400}
         hideProgressBar={false}

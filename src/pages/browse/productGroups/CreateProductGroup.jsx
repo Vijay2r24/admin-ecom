@@ -38,7 +38,7 @@ const CreateProductGroup = () => {
         const res = await apiGet(`${GET_PRODUCT_GROUPBY_ID}/${groupId}`, {}, token);
 
         const group = res?.data?.data?.productGroup;
-        if (res.data.STATUS === STATUS.SUCCESS.toUpperCase() && group) {
+        if (res.data.STATUS?.toUpperCase() === STATUS.SUCCESS.toUpperCase() && group) {
           setFormData({
             ProductGroupName: group.ProductGroupName || "",
             ProductGroupCode: group.ProductGroupCode || "",
@@ -113,7 +113,7 @@ const CreateProductGroup = () => {
       const { payload, token } = preparePayload();
       const res = await apiPost(CREATE_OR_UPDATE_PRODUCT_GROUP, payload, token);
 
-      if (res.data.STATUS === STATUS.SUCCESS.toUpperCase()) {
+      if (res.data.STATUS?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(res.data.MESSAGE, STATUS.SUCCESS, 3000, () => {
           navigate("/browse", { state: { fromProductGroupEdit: true } });
         });

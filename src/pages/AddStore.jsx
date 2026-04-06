@@ -463,7 +463,7 @@ const AddStore = () => {
       const token = localStorage.getItem("token");
       const oResponse = await apiGet(`${GET_STORE_BY_ID}/${id}`, {}, token);
 
-      if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
+      if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const store = oResponse.data.data;
 
         // FIX: Properly format phone number for the phone input component
@@ -769,7 +769,7 @@ const AddStore = () => {
           oResponse = await apiPost(CREATE_STORE, payload, token);
         }
 
-        if (oResponse.data.status === STATUS.SUCCESS.toUpperCase()) {
+        if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           showEmsg(oResponse.data?.message, STATUS.SUCCESS, 3000, async () => {
             navigate("/stores");
           });

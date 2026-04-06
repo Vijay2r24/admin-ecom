@@ -315,7 +315,7 @@ const OrderView = () => {
   useEffect(() => {
     // Check if user has permission to view order details
     if (!hasViewPermission) {
-      setError("You don't have permission to view order details");
+      setError(t("TOOLTIP_MESSAGES.NO_PERMISSION"));
       setLoading(false);
       return;
     }
@@ -359,7 +359,7 @@ const OrderView = () => {
         false
       );
 
-      if (oResponse?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(oResponse.data.message, STATUS.SUCCESS);
         if (fetchDataRef.current) await fetchDataRef.current();
         closeEditDialog();

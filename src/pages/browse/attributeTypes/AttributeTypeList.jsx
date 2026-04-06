@@ -8,7 +8,10 @@ import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Switch from "../../../components/Switch";
 import Tooltip from "../../../components/Tooltip";
+import Loader from "../../../components/Loader";
+import SkeletonLoader from "../../../components/SkeletonLoader";
 import { UPDATE_ATTRIBUTE_TYPE_STATUS } from "../../../contants/apiRoutes";
+import { SKELETON_TYPES } from "../../../contants/constants";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -236,52 +239,65 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
           handleFilterChange={bShowFilter ? handleFilterChange : undefined}
         />
       </div>
-      {bLoading && (
-        <div className="text-center py-8 text-gray-500">
-          {t("COMMON.LOADING")}
-        </div>
-      )}
+      {/* Loading/Error states or Table */}
+      <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+        <div
+          className="table-scroll-container overflow-x-auto overflow-y-auto"
+          onScroll={handleTableScroll}
+        >
+          <table className="table-base w-full">
+            {/* Floating Header */}
+            <thead
+              className={`table-head-floating sticky top-0 z-10 ${
+                tableScrollTop > 10 ? "shadow-sm" : ""
+              }`}
+            >
+              <tr>
+                <th className="table-head-cell-floating text-left px-6 py-4">
+                  {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.NAME")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.DESCRIPTION_LABEL")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.ATTRIBUTES")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.STATUS")}
+                </th>
+                <th className="table-head-cell-floating text-center px-6 py-4">
+                  {t("COMMON.UPDATE_STATUS")}
+                </th>
+              </tr>
+            </thead>
 
-      {sError && !bLoading && (
-        <div className="text-center py-8 text-red-500">
-          {t("COMMON.ERROR")}: {sError}
-        </div>
-      )}
-
-      {!bLoading && !sError && (
-        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
-          <div
-            className="table-scroll-container overflow-x-auto overflow-y-auto"
-            onScroll={handleTableScroll}
-          >
-            <table className="table-base w-full">
-              {/* Floating Header */}
-              <thead
-                className={`table-head-floating sticky top-0 z-10 ${
-                  tableScrollTop > 10 ? "shadow-sm" : ""
-                }`}
-              >
+            <tbody className="table-body">
+              {bLoading ? (
+                <SkeletonLoader type={SKELETON_TYPES.ATTRIBUTE_TYPE_TABLE} rows={6} />
+              ) : sError ? (
                 <tr>
-                  <th className="table-head-cell-floating text-left px-6 py-4">
-                    {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.NAME")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.DESCRIPTION_LABEL")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.ATTRIBUTES")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.STATUS")}
-                  </th>
-                  <th className="table-head-cell-floating text-center px-6 py-4">
-                    {t("COMMON.UPDATE_STATUS")}
-                  </th>
+                  <td colSpan={5} className="py-8 text-center text-red-500">
+                    {t("COMMON.ERROR")}: {sError}
+                  </td>
                 </tr>
-              </thead>
-
-              <tbody className="table-body">
-                {aAttributeTypes.map((type) => (
+              ) : aAttributeTypes.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-gray-500">
+                    <div>
+                      {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.EMPTY_MESSAGE")}
+                      {sSearchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
+                        >
+                          {t("COMMON.CLEAR_SEARCH")}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                aAttributeTypes.map((type) => (
                   <tr
                     key={type.AttributeTypeID}
                     className={`table-row items-center hover:bg-gray-50 ${
@@ -373,40 +389,28 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
-
-      {!bLoading && !sError && aAttributeTypes.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="text-gray-500">
-            {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.EMPTY_MESSAGE")}
-          </div>
-          {sSearchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
-            >
-              {t("COMMON.CLEAR_SEARCH")}
-            </button>
-          )}
-        </div>
-      )}
+      </div>
 
       {/* Pagination Controls */}
-      {iTotalItems > 0 && !bLoading && (
-        <Pagination
-          currentPage={iCurrentPage}
-          totalPages={iTotalPages}
-          totalItems={iTotalItems}
-          itemsPerPage={iItemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+      {iTotalItems > 0 && (
+        bLoading ? (
+          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
+        ) : (
+          <Pagination
+            currentPage={iCurrentPage}
+            totalPages={iTotalPages}
+            totalItems={iTotalItems}
+            itemsPerPage={iItemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        )
       )}
 
       {statusPopup.open && (

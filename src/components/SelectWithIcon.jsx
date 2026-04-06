@@ -45,9 +45,28 @@ const SelectWithIcon = forwardRef(
         ? placeholder
         : selectedOptionLabels[0];
 
-    const filteredOptions = options.filter((option) =>
-      (option.label || "").toString().toLowerCase().includes(sSearchTerm.toLowerCase())
-    );
+    const filteredOptions = (() => {
+      const baseFiltered = options.filter((option) =>
+        (option.label || "").toString().toLowerCase().includes(sSearchTerm.toLowerCase())
+      );
+      
+      // Always include the currently selected value in filtered options
+      if (!multiple && value && !baseFiltered.some(option => String(option.value) === String(value))) {
+        const selectedOption = options.find(option => String(option.value) === String(value));
+        if (selectedOption) {
+          return [selectedOption, ...baseFiltered];
+        } else if (value) {
+          // If the selected option is not in the options array at all (due to API filtering),
+          // create a fallback option to ensure it remains visible
+          return [{
+            value: value,
+            label: selectedOptionLabels[0] || value,
+          }, ...baseFiltered];
+        }
+      }
+      
+      return baseFiltered;
+    })();
     const shouldShowSelectAll = multiple && filteredOptions.length > 2;
 
     const allSelected =
@@ -151,7 +170,7 @@ const SelectWithIcon = forwardRef(
               } rounded-md transition-all duration-200 flex items-center justify-between
             ${disabled
                 ? "bg-gray-100 cursor-not-allowed opacity-75"
-                : "bg-white hover:border-custom-bg cursor-pointer"
+                : "bg-white hover:border-custom-bg cursor-pointer shadow-sm"
             } ${className}`}
             onClick={(e) => {
               e.stopPropagation();
@@ -186,8 +205,7 @@ const SelectWithIcon = forwardRef(
 
             <div
               ref={selectedItemsRef}
-              className={`flex flex-nowrap gap-2 w-full pr-6 overflow-x-auto items-center [&::-webkit-scrollbar]:hidden ${multiple && value.length > 0 ? "py-0.5" : ""
-                }`}
+              className={`flex flex-nowrap gap-2 w-full pr-6 overflow-x-auto items-center [&::-webkit-scrollbar]:hidden`}
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {multiple && Array.isArray(value) && value.length > 0 ? (
@@ -199,7 +217,7 @@ const SelectWithIcon = forwardRef(
                     return itemLabel ? (
                       <span
                         key={itemValue}
-                        className={`flex items-center text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${disabled
+                        className={`flex items-center text-xs font-medium px-2 py-0.25 rounded-full flex-shrink-0 ${disabled
                           ? "bg-gray-300 text-gray-600"
                           : "bg-custom-bg text-white"
                           }`}
@@ -213,7 +231,7 @@ const SelectWithIcon = forwardRef(
                     ) : null;
                   })}
                   {remainingCount > 0 && (
-                    <span className="flex items-center bg-gray-300 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0">
+                    <span className="flex items-center bg-gray-300 text-gray-700 text-xs font-medium px-2 py-0.25 rounded-full flex-shrink-0">
                       +{remainingCount} more
                     </span>
                   )}

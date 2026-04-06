@@ -101,7 +101,7 @@ const updateStatusById = async (
     const response = await apiPatch(`${apiRoute}/${id}`, payload, token);
     const backendMessage =
       response?.data?.MESSAGE || t("CONTEXT.STATUS_UPDATE_SUCCESS");
-    if (response?.data?.STATUS === STATUS.SUCCESS.toUpperCase()) {
+    if (response?.data?.STATUS?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
       setState((prev) => ({
         ...prev,
         [key]: {
@@ -159,8 +159,8 @@ export const AllDataProvider = ({ children }) => {
         if (rolesPagination) {
           if (
             oResponse.data &&
-            (oResponse.data.STATUS === STATUS.SUCCESS.toUpperCase() ||
-              oResponse.data.status === STATUS.SUCCESS.toUpperCase()) &&
+            (oResponse.data.STATUS?.toUpperCase() === STATUS.SUCCESS.toUpperCase() ||
+              oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) &&
             oResponse.data.data &&
             oResponse.data.data.RolesPAginationData &&
             Array.isArray(oResponse.data.data.RolesPAginationData.data)
@@ -169,9 +169,8 @@ export const AllDataProvider = ({ children }) => {
             total = oResponse.data.data.RolesPAginationData.totalRecords || 0;
           }
         } else if (
-          oResponse.data.STATUS === STATUS.SUCCESS.toUpperCase() ||
-          oResponse.data.status === STATUS.SUCCESS ||
-          oResponse.data.status === STATUS.SUCCESS.toUpperCase()
+          oResponse.data.status === STATUS.SUCCESS.toUpperCase() ||
+          oResponse.data.status === STATUS.SUCCESS
         ) {
           if (oResponse.data.data && Array.isArray(oResponse.data.data.data)) {
             data = oResponse.data.data.data;

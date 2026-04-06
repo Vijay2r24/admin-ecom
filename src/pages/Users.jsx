@@ -7,13 +7,14 @@ import ActionButtons from "../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { USER_ACTIVE_STATUS } from "../contants/apiRoutes";
 import { useTitle } from "../context/TitleContext";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS, SKELETON_TYPES } from "../contants/constants";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
 import Switch from "../components/Switch";
 import { Image } from "lucide-react";
 import Loader from "../components/Loader";
+import SkeletonLoader from "../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
 
@@ -279,7 +280,8 @@ const Users = () => {
       searchPlaceholder: t("COMMON.SEARCH_STORE") || "Search store",
       onInputChange: (inputValue) =>
         handleDropdownInputChange(inputValue, "store"),
-    },];
+    },
+  ];
 
   const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNextPage = () =>
@@ -450,179 +452,149 @@ const Users = () => {
             className="table-wrapper-floating"
             onScroll={handleTableScroll}
           >
-            {loading || initialLoading ? (
-              <table className="table-base">
-                {/* Floating Header */}
-                <thead
-                  className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
-                    }`}
-                >
+            <table className="table-base">
+              {/* Single Floating Header - Used for All States */}
+              <thead
+                className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
+                  }`}
+              >
+                <tr>
+                  <th className="table-head-cell-floating text-left">
+                    {t("COMMON.USER")}
+                  </th>
+                  <th className="table-head-cell-floating hidden sm:table-cell text-center">
+                    {t("USERS.TABLE.CONTACT")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("COMMON.ROLE")}
+                  </th>
+                  <th className="table-head-cell-floating text-center">
+                    {t("COMMON.STATUS")}
+                  </th>
+                  <th className="table-head-cell-floating hidden sm:table-cell text-center">
+                    {t("COMMON.ACTIONS")}
+                  </th>
+                </tr>
+              </thead>
+
+              {/* Conditional Body */}
+              <tbody className="table-body">
+                {loading || initialLoading ? (
+                  <SkeletonLoader type={SKELETON_TYPES.USER_TABLE} rows={8} />
+                ) : usersData.length === 0 ? (
                   <tr>
-                    <th className="table-head-cell-floating text-left">
-                      {t("COMMON.USER")}
-                    </th>
-                    <th className="table-head-cell-floating hidden sm:table-cell text-center">
-                      {t("USERS.TABLE.CONTACT")}
-                    </th>
-                    <th className="table-head-cell-floating text-center">
-                      {t("COMMON.ROLE")}
-                    </th>
-                    <th className="table-head-cell-floating text-center">
-                      {t("COMMON.STATUS")}
-                    </th>
-                    <th className="table-head-cell-floating hidden sm:table-cell text-right">
-                      {t("COMMON.ACTIONS")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="table-body">
-                  <tr>
-                    <td colSpan="5" className="table-cell">
-                      <div className="flex justify-center items-center h-64">
-                        <Loader className="h-8 w-8" />
-                      </div>
+                    <td colSpan={5} className="py-8 text-center text-gray-500">
+                      {t("USERS.NO_USERS_FOUND")}
                     </td>
                   </tr>
-                </tbody>
-              </table>
-            ) : error ? (
-              <div className="text-center py-8 text-red-500">
-                {t("USERS.FETCH_ERROR")}
-              </div>
-            ) : usersData.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                {t("USERS.NO_USERS_FOUND")}
-              </div>
-            ) : (
-              <table className="table-base">
-                {/* Floating Header */}
-                <thead
-                  className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
-                    }`}
-                >
-                  <tr>
-                    <th className="table-head-cell-floating text-left">
-                      {t("COMMON.USER")}
-                    </th>
-                    <th className="table-head-cell-floating hidden sm:table-cell text-center">
-                      {t("USERS.TABLE.CONTACT")}
-                    </th>
-                    <th className="table-head-cell-floating text-center">
-                      {t("COMMON.ROLE")}
-                    </th>
-                    <th className="table-head-cell-floating text-center">
-                      {t("COMMON.STATUS")}
-                    </th>
-                    <th className="table-head-cell-floating hidden sm:table-cell text-right">
-                      {t("COMMON.ACTIONS")}
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody className="table-body">
-                  {usersData.map((user) => (
-                  <tr key={user.UserID} className="table-row">
-                    {/* User */}
-                    <td className="table-cell text-left">
-                      <div className="flex items-center">
-                        {hasProfileImage(user) ? (
-                          <img
-                            className="h-10 w-10 rounded-full object-cover"
-                            src={getProfileImageUrl(user)}
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                            alt=""
-                          />
-                        ) : null}
-                        {!hasProfileImage(user) && (
-                          <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                            <Image className="h-5 w-5 text-gray-400" />
-                          </div>
-                        )}
-                        {hasProfileImage(user) && (
-                          <div 
-                            className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center" 
-                            style={{ display: 'none' }}
-                            onError={(e) => {
-                              e.target.style.display = 'flex';
-                              e.target.previousSibling.style.display = 'none';
-                            }}
-                          >
-                            <Image className="h-5 w-5 text-gray-400" />
-                          </div>
-                        )}
-                        <div className="ml-4">
-                          <div className="table-cell-text">
-                            <span className="ellipsis-text">
-                              {user.FirstName} {user.LastName}
-                            </span>
-                          </div>
-                          <div className="table-cell-subtext sm:hidden text-xs font-semibold text-gray-900">
-                            {user.Email}
-                          </div>
-                          <div className="table-cell-subtext lg:hidden">
-                            {getStoresString(user)}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Contact */}
-                    <td className="table-cellhidden sm:table-cell text-center">
-                      <div className="flex flex-col items-center space-y-1">
-                        <div className="flex flex-col items-start space-y-1 w-full max-w-[150px]">
-                          {" "}
-                          {/* adjust max-w as needed */}
-                          <div className="table-cell-subtext flex items-center justify-start">
-                            <Mail className="h-4 w-4 mr-2 text-gray-500" />
-                            <span className="ellipsis-text text-xs font-semibold text-gray-900">
+                ) : (
+                  usersData.map((user) => (
+                    <tr key={user.UserID} className="table-row">
+                      {/* User */}
+                      <td className="table-cell text-left">
+                        <div className="flex items-center">
+                          {hasProfileImage(user) ? (
+                            <img
+                              className="h-10 w-10 rounded-full object-cover"
+                              src={getProfileImageUrl(user)}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                                if (e.target.nextSibling) {
+                                  e.target.nextSibling.style.display = 'flex';
+                                }
+                              }}
+                              alt=""
+                            />
+                          ) : null}
+                          {!hasProfileImage(user) && (
+                            <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                              <Image className="h-5 w-5 text-gray-400" />
+                            </div>
+                          )}
+                          {hasProfileImage(user) && (
+                            <div 
+                              className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center" 
+                              style={{ display: 'none' }}
+                              onError={(e) => {
+                                e.target.style.display = 'flex';
+                                if (e.target.previousSibling) {
+                                  e.target.previousSibling.style.display = 'none';
+                                }
+                              }}
+                            >
+                              <Image className="h-5 w-5 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="ml-4">
+                            <div className="table-cell-text">
+                              <span className="ellipsis-text">
+                                {user.FirstName} {user.LastName}
+                              </span>
+                            </div>
+                            <div className="table-cell-subtext sm:hidden text-xs font-semibold text-gray-900">
                               {user.Email}
-                            </span>
-                          </div>
-                          <div className="table-cell-subtext flex items-center justify-start">
-                            <Phone className="h-4 w-4 mr-2" />
-                            {user.CountryCode ? `${user.CountryCode} ${user.PhoneNumber}` : user.PhoneNumber}
+                            </div>
+                            <div className="table-cell-subtext lg:hidden">
+                              {getStoresString(user)}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Role */}
-                    <td className="table-cell text-center">
-                      <div className="flex items-center justify-center">
-                        <Shield className="h-4 w-4 mr-2 text-gray-400" />
-                        <span className="status-badge bg-blue-100 text-blue-800">
-                          <span className="ellipsis-text">{user.RoleName}</span>
-                        </span>
-                      </div>
-                    </td>
+                      {/* Contact */}
+                      <td className="table-cell hidden sm:table-cell text-center">
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="flex flex-col items-start space-y-1 w-full max-w-[150px]">
+                            {" "}
+                            {/* adjust max-w as needed */}
+                            <div className="table-cell-subtext flex items-center justify-start">
+                              <Mail className="h-4 w-4 mr-2 text-gray-500" />
+                              <span className="ellipsis-text text-xs font-semibold text-gray-900">
+                                {user.Email}
+                              </span>
+                            </div>
+                            <div className="table-cell-subtext flex items-center justify-start">
+                              <Phone className="h-4 w-4 mr-2" />
+                              {user.CountryCode ? `${user.CountryCode} ${user.PhoneNumber}` : user.PhoneNumber}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
 
-                    {/* Status */}
-                    <td className="table-cell text-center">
-                      <Switch
-                        checked={user.IsActive}
-                        onChange={(e) =>
-                          handleStatusChange(user.UserID, e.target.checked)
-                        }
-                      />
-                    </td>
+                      {/* Role */}
+                      <td className="table-cell text-center">
+                        <div className="flex items-center justify-center">
+                          <Shield className="h-4 w-4 mr-2 text-gray-400" />
+                          <span className="status-badge bg-blue-100 text-blue-800">
+                            <span className="ellipsis-text">{user.RoleName}</span>
+                          </span>
+                        </div>
+                      </td>
 
-                    {/* Actions */}
-                    <td className="table-cell text-right">
-                      <ActionButtons
-                        id={user.UserID}
-                        viewLink={`/editUser/${user.UserID}`}
-                        disableEdit={!hasEditPermission}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                      {/* Status */}
+                      <td className="table-cell text-center">
+                        <Switch
+                          checked={user.IsActive}
+                          onChange={(e) =>
+                            handleStatusChange(user.UserID, e.target.checked)
+                          }
+                        />
+                      </td>
+
+                      {/* Actions */}
+                      <td className="table-cell text-center">
+                        <ActionButtons
+                          id={user.UserID}
+                          viewLink={`/editUser/${user.UserID}`}
+                          disableEdit={!hasEditPermission}
+                        />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-            )}
           </div>
         </div>
       ) : (
@@ -637,17 +609,9 @@ const Users = () => {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
               {loading || initialLoading ? (
-                <div className="col-span-full text-center py-8">
-                  <div className="flex justify-center items-center h-32">
-                    <Loader className="h-8 w-8" />
-                  </div>
-                </div>
-              ) : error ? (
-                <div className="col-span-full text-center py-4 text-red-500">
-                  {t("USERS.FETCH_ERROR")}
-                </div>
+                <SkeletonLoader type={SKELETON_TYPES.USER_GRID} rows={6} className="p-4" />
               ) : usersData.length === 0 ? (
-                <div className="col-span-full text-center py-4">
+                <div className="col-span-full text-center py-4 text-gray-500">
                   {t("USERS.NO_USERS_FOUND")}
                 </div>
               ) : (
@@ -656,84 +620,88 @@ const Users = () => {
                     key={user.UserID}
                     className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-xl transition-shadow duration-200"
                   >
-                <div className="flex items-center gap-4 pb-2 border-b border-gray-100">
-                  <div className="flex-shrink-0 h-12 w-12 bg-gray-100 rounded-full overflow-hidden">
-                    {hasProfileImage(user) ? (
-                      <img
-                        className="h-full w-full object-cover"
-                        src={getProfileImageUrl(user)}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                        alt=""
-                      />
-                    ) : null}
-                    {!hasProfileImage(user) && (
-                      <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-                        <Image className="h-6 w-6 text-gray-400" />
+                    <div className="flex items-center gap-4 pb-2 border-b border-gray-100">
+                      <div className="flex-shrink-0 h-12 w-12 bg-gray-100 rounded-full overflow-hidden">
+                        {hasProfileImage(user) ? (
+                          <img
+                            className="h-full w-full object-cover"
+                            src={getProfileImageUrl(user)}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = 'none';
+                              if (e.target.nextSibling) {
+                                e.target.nextSibling.style.display = 'flex';
+                              }
+                            }}
+                            alt=""
+                          />
+                        ) : null}
+                        {!hasProfileImage(user) && (
+                          <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+                            <Image className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
+                        {hasProfileImage(user) && (
+                          <div 
+                            className="h-full w-full bg-gray-100 flex items-center justify-center" 
+                            style={{ display: 'none' }}
+                            onError={(e) => {
+                              e.target.style.display = 'flex';
+                              if (e.target.previousSibling) {
+                                e.target.previousSibling.style.display = 'none';
+                              }
+                            }}
+                          >
+                            <Image className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {hasProfileImage(user) && (
-                      <div 
-                        className="h-full w-full bg-gray-100 flex items-center justify-center" 
-                        style={{ display: 'none' }}
-                        onError={(e) => {
-                          e.target.style.display = 'flex';
-                          e.target.previousSibling.style.display = 'none';
-                        }}
+                      <div>
+                        <div className="text-title font-bold text-gray-900">
+                          {user.FirstName} {user.LastName}
+                        </div>
+                        <div className="text-secondary flex items-center mt-1">
+                          <Shield className="h-4 w-4 mr-1" />
+                          {user.RoleName}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-gray-600">
+                      <div className="font-medium mb-1">{t("COMMON.STORE")}:</div>
+                      <div className="truncate">{getStoresString(user)}</div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-2">
+                      <span
+                        className={`px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${user.IsActive ? "status-active" : "status-inactive"
+                          }`}
                       >
-                        <Image className="h-6 w-6 text-gray-400" />
+                        {user.IsActive ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")}
+                      </span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-gray-500 border-t border-gray-100 pt-2">
+                      <div className="flex items-center gap-1">
+                        <Mail className="h-4 w-4" />
+                        <span
+                          className="truncate max-w-[120px] block text-xs font-semibold text-gray-900"
+                          title={user.Email}
+                        >
+                          {user.Email}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-title font-bold text-gray-900">
-                      {user.FirstName} {user.LastName}
+                      <div className="flex items-center gap-1 sm:ml-4">
+                        <Phone className="h-4 w-4" />
+                        <span>{user.PhoneNumber}</span>
+                      </div>
                     </div>
-                    <div className="text-secondary flex items-center mt-1">
-                      <Shield className="h-4 w-4 mr-1" />
-                      {user.RoleName}
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 mt-2">
+                      <ActionButtons
+                        id={user.UserID}
+                        viewLink={`/editUser/${user.UserID}`}
+                        disableEdit={!hasEditPermission}
+                      />
                     </div>
-                  </div>
-                </div>
-
-                <div className="text-sm text-gray-600">
-                  <div className="font-medium mb-1">{t("COMMON.STORE")}:</div>
-                  <div className="truncate">{getStoresString(user)}</div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 pt-2">
-                  <span
-                    className={`px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${user.IsActive ? "status-active" : "status-inactive"
-                      }`}
-                  >
-                    {user.IsActive ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")}
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-gray-500 border-t border-gray-100 pt-2">
-                  <div className="flex items-center gap-1">
-                    <Mail className="h-4 w-4" />
-                    <span
-                      className="truncate max-w-[120px] block text-xs font-semibold text-gray-900"
-                      title={user.Email}
-                    >
-                      {user.Email}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 sm:ml-4">
-                    <Phone className="h-4 w-4" />
-                    <span>{user.PhoneNumber}</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 mt-2">
-                  <ActionButtons
-                    id={user.UserID}
-                    viewLink={`/editUser/${user.UserID}`}
-                    disableEdit={!hasEditPermission}
-                  />
-                </div>
                   </div>
                 ))
               )}
@@ -743,15 +711,19 @@ const Users = () => {
       )}
 
       <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={nTotalPages}
-          totalItems={actualTotal}
-          itemsPerPage={currentPageSize}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+        {loading || initialLoading ? (
+          <SkeletonLoader type="pagination" />
+        ) : (
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={nTotalPages}
+            totalItems={actualTotal}
+            itemsPerPage={currentPageSize}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        )}
       </div>
 
       {statusPopup.open && (

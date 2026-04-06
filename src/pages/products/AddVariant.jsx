@@ -732,7 +732,7 @@ export default function CreateVariant() {
         },
         token
       );
-      if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const values = (response.data.data || []).map((val) => ({
           id: val.AttributeValueID,
           label: val.Unit ? `${val.Value} (${val.Unit})` : val.Value,
@@ -893,7 +893,7 @@ export default function CreateVariant() {
         const response = await apiGet(GETPRODUCTDETAILS, params, token);
         const resData = response?.data;
 
-        if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+        if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           const data = resData.data.map((p) => ({
             ProductID: p.ProductID,
             ProductName: p.ProductName,
@@ -971,7 +971,7 @@ export default function CreateVariant() {
         token
       );
 
-      if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const product = response.data.data;
         setSelectedProduct(product);
         setFormData({
@@ -1103,7 +1103,7 @@ export default function CreateVariant() {
           const updatedOptions = { ...prev };
 
           results.forEach(({ typeId, res, error }) => {
-            if (res?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+            if (res?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
               const rawData = res.data.data || [];
               const fetchedValues = rawData.map((val) => ({
                 id: val.AttributeValueID || val.AttributeID || val.id,
@@ -1139,7 +1139,7 @@ export default function CreateVariant() {
   useEffect(() => {
     if (
       attributes?.data?.length &&
-      attributes?.status === STATUS.SUCCESS.toUpperCase()
+      attributes?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()
     ) {
       // This handles the case where attributes come from Redux
       // But we're now fetching them individually, so this is a fallback
@@ -1298,7 +1298,7 @@ export default function CreateVariant() {
 
       const response = await apiPost(VALIDATE_PRODUCT_VARIANTS, payload, token);
 
-      if (response?.data?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(t("ADD_VARIANT.MSG_VALIDATED"), STATUS.SUCCESS);
         return true;
       } else {

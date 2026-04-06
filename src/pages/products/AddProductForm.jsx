@@ -246,7 +246,7 @@ const AddProductForm = () => {
             token
           );
 
-          if (response.data.status === STATUS.SUCCESS.toUpperCase()) {
+          if (response.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
             const product = response.data?.data;
             setHasFetchedProduct(true);
 
@@ -300,6 +300,11 @@ const AddProductForm = () => {
                 product.ProductSpecification?.[0]?.SpecificatiobnTypeID ||
                 "",
             });
+
+            // Set groupingAttributeTypeID from product metadata if exists
+            if (product.Metadata?.GroupBy) {
+              setGroupingAttributeTypeID(product.Metadata.GroupBy);
+            }
 
             setSpecifications(
               mappedSpecifications.length
@@ -1333,6 +1338,11 @@ const AddProductForm = () => {
       IsActive: true,
       Specifications,
       Variants,
+      ...(groupingAttributeTypeID && {
+        Metadata: {
+          GroupBy: groupingAttributeTypeID
+        }
+      })
     };
 
     const formData = new FormData();
@@ -1370,7 +1380,7 @@ const AddProductForm = () => {
 
       const resData = response?.data;
 
-      if (resData?.status === STATUS.SUCCESS.toUpperCase()) {
+      if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(
           resData.MESSAGE ||
           (productId
@@ -1712,19 +1722,46 @@ const AddProductForm = () => {
                             })
                           )
                         }
-                        options={attributeTypes
-                          ?.filter((type) => {
-                            // Check if this attribute type is already selected in another row
-                            const isAlreadySelected = aAttributes.some((selectedAttr, selectedIndex) => 
-                              selectedIndex !== index && // Don't check the current attribute being edited
-                              String(selectedAttr.AttributeTypeID) === String(type.AttributeTypeID || type.attributeTypeID)
-                            );
-                                                        return type.IsActive && !isAlreadySelected;
-                          })
-                          .map((type) => ({
-                            value: type.AttributeTypeID || type.attributeTypeID,
-                            label: type.Name || type.name,
-                          }))}
+                        options={(() => {
+                            const filteredOptions = attributeTypes?.filter((type) => {
+                              // Check if this attribute type is already selected in another row
+                              const isAlreadySelected = aAttributes.some((selectedAttr, selectedIndex) => 
+                                selectedIndex !== index && // Don't check the current attribute being edited
+                                String(selectedAttr.AttributeTypeID) === String(type.AttributeTypeID || type.attributeTypeID)
+                              );
+                              // Only filter out if not the current selection and not already selected elsewhere
+                              return type.IsActive && !isAlreadySelected;
+                            }).map((type) => ({
+                              value: type.AttributeTypeID || type.attributeTypeID,
+                              label: type.Name || type.name,
+                            })) || [];
+
+                            // Always ensure the currently selected value is included, even if not in the API response
+                            if (attr.AttributeTypeID && !filteredOptions.some(option => 
+                              String(option.value) === String(attr.AttributeTypeID)
+                            )) {
+                              // Try to find in current attributeTypes first
+                              const currentType = attributeTypes?.find(type => 
+                                String(type.AttributeTypeID || type.attributeTypeID) === String(attr.AttributeTypeID)
+                              );
+                              
+                              if (currentType && currentType.IsActive) {
+                                filteredOptions.push({
+                                  value: currentType.AttributeTypeID || currentType.attributeTypeID,
+                                  label: currentType.Name || currentType.name,
+                                });
+                              } else {
+                                // If not found in current attributeTypes (due to search filtering), 
+                                // we need to reconstruct it from the stored data
+                                filteredOptions.push({
+                                  value: attr.AttributeTypeID,
+                                  label: attr.typeName || "Selected Attribute Type",
+                                });
+                              }
+                            }
+
+                            return filteredOptions;
+                          })()}
                         Icon={Hash}
                         error={
                           oValidationErrors[`attr_${index}_AttributeTypeID`]
@@ -1857,7 +1894,7 @@ const AddProductForm = () => {
                             value: attr.AttributeTypeID,
                             label: tAttr
                               ? tAttr.Name || tAttr.name
-                              : `Attribute ${attr.AttributeTypeID}`,
+                              : attr.typeName || `Attribute ${attr.AttributeTypeID}`,
                           };
                         }),
                     ]}
