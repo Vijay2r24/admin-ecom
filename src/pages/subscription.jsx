@@ -48,7 +48,7 @@ const SubscriptionPlan = () => {
         name: userDetails.Name || userDetails.name || TENANT_DEFAULTS.NAME,
       };
     } catch (error) {
-      return { email: TENANT_DEFAULTS.EMAIL, tenantID: TENANT_DEFAULTS.TENANT_ID, name: TENANT_DEFAULTS.NAME };
+      return { email: TENANT_DEFAULTS.NA, tenantID: TENANT_DEFAULTS.NA, name: TENANT_DEFAULTS.NAME };
     }
   };
 

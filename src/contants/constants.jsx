@@ -1211,8 +1211,7 @@ export const getPermissionTooltip = (permission, isEditingAdmin, isAdminRole, mo
 };
 
 export const TENANT_DEFAULTS = {
-  EMAIL: "N/A",
-  TENANT_ID: "N/A",
+  NA: "N/A",
   NAME: "User",
 };
 
