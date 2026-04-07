@@ -581,6 +581,13 @@ const OrderList = () => {
 
               <tbody className="table-body">
                 {bLoading || bFilterLoading ? (
+                  <tr>
+                    <td colSpan={8} className="py-8 text-center">
+                      <div className="flex justify-center">
+                        <Loader size="small" />
+                      </div>
+                    </td>
+                  </tr>
                   <SkeletonLoader type={SKELETON_TYPES.ORDER_TABLE} rows={8} />
                 ) : sError ? (
                   <tr>

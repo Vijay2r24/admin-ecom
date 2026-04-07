@@ -105,9 +105,6 @@ const BulkImages = () => {
         return uploadedBatch;
       }
     } catch (error) {
-      // Show actual backend error message
-      const errorMessage = error.response?.data?.message;
-      showEmsg(errorMessage, STATUS.ERROR);
       throw error;
     }
   };
@@ -139,10 +136,8 @@ const BulkImages = () => {
       
       // Show success message when all batches are completed
       showEmsg(t('BULK_IMAGES.UPLOAD_SUCCESS'), STATUS.SUCCESS);
-    } catch (error) {
-      // Show actual backend error message
-      const errorMessage = error?.response?.data?.message || error.message || t('BULK_IMAGES.UPLOAD_ERROR');
-      showEmsg(errorMessage, STATUS.ERROR);
+    } catch {
+      // ApiUtils interceptor already shows the error toast — no duplicate needed
     } finally {
       setUploading(false);
     }

@@ -39,6 +39,8 @@ import {
   VALIDATE_PRODUCT_VARIANTS,
 } from "../../contants/apiRoutes";
 import { FILETYPE, STATUS } from "../../contants/constants";
+
+const TYPE_GLOBAL = "global";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import VariantTabs from "../../components/products/VariantTabs.jsx";
 import TextInputWithIcon from "../../components/TextInputWithIcon.jsx";
@@ -236,7 +238,6 @@ export default function CreateVariant() {
     const next = cropQueue[0];
     if (!next) return;
 
-    // If enqueue already created url then use it, otherwise create it now.
     const url = next.url || URL.createObjectURL(next.file);
     activeUrlsRef.current.add(url);
 
@@ -438,25 +439,8 @@ export default function CreateVariant() {
         }
       }
 
-      // Pop queue and revoke the original modal.image after a small delay
-      setCropQueue((prev) => {
-        if (!prev || prev.length === 0) return [];
-        const [, ...rest] = prev;
-
-        const urlToRevoke = modal.image;
-        setTimeout(() => {
-          try {
-            if (urlToRevoke) {
-              URL.revokeObjectURL(urlToRevoke);
-              activeUrlsRef.current.delete(urlToRevoke);
-            }
-          } catch (err) { }
-        }, 120);
-
-        return rest;
-      });
-
-      // close modal — next queue item (if any) will open modal by effect
+      // The modal (ImageCropperModal) already called onQueueUpdate to pop the queue.
+      // Just close the cropperModal so the useEffect can open the next item if any.
       setCropperModal({
         isOpen: false,
         image: "",
@@ -470,28 +454,9 @@ export default function CreateVariant() {
   );
 
   // --------------------------
-  // handleCropperCancel - drop current queued item and revoke URL
+  // handleCropperCancel - close modal; modal already updated queue via onQueueUpdate
   // --------------------------
   const handleCropperCancel = useCallback(() => {
-    const modal = { ...cropperModal };
-
-    setCropQueue((prev) => {
-      if (!prev || prev.length === 0) return [];
-      const [, ...rest] = prev;
-
-      const urlToRevoke = modal.image;
-      setTimeout(() => {
-        try {
-          if (urlToRevoke) {
-            URL.revokeObjectURL(urlToRevoke);
-            activeUrlsRef.current.delete(urlToRevoke);
-          }
-        } catch (err) { }
-      }, 100);
-
-      return rest;
-    });
-
     setCropperModal({
       isOpen: false,
       image: "",
@@ -500,7 +465,7 @@ export default function CreateVariant() {
       type: "variant",
       groupKey: null,
     });
-  }, [cropperModal]);
+  }, []);
 
   // --------------------------
   // removeVariantImage - remove image by image id (handles global vs local)

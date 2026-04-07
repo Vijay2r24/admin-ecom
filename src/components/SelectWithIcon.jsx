@@ -20,6 +20,7 @@ const SelectWithIcon = forwardRef(
       maxVisibleItems = 3,
       disabled = false,
       className = "",
+      onInputChange,
       ...rest
     },
     ref
@@ -177,13 +178,9 @@ const SelectWithIcon = forwardRef(
               if (!disabled) {
                 setIsOpen((prev) => {
                   if (!prev) {
-                    // Clear search term when opening dropdown to show all options
                     setSearchTerm("");
                     setHighlightedIndex(-1);
-                    // Trigger onInputChange with empty string to fetch all options
-                    if (typeof rest.onInputChange === "function") {
-                      rest.onInputChange("");
-                    }
+                    onInputChange?.("");
                   }
                   return !prev;
                 });
@@ -286,9 +283,7 @@ const SelectWithIcon = forwardRef(
                       onChange={(e) => {
                         setSearchTerm(e.target.value);
                         setHighlightedIndex(-1);
-                        if (typeof rest.onInputChange === "function") {
-                          rest.onInputChange(e.target.value);
-                        }
+                        onInputChange?.(e.target.value);
                       }}
                     />
                     {sSearchTerm && (

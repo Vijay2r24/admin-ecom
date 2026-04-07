@@ -55,7 +55,7 @@ const Banners = () => {
       const token = localStorage.getItem("token");
       const oResponse = await apiGet(
         GET_ALL_BANNERS,
-        { page: nPage, limit: rowsPerPage },
+        { pageNumber: nPage, pageSize: rowsPerPage },
         token
       );
       if (
@@ -221,6 +221,9 @@ const Banners = () => {
           <div className="mb-4 text-red-500 text-center">{sError}</div>
         )}
         {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader height={48} width={48} />
+          </div>
           <SkeletonLoader type={SKELETON_TYPES.BANNER_GRID} rows={6} className="mt-4" />
         ) : paginatedBanners.length === 0 && !sError ? (
           <div className="flex flex-col items-center justify-center py-20 px-4">
