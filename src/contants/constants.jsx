@@ -174,6 +174,8 @@ export const PASSWORD_ARIA = {
   HIDE: "Hide password",
 };
 
+  
+
 export const LOCALES = {
   ENGLISH_US: "en-US",
   ENGLISH_INDIA: "en-IN",
@@ -1207,3 +1209,14 @@ export const getPermissionTooltip = (permission, isEditingAdmin, isAdminRole, mo
     return t("CREATE_USER_ROLE.TOOLTIPS.PERMISSION_ENABLED");
   }
 };
+
+export const TENANT_DEFAULTS = {
+  NA: "N/A",
+  NAME: "User",
+};
+
+export const PLAN_EMAIL_MAP = [
+  { email: "b2yinfy@gmail.com", plan: "Basic" },
+  { email: "vinayvinuus132@gmail.com", plan: "Premium" },
+  { email: "astratechadmin@gmail.com", plan: "Pro" },
+];
