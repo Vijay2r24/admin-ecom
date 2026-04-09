@@ -216,8 +216,8 @@
     "BATCH_SUCCESS": "Batch {current}/{total} uploaded successfully ({count} images)",
     "BATCH_ERROR": "Failed to upload batch {current}/{total}",
     "BATCH": "Batch",
-    "THEMES": "Tenant Settings"
-    "THEMES":"Tenant Settings",
+    "THEMES": "Tenant Settings",
+   
     "PRODUCT_INVENTORY":"Product Inventory"
   },
   "DASHBOARD": {
