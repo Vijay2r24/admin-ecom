@@ -487,98 +487,6 @@ const Users = () => {
                       {t("USERS.NO_USERS_FOUND")}
                     </td>
                   </tr>
-                </tbody>
-              </table>
-            ) : error ? (
-              <div className="text-center py-8 text-red-500">
-                {t("USERS.FETCH_ERROR")}
-              </div>
-            ) : usersData.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                {t("USERS.NO_USERS_FOUND")}
-              </div>
-            ) : (
-              <table className="table-base">
-                {/* Floating Header */}
-                <thead
-                  className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""
-                    }`}
-                >
-                  <tr>
-                    <th className="table-head-cell-floating text-left">
-                      {t("COMMON.USER")}
-                    </th>
-                    <th className="table-head-cell-floating hidden sm:table-cell text-center">
-                      {t("USERS.TABLE.CONTACT")}
-                    </th>
-                    <th className="table-head-cell-floating text-center">
-                      {t("COMMON.ROLE")}
-                    </th>
-                    <th className="table-head-cell-floating text-center">
-                      {t("COMMON.STATUS")}
-                    </th>
-                    <th className="table-head-cell-floating hidden sm:table-cell text-center">
-                      {t("COMMON.ACTIONS")}
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody className="table-body">
-                  {usersData.map((user) => (
-                  <tr key={user.UserID} className="table-row">
-                    {/* User */}
-                    <td className="table-cell text-left">
-                      <div className="flex items-center">
-                        {hasProfileImage(user) ? (
-                          <img
-                            className="h-10 w-10 rounded-full object-cover"
-                            src={getProfileImageUrl(user)}
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                            alt=""
-                          />
-                        ) : null}
-                        {!hasProfileImage(user) && (
-                          <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                            <Image className="h-5 w-5 text-gray-400" />
-                          </div>
-                        )}
-                        {hasProfileImage(user) && (
-                          <div 
-                            className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center" 
-                            style={{ display: 'none' }}
-                            onError={(e) => {
-                              e.target.style.display = 'flex';
-                              e.target.previousSibling.style.display = 'none';
-                            }}
-                          >
-                            <Image className="h-5 w-5 text-gray-400" />
-                          </div>
-                        )}
-                        <div className="ml-4 min-w-0">
-                          <div className="table-cell-text max-w-[160px] truncate" title={`${user.FirstName} ${user.LastName}`}>
-                            {user.FirstName} {user.LastName}
-                          </div>
-                          <div className="table-cell-subtext sm:hidden text-xs font-semibold text-gray-900 max-w-[160px] truncate" title={user.Email}>
-                            {user.Email}
-                          </div>
-                          <div className="table-cell-subtext lg:hidden max-w-[160px] truncate" title={getStoresString(user)}>
-                            {getStoresString(user)}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Contact */}
-                    <td className="table-cellhidden sm:table-cell text-center">
-                      <div className="flex flex-col items-center space-y-1">
-                        <div className="flex flex-col items-start space-y-1 w-full max-w-[180px]">
-                          <div className="table-cell-subtext flex items-center justify-start w-full">
-                            <Mail className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
-                            <span className="text-xs font-semibold text-gray-900 truncate" title={user.Email}>
                 ) : (
                   usersData.map((user) => (
                     <tr key={user.UserID} className="table-row">
@@ -631,46 +539,6 @@ const Users = () => {
                               {getStoresString(user)}
                             </div>
                           </div>
-                          <div className="table-cell-subtext flex items-center justify-start w-full">
-                            <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
-                            <span className="truncate" title={user.CountryCode ? `${user.CountryCode} ${user.PhoneNumber}` : user.PhoneNumber}>
-                              {user.CountryCode ? `${user.CountryCode} ${user.PhoneNumber}` : user.PhoneNumber}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Role */}
-                    <td className="table-cell text-center">
-                      <div className="flex items-center justify-center">
-                        <Shield className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
-                        <span className="status-badge bg-blue-100 text-blue-800 max-w-[120px] truncate" title={user.RoleName}>
-                          {user.RoleName}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Status */}
-                    <td className="table-cell text-center">
-                      <Switch
-                        checked={user.IsActive}
-                        onChange={(e) =>
-                          handleStatusChange(user.UserID, e.target.checked)
-                        }
-                      />
-                    </td>
-
-                    {/* Actions */}
-                    <td className="table-cell text-center">
-                      <ActionButtons
-                        id={user.UserID}
-                        viewLink={`/editUser/${user.UserID}`}
-                        disableEdit={!hasEditPermission}
-                      />
-                    </td>
-                  </tr>
-                ))}
                         </div>
                       </td>
 
@@ -739,15 +607,17 @@ const Users = () => {
                 : 'calc(100vh - 180px)'
             }}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-              {loading || initialLoading ? (
-                <SkeletonLoader type={SKELETON_TYPES.USER_GRID} rows={6} className="p-4" />
-              ) : usersData.length === 0 ? (
-                <div className="col-span-full text-center py-4 text-gray-500">
-                  {t("USERS.NO_USERS_FOUND")}
-                </div>
-              ) : (
-                usersData.map((user) => (
+            {loading || initialLoading ? (
+              <div className="p-4">
+                <SkeletonLoader type={SKELETON_TYPES.USER_GRID} rows={6} />
+              </div>
+            ) : usersData.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">
+                {t("USERS.NO_USERS_FOUND")}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+                {usersData.map((user) => (
                   <div
                     key={user.UserID}
                     className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-xl transition-shadow duration-200"
@@ -835,9 +705,9 @@ const Users = () => {
                       />
                     </div>
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

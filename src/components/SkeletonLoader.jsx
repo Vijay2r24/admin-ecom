@@ -1,4 +1,5 @@
 import React from 'react';
+import { FileSpreadsheet } from 'lucide-react';
 import { SKELETON_TYPES } from '../contants/constants';
 
 const SkeletonLoader = ({ type = SKELETON_TYPES.DEFAULT, rows = 3, className = '' }) => {
@@ -90,14 +91,23 @@ const SkeletonLoader = ({ type = SKELETON_TYPES.DEFAULT, rows = 3, className = '
           <>
             {[...Array(rows)].map((_, rowIndex) => (
               <tr key={rowIndex} className="table-row">
-                <td className="table-cell w-1/6 text-center">
-                  <div className="flex items-center justify-center">
-                    <div className="h-4 w-4 bg-gray-200 rounded animate-pulse mr-1" />
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-20" />
+                <td className="table-cell w-1/4 text-left align-middle px-4 py-3">
+                  <div className="flex items-center">
+                    <FileSpreadsheet className="h-4 w-4 text-gray-300 mr-2 flex-shrink-0" />
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
                   </div>
                 </td>
-                <td className="table-cell w-1/6 text-center">
+                <td className="table-cell w-1/5 text-center align-middle px-4 py-3">
+                  <div className="h-6 w-16 bg-gray-200 rounded-full animate-pulse mx-auto" />
+                </td>
+                <td className="table-cell w-1/6 text-center align-middle px-4 py-3">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-20 mx-auto" />
+                </td>
+                <td className="table-cell w-1/6 text-center align-middle px-4 py-3">
                   <div className="h-4 bg-gray-200 rounded animate-pulse w-16 mx-auto" />
+                </td>
+                <td className="table-cell w-1/6 text-center align-middle px-4 py-3">
+                  <div className="h-8 w-8 bg-gray-200 rounded animate-pulse mx-auto" />
                 </td>
               </tr>
             ))}

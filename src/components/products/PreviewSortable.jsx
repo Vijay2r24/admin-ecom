@@ -34,7 +34,7 @@ export default function PreviewSortable({
           <button
             type="button"
             onClick={() => setOpenModal(true)}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm"
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
           >
             <Hash className="w-4 h-4" />
             {t("IMAGE_SORTING.VIEW_DELETE_REORDER")}

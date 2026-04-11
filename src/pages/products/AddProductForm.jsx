@@ -348,7 +348,15 @@ const AddProductForm = () => {
                   key: "attributes", // Pass selected attribute type so API can filter values server-side
                   params: { AttributeTypeID: typeId, attributeTypeId: typeId },
                 })
-              )
+              ).then((action) => {
+                // Store the fetched attributes in attributesByType when API call succeeds
+                if (action.payload) {
+                  setAttributesByType(prev => ({
+                    ...prev,
+                    [typeId]: action.payload.data
+                  }));
+                }
+              })
             );
             attributeLabelMapRef.current = attributeLabelMap;
 
@@ -1769,7 +1777,7 @@ const AddProductForm = () => {
                         placeholder={t(
                           "PRODUCT_CREATION.ATTRIBUTE_ID_PLACEHOLDER"
                         )}
-                        disabled={!!productId}
+                        disabled={false}
                       />
                     </div>
 
@@ -1844,7 +1852,7 @@ const AddProductForm = () => {
                         )}
                         multiple
                         maxVisibleItems={10}
-                        disabled={!attr.AttributeTypeID || !!productId}
+                        disabled={!attr.AttributeTypeID}
                       />
 
                       {!productId && (

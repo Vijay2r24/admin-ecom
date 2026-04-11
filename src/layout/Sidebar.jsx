@@ -20,7 +20,6 @@ import {
   BadgeCheck,
   Cog,
   Upload,
-  Upload,// Add CreditCard icon for Payments
   RefreshCw,
   Warehouse,
 } from 'lucide-react';

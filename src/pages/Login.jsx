@@ -78,7 +78,7 @@ const Login = () => {
         confirmPassword: "",
     });
 
-    const [sCurrentView, setCurrentView] = useState("login");
+    const [sCurrentView, setCurrentView] = useState(LOGIN_VIEWS.LOGIN);
     const [sForgotPasswordEmail, setForgotPasswordEmail] = useState("");
     const [sOtp, setOtp] = useState("");
     const [bShowOtpDialog, setbShowOtpDialog] = useState(false);
@@ -323,7 +323,7 @@ const Login = () => {
     };
 
     const handleForgotPasswordClick = () => {
-        setCurrentView("forgotPassword");
+        setCurrentView(LOGIN_VIEWS.FORGOT_PASSWORD);
         setError({
             email: "",
             password: "",
@@ -448,7 +448,7 @@ const Login = () => {
             if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
                 showToastMessage(message || t("LOGIN.SUCCESS"), STATUS.SUCCESS);
                 setbShowOtpDialog(false);
-                setCurrentView("login");
+                setCurrentView(LOGIN_VIEWS.LOGIN);
                 setError({
                     email: "",
                     password: "",

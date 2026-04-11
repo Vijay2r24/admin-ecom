@@ -31,7 +31,9 @@
   "OTP": {
     "SUCCESS": "OTP sent successfully.",
     "FAILURE": "Failed to send OTP. Please try again.",
-    "ERROR": "Something went wrong while sending OTP."
+    "ERROR": "Something went wrong while sending OTP.",
+    "VERIFY_SUCCESS": "OTP verified successfully.",
+    "VERIFY_ERROR": "Invalid OTP. Please try again."
   },
   "RESET_PASSWORD": {
     "TITLE": "Reset Your Password",
@@ -216,8 +218,7 @@
     "BATCH_SUCCESS": "Batch {current}/{total} uploaded successfully ({count} images)",
     "BATCH_ERROR": "Failed to upload batch {current}/{total}",
     "BATCH": "Batch",
-    "THEMES": "Tenant Settings",
-   
+    "THEMES": "Tenant Settings",   
     "PRODUCT_INVENTORY":"Product Inventory"
   },
   "DASHBOARD": {
@@ -278,7 +279,8 @@
     "LOW_STOCK_ALERT": {
       "LOW_STOCK_ALERT": "Low Stock Alert",
       "RESTOCK_BTN": "Restock"
-    }
+    },
+     "NO_RECENT_ORDERS":"No recent orders"
   },
   "PRODUCT_SETUP": {
     "PRODUCT_SETUP": "Product Setup",

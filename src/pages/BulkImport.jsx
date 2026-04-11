@@ -411,10 +411,10 @@ const BulkImport = () => {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {(totalPages > 1 || listLoading) && (
         <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
           {listLoading ? (
-            <SkeletonLoader type="pagination" />
+            <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
           ) : (
             <Pagination
               currentPage={currentPage}

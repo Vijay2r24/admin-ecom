@@ -11,6 +11,9 @@ import { store } from "./store/index";
 import { MODULES, PERMISSIONS } from './contants/constants';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useInactivityTimer } from './hooks/useInactivityTimer';
+import InactivityNotification from './components/InactivityNotification';
+import InactivityManager from './components/InactivityManager';
 
 // Remove all title attributes to prevent white tooltips
 const removeTitleAttributes = () => {
@@ -121,7 +124,6 @@ const PublicRoute = ({ children }) => {
 };
 const App = () => {
   const location = useLocation();
-
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -171,9 +173,10 @@ const App = () => {
 
   return (
     <Provider store={store}>
-      <AllDataProvider>
-        <TitleProvider>
-          <LocationDataProvider>
+      <InactivityManager>
+        <AllDataProvider>
+          <TitleProvider>
+            <LocationDataProvider>
             {/* Removed Suspense wrapper since we're not using lazy loading anymore */}
             <ScrollToTop />
             <Routes>
@@ -507,7 +510,8 @@ const App = () => {
           </LocationDataProvider>
         </TitleProvider>
       </AllDataProvider>
-    <ToastContainer
+      </InactivityManager>
+      <ToastContainer
         position="top-right"
         autoClose={1400}
         hideProgressBar={false}

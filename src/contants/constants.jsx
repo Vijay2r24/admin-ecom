@@ -880,6 +880,22 @@ export const MESSAGES = {
   DEFAULT_ERROR_MESSAGE: "An unexpected error occurred. Please try again.",
 };
 
+export const INACTIVITY_NOTIFICATION = {
+  TITLES: {
+    ACCOUNT_INACTIVE: { labelKey: "INACTIVITY.ACCOUNT_INACTIVE" },
+    SESSION_TIMEOUT_WARNING: { labelKey: "INACTIVITY.SESSION_TIMEOUT_WARNING" },
+  },
+  MESSAGES: {
+    ACCOUNT_INACTIVE: { labelKey: "INACTIVITY.ACCOUNT_INACTIVE_MESSAGE" },
+    SESSION_TIMEOUT: { labelKey: "INACTIVITY.SESSION_TIMEOUT_MESSAGE" },
+  },
+  BUTTONS: {
+    LOGOUT_NOW: { labelKey: "INACTIVITY.LOGOUT_NOW" },
+    CONTINUE_SESSION: { labelKey: "INACTIVITY.CONTINUE_SESSION" },
+  },
+  SECOND_LABEL: { labelKey: "INACTIVITY.SECONDS" },
+};
+
 export const STYLES = {
   primaryColor: "#FF5A5F",
   textColor: {

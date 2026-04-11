@@ -863,7 +863,7 @@ const generateComparisonText = (startDate, endDate) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Top Products */}
         <div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col mt-6 md:mt-0">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[500px] mt-6 md:mt-0">
             <div className="px-4 py-3 border-b border-gray-100">
               <h2 className="text-sm font-semibold text-gray-900">
                 {t("DASHBOARD.TOP_PRODUCTS.TOP_PRODUCTS")}
@@ -950,8 +950,80 @@ const generateComparisonText = (startDate, endDate) => {
                   </div>
                 ))
               ) : (
-                <div className="flex justify-center items-center h-32">
-                  <p className="text-gray-500">
+                <div className="flex flex-col justify-center items-center h-40">
+                  <div className="mb-3 relative">
+                    <div className="relative w-16 h-16">
+                      {/* Shopping cart with animated items */}
+                      <svg 
+                        className="absolute inset-0 w-16 h-16 text-gray-300" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={1.5} 
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" 
+                        />
+                      </svg>
+                      
+                      {/* Animated product items floating above cart */}
+                      <div className="absolute -top-2 -right-2">
+                        <svg 
+                          className="w-6 h-6 text-gray-400 animate-bounce" 
+                          fill="currentColor" 
+                          viewBox="0 0 24 24"
+                          style={{ animationDelay: '0ms' }}
+                        >
+                          <rect x="4" y="4" width="16" height="16" rx="2" />
+                        </svg>
+                      </div>
+                      
+                      <div className="absolute -top-4 -left-2">
+                        <svg 
+                          className="w-5 h-5 text-gray-400 animate-bounce" 
+                          fill="currentColor" 
+                          viewBox="0 0 24 24"
+                          style={{ animationDelay: '200ms' }}
+                        >
+                          <rect x="5" y="5" width="14" height="14" rx="2" />
+                        </svg>
+                      </div>
+                      
+                      <div className="absolute top-0 left-0">
+                        <svg 
+                          className="w-4 h-4 text-gray-400 animate-bounce" 
+                          fill="currentColor" 
+                          viewBox="0 0 24 24"
+                          style={{ animationDelay: '400ms' }}
+                        >
+                          <rect x="6" y="6" width="12" height="12" rx="2" />
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    {/* Subtle rotating ring around the cart */}
+                    <div className="absolute inset-0 w-20 h-20 -m-2">
+                      <svg 
+                        className="w-full h-full text-gray-200 animate-spin" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        style={{ animationDuration: '3s' }}
+                      >
+                        <circle 
+                          cx="12" 
+                          cy="12" 
+                          r="10" 
+                          strokeWidth="1" 
+                          strokeDasharray="2 4"
+                          opacity="0.5"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="text-gray-500 text-sm">
                     {t("DASHBOARD.NO_TOP_PRODUCTS")}
                   </p>
                 </div>
@@ -962,7 +1034,7 @@ const generateComparisonText = (startDate, endDate) => {
 
         {/* Recent Orders */}
         <div className="mb-6 md:mb-0 -z-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[500px]">
             <div className="px-4 py-3 border-b border-gray-100">
               <h2 className="text-sm font-semibold text-gray-900">
                 {t("DASHBOARD.RECENT_ORDERS.RECENT_ORDERS")}
@@ -1051,8 +1123,87 @@ const generateComparisonText = (startDate, endDate) => {
                   </tbody>
                 </table>
               ) : (
-                <div className="flex justify-center items-center h-32">
-                  <p className="text-gray-500">
+                <div className="flex flex-col justify-center items-center h-40">
+                  <div className="mb-3 relative">
+                    <div className="relative w-16 h-16">
+                      {/* Document/Order icon with animated elements */}
+                      <svg 
+                        className="absolute inset-0 w-16 h-16 text-gray-300" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={1.5} 
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                        />
+                      </svg>
+                      
+                      {/* Animated order items */}
+                      <div className="absolute -top-2 -right-2">
+                        <svg 
+                          className="w-5 h-5 text-gray-400 animate-pulse" 
+                          fill="currentColor" 
+                          viewBox="0 0 24 24"
+                          style={{ animationDelay: '0ms' }}
+                        >
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </div>
+                      
+                      <div className="absolute -top-4 -left-2">
+                        <svg 
+                          className="w-4 h-4 text-gray-400 animate-pulse" 
+                          fill="currentColor" 
+                          viewBox="0 0 24 24"
+                          style={{ animationDelay: '300ms' }}
+                        >
+                          <circle cx="12" cy="12" r="2" />
+                        </svg>
+                      </div>
+                      
+                      {/* Animated checkmark for completed orders */}
+                      <div className="absolute bottom-0 right-0">
+                        <svg 
+                          className="w-6 h-6 text-green-400 animate-bounce" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                          style={{ animationDelay: '600ms' }}
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M5 13l4 4L19 7" 
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    {/* Subtle rotating ring around document */}
+                    <div className="absolute inset-0 w-20 h-20 -m-2">
+                      <svg 
+                        className="w-full h-full text-gray-200 animate-spin" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        style={{ animationDuration: '4s' }}
+                      >
+                        <circle 
+                          cx="12" 
+                          cy="12" 
+                          r="10" 
+                          strokeWidth="1" 
+                          strokeDasharray="3 3"
+                          opacity="0.4"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="text-gray-500 text-sm">
                     {t("DASHBOARD.NO_RECENT_ORDERS")}
                   </p>
                 </div>

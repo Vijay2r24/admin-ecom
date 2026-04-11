@@ -673,11 +673,11 @@ const Payments = () => {
         />
       )}
 
-      {totalPages > 1 && (
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-          {bFilterLoading || paymentsLoading ? (
-            <SkeletonLoader type="pagination" />
-          ) : (
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
+        {bFilterLoading || paymentsLoading ? (
+          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
+        ) : (
+          totalPages > 1 && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -687,9 +687,9 @@ const Payments = () => {
               handleNextPage={handleNextPage}
               handlePageClick={handlePageClick}
             />
-          )}
-        </div>
-      )}
+          )
+        )}
+      </div>
     </div>
   );
 };
