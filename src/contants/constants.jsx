@@ -613,7 +613,6 @@ export const PERMISSIONS = {
   UPDATE_CATEGORY: "Update Category",
   VIEW_ATTRIBUTE_TYPES: "View Attribute Types",
   UPDATE_ATTRIBUTE_TYPE: "Update Attribute Type",
-  VIEW_COLOURS: "View Colours",
   UPDATE_COLOUR: "Update Colour",
   VIEW_ATTRIBUTES: "View Attributes",
   UPDATE_ATTRIBUTE: "Update Attribute",
