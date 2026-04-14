@@ -9,8 +9,7 @@ import { getPermissionCode } from './utils/permissionUtils';
 import { Provider } from "react-redux";
 import { store } from "./store/index";
 import { MODULES, PERMISSIONS } from './contants/constants';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+
 import { useInactivityTimer } from './hooks/useInactivityTimer';
 import InactivityNotification from './components/InactivityNotification';
 import InactivityManager from './components/InactivityManager';
@@ -511,18 +510,7 @@ const App = () => {
         </TitleProvider>
       </AllDataProvider>
       </InactivityManager>
-      <ToastContainer
-        position="top-right"
-        autoClose={1400}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+
     </Provider>
   );
 };

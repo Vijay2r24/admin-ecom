@@ -23,7 +23,6 @@ import {
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { useTitle } from "../../context/TitleContext";
-import { ToastContainer } from "react-toastify";
 import SpecificationTypeList from "./productSpecification/SpecificationTypeList";
 import { VIEW_TYPES, FORM_MODES } from "../../contants/constants";
 
@@ -192,7 +191,6 @@ const Browse = () => {
           </Tab.Panels>
         </Tab.Group>
       </div>
-      <ToastContainer />
     </div>
   );
 };

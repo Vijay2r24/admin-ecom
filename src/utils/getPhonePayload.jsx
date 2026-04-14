@@ -34,6 +34,6 @@ export const getPhonePayload = (fullNumber = "", defaultCountryCode = COUNTRY_CO
   return {
     countryCode: `+${parsed.countryCallingCode}`,
     phoneNumber: parsed.nationalNumber,
-    formatted: parsed.formatInternational(),
+    formatted: parsed.number, // E.164 format e.g. +919494602714
   };
 };

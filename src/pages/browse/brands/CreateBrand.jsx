@@ -7,6 +7,7 @@ import TextAreaWithIcon from "../../../components/TextAreaWithIcon";
 import Loader from "../../../components/Loader";
 import SelectWithIcon from "../../../components/SelectWithIcon";
 import ImageCropperModal from "../../../components/ImageCropperModal";
+import { ToastContainer } from "react-toastify";
 import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
@@ -24,7 +25,7 @@ import {
   SCROLL_CONSTANTS,
 } from "../../../contants/constants";
 
-import { ToastContainer } from "react-toastify";
+
 
 const CreateBrand = () => {
   const { t } = useTranslation();
@@ -523,17 +524,17 @@ const CreateBrand = () => {
         response = await apiPost(CREATE_BRAND, dataToSend, token, true);
       }
 
-      const responseStatus = response.data.STATUS || response.data.status;
-      const responseMessage = response.data.MESSAGE || response.data.message;
+      const responseStatus = response?.data?.STATUS || response?.data?.status;
+      const responseMessage = response?.data?.MESSAGE || response?.data?.message;
 
-      if (
+      if (response && (
         responseStatus === STATUS.SUCCESS.toUpperCase() ||
         responseStatus === STATUS.SUCCESS
-      ) {
+      )) {
         showEmsg(responseMessage, STATUS.SUCCESS, 3000, () =>
           navigate("/browse", { state: { fromBrandEdit: true } })
         );
-      } else {
+      } else if (response) {
         showEmsg(responseMessage, STATUS.WARNING);
         setErrors((prev) => ({ ...prev, api: responseMessage }));
       }
@@ -541,6 +542,7 @@ const CreateBrand = () => {
       const message =
         err?.response?.data?.MESSAGE ||
         err?.response?.data?.message ||
+        err?.message ||
         t("COMMON.API_ERROR");
       showEmsg(message, STATUS.ERROR);
     } finally {
@@ -577,15 +579,16 @@ const CreateBrand = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       {loaderOverlay}
-      {isEditing && <ToastContainer />}
-
+      <ToastContainer />
       {/* Image Cropper Modal */}
       {bShowCropper && (
         <ImageCropperModal
           image={oImageToCrop}
+          queue={oImageToCrop ? [{ id: 'brand', url: oImageToCrop }] : []}
           onCropComplete={handleCropComplete}
+          onQueueUpdate={(newQueue) => { if (newQueue.length === 0) handleCropCancel(); }}
           onClose={handleCropCancel}
-          aspectRatio={1} // Square aspect ratio for brand logos
+          aspectRatio={1}
           minWidth={200}
           minHeight={200}
           title={t("PRODUCT_SETUP.CREATE_BRAND.CROP_TITLE")}

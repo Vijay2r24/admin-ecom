@@ -289,14 +289,14 @@ const CreateAttributeType = () => {
           );
         }
 
-        if (response.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
+        if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           showEmsg(response.data.message, STATUS.SUCCESS, 3000, navigateBack);
-        } else {
+        } else if (response) {
           showEmsg(response.data.message, STATUS.WARNING);
         }
       } catch (err) {
         showEmsg(
-          err?.response?.data?.message || t("COMMON.API_ERROR"),
+          err?.response?.data?.message || err?.message || t("COMMON.API_ERROR"),
           STATUS.ERROR
         );
       } finally {
@@ -350,10 +350,9 @@ const CreateAttributeType = () => {
           <Loader />
         </div>
       )}
-      {isEditing && <ToastContainer />}
+      <ToastContainer />
 
-      <div className="flex items-center mb-6">
-        <BackButton onClick={navigateBack} />
+      <div className="flex items-center mb-6">        <BackButton onClick={navigateBack} />
         <h2 className="text-xl font-bold text-gray-900">
           {isEditing
             ? t("PRODUCT_SETUP.ATTRIBUTE_TYPE.EDIT_TITLE")

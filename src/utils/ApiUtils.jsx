@@ -160,8 +160,6 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
             });
             window.dispatchEvent(logoutEvent);
           }
-        } else {
-          showEmsg(msg || DEFAULT_ERROR_MESSAGE, "error");
         }
         // Don't show toast here - let components handle their own error display
         return Promise.reject(new Error(msg));
@@ -217,7 +215,7 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
           window.dispatchEvent(logoutEvent);
         }
       } else {
-        showEmsg(msg, "error");
+        // Don't show toast here - let components handle their own error display
       }
       // Don't show toast here - let components handle their own error display
 
@@ -249,7 +247,7 @@ const makeApiCall = async (apiCall) => {
 
 export const apiGet = async (endpoint, oParams = {}, token = null, responseType = "json") => {
   return makeApiCall(async () => {
-    const api = oCreateApiInstance(token, false, endpoint);
+    const api = oCreateApiInstance(token, false, `${endpoint}-${Date.now()}`);
     const response = await api.get(endpoint, { params: oParams, responseType });
     return response;
   });
@@ -263,7 +261,7 @@ export const apiPost = async (
   responseType = "json"
 ) => {
   return makeApiCall(async () => {
-    const api = oCreateApiInstance(token, isFormData, endpoint);
+    const api = oCreateApiInstance(token, isFormData, `${endpoint}-${Date.now()}`);
     const response = await api.post(endpoint, data, { responseType });
     return response;
   });
@@ -271,7 +269,7 @@ export const apiPost = async (
 
 export const apiPut = async (endpoint, data, token = null, isFormData = false) => {
   return makeApiCall(async () => {
-    const api = oCreateApiInstance(token, isFormData, endpoint);
+    const api = oCreateApiInstance(token, isFormData, `${endpoint}-${Date.now()}`);
     const response = await api.put(endpoint, data);
     return response;
   });
@@ -279,7 +277,7 @@ export const apiPut = async (endpoint, data, token = null, isFormData = false) =
 
 export const apiPatch = async (endpoint, data, token = null, isFormData = false) => {
   return makeApiCall(async () => {
-    const api = oCreateApiInstance(token, isFormData, endpoint);
+    const api = oCreateApiInstance(token, isFormData, `${endpoint}-${Date.now()}`);
     const response = await api.patch(endpoint, data);
     return response;
   });
@@ -287,7 +285,7 @@ export const apiPatch = async (endpoint, data, token = null, isFormData = false)
 
 export const apiDelete = async (endpoint, token = null) => {
   return makeApiCall(async () => {
-    const api = oCreateApiInstance(token, false, endpoint);
+    const api = oCreateApiInstance(token, false, `${endpoint}-${Date.now()}`);
     const response = await api.delete(endpoint);
     return response;
   });

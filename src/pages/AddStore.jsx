@@ -57,7 +57,7 @@ const AddStore = () => {
     country: "",
     state: "",
     city: "",
-    zipCode: "",
+    zipCode: "",      
     phone: "",
     email: "",
     status: "",
@@ -472,25 +472,22 @@ const AddStore = () => {
         let countryCode = store.CountryCallingCode || store.CountryCode || "";
 
         if (store.PhoneNumber && (store.CountryCallingCode || store.CountryCode)) {
-          // Format: "+91 63644 37189" (with spaces for better readability)
-          const cleanPhone = store.PhoneNumber.replace(/\D/g, ""); // Remove any non-digits
-          const callingCode = store.CountryCallingCode || store.CountryCode;
-          formattedPhone = `${callingCode} ${cleanPhone}`;
+          const cleanPhone = store.PhoneNumber.replace(/\D/g, "");
+          const callingCode = (store.CountryCallingCode || store.CountryCode).replace(/\D/g, "");
+          formattedPhone = `+${callingCode}${cleanPhone}`; // E.164: +919494602714
           rawPhoneNumber = cleanPhone;
-          countryCode = callingCode;
+          countryCode = `+${callingCode}`;
         } else if (store.PhoneNumber && store.PhoneNumber.startsWith("+")) {
-          // If phone number already has country code but no separate CountryCode field
-          formattedPhone = store.PhoneNumber;
-          // Extract country code and raw phone number
-          const phoneWithoutSpaces = store.PhoneNumber.replace(/\s/g, "");
+          formattedPhone = store.PhoneNumber.replace(/\s/g, ""); // strip spaces → E.164
+          const phoneWithoutSpaces = formattedPhone;
           const countryCodeMatch = phoneWithoutSpaces.match(/^\+\d{1,3}/);
           countryCode = countryCodeMatch ? countryCodeMatch[0] : "";
           rawPhoneNumber = phoneWithoutSpaces.substring(countryCode.length);
         } else if (store.PhoneNumber) {
-          // If no country code but has phone number, use default country code
-          formattedPhone = `+${COUNTRY_CODES.INDIA} ${store.PhoneNumber}`;
-          countryCode = COUNTRY_CODES.INDIA;
-          rawPhoneNumber = store.PhoneNumber.replace(/\D/g, "");
+          const cleanPhone = store.PhoneNumber.replace(/\D/g, "");
+          formattedPhone = `+${COUNTRY_CODES.INDIA}${cleanPhone}`; // E.164
+          countryCode = `+${COUNTRY_CODES.INDIA}`;
+          rawPhoneNumber = cleanPhone;
         }
 
         setFormData((prev) => ({
@@ -559,7 +556,7 @@ const AddStore = () => {
       }
     } catch (error) {
       showEmsg(
-        error?.response?.data?.MESSAGE || t("COMMON.ERROR_MESSAGE"),
+        error?.response?.data?.MESSAGE || error?.message || t("COMMON.ERROR_MESSAGE"),
         STATUS.ERROR
       );
       setIsFormDataLoading(false);
@@ -646,38 +643,27 @@ const AddStore = () => {
 
   // UPDATED: validateForm function with loading state consideration
   const validateForm = useCallback(() => {
-    // Mark all required fields as touched before validation
-    Object.keys(requiredFields).forEach(field => {
-      if (requiredFields[field]) {
-        markFieldTouched(field);
-      }
-    });
-
     const newErrors = {};
-    let isValid = true;
 
-    // Validate all fields
     newErrors.name = validateName(oFormData.name);
     newErrors.address = validateAddress(oFormData.address);
     newErrors.zipCode = validateZipCode(oFormData.zipCode);
     newErrors.phone = validatePhone(oFormData.phone);
     newErrors.email = validateEmail(oFormData.email);
 
-    // Only validate location fields if form data is not loading
     if (!isFormDataLoading) {
       newErrors.country = validateCountry(oFormData.country);
       newErrors.state = validateState(oFormData.state);
       newErrors.city = validateCity(oFormData.city);
     }
 
-    // Check if any errors exist
-    Object.values(newErrors).forEach((error) => {
-      if (error) isValid = false;
-    });
+    // Filter out empty strings
+    const filteredErrors = Object.fromEntries(
+      Object.entries(newErrors).filter(([_, v]) => v !== "" && v !== undefined)
+    );
 
-    setErrors(newErrors);
+    setErrors(filteredErrors);
 
-    // Update field validation states
     setFieldValid({
       name: !newErrors.name && oFormData.name.trim() !== "",
       address: !newErrors.address && oFormData.address.trim() !== "",
@@ -689,8 +675,15 @@ const AddStore = () => {
       email: !newErrors.email && oFormData.email.trim() !== "",
     });
 
-    return isValid;
-  }, [oFormData, markFieldTouched, requiredFields, isFormDataLoading]);
+    // Mark all fields as touched so errors show
+    setFieldTouched({
+      name: true, address: true, zipCode: true,
+      phone: true, email: true, country: true,
+      state: true, city: true,
+    });
+
+    return Object.keys(filteredErrors).length === 0;
+  }, [oFormData, isFormDataLoading]);
 
   const handleClose = useCallback(() => {
     navigate("/stores");
@@ -699,13 +692,6 @@ const AddStore = () => {
   const handleSubmit = useCallback(
     async (e) => {
       e?.preventDefault();
-
-      // Mark all required fields as touched before validation
-      Object.keys(requiredFields).forEach(field => {
-        if (requiredFields[field]) {
-          markFieldTouched(field);
-        }
-      });
 
       if (!validateForm()) return;
 
@@ -769,16 +755,16 @@ const AddStore = () => {
           oResponse = await apiPost(CREATE_STORE, payload, token);
         }
 
-        if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
+        if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           showEmsg(oResponse.data?.message, STATUS.SUCCESS, 3000, async () => {
             navigate("/stores");
           });
-        } else {
+        } else if (oResponse) {
           showEmsg(oResponse.data?.message, STATUS.WARNING);
         }
       } catch (err) {
         showEmsg(
-          err?.response?.data?.message || t("COMMON.API_ERROR"),
+          err?.response?.data?.message || err?.message || t("COMMON.API_ERROR"),
           STATUS.ERROR
         );
       } finally {
@@ -795,8 +781,6 @@ const AddStore = () => {
       countriesData.data,
       statesData.data,
       citiesData.data,
-      markFieldTouched,
-      requiredFields,
     ]
   );
 

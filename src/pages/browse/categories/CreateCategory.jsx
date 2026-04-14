@@ -549,17 +549,17 @@ const CreateCategory = () => {
         );
       }
 
-      if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
+      if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(oResponse.data.message, STATUS.SUCCESS, 3000, () => {
           navigate("/browse", { state: { fromCategoryEdit: true } });
         });
-      } else {
+      } else if (oResponse) {
         showEmsg(oResponse.data.message, STATUS.WARNING);
         setErrors((prev) => ({ ...prev, api: oResponse.data.message }));
       }
     } catch (err) {
       const errorMessage =
-        err?.response?.data?.message || t("COMMON.API_ERROR");
+        err?.response?.data?.message || err?.message || t("COMMON.API_ERROR");
       showEmsg(errorMessage, STATUS.ERROR);
     } finally {
       hideLoaderWithDelay(setSubmitting);
@@ -607,9 +607,11 @@ const CreateCategory = () => {
       {bShowCropper && (
         <ImageCropperModal
           image={oImageToCrop}
+          queue={oImageToCrop ? [{ id: 'category', url: oImageToCrop }] : []}
           onCropComplete={handleCropComplete}
+          onQueueUpdate={(newQueue) => { if (newQueue.length === 0) handleCropCancel(); }}
           onClose={handleCropCancel}
-          aspectRatio={1} // Square aspect ratio for category images
+          aspectRatio={1}
           minWidth={200}
           minHeight={200}
           title={t("PRODUCT_SETUP.CREATE_CATEGORY.CROP_TITLE")}
