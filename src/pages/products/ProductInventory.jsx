@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense, startTransition } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-const Toolbar = lazy(() => import("../../components/Toolbar"));
-const Pagination = lazy(() => import("../../components/Pagination"));
-const ActionButtons = lazy(() => import("../../components/ActionButtons"));
+import Toolbar from "../../components/Toolbar";
+import Pagination from "../../components/Pagination";
+import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { apiGet } from "../../utils/ApiUtils.jsx";
 import {
@@ -11,7 +11,7 @@ import {
   UPDATE_PRODUCT_STATUS,
   UPDATE_PRODUCT_VARIANT_STATUS,
 } from "../../contants/apiRoutes";
-const Switch = lazy(() => import("../../components/Switch.jsx"));
+import Switch from "../../components/Switch.jsx";
 import { useTitle } from "../../context/TitleContext";
 import {
   ITEMS_PER_PAGE,
@@ -37,15 +37,16 @@ import {
   updateStatusById,
 } from "../../store/slices/allDataSlice.jsx";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
-const FullscreenErrorPopup = lazy(() => import("../../components/FullscreenErrorPopup"));
+import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
 import { exportProductReport } from "../../store/slices/exportSlice";
 import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
-const SkeletonLoader = lazy(() => import("../../components/SkeletonLoader"));
-const Loader =lazy(() => import("../../components/Loader.jsx"));
+import SkeletonLoader from "../../components/SkeletonLoader";
+import Loader from "../../components/Loader.jsx";
 import { SKELETON_TYPES } from "../../contants/constants.jsx";
 import { hideLoaderWithDelay } from "../../utils/loaderUtils";
+import PlanGate from "../PlanGate";
 const ProductVariantsPopup = lazy(() => import("../../pages/products/ProductVariantsPopup.jsx"));
 const ProductVariantsStatusPopup = lazy(() => import("../../pages/products/ProductVariantsStatusPopup.jsx"));
 const ProductStoreInventoryPopup = lazy(() => import("../../pages/products/ProductStoreInventoryPopup.jsx"));
@@ -92,17 +93,21 @@ const ProductInventory = () => {
   });
   // Add this function to handle viewing variants
   const handleViewVariants = (productId) => {
-    setVariantPopup({
-      open: true,
-      productId,
+    startTransition(() => {
+      setVariantPopup({
+        open: true,
+        productId,
+      });
     });
   };
 
   // Add this function to handle viewing store inventory
   const handleViewStoreInventory = (productVariantId) => {
-    setStoreInventoryPopup({
-      open: true,
-      productVariantId,
+    startTransition(() => {
+      setStoreInventoryPopup({
+        open: true,
+        productVariantId,
+      });
     });
   };
 
@@ -125,9 +130,11 @@ const ProductInventory = () => {
 
   // Add this function to handle variant status popup
   const handleOpenVariantStatusPopup = (productId) => {
-    setVariantStatusPopup({
-      open: true,
-      productId,
+    startTransition(() => {
+      setVariantStatusPopup({
+        open: true,
+        productId,
+      });
     });
   };
 
@@ -333,6 +340,12 @@ const ProductInventory = () => {
         setTotalPages(0);
       }
     } catch (err) {
+      if (err?.response?.status === 403) {
+        setProducts([]);
+        setTotalItems(0);
+        setTotalPages(0);
+        return;
+      }
       setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
       setProducts([]);
       setTotalItems(0);
@@ -492,7 +505,9 @@ const ProductInventory = () => {
       handleOpenVariantStatusPopup(productId);
     } else {
       // For variant level, show confirmation popup as before
-      setStatusPopup({ open: true, productId, newStatus: !currentIsActive });
+      startTransition(() => {
+        setStatusPopup({ open: true, productId, newStatus: !currentIsActive });
+      });
     }
   };
 
@@ -548,7 +563,6 @@ const ProductInventory = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       <ToastContainer />
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader /></div>}>
           <Toolbar
         searchTerm={sSearchTerm}
         setSearchTerm={setSearchTerm}
@@ -565,7 +579,10 @@ const ProductInventory = () => {
       />
 
       {sError ? (
-        <div className="text-center py-8 text-red-500">{sError}</div>
+        <PlanGate
+          embed
+          sectionTitle={t("PLAN_GATE.SECTIONS.PRODUCT_INVENTORY")}
+        />
       ) : sViewMode === VIEW_MODES.TABLE ? (
         <div className="table-container-floating">
           <div className="table-wrapper-floating" onScroll={handleTableScroll}>
@@ -878,25 +895,31 @@ const ProductInventory = () => {
         />
       )}
       {variantPopup.open && (
-        <ProductVariantsPopup
-          productId={variantPopup.productId}
-          onClose={handleCloseVariantPopup}
-        />
+        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"><Loader /></div>}>
+          <ProductVariantsPopup
+            productId={variantPopup.productId}
+            onClose={handleCloseVariantPopup}
+          />
+        </Suspense>
       )}
 
       {variantStatusPopup.open && (
-        <ProductVariantsStatusPopup
-          productId={variantStatusPopup.productId}
-          onClose={handleCloseVariantStatusPopup}
-          onVariantStatusUpdate={handleVariantStatusUpdate}
-        />
+        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"><Loader /></div>}>
+          <ProductVariantsStatusPopup
+            productId={variantStatusPopup.productId}
+            onClose={handleCloseVariantStatusPopup}
+            onVariantStatusUpdate={handleVariantStatusUpdate}
+          />
+        </Suspense>
       )}
 
       {storeInventoryPopup.open && (
-        <ProductStoreInventoryPopup
-          productVariantId={storeInventoryPopup.productVariantId}
-          onClose={handleCloseStoreInventoryPopup}
-        />
+        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"><Loader /></div>}>
+          <ProductStoreInventoryPopup
+            productVariantId={storeInventoryPopup.productVariantId}
+            onClose={handleCloseStoreInventoryPopup}
+          />
+        </Suspense>
       )}
 
       {statusPopup.open && (
@@ -912,7 +935,6 @@ const ProductInventory = () => {
           isSubmitting={bSubmitting}
         />
       )}
-      </Suspense>
     </div>
   );
 };

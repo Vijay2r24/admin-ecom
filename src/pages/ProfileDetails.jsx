@@ -7,7 +7,14 @@ import { useNavigate } from "react-router-dom";
 import { apiPost } from "../utils/ApiUtils";
 import { UPDATEUSERPASSWORD } from "../contants/apiRoutes";
 import md5 from "md5";
-import { PASSWORD_LABELS, PASSWORD_VISIBILITY, STATUS, SKELETON_TYPES } from "../contants/constants";
+import {
+  PASSWORD_ARIA,
+  PASSWORD_LABELS,
+  PASSWORD_VISIBILITY,
+  PROFILE_MODAL_TYPE,
+  STATUS,
+  SKELETON_TYPES,
+} from "../contants/constants";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
 import { useTitle } from "../context/TitleContext";
@@ -210,7 +217,7 @@ const ProfileDetails = () => {
     !passwordErrors.confirmNewPassword;
 
   const securityPrefModals = {
-    changePassword: {
+    [PROFILE_MODAL_TYPE.CHANGE_PASSWORD]: {
       title: t("PROFILE.CHANGE_PASSWORD"),
       content: (
         <form className="space-y-4" onSubmit={handleChangePassword}>
@@ -220,7 +227,11 @@ const ProfileDetails = () => {
               label={t("PROFILE.CURRENT_PASSWORD")}
               id="currentPassword"
               name="currentPassword"
-              type={showPasswords.current ? "text" : "password"}
+              type={
+                showPasswords.current
+                  ? PASSWORD_VISIBILITY.SHOW
+                  : PASSWORD_VISIBILITY.HIDE
+              }
               placeholder={t("PROFILE.ENTER_CURRENT_PASSWORD")}
               Icon={Key}
               value={passwordForm.currentPassword}
@@ -228,10 +239,18 @@ const ProfileDetails = () => {
               inputSlot={
                 <button
                   type="button"
-                  onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                  onClick={() =>
+                    setShowPasswords((prev) => ({
+                      ...prev,
+                      current: !prev.current,
+                    }))
+                  }
                   className="text-gray-500 hover:text-custom-bg"
+                  aria-label={
+                    showPasswords.current ? PASSWORD_ARIA.HIDE : PASSWORD_ARIA.SHOW
+                  }
                 >
-                  {showPasswords.current ? "Hide" : "Show"}
+                  {showPasswords.current ? PASSWORD_LABELS.SHOW : PASSWORD_LABELS.HIDE}
                 </button>
               }
             />
@@ -246,7 +265,11 @@ const ProfileDetails = () => {
               label={t("PROFILE.NEW_PASSWORD")}
               id="newPassword"
               name="newPassword"
-              type={showPasswords.new ? "text" : "password"}
+              type={
+                showPasswords.new
+                  ? PASSWORD_VISIBILITY.SHOW
+                  : PASSWORD_VISIBILITY.HIDE
+              }
               placeholder={t("PROFILE.ENTER_NEW_PASSWORD")}
               Icon={Lock}
               value={passwordForm.newPassword}
@@ -254,10 +277,13 @@ const ProfileDetails = () => {
               inputSlot={
                 <button
                   type="button"
-                  onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                  onClick={() =>
+                    setShowPasswords((prev) => ({ ...prev, new: !prev.new }))
+                  }
                   className="text-gray-500 hover:text-custom-bg"
+                  aria-label={showPasswords.new ? PASSWORD_ARIA.HIDE : PASSWORD_ARIA.SHOW}
                 >
-                  {showPasswords.new ? "Hide" : "Show"}
+                  {showPasswords.new ? PASSWORD_LABELS.SHOW : PASSWORD_LABELS.HIDE}
                 </button>
               }
             />
@@ -291,7 +317,11 @@ const ProfileDetails = () => {
               label={t("PROFILE.CONFIRM_NEW_PASSWORD")}
               id="confirmNewPassword"
               name="confirmNewPassword"
-              type={showPasswords.confirm ? PASSWORD_LABELS.SHOW : PASSWORD_LABELS.HIDE}
+              type={
+                showPasswords.confirm
+                  ? PASSWORD_VISIBILITY.SHOW
+                  : PASSWORD_VISIBILITY.HIDE
+              }
               placeholder={t("PROFILE.CONFIRM_NEW_PASSWORD_PLACEHOLDER")}
               Icon={Lock}
               value={passwordForm.confirmNewPassword}
@@ -301,8 +331,13 @@ const ProfileDetails = () => {
                   type="button"
                   onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
                   className="text-gray-500 hover:text-custom-bg"
+                  aria-label={
+                    showPasswords.confirm ? PASSWORD_ARIA.HIDE : PASSWORD_ARIA.SHOW
+                  }
                 >
-                  {showPasswords.confirm ? PASSWORD_VISIBILITY.HIDE : PASSWORD_VISIBILITY.SHOW}
+                  {showPasswords.confirm
+                    ? PASSWORD_LABELS.SHOW
+                    : PASSWORD_LABELS.HIDE}
                 </button>
               }
             />
@@ -352,8 +387,16 @@ const ProfileDetails = () => {
     </div>
   ) : null;
 
-  if (userDetailsError) return <div>Error: {userDetailsError}</div>;
-  if (!user) return <div>No user data found</div>;
+  if (userDetailsError) {
+    return (
+      <div>
+        {t("PROFILE.ERROR_LOADING", { error: userDetailsError })}
+      </div>
+    );
+  }
+  if (!user) {
+    return <div>{t("PROFILE.NO_USER_DATA")}</div>;
+  }
 
   // Show skeleton loader while loading
   if (userDetailsLoading) {
@@ -372,7 +415,7 @@ const ProfileDetails = () => {
                 {user?.avatar ? (
                   <img
                     src={user.avatar}
-                    alt={user?.name}
+                    alt={t("PROFILE.PROFILE_PHOTO_ALT", { name: user?.name || "" })}
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -382,7 +425,11 @@ const ProfileDetails = () => {
                   </div>
                 )}
               </div>
-              <button className="absolute bottom-0 right-0 p-2.5 bg-white rounded-full text-custom-bg hover:bg-sky-50 transition-all duration-200 border border-custom-bg hover:scale-110">
+              <button
+                type="button"
+                aria-label={t("PROFILE.CHANGE_PHOTO_ARIA")}
+                className="absolute bottom-0 right-0 p-2.5 bg-white rounded-full text-custom-bg hover:bg-sky-50 transition-all duration-200 border border-custom-bg hover:scale-110"
+              >
                 <Camera className="h-5 w-5" />
               </button>
             </div>
@@ -423,7 +470,7 @@ const ProfileDetails = () => {
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-caption text-2xl font-bold"
               onClick={handleCloseModal}
-              aria-label="Close"
+              aria-label={t("COMMON.CLOSE")}
             >
               <X size={24} />
             </button>
@@ -636,7 +683,7 @@ const ProfileDetails = () => {
             </div>
             <div className="p-6 space-y-4">
               <button
-                onClick={() => handleOpenModal("changePassword")}
+                onClick={() => handleOpenModal(PROFILE_MODAL_TYPE.CHANGE_PASSWORD)}
                 className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 group"
               >
                 <div className="flex items-center space-x-3">
@@ -650,7 +697,7 @@ const ProfileDetails = () => {
                 <Edit className="h-4 w-4 text-gray-400 group-hover:text-caption" />
               </button>
               <button
-                onClick={() => handleOpenModal("twoFactor")}
+                onClick={() => handleOpenModal(PROFILE_MODAL_TYPE.TWO_FACTOR)}
                 disabled
                 className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl group cursor-not-allowed opacity-50"
               >
@@ -666,7 +713,7 @@ const ProfileDetails = () => {
               </button>
 
               <button
-                onClick={() => handleOpenModal("privacy")}
+                onClick={() => handleOpenModal(PROFILE_MODAL_TYPE.PRIVACY)}
                 disabled
                 className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl group cursor-not-allowed opacity-50"
               >

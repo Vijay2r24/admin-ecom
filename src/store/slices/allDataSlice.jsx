@@ -22,6 +22,10 @@ import {
   GET_ALL_SPECIFICATIONS
 } from "../../contants/apiRoutes";
 import { STATUS } from "../../contants/constants";
+import {
+  applySubscriptionFromLoginPayload,
+  subscriptionPayloadHasPlanFields,
+} from "../../utils/planAccessUtils";
 
 /**
  * Resource Configurations
@@ -168,6 +172,9 @@ export const fetchUserDetails = createAsyncThunk(
       if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const userData = response.data.data;
         localStorage.setItem("userDetails", JSON.stringify(userData));
+        if (subscriptionPayloadHasPlanFields(userData)) {
+          applySubscriptionFromLoginPayload(userData, { silentPlanToast: false });
+        }
         return userData;
       } else {
         throw new Error(response?.data?.message || "Failed to fetch user details");

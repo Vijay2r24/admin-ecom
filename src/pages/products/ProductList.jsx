@@ -26,6 +26,7 @@ import {
   updateStatusById,
 } from "../../store/slices/allDataSlice.jsx";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
+import PlanGate from "../PlanGate";
 import { ToastContainer } from "react-toastify";
 import { exportProductReport } from "../../store/slices/exportSlice";
 import noImage from "../../../assets/images/missing-pictur.jpg";
@@ -211,6 +212,12 @@ const ProductList = () => {
         setTotalPages(0);
       }
     } catch (err) {
+      if (err?.response?.status === 403) {
+        setProducts([]);
+        setTotalItems(0);
+        setTotalPages(0);
+        return;
+      }
       setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
       setProducts([]);
       setTotalItems(0);
@@ -530,8 +537,11 @@ const ProductList = () => {
                   <SkeletonLoader type={SKELETON_TYPES.PRODUCT_TABLE} rows={8} />
                 ) : sError ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-red-500">
-                      {sError}
+                    <td colSpan={5} className="py-4">
+                      <PlanGate
+                        embed
+                        sectionTitle={t("PLAN_GATE.SECTIONS.PRODUCT_LIST")}
+                      />
                     </td>
                   </tr>
                 ) : aProducts.length === 0 ? (
@@ -620,7 +630,14 @@ const ProductList = () => {
         <div className="grid-container-floating">
           <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-              {bFilterLoading ? (
+              {sError ? (
+                <div className="col-span-full">
+                  <PlanGate
+                    embed
+                    sectionTitle={t("PLAN_GATE.SECTIONS.PRODUCT_LIST")}
+                  />
+                </div>
+              ) : bFilterLoading ? (
                 <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={6} className="p-4" />
               ) : aProducts.length === 0 ? (
                 <div className="col-span-full text-center py-8 text-gray-500">

@@ -11,6 +11,8 @@ const TextInputWithIcon = forwardRef(
       placeholder,
       error,
       Icon,
+      isValid,
+      required,
       inputSlot,
       className = "",
       ...rest

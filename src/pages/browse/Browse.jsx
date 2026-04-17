@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Tab } from "@headlessui/react";
 import BrandList from "./brands/BrandList";
 import BrandCreate from "./brands/CreateBrand";
@@ -25,6 +25,12 @@ import { useLocation } from "react-router-dom";
 import { useTitle } from "../../context/TitleContext";
 import SpecificationTypeList from "./productSpecification/SpecificationTypeList";
 import { VIEW_TYPES, FORM_MODES } from "../../contants/constants";
+import PlanGate from "../PlanGate";
+import {
+  getSubscriptionFeaturesFromStorage,
+  isProductSetupTabAllowedByPlan,
+  isTenantAdminRole,
+} from "../../utils/planAccessUtils";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -41,41 +47,58 @@ const Browse = () => {
   const aTabs = [
     {
       name: t("PRODUCT_SETUP.TABS.BRANDS"),
+      planTabKey: "brands",
+      sectionTitleKey: "PLAN_GATE.SECTIONS.BRANDS",
       list: BrandList,
       create: BrandCreate,
       icon: Package,
     },
     {
       name: t("PRODUCT_SETUP.TABS.CATEGORIES"),
+      planTabKey: "categories",
+      sectionTitleKey: "PLAN_GATE.SECTIONS.CATEGORIES",
       list: CategoryList,
       create: CategoryCreate,
       icon: Tag,
     },
     {
       name: t("PRODUCT_SETUP.TABS.ATTRIBUTE_TYPES"),
+      planTabKey: "attributeTypes",
+      sectionTitleKey: "PLAN_GATE.SECTIONS.ATTRIBUTE_TYPES",
       list: AttributeTypeList,
       create: AttributeTypeCreate,
       icon: Settings,
     },
     {
       name: t("PRODUCT_SETUP.TABS.COLORS"),
+      planTabKey: "colors",
+      sectionTitleKey: "PLAN_GATE.SECTIONS.COLORS",
       list: ColorList,
       create: ColorCreate,
       icon: Palette,
     },
     {
       name: t("PRODUCT_SETUP.TABS.ATTRIBUTES"),
+      planTabKey: "attributes",
+      sectionTitleKey: "PLAN_GATE.SECTIONS.ATTRIBUTES",
       list: AttributeList,
       create: AttributeCreate,
       icon: Layers,
     },
     {
       name: t("PRODUCT_SETUP.TABS.SPECIFICATION_TYPE"),
+      planTabKey: "specificationTypes",
+      sectionTitleKey: "PLAN_GATE.SECTIONS.SPECIFICATION_TYPE",
       list: SpecificationTypeList,
       create: CreateProductGroup,
       icon: Boxes,
     },
   ];
+
+  const planFeatures = useMemo(() => getSubscriptionFeaturesFromStorage(), [
+    location.pathname,
+  ]);
+  const ignorePlanForAdmin = isTenantAdminRole();
 
   useEffect(() => {
     if (location.state && location.state.fromCategoryEdit) {
@@ -177,13 +200,24 @@ const Browse = () => {
           <Tab.Panels>
             {aTabs.map((tab, idx) => (
               <Tab.Panel key={idx} className="p-4 sm:p-6">
-                {sViewMode === VIEW_TYPES.LIST ? (
-                  <tab.list
-                    onCreate={() => setViewMode(FORM_MODES.CREATE)}
-                  />
+                {isProductSetupTabAllowedByPlan(
+                  tab.planTabKey,
+                  planFeatures,
+                  ignorePlanForAdmin
+                ) ? (
+                  sViewMode === VIEW_TYPES.LIST ? (
+                    <tab.list
+                      onCreate={() => setViewMode(FORM_MODES.CREATE)}
+                    />
+                  ) : (
+                    <tab.create
+                      setViewMode={setViewMode}
+                    />
+                  )
                 ) : (
-                  <tab.create
-                    setViewMode={setViewMode}
+                  <PlanGate
+                    embed
+                    sectionTitle={t(tab.sectionTitleKey)}
                   />
                 )}
               </Tab.Panel>

@@ -12,6 +12,8 @@
     "FORGOT_PASSWORD_TITLE": "Forgot Your Password?",
     "FORGOT_PASSWORD_SUBTITLE": "Enter your email address and we'll send you an OTP to reset your password.",
     "SEND_OTP_BUTTON": "Send OTP",
+    "PLAN_EXPIRED_RENEW_TO_LOGIN": "Your subscription plan has expired. Renew your plan to continue, then sign in again. Contact your administrator if you need help.",
+    "PLAN_EXPIRED_SESSION": "Your subscription plan has expired. Renew the plan to continue. You have been signed out.",
     "ERRORS": {
       "EMAIL_REQUIRED": "Email is required",
       "EMAIL_INVALID": "Please enter a valid email address",
@@ -126,6 +128,39 @@
     "UPGRADE_REQUEST_TITLE": "Plan Upgrade Request",
     "UPGRADE_REQUEST_MSG": "To upgrade your plan to {{plan}}, please contact the administrator for assistance.",
     "CURRENCY": "INR"
+  },
+  "SUBSCRIPTION": {
+    "DEFAULT_PLAN_LABEL": "current plan",
+    "PLAN_UPDATED_REFRESH": "Your subscription was updated ({{plan}}). Menus and limits now match your plan.",
+    "TOAST_READ_ONLY_HEADING": "This action is blocked: your subscription is in read-only mode.",
+    "TOAST_READ_ONLY_GRACE_HEADING": "Grace period: account is read-only. Renew or upgrade to keep working without interruption.",
+    "TOAST_READ_ONLY_RENEW_HEADING": "Read-only mode: renew your subscription to create or change data again.",
+    "TOAST_PLAN_EXPIRED_SIGN_OUT": "Your plan or subscription is expired or inactive. You will be signed out; please sign in again after renewal.",
+    "TOAST_PLAN_FORBIDDEN_UPGRADE": "Your current plan does not allow this. Opening the upgrade page.",
+    "TOAST_PLAN_LIMIT_HEADING": "Plan or usage limit reached for your subscription.",
+    "TOAST_HTTP_403_PLAN": "Access was denied (403). If this is plan-related, review your subscription or upgrade."
+  },
+  "PLAN_GATE": {
+    "TITLE": "Upgrade your plan",
+    "DESCRIPTION": "This module is not included in your current subscription. View available plans to unlock it, or contact your administrator for help.",
+    "DESCRIPTION_SECTION": "{{section}} is not included in your current subscription. Upgrade your plan to use this area.",
+    "CURRENT_PLAN": "Current plan",
+    "VIEW_PLANS": "View subscription plans",
+    "BACK_DASHBOARD": "Back to dashboard",
+    "SECTIONS": {
+      "BRANDS": "Brands",
+      "CATEGORIES": "Categories",
+      "ATTRIBUTE_TYPES": "Attribute types",
+      "COLORS": "Colors",
+      "ATTRIBUTES": "Attributes",
+      "SPECIFICATION_TYPE": "Specification types",
+      "PRODUCT_LIST": "Product list",
+      "PRODUCT_INVENTORY": "Product inventory",
+      "PRODUCT_DETAILS": "Product details",
+      "VARIANTS": "Variants",
+      "INVENTORY": "Inventory",
+      "SPECIFICATIONS": "Specifications"
+    }
   },
   "BULK_IMPORT": {
     "TITLE": "Bulk Import",
@@ -709,7 +744,9 @@
     "STORE_ID": "Store ID",
     "FINAL_PRICE": "Final Price",
     "LOADING_DETAILS": "Loading product details...",
-    "ERROR_LOADING_DETAILS": "Error Loading Data"
+    "ERROR_LOADING_DETAILS": "Error Loading Data",
+    "DETAIL_TABS_NAV_LABEL": "Tabs",
+    "VARIANT_NUMBER": "Variant {{n}}"
   },
   "INVENTORY": {
     "STORE_LABEL": "Store",
@@ -1164,7 +1201,12 @@
     "PASSWORDS_DO_NOT_MATCH": "New password and confirmation do not match.",
     "CONFIRM_NEW_PASSWORD_REQUIRED": "Confirm new password is required.",
     "NEW_PASSWORD_REQUIRED": "New password is required.",
-    "CURRENT_PASSWORD_REQUIRED": "Current password is required."
+    "CURRENT_PASSWORD_REQUIRED": "Current password is required.",
+    "NO_USER_DATA": "No user data found.",
+    "NO_STORES_ASSIGNED": "No stores assigned to this profile.",
+    "ERROR_LOADING": "Error: {{error}}",
+    "PROFILE_PHOTO_ALT": "Profile photo",
+    "CHANGE_PHOTO_ARIA": "Change profile photo"
   },
   "BANNERS": {
     "TITLE": "Banner Management",

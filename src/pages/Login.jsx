@@ -37,6 +37,7 @@ import {
   STATUS_VALUE_NAMES,
   KEYBOARD_EVENTS,
   LOGIN_VIEWS,
+  WINDOW_CUSTOM_EVENTS,
 } from "../contants/constants";
 import { useUserDetails } from "../../src/context/AllDataContext";
 import { useDispatch } from "react-redux";
@@ -49,6 +50,12 @@ import {
 import Loader from "../components/Loader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { loginSuccess } from "../store/slices/authSlice";
+import {
+    applySubscriptionFromLoginPayload,
+    clearSubscriptionReadOnlyMode,
+    getFirstAccessibleHrefForSession,
+    isPlanExpiredFromLoginPayload,
+} from "../utils/planAccessUtils";
 
 // Add these constants
 const PASSWORD_LABELS = {
@@ -253,6 +260,17 @@ const Login = () => {
                 data?.UserID &&
                 status === STATUS.SUCCESS.toUpperCase()
             ) {
+                if (isPlanExpiredFromLoginPayload(data)) {
+                    showToastMessage(
+                        t("LOGIN.PLAN_EXPIRED_RENEW_TO_LOGIN"),
+                        STATUS.ERROR
+                    );
+                    hideLoaderWithDelay(setSubmitting);
+                    return;
+                }
+
+                clearSubscriptionReadOnlyMode();
+
                 toast.success(message || t("LOGIN.SUCCESS"), {
                     containerId: t("LOGIN_CONTAINER_ID")
                 });
@@ -264,7 +282,27 @@ const Login = () => {
                     "PermissionIDs",
                     JSON.stringify(data.PermissionIDs || [])
                 );
-
+                applySubscriptionFromLoginPayload(data, {
+                    silentPlanToast: true,
+                    fromLogin: true,
+                });
+                let subscriptionForRedux = null;
+                try {
+                    subscriptionForRedux = JSON.parse(
+                        localStorage.getItem("subscription")
+                    );
+                } catch {
+                    subscriptionForRedux = null;
+                }
+                const roleNameFromLogin =
+                    data.RoleName ||
+                    data.UserRoleName ||
+                    (data.Role && data.Role.RoleName) ||
+                    "";
+                if (roleNameFromLogin) {
+                    localStorage.setItem("sessionRoleName", roleNameFromLogin);
+                }
+                localStorage.setItem("PermissionIDs", JSON.stringify(data.PermissionIDs || []));
                 dispatch(
                     loginSuccess({
                         token: data.token,
@@ -273,6 +311,7 @@ const Login = () => {
                             email: oFormData.email,
                             tenantID: data.TenantID,
                             permissionIDs: data.PermissionIDs || [],
+                            subscription: subscriptionForRedux,
                         },
                     })
                 );
@@ -293,6 +332,10 @@ const Login = () => {
                     console.error("Failed to fetch permissions:", e);
                 }
 
+                window.dispatchEvent(
+                    new CustomEvent(WINDOW_CUSTOM_EVENTS.PERMISSIONS_STORAGE_CHANGED)
+                );
+
                 try {
                     let userData = null;
                     if (fetchUserDetails) {
@@ -305,7 +348,9 @@ const Login = () => {
                 }
 
                 setTimeout(() => {
-                    navigate("/dashboard", { replace: true });
+                    const home =
+                        getFirstAccessibleHrefForSession() || "/not-authorized";
+                    navigate(home, { replace: true });
                 }, 2000);
             } else {
                 const fallbackMessage = t("LOGIN.ERRORS.INVALID_CREDENTIALS");

@@ -27,6 +27,25 @@ export const NOTIFICATION_MESSAGES = {
   OPERATION_SUCCESS: "Operation completed successfully"
 };
 
+/** ApiUtils dispatches; App listens and runs client-side navigate (same idea as `triggerIdleLogout` + IdleLogout). */
+export const WINDOW_CUSTOM_EVENTS = {
+  NAVIGATE_UPGRADE_PLAN: "navigateToUpgradePlan",
+  PLAN_EXPIRED_LOGOUT: "triggerPlanExpiredLogout",
+  SUBSCRIPTION_READ_ONLY_CHANGED: "subscriptionReadOnlyChanged",
+  /** Emitted when `localStorage.subscription` is updated (login, profile refresh, etc.) */
+  SUBSCRIPTION_STORAGE_CHANGED: "subscriptionStorageChanged",
+  /** Emitted when `PermissionIDs` / `AllPermissions` are updated so Sidebar re-filters menus */
+  PERMISSIONS_STORAGE_CHANGED: "permissionsStorageChanged",
+};
+
+/** Backend `customCode` values used in ApiUtils response handling */
+export const API_CUSTOM_CODES = {
+  PERMISSION_DENIED: 1001,
+  SUBSCRIPTION_READ_ONLY: 1005,
+  /** Optional: plan / subscription quota or seat limit (backend may use this code) */
+  PLAN_OR_SUBSCRIPTION_LIMIT: 1006,
+};
+
 export const PRODUCT_STATUS = {
   ACTIVE: "active",
   INACTIVE: "inactive",
@@ -37,6 +56,13 @@ export const PRODUCT_STATUS_LABELS = {
   ACTIVE: "Active",
   INACTIVE: "Inactive", 
   OUT_OF_STOCK: "Out of Stock"
+};
+
+/** Product details page tab keys (keep in sync with `PLAN_FEATURE_TOKEN_BY_PRODUCT_DETAILS_TAB` in planAccessUtils). */
+export const PRODUCT_DETAILS_TAB = {
+  VARIANTS: "variants",
+  INVENTORY: "inventory",
+  SPECS: "specs",
 };
 
 export const DEFAULT_COLOR = "#000000";
@@ -174,7 +200,12 @@ export const PASSWORD_ARIA = {
   HIDE: "Hide password",
 };
 
-  
+/** Keys for `ProfileDetails` security modal state (`setModalType`) */
+export const PROFILE_MODAL_TYPE = {
+  CHANGE_PASSWORD: "changePassword",
+  TWO_FACTOR: "twoFactor",
+  PRIVACY: "privacy",
+};
 
 export const LOCALES = {
   ENGLISH_US: "en-US",
@@ -544,6 +575,10 @@ export const MODULES = {
   PRODUCT_SETUP: "Product Setup",
   PAYMENT: "Payment Management",
   BANNER: "Banner Management",
+  NOTIFICATION: "Send Notification",
+  PAYMENT: "Payment",
+  PRODUCT: 'Product Management',
+  PAGE: 'Settings',
 };
 
 // Permission mappings for role management
@@ -590,20 +625,20 @@ export const PERMISSIONS = {
   EDIT_STORE: "Edit Store",
   VIEW_DASHBOARD: "View Dashboard",
   VIEW_ORDERS: "View Orders",
-  VIEW_STORE: "View Store",
+  VIEW_STORE: "View Stores",
   ADD_STORE: "Add Store",
   UPDATE_STORE: "Update Store",
-  VIEW_USER: "View User",
+  VIEW_USER: "View Users",
   ADD_USER: "Add User",
   UPDATE_USER: "Update user",
-  VIEW_ROLE: "View Role",
+  VIEW_ROLE: "View Roles",
   ADD_ROLE: "Add Role",
   EDIT_ROLE: "Edit Role",
   VIEW_BANNERS: "View Banners",
   CREATE_BANNER: "Create Banner",
   UPDATE_BANNER: "Update Banner",
   UPDATE_BANNER_SEQUENCE: "Update Banner Sequence",
-  SEND_NOTIFICATION: "Send Push Notification",
+  SEND_NOTIFICATION: "Send Notification",
   VIEW_PRODUCTS: "View Products",
   CREATE_PRODUCT: "Create Product",
   UPDATE_PRODUCT: "Update Product",

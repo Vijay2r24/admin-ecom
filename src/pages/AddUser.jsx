@@ -33,7 +33,14 @@ import {
 } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
-import { COUNTRY_CODES, GENDER_OPTIONS, PERMISSIONS, STATUS } from "../contants/constants";
+import {
+  COUNTRY_CODES,
+  GENDER_OPTIONS,
+  MODULES,
+  PERMISSIONS,
+  STATUS,
+} from "../contants/constants";
+import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
 import md5 from "md5";
 import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
@@ -279,18 +286,17 @@ const AddUser = () => {
   const navigate = useNavigate();
   const [bSubmitting, setSubmitting] = useState(false);
 
-  // Get permissions from localStorage
-  const userPermissions = JSON.parse(
-    localStorage.getItem("PermissionIDs") || "[]"
+  const permissionIdForEditRole = getPermissionCode(
+    MODULES.ROLE,
+    PERMISSIONS.EDIT_ROLE
   );
+  const hasEditRolePermission = hasPermissionId(permissionIdForEditRole);
 
-  // Check if user has Edit Role permission
-  const hasEditRolePermission = userPermissions.includes(PERMISSIONS.EDIT_ROLE);
-
-  // Check if user has Edit Store permission
-  const hasEditStorePermission = userPermissions.includes(
+  const permissionIdForEditStore = getPermissionCode(
+    MODULES.STORE,
     PERMISSIONS.EDIT_STORE
   );
+  const hasEditStorePermission = hasPermissionId(permissionIdForEditStore);
 
   // Determine if we should show the entire Account Security section
   const shouldShowAccountSecuritySection =

@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { clearSubscriptionReadOnlyMode } from "../../utils/planAccessUtils";
 
 const initialState = {
   isLoggedIn: false,
@@ -19,10 +20,14 @@ const authSlice = createSlice({
       state.isLoggedIn = false;
       state.token = null;
       state.user = null;
+      clearSubscriptionReadOnlyMode();
       localStorage.removeItem("token");
       localStorage.removeItem("userDetails");
       localStorage.removeItem("tenantID");
       localStorage.removeItem("PermissionIDs");
+      localStorage.removeItem("subscription");
+      localStorage.removeItem("AllPermissions");
+      localStorage.removeItem("sessionRoleName");
     },
   },
 });

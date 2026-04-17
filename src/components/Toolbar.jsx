@@ -17,6 +17,7 @@ import Tooltip from "./Tooltip";
 import { createPortal } from "react-dom";
 import DateTimeRangePickerComponent from "./CustomDatePicker";
 import { VIEW_MODES, TOOLTIPSTATUS } from "../contants/constants";
+import { useSubscriptionReadOnly } from "../hooks/useSubscriptionReadOnly";
 
 const OrderToolbar = ({
   searchTerm,
@@ -49,6 +50,8 @@ const OrderToolbar = ({
   isBrowsePage = false, // New prop to identify browse pages
 }) => {
   const { t } = useTranslation();
+  const subscriptionReadOnly = useSubscriptionReadOnly();
+  const createDisabled = disableCreate || subscriptionReadOnly;
 
   // Track filter dropdown state for dynamic table height
   useEffect(() => {
@@ -267,9 +270,9 @@ const OrderToolbar = ({
         {onCreate && (
           <button
             onClick={onCreate}
-            disabled={disableCreate}
+            disabled={createDisabled}
             className={`inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
-              disableCreate
+              createDisabled
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'text-white bg-custom-bg hover:bg-bg-hover'
             }`}
@@ -282,9 +285,9 @@ const OrderToolbar = ({
         {onAddVariants && (
           <button
             onClick={onAddVariants}
-            disabled={disableCreate}
+            disabled={createDisabled}
             className={`inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
-              disableCreate
+              createDisabled
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'text-white bg-custom-bg hover:bg-bg-hover'
             }`}

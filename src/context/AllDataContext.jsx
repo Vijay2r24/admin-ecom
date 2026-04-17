@@ -22,6 +22,10 @@ import {
   GET_USER_BY_ID,
   GET_ALL_PRODUCT_GROUPS,
 } from "../contants/apiRoutes";
+import {
+  applySubscriptionFromLoginPayload,
+  subscriptionPayloadHasPlanFields,
+} from "../utils/planAccessUtils";
 
 const AllDataContext = createContext();
 const aResourceConfigsStatic = [
@@ -231,6 +235,9 @@ export const AllDataProvider = ({ children }) => {
       ) {
         const userData = userDetailsResponse.data.data;
         localStorage.setItem("userDetails", JSON.stringify(userData));
+        if (subscriptionPayloadHasPlanFields(userData)) {
+          applySubscriptionFromLoginPayload(userData, { silentPlanToast: false });
+        }
         setState((prev) => ({
           ...prev,
           userDetails: userData,

@@ -151,8 +151,6 @@ const AddUserRole = () => {
   const enforceViewLogicForModule = (permissionsObj, moduleName) => {
     if (!permissionsObj || !permissionsObj[moduleName]) return permissionsObj;
 
-    if (moduleName === "Menu Management") return permissionsObj;
-
     const updated = { ...permissionsObj };
     const perms = [...updated[moduleName]];
 
@@ -187,7 +185,7 @@ const AddUserRole = () => {
         perms.forEach((permission, index) => {
           if (index !== masterViewIndex) {
             // Only enforce edit→view dependencies for edit permissions, but allow view permissions to be independent
-            if (isEditPermissionName(permission.Name)) {
+            if (index !== masterViewIndex && isEditPermissionName(permission.Name)) {
               const requiredViewPermission = getViewPermissionForEdit(permission.Name);
               if (requiredViewPermission) {
                 const viewPermissionIndex = perms.findIndex(
@@ -231,69 +229,27 @@ const AddUserRole = () => {
     return updated;
   };
 
-  const enforceViewLogicAllModules = useCallback((permissionsObj) => {
-    if (!permissionsObj) return permissionsObj;
+  const enforceViewLogicAllModules = useCallback((permissionsObj, moduleName) => {
+    if (!permissionsObj || !permissionsObj[moduleName]) return permissionsObj;
     let updated = { ...permissionsObj };
-    Object.keys(updated).forEach((moduleName) => {
-      if (moduleName === "Menu Management") return;
-      updated = enforceViewLogicForModule(updated, moduleName);
+    const perms = [...updated[moduleName]];
+    const hasAnyViewChecked = perms.some(p => 
+      p.Name.toLowerCase().startsWith("view") && p.IsChecked
+    );
+    const masterViewIndex = perms.findIndex(p => {
+       const name = p.Name.toLowerCase();
+       return name.startsWith("view ") && !name.includes("details");
     });
+    perms.forEach((permission, index) => {
+      if (permission.IsChecked && !permission.Name.toLowerCase().startsWith("view")) {
+        if (masterViewIndex !== -1 && !perms[masterViewIndex].IsChecked) {
+          perms[masterViewIndex] = { ...perms[masterViewIndex], IsChecked: true };
+        }
+      }
+    });
+    updated[moduleName] = perms;
     return updated;
   }, []);
-
-  const syncMenuManagement = useCallback(
-    (permissions) => {
-      const menuModule = "Menu Management";
-      if (!permissions[menuModule]) return permissions;
-
-      permissions[menuModule] = permissions[menuModule].map((p) =>
-        p.Name.toLowerCase().includes("dashboard")
-          ? { ...p, IsChecked: true }
-          : p
-      );
-
-      Object.keys(permissions).forEach((moduleName) => {
-        if (moduleName === menuModule) return;
-
-        const keyword = moduleName
-          .toLowerCase()
-          .replace("management", "")
-          .replace("setup", "")
-          .trim();
-
-        const anySelected = permissions[moduleName].some((p) => p.IsChecked);
-
-        permissions[menuModule] = permissions[menuModule].map((menuItem) => {
-          if (menuItem.Name.toLowerCase().includes(keyword)) {
-            return { ...menuItem, IsChecked: anySelected };
-          }
-          return menuItem;
-        });
-      });
-
-      const productManagementSelected = permissions["Product Management"]
-        ? permissions["Product Management"].some((p) => p.IsChecked)
-        : false;
-
-      const productSetupSelected = permissions["Product Setup"]
-        ? permissions["Product Setup"].some((p) => p.IsChecked)
-        : false;
-
-      const shouldCheckProducts =
-        productManagementSelected || productSetupSelected;
-
-      permissions[menuModule] = permissions[menuModule].map((menuItem) => {
-        if (menuItem.Name.toLowerCase() === "products") {
-          return { ...menuItem, IsChecked: shouldCheckProducts };
-        }
-        return menuItem;
-      });
-
-      const final = enforceViewLogicAllModules(permissions);
-      return final;
-    },
-    [enforceViewLogicAllModules]
-  );
 
   const fetchPermissions = useCallback(async () => {
     setLoadingPermissions(true);
@@ -359,6 +315,7 @@ const AddUserRole = () => {
             permission.Module ||
             permission.PermissionModule ||
             permission.module;
+          if (module === "Menu Management") return;
           const id =
             permission.PermissionID || permission.ID || permission.permissionId;
           const name =
@@ -376,54 +333,14 @@ const AddUserRole = () => {
             IsChecked: isChecked,
           });
         });
-
-        const syncedPermissions = (() => {
-          const updated = { ...categorizedPermissions };
-          const menuModule = "Menu Management";
-          if (!updated[menuModule]) return updated;
-
-          updated[menuModule] = updated[menuModule].map((p) =>
-            p.Name.toLowerCase().includes("dashboard")
-              ? { ...p, IsChecked: true }
-              : p
-          );
-
-          Object.keys(updated).forEach((moduleName) => {
-            if (moduleName === menuModule) return;
-            const keyword = moduleName
-              .toLowerCase()
-              .replace("management", "")
-              .replace("setup", "")
-              .trim();
-
-            const anySelected = updated[moduleName].some((p) => p.IsChecked);
-            updated[menuModule] = updated[menuModule].map((menuItem) =>
-              menuItem.Name.toLowerCase().includes(keyword)
-                ? { ...menuItem, IsChecked: anySelected }
-                : menuItem
-            );
-          });
-
-          return updated;
-        })();
-
-        const enforced = enforceViewLogicAllModules(syncedPermissions);
-
-        const ordered = {};
-        if (enforced["Menu Management"]) {
-          ordered["Menu Management"] = enforced["Menu Management"];
-        }
-        Object.keys(enforced)
-          .filter((key) => key !== "Menu Management")
-          .forEach((key) => {
-            ordered[key] = enforced[key];
-          });
-
-        setPermissionsByModule(ordered);
-
+        let finalizedPermissions = {};
+        Object.keys(categorizedPermissions).forEach(moduleKey => {
+          finalizedPermissions = enforceViewLogicAllModules(categorizedPermissions, moduleKey);
+        });
+        setPermissionsByModule(finalizedPermissions);
         // Validate permissions after setting
         setTimeout(() => {
-          validateField("Permissions", ordered);
+          validateField("Permissions", finalizedPermissions);
         }, 100);
       } else {
         setPermissionsByModule({});
@@ -450,17 +367,14 @@ const AddUserRole = () => {
         updated[moduleName] = updated[moduleName].map((p) =>
           p.ID === permissionId ? { ...p, IsChecked: !p.IsChecked } : p
         );
-
-        const afterViewEnforce = enforceViewLogicForModule(updated, moduleName);
-        const finalPermissions = syncMenuManagement(afterViewEnforce);
-
+        const finalPermissions = enforceViewLogicForModule(updated, moduleName);
         // Validate permissions after change
         validateField("Permissions", finalPermissions);
 
         return finalPermissions;
       });
     },
-    [isAdminRole, syncMenuManagement, validateField]
+    [isAdminRole, validateField]
   );
 
   const handleSelectAllChange = useCallback(
@@ -473,8 +387,7 @@ const AddUserRole = () => {
           IsChecked: isChecked,
         }));
 
-        const afterViewEnforce = enforceViewLogicForModule(updated, moduleName);
-        const finalPermissions = syncMenuManagement(afterViewEnforce);
+        const finalPermissions = enforceViewLogicForModule(updated, moduleName);
 
         // Validate permissions after change
         validateField("Permissions", finalPermissions);
@@ -482,7 +395,7 @@ const AddUserRole = () => {
         return finalPermissions;
       });
     },
-    [isAdminRole, syncMenuManagement, validateField]
+    [isAdminRole, validateField]
   );
 
   const handleClose = useCallback(() => {
@@ -742,31 +655,17 @@ const AddUserRole = () => {
                           }`}
                         >
                           <div className="flex justify-between items-center">
-                            <h2 className="text-lg font-bold truncate">
-                              {moduleName}
-                            </h2>
-                            {/* MODIFIED: Added check to hide Select All for Menu Management */}
-                            {moduleName !== "Menu Management" && (
-                              <label className="text-sm truncate">
-                                <input
-                                  type="checkbox"
-                                  checked={isAllSelected}
-                                  onChange={(e) =>
-                                    handleSelectAllChange(
-                                      moduleName,
-                                      e.target.checked
-                                    )
-                                  }
-                                  className={`mr-2 form-checkbox h-[12px] w-[12px] ${
-                                    isEditingAdmin
-                                      ? "text-gray-400 cursor-not-allowed"
-                                      : "text-blue-600"
-                                  }`}
-                                  disabled={isEditingAdmin}
-                                />
-                                {t("CREATE_USER_ROLE.SELECT_ALL")}
-                              </label>
-                            )}
+                            <h2 className="text-lg font-bold truncate">{moduleName}</h2>
+                            <label className="text-sm">
+                              <input
+                                type="checkbox"
+                                checked={isAllSelected}
+                                onChange={(e) => handleSelectAllChange(moduleName, e.target.checked)}
+                                className="mr-2"
+                                disabled={isEditingAdmin}
+                              />
+                              {t("CREATE_USER_ROLE.SELECT_ALL")}
+                            </label>
                           </div>
                           <hr className="border-gray-300 my-4 mt-2 mb-4" />
                           {oPermissionsByModule[moduleName].map(

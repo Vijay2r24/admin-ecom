@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { apiGet } from "../../utils/ApiUtils";
@@ -7,15 +7,13 @@ import { useTitle } from "../../context/TitleContext";
 import BackButton from "../../components/BackButton";
 import Loader from "../../components/Loader";
 import { showEmsg } from "../../utils/ShowEmsg";
-import { STATUS } from "../../contants/constants";
+import { STATUS, PRODUCT_DETAILS_TAB } from "../../contants/constants";
 import {
-  ArrowLeft,
   Package,
   Store,
   Tag,
   Info,
   Check,
-  X,
   Image as ImageIcon,
   Grid,
   List,
@@ -31,6 +29,13 @@ import { ScrollableMatrixInventoryTable } from "../products/ScrollableMatrixInve
 import { fetchResource } from "../../store/slices/allDataSlice.jsx";
 import { useSelector, useDispatch } from "react-redux";
 import SelectWithIcon from "../../components/SelectWithIcon.jsx";
+import PlanGate from "../PlanGate";
+import {
+  getSubscriptionFeaturesFromStorage,
+  isProductDetailTabAllowedByPlan,
+  isTenantAdminRole,
+} from "../../utils/planAccessUtils";
+
 const ProductDetails = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
@@ -40,7 +45,14 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("variants");
+  const [bAccessDeniedRedirect, setAccessDeniedRedirect] = useState(false);
+
+  const planFeatures = useMemo(
+    () => getSubscriptionFeaturesFromStorage(),
+    [productId]
+  );
+  const ignorePlanForAdmin = isTenantAdminRole();
+  const [activeTab, setActiveTab] = useState(PRODUCT_DETAILS_TAB.VARIANTS);
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [selectedImage, setSelectedImage] = useState(0);
   const [storeId, setStoreId] = useState("");
@@ -78,6 +90,10 @@ const ProductDetails = () => {
         throw new Error(response?.data?.message || t("COMMON.API_ERROR"));
       }
     } catch (err) {
+      if (err?.response?.status === 403) {
+        setAccessDeniedRedirect(true);
+        return;
+      }
       const errorMessage =
         err?.response?.data?.message || err?.message || t("COMMON.API_ERROR");
       setError(errorMessage);
@@ -163,33 +179,24 @@ const ProductDetails = () => {
     );
   }
 
-  if (error) {
+  if (bAccessDeniedRedirect) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <X className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            {t("COMMON.ERROR")}
-          </h2>
-          <p className="text-gray-600">{error}</p>
-          <button
-            onClick={() => navigate("/productList")}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            {t("COMMON.BACK_TO_PRODUCTS")}
-          </button>
-        </div>
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <PlanGate
+          embed
+          sectionTitle={t("PLAN_GATE.SECTIONS.PRODUCT_DETAILS")}
+        />
       </div>
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">{t("PRODUCTS.NOT_FOUND")}</p>
-        </div>
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <PlanGate
+          embed
+          sectionTitle={t("PLAN_GATE.SECTIONS.PRODUCT_DETAILS")}
+        />
       </div>
     );
   }
@@ -224,7 +231,11 @@ const ProductDetails = () => {
                   </span>
                   <span className="flex items-center">
                     <Info className="h-4 w-4 mr-1" />
-                    <span>{product.IsActive ? "Active" : "Inactive"}</span>
+                    <span>
+                      {product.IsActive
+                        ? t("COMMON.ACTIVE")
+                        : t("COMMON.INACTIVE")}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -233,10 +244,13 @@ const ProductDetails = () => {
 
           {/* Tab Navigation */}
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-8" aria-label="Tabs">
+            <nav
+              className="flex space-x-8 px-8"
+              aria-label={t("PRODUCTS.DETAIL_TABS_NAV_LABEL")}
+            >
               <button
-                onClick={() => setActiveTab("variants")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "variants"
+                onClick={() => setActiveTab(PRODUCT_DETAILS_TAB.VARIANTS)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === PRODUCT_DETAILS_TAB.VARIANTS
                   ? "border-custom-bg text-custom-bg"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
@@ -245,8 +259,8 @@ const ProductDetails = () => {
                 {t("PRODUCTS.VARIANTS")}
               </button>
               <button
-                onClick={() => setActiveTab("inventory")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "inventory"
+                onClick={() => setActiveTab(PRODUCT_DETAILS_TAB.INVENTORY)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === PRODUCT_DETAILS_TAB.INVENTORY
                   ? "border-custom-bg text-custom-bg"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
@@ -255,8 +269,8 @@ const ProductDetails = () => {
                 {t("STORES.INVENTORY")}
               </button>
               <button
-                onClick={() => setActiveTab("specs")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "specs"
+                onClick={() => setActiveTab(PRODUCT_DETAILS_TAB.SPECS)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === PRODUCT_DETAILS_TAB.SPECS
                   ? "border-custom-bg text-custom-bg"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
@@ -269,7 +283,12 @@ const ProductDetails = () => {
 
           {/* Variants Tab */}
 
-          {activeTab === "variants" && (
+          {activeTab === PRODUCT_DETAILS_TAB.VARIANTS &&
+            (isProductDetailTabAllowedByPlan(
+              PRODUCT_DETAILS_TAB.VARIANTS,
+              planFeatures,
+              ignorePlanForAdmin
+            ) ? (
             <div className="p-8">
               {/* All Variants Table Only (Main Image section removed) */}
               <div className="space-y-6">
@@ -335,7 +354,7 @@ const ProductDetails = () => {
                             }}
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              Variant {index + 1}
+                              {t("PRODUCTS.VARIANT_NUMBER", { n: index + 1 })}
                             </td>
 
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
@@ -400,10 +419,22 @@ const ProductDetails = () => {
                 </div>
               </div>
             </div>
-          )}
+            ) : (
+              <div className="p-8">
+                <PlanGate
+                  embed
+                  sectionTitle={t("PLAN_GATE.SECTIONS.VARIANTS")}
+                />
+              </div>
+            ))}
 
           {/* Inventory Tab */}
-          {activeTab === "inventory" && (
+          {activeTab === PRODUCT_DETAILS_TAB.INVENTORY &&
+            (isProductDetailTabAllowedByPlan(
+              PRODUCT_DETAILS_TAB.INVENTORY,
+              planFeatures,
+              ignorePlanForAdmin
+            ) ? (
             <div className="p-8">
               {/* ------------------------------- */}
               {/*     STORE INVENTORY HEADER      */}
@@ -489,10 +520,22 @@ const ProductDetails = () => {
                 );
               })()}
             </div>
-          )}
+            ) : (
+              <div className="p-8">
+                <PlanGate
+                  embed
+                  sectionTitle={t("PLAN_GATE.SECTIONS.INVENTORY")}
+                />
+              </div>
+            ))}
 
           {/* Specifications Tab */}
-          {activeTab === "specs" && (
+          {activeTab === PRODUCT_DETAILS_TAB.SPECS &&
+            (isProductDetailTabAllowedByPlan(
+              PRODUCT_DETAILS_TAB.SPECS,
+              planFeatures,
+              ignorePlanForAdmin
+            ) ? (
             <div className="p-6">
               {/* Specifications Section */}
               {product.ProductSpecification?.length > 0 && (
@@ -606,7 +649,14 @@ const ProductDetails = () => {
                 </div>
               )}
             </div>
-          )}
+            ) : (
+              <div className="p-8">
+                <PlanGate
+                  embed
+                  sectionTitle={t("PLAN_GATE.SECTIONS.SPECIFICATIONS")}
+                />
+              </div>
+            ))}
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from 'react';
+import { Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { TitleProvider } from "./context/TitleContext";
 import { AllDataProvider } from "./context/AllDataContext";
 import LocationDataProvider from "./context/LocationDataProvider";
@@ -8,8 +8,18 @@ import NotAuthorized from './pages/NotAuthorized';
 import { getPermissionCode } from './utils/permissionUtils';
 import { Provider } from "react-redux";
 import { store } from "./store/index";
-import { MODULES, PERMISSIONS } from './contants/constants';
-
+import { MODULES, PERMISSIONS, WINDOW_CUSTOM_EVENTS } from './contants/constants';
+import { logout } from "./store/slices/authSlice";
+import { fetchUserDetails } from "./store/slices/allDataSlice";
+import { showEmsg } from "./utils/ShowEmsg";
+import i18n from "./i18n.js";
+import {
+  getFirstAccessibleHrefForSession,
+  isPlanExpiredFromSubscriptionStorage,
+  isTenantAdminRole,
+} from "./utils/planAccessUtils";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useInactivityTimer } from './hooks/useInactivityTimer';
 import InactivityNotification from './components/InactivityNotification';
 import InactivityManager from './components/InactivityManager';
@@ -66,70 +76,144 @@ import ScrollToTop from './components/ScrollToTop';
 import ThemeSettings from './pages/ApplicationSettings';
 import ApplicationSettings from './pages/ApplicationSettings';
 import SubscriptionPlan from './pages/subscription';
-
-const dashboardPermission = getPermissionCode(MODULES.DASHBOARD, PERMISSIONS.VIEW_DASHBOARD);
-
-const ordersPermission = getPermissionCode(MODULES.ORDER, PERMISSIONS.VIEW_ORDERS);
-const orderDetailPermission = getPermissionCode(MODULES.ORDER, PERMISSIONS.VIEW_ORDERS);
-
-const storesPermission = getPermissionCode(MODULES.STORE, PERMISSIONS.VIEW_STORE);
-const addStorePermission = getPermissionCode(MODULES.STORE, PERMISSIONS.ADD_STORE);
-const editStorePermission = getPermissionCode(MODULES.STORE, PERMISSIONS.UPDATE_STORE);
-
-const usersPermission = getPermissionCode(MODULES.USER, PERMISSIONS.VIEW_USER);
-const addUserPermission = getPermissionCode(MODULES.USER, PERMISSIONS.ADD_USER);
-const editUserPermission = getPermissionCode(MODULES.USER, PERMISSIONS.UPDATE_USER);
-
-const userRolesPermission = getPermissionCode(MODULES.ROLE, PERMISSIONS.VIEW_ROLE);
-const addUserRolePermission = getPermissionCode(MODULES.ROLE, PERMISSIONS.ADD_ROLE);
-const editUserRolePermission = getPermissionCode(MODULES.ROLE, PERMISSIONS.EDIT_ROLE);
-
-const bannersPermission = getPermissionCode(MODULES.CONTENT, PERMISSIONS.VIEW_BANNERS);
-const bannersCreatePermission = getPermissionCode(MODULES.CONTENT, PERMISSIONS.CREATE_BANNER);
-const bannersEditPermission = getPermissionCode(MODULES.CONTENT, PERMISSIONS.UPDATE_BANNER);
-const notificationsPermission = getPermissionCode(MODULES.CONTENT, PERMISSIONS.SEND_NOTIFICATION);
-
-const productsPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCTS);
-const addProductPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.CREATE_PRODUCT);
-const editProductPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_PRODUCT);
-
-const inventoryPermission = getPermissionCode(MODULES.INVENTORY, PERMISSIONS.VIEW_INVENTORY);
-
-const viewBrandPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_BRANDS);
-const updateBrandPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_BRAND);
-
-const viewCategoryPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_CATEGORIES);
-const updateCategoryPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_CATEGORY);
-
-const viewAttributeTypePermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_ATTRIBUTE_TYPES);
-const updateAttributeTypePermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_ATTRIBUTE_TYPE);
-
-const viewColorPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_COLOURS);
-const updateColorPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_COLOUR);
-
-const viewAttributePermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_ATTRIBUTES);
-const updateAttributePermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_ATTRIBUTE);
-
-const viewProductGroupPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCT_GROUPS);
-const updateProductGroupPermission = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_PRODUCT_GROUP);
-
+import PlanGate from './pages/PlanGate';
 
 const PublicRoute = ({ children }) => {
   const token = localStorage.getItem("token");
   if (token) {
-    return <Navigate to="/dashboard" replace />;
+    const target = getFirstAccessibleHrefForSession() || "/not-authorized";
+    return <Navigate to={target} replace />;
   }
   return children;
 };
 const App = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const planExpiredHandlingRef = useRef(false);
 
   useEffect(() => {
     setLoading(true);
     const timer = setTimeout(() => setLoading(false), 600);
     return () => clearTimeout(timer);
   }, [location]);
+
+  useEffect(() => {
+    const handleNavigateUpgradePlan = () => {
+      if (!isTenantAdminRole()) {
+        const h = getFirstAccessibleHrefForSession();
+        navigate(h || "/not-authorized", { replace: true });
+        return;
+      }
+      navigate("/upgrade-plan", { replace: true });
+    };
+    window.addEventListener(
+      WINDOW_CUSTOM_EVENTS.NAVIGATE_UPGRADE_PLAN,
+      handleNavigateUpgradePlan
+    );
+    return () => {
+      window.removeEventListener(
+        WINDOW_CUSTOM_EVENTS.NAVIGATE_UPGRADE_PLAN,
+        handleNavigateUpgradePlan
+      );
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    if (location.pathname === "/") {
+      planExpiredHandlingRef.current = false;
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handlePlanExpiredLogout = () => {
+      if (planExpiredHandlingRef.current) {
+        return;
+      }
+      planExpiredHandlingRef.current = true;
+      store.dispatch(logout());
+      showEmsg(i18n.t("LOGIN.PLAN_EXPIRED_SESSION"), "error", 6000);
+      navigate("/", { replace: true });
+    };
+    window.addEventListener(
+      WINDOW_CUSTOM_EVENTS.PLAN_EXPIRED_LOGOUT,
+      handlePlanExpiredLogout
+    );
+    return () => {
+      window.removeEventListener(
+        WINDOW_CUSTOM_EVENTS.PLAN_EXPIRED_LOGOUT,
+        handlePlanExpiredLogout
+      );
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    const checkPlanExpiry = () => {
+      if (!localStorage.getItem("token")) {
+        return;
+      }
+      if (!isPlanExpiredFromSubscriptionStorage()) {
+        return;
+      }
+      window.dispatchEvent(
+        new CustomEvent(WINDOW_CUSTOM_EVENTS.PLAN_EXPIRED_LOGOUT)
+      );
+    };
+    checkPlanExpiry();
+    const intervalId = window.setInterval(checkPlanExpiry, 30000);
+    return () => window.clearInterval(intervalId);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const onSubscriptionStorage = (e) => {
+      const detail = e?.detail || {};
+      if (!detail.planChanged || detail.silent) {
+        return;
+      }
+      showEmsg(
+        i18n.t("SUBSCRIPTION.PLAN_UPDATED_REFRESH", {
+          plan: detail.planName || i18n.t("SUBSCRIPTION.DEFAULT_PLAN_LABEL"),
+        }),
+        "success",
+        4500
+      );
+    };
+    window.addEventListener(
+      WINDOW_CUSTOM_EVENTS.SUBSCRIPTION_STORAGE_CHANGED,
+      onSubscriptionStorage
+    );
+    return () => {
+      window.removeEventListener(
+        WINDOW_CUSTOM_EVENTS.SUBSCRIPTION_STORAGE_CHANGED,
+        onSubscriptionStorage
+      );
+    };
+  }, []);
+
+  /** Pick up plan / AllowedFeatures changes from backend (same payload shape as login when API includes them on user profile). */
+  useEffect(() => {
+    const syncProfilePlan = () => {
+      if (!localStorage.getItem("token")) {
+        return;
+      }
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        return;
+      }
+      store.dispatch(fetchUserDetails(userId));
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        syncProfilePlan();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const intervalId = window.setInterval(syncProfilePlan, 120000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   // Remove all title attributes to prevent white tooltips
   useEffect(() => {
@@ -185,8 +269,17 @@ const App = () => {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute permissionCode={dashboardPermission}>
+                <ProtectedRoute permissionCode={getPermissionCode(MODULES.DASHBOARD, PERMISSIONS.VIEW_DASHBOARD)}>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/upgrade-plan"
+              element={
+                <ProtectedRoute tenantAdminOnly>
+                  <PlanGate />
                 </ProtectedRoute>
               }
             />
@@ -195,7 +288,7 @@ const App = () => {
               <Route
                 path="/browse"
                 element={
-                  <ProtectedRoute permissionCode={productsPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCTS)}>
                     <Browse />
                   </ProtectedRoute>
                 }
@@ -203,7 +296,7 @@ const App = () => {
                <Route
                 path="/subscription"
                 element={
-                  <ProtectedRoute permissionCode={notificationsPermission}>
+                  <ProtectedRoute tenantAdminOnly>
                     <SubscriptionPlan />
                   </ProtectedRoute>
                 }
@@ -211,7 +304,7 @@ const App = () => {
               <Route
                 path="/payments"
                 element={
-                  <ProtectedRoute permissionCode={notificationsPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.ORDER, PERMISSIONS.VIEW_ORDERS)}>
                     <Payments />
                   </ProtectedRoute>
                 }
@@ -219,7 +312,7 @@ const App = () => {
               <Route
                 path="/payment-details/:id"
                 element={
-                  <ProtectedRoute permissionCode={notificationsPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.ORDER, PERMISSIONS.VIEW_ORDERS)}>
                     <PaymentDetailsWrapper />
                   </ProtectedRoute>
                 }
@@ -227,7 +320,7 @@ const App = () => {
               <Route
                 path="/activeBanners"
                 element={
-                  <ProtectedRoute permissionCode={productsPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCTS)}>
                     <ActiveBanners />
                   </ProtectedRoute>
                 }
@@ -235,7 +328,7 @@ const App = () => {
               <Route
                 path="/browse/editbrand/:id"
                 element={
-                  <ProtectedRoute permissionCode={updateBrandPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_BRAND)}>
                     <CreateBrand />
                   </ProtectedRoute>
                 }
@@ -243,7 +336,7 @@ const App = () => {
               <Route
                 path="/browse/editcatagiry/:id"
                 element={
-                  <ProtectedRoute permissionCode={updateCategoryPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_CATEGORY)}>
                     <CreateCategory />
                   </ProtectedRoute>
                 }
@@ -251,7 +344,7 @@ const App = () => {
               <Route
                 path="/browse/editattributetype/:id"
                 element={
-                  <ProtectedRoute permissionCode={updateAttributeTypePermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_ATTRIBUTE_TYPE)}>
                     <CreateAttributeType />
                   </ProtectedRoute>
                 }
@@ -259,7 +352,7 @@ const App = () => {
               <Route
                 path="/browse/editcolor/:id"
                 element={
-                  <ProtectedRoute permissionCode={updateColorPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_COLOUR)}>
                     <CreateColor />
                   </ProtectedRoute>
                 }
@@ -267,7 +360,7 @@ const App = () => {
               <Route
                 path="/browse/editattribute/:id"
                 element={
-                  <ProtectedRoute permissionCode={updateAttributePermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_ATTRIBUTE)}>
                     <CreateAttribute />
                   </ProtectedRoute>
                 }
@@ -275,7 +368,7 @@ const App = () => {
               <Route
                 path="/browse/editgroup/:id"
                 element={
-                  <ProtectedRoute permissionCode={updateProductGroupPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_PRODUCT_GROUP)}>
                     <CreateProductGroup />
                   </ProtectedRoute>
                 }
@@ -285,7 +378,7 @@ const App = () => {
               <Route
                 path="/orders"
                 element={
-                  <ProtectedRoute permissionCode={ordersPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.ORDER, PERMISSIONS.VIEW_ORDERS)}>
                     <Orders />
                   </ProtectedRoute>
                 }
@@ -293,7 +386,7 @@ const App = () => {
               <Route
                 path="/orders/:orderId"
                 element={
-                  <ProtectedRoute permissionCode={orderDetailPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.ORDER, PERMISSIONS.VIEW_ORDERS)}>
                     <OrderDetailPage />
                   </ProtectedRoute>
                 }
@@ -303,7 +396,7 @@ const App = () => {
               <Route
                 path="/userRoles"
                 element={
-                  <ProtectedRoute permissionCode={userRolesPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.ROLE, PERMISSIONS.VIEW_ROLE)}>
                     <UserRoles />
                   </ProtectedRoute>
                 }
@@ -313,7 +406,7 @@ const App = () => {
               <Route
                 path="/productList"
                 element={
-                  <ProtectedRoute permissionCode={productsPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCTS)}>
                     <ProductList />
                   </ProtectedRoute>
                 }
@@ -321,7 +414,7 @@ const App = () => {
                  <Route
                 path="/InventoryList"
                 element={
-                  <ProtectedRoute permissionCode={inventoryPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.INVENTORY, PERMISSIONS.VIEW_INVENTORY)}>
                     <InventoryList />
                   </ProtectedRoute>
                 }
@@ -329,7 +422,7 @@ const App = () => {
               <Route
                 path="/Addproduct"
                 element={
-                  <ProtectedRoute permissionCode={addProductPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.CREATE_PRODUCT)}>
                     <Addproduct />
                   </ProtectedRoute>
                 }
@@ -342,7 +435,7 @@ const App = () => {
               <Route
                 path="/edit-product/:productId?"
                 element={
-                  <ProtectedRoute permissionCode={editProductPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.UPDATE_PRODUCT)}>
                     <Addproduct />
                   </ProtectedRoute>
                 }
@@ -352,7 +445,7 @@ const App = () => {
               <Route
                 path="/banners-create"
                 element={
-                  <ProtectedRoute permissionCode={bannersCreatePermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode("Banner Management", PERMISSIONS.CREATE_BANNER)}>
                     <Bannerscreate />
                   </ProtectedRoute>
                 }
@@ -360,7 +453,7 @@ const App = () => {
               <Route
                 path="/banners-edit/:bannerId?"
                 element={
-                  <ProtectedRoute permissionCode={bannersEditPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode("Banner Management", PERMISSIONS.UPDATE_BANNER)}>
                     <Bannerscreate />
                   </ProtectedRoute>
                 }
@@ -368,7 +461,7 @@ const App = () => {
               <Route
                 path="/banners"
                 element={
-                  <ProtectedRoute permissionCode={bannersPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode("Banner Management", PERMISSIONS.VIEW_BANNERS)}>
                     <Banners />
                   </ProtectedRoute>
                 }
@@ -396,7 +489,7 @@ const App = () => {
               <Route
                 path="/addUserRole"
                 element={
-                  <ProtectedRoute permissionCode={addUserRolePermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.ROLE, PERMISSIONS.ADD_ROLE)}>
                     <AddUserRole />
                   </ProtectedRoute>
                 }
@@ -404,7 +497,7 @@ const App = () => {
               <Route
                 path="/edit-UserRole/:roleId"
                 element={
-                  <ProtectedRoute permissionCode={editUserRolePermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.ROLE, PERMISSIONS.EDIT_ROLE)}>
                     <AddUserRole />
                   </ProtectedRoute>
                 }
@@ -414,7 +507,7 @@ const App = () => {
               <Route
                 path="/stores"
                 element={
-                  <ProtectedRoute permissionCode={storesPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.STORE, PERMISSIONS.VIEW_STORE)}>
                     <Stores />
                   </ProtectedRoute>
                 }
@@ -422,7 +515,7 @@ const App = () => {
               <Route
                 path="/add-store"
                 element={
-                  <ProtectedRoute permissionCode={addStorePermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.STORE, PERMISSIONS.ADD_STORE)}>
                     <AddStore />
                   </ProtectedRoute>
                 }
@@ -430,7 +523,7 @@ const App = () => {
               <Route
                 path="/editStore/:id"
                 element={
-                  <ProtectedRoute permissionCode={editStorePermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.STORE, PERMISSIONS.UPDATE_STORE)}>
                     <AddStore />
                   </ProtectedRoute>
                 }
@@ -440,7 +533,7 @@ const App = () => {
               <Route
                 path="/add-user"
                 element={
-                  <ProtectedRoute permissionCode={addUserPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.USER, PERMISSIONS.ADD_USER)}>
                     <AddUser />
                   </ProtectedRoute>
                 }
@@ -448,7 +541,7 @@ const App = () => {
               <Route
                 path="/editUser/:id"
                 element={
-                  <ProtectedRoute permissionCode={editUserPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.USER, PERMISSIONS.UPDATE_USER)}>
                     <AddUser />
                   </ProtectedRoute>
                 }
@@ -456,7 +549,7 @@ const App = () => {
               <Route
                 path="/users"
                 element={
-                  <ProtectedRoute permissionCode={usersPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.USER, PERMISSIONS.VIEW_USER)}>
                     <Users />
                   </ProtectedRoute>
                 }
@@ -466,7 +559,7 @@ const App = () => {
               <Route
                 path="/notifications"
                 element={
-                  <ProtectedRoute permissionCode={notificationsPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode("Notification Management", PERMISSIONS.SEND_NOTIFICATION)}>
                     <Notifications />
                   </ProtectedRoute>
                 }
@@ -476,7 +569,7 @@ const App = () => {
               <Route
                 path="/bulk-import"
                 element={
-                  <ProtectedRoute permissionCode={notificationsPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode("Bulk Import Management", "View Bulk Import")}>
                     <BulkImport />
                   </ProtectedRoute>
                 }
@@ -486,7 +579,7 @@ const App = () => {
               <Route
                 path="/bulk-images"
                 element={
-                  <ProtectedRoute permissionCode={notificationsPermission}>
+                  <ProtectedRoute permissionCode={getPermissionCode("Bulk Import Management", "Upload Bulk Import Images")}>
                     <BulkImages />
                   </ProtectedRoute>
                 }

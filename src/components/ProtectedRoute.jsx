@@ -1,110 +1,74 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../layout/Layout";
-import { Box, Typography } from "@mui/material";
-import { Lock as LockIcon } from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
+import { Navigate, useLocation } from "react-router-dom";
+import PlanGate from "../pages/PlanGate";
+import {
+  getFirstAccessibleHrefForSession,
+  isTenantAdminRole,
+} from "../utils/planAccessUtils";
+import { permissionIdsInclude } from "../utils/permissionUtils";
 
-import { Navigate } from "react-router-dom";
-const ProtectedRoute = ({ permissionCode, children }) => {
-  const [hasPermission, setHasPermission] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { t } = useTranslation();
+function readPermissionAllowed(permissionCode) {
+  if (!permissionCode) {
+    return true;
+  }
+  try {
+    const permissionIDs =
+      JSON.parse(localStorage.getItem("PermissionIDs")) || [];
+    return permissionIdsInclude(permissionIDs, permissionCode);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @param {{ permissionCode?: string|null, tenantAdminOnly?: boolean }} props
+ * `tenantAdminOnly` — only tenant role name `admin` may open (upgrade / subscription pages).
+ */
+const ProtectedRoute = ({ permissionCode, tenantAdminOnly, children }) => {
+  const location = useLocation();
   const token = localStorage.getItem("token");
+  const [hasPermission, setHasPermission] = useState(() =>
+    permissionCode ? readPermissionAllowed(permissionCode) : true
+  );
+
+  useEffect(() => {
+    setHasPermission(permissionCode ? readPermissionAllowed(permissionCode) : true);
+  }, [permissionCode]);
+
   if (!token) {
     return <Navigate to="/" replace />;
   }
 
-  useEffect(() => {
-    const checkPermission = () => {
-      try {
-        const permissionIDs =
-          JSON.parse(localStorage.getItem("PermissionIDs")) || [];
+  if (tenantAdminOnly) {
+    if (!isTenantAdminRole()) {
+      const next = getFirstAccessibleHrefForSession();
+      const target =
+        next && next !== location.pathname ? next : "/not-authorized";
+      return <Navigate to={target} replace />;
+    }
+    return <Layout>{children}</Layout>;
+  }
 
-        if (!permissionCode) {
-          // If no permission code is required, allow access
-          setHasPermission(true);
-        } else {
-          // Check if user has the required permission
-          setHasPermission(permissionIDs.includes(permissionCode));
-        }
-      } catch (err) {
-        setHasPermission(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    setTimeout(checkPermission, 0);
-  }, [permissionCode]);
-
-  if (isLoading) {
+  if (!hasPermission) {
+    if (isTenantAdminRole()) {
+      return (
+        <Layout>
+          <PlanGate />
+        </Layout>
+      );
+    }
+    const next = getFirstAccessibleHrefForSession();
+    const target =
+      next && next !== location.pathname ? next : "/not-authorized";
     return (
       <Layout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <Navigate to={target} replace />
       </Layout>
     );
   }
 
-  return (
-    <Layout>
-      {hasPermission ? (
-        children
-      ) : (
-        <div className="main-container">
-          <Box
-            sx={{
-              paddingTop: { xs: "50px", sm: "80px", md: "100px" },
-              textAlign: "center",
-            }}
-          >
-            {/* Lock Icon inside the circle */}
-            <Box
-              sx={{
-                width: { xs: "60px", sm: "70px", md: "80px" },
-                height: { xs: "60px", sm: "70px", md: "80px" },
-                backgroundColor: "var(--custom-bg)", // Fixed syntax
-                borderRadius: "50%",
-                margin: "0 auto",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <LockIcon
-                sx={{
-                  fontSize: { xs: 20, sm: 25, md: 30 },
-                  color: "white",
-                }}
-              />
-            </Box>
-
-            <Box mt={3}>
-              <Typography
-                variant="h4"
-                component="h1"
-                gutterBottom
-                sx={{
-                  fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
-                }}
-              >
-                {t("COMMON.ACCESS_DENIED_TITLE")}
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  fontSize: { xs: "0.7rem", sm: "0.8rem" },
-                }}
-              >
-                {t("COMMON.ACCESS_DENIED_MESSAGE")}
-              </Typography>
-            </Box>
-          </Box>
-        </div>
-      )}
-    </Layout>
-  );
+  return <Layout>{children}</Layout>;
 };
 
 export default ProtectedRoute;

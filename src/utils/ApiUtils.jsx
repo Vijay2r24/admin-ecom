@@ -2,7 +2,18 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { BASE_URL } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
-import { MESSAGES, STATUS, TOAST_DURATION } from "../contants/constants";
+import {
+  API_CUSTOM_CODES,
+  MESSAGES,
+  STATUS,
+  TOAST_DURATION,
+  WINDOW_CUSTOM_EVENTS,
+} from "../contants/constants";
+import {
+  isTenantAdminRole,
+  markSubscriptionReadOnlyMode,
+} from "./planAccessUtils";
+import i18n from "../i18n.js";
 
 /* ------------------------------------------------------------------
    LOGOUT + NOTIFICATION FUNCTIONS
@@ -20,6 +31,83 @@ const handleLogout = () => {
 const isLoginPage = () => {
   const path = window.location.pathname.toLowerCase();
   return path === "/" || path === "/login";
+};
+
+const isUpgradePlanPage = () =>
+  window.location.pathname.toLowerCase() === "/upgrade-plan";
+
+/** HTTP 200 body failure sometimes carries plan/forbidden text instead of HTTP 403 */
+const shouldSilentRedirectToUpgradePlanFromMessage = (message) => {
+  const m = (message || "").toLowerCase();
+  return m.includes("403") || m.includes("forbidden");
+};
+
+const shouldDispatchPlanExpiredLogoutFromMessage = (message) => {
+  const m = (message || "").toLowerCase();
+  return (
+    m.includes("plan expired") ||
+    m.includes("subscription expired") ||
+    (m.includes("plan") && m.includes("expir")) ||
+    (m.includes("subscription") && m.includes("expir"))
+  );
+};
+
+const dispatchPlanExpiredLogout = () => {
+  if (isLoginPage()) {
+    return;
+  }
+  window.dispatchEvent(
+    new CustomEvent(WINDOW_CUSTOM_EVENTS.PLAN_EXPIRED_LOGOUT)
+  );
+};
+
+const isCustomCode = (value, code) =>
+  value != null && Number(value) === Number(code);
+
+const normalizeApiMessage = (message) => (message || "").toLowerCase();
+
+/** Heuristic when backend does not send `customCode` for quota / seat / usage caps */
+const isLikelyPlanOrSubscriptionLimitMessage = (message) => {
+  const m = normalizeApiMessage(message);
+  return (
+    m.includes("limit reached") ||
+    m.includes("maximum") ||
+    m.includes("max limit") ||
+    m.includes("max user") ||
+    m.includes("max users") ||
+    m.includes("quota") ||
+    m.includes("exceeded your") ||
+    m.includes("exceeds the") ||
+    m.includes("not allowed for your plan") ||
+    m.includes("upgrade your plan") ||
+    m.includes("plan does not allow")
+  );
+};
+
+const toastSubscriptionReadOnly = (msg) => {
+  const n = normalizeApiMessage(msg);
+  let headingKey = "SUBSCRIPTION.TOAST_READ_ONLY_HEADING";
+  if (n.includes("grace")) {
+    headingKey = "SUBSCRIPTION.TOAST_READ_ONLY_GRACE_HEADING";
+  } else if (n.includes("renew") || n.includes("read only") || n.includes("read-only")) {
+    headingKey = "SUBSCRIPTION.TOAST_READ_ONLY_RENEW_HEADING";
+  }
+  const heading = i18n.t(headingKey);
+  const body = (msg || "").trim();
+  showEmsg(body ? `${heading} — ${body}` : heading, "warning", 6500);
+};
+
+const redirectToUpgradePlanSilently = () => {
+  if (isLoginPage() || isUpgradePlanPage()) {
+    return false;
+  }
+  if (!isTenantAdminRole()) {
+    return false;
+  }
+  window.dispatchEvent(
+    new CustomEvent(WINDOW_CUSTOM_EVENTS.NAVIGATE_UPGRADE_PLAN)
+  );
+  return true;
 };
 
 const showLogoutNotification = (message, fallbackText = INACTIVE_USER_MESSAGE) => {
@@ -139,8 +227,18 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       const customCode = response?.data?.customCode;
 
       if (status === failure) {
+        if (isCustomCode(customCode, API_CUSTOM_CODES.SUBSCRIPTION_READ_ONLY)) {
+          markSubscriptionReadOnlyMode();
+          if (!isLoginPage()) {
+            toastSubscriptionReadOnly(msg);
+          }
+          return Promise.reject(new Error(msg));
+        }
         // Check for permission denied response with customCode 1001
-        if (customCode === 1001 || normalized.includes("permission")) {
+        if (
+          isCustomCode(customCode, API_CUSTOM_CODES.PERMISSION_DENIED) ||
+          normalized.includes("permission")
+        ) {
           if (!isLoginPage()) {
   
             const logoutEvent = new CustomEvent('triggerIdleLogout', { 
@@ -154,12 +252,38 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
           normalized.includes("account has been deactivated")
         ) {
           if (!isLoginPage()) {
-            e.log("User inactive/deactivated - triggering IdleLogout");
+            console.error("User inactive/deactivated - triggering IdleLogout");
             const logoutEvent = new CustomEvent('triggerIdleLogout', { 
               detail: { message: msg, fallbackText: "Account inactive - session timeout" } 
             });
             window.dispatchEvent(logoutEvent);
           }
+        } else {
+          if (shouldDispatchPlanExpiredLogoutFromMessage(msg)) {
+            if (!isLoginPage()) {
+              showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_EXPIRED_SIGN_OUT"), "error", 6500);
+            }
+            dispatchPlanExpiredLogout();
+            return Promise.reject(new Error(msg));
+          }
+          if (shouldSilentRedirectToUpgradePlanFromMessage(msg) && redirectToUpgradePlanSilently()) {
+            if (!isLoginPage()) {
+              showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_FORBIDDEN_UPGRADE"), "warning", 5000);
+            }
+            return Promise.reject(new Error(msg));
+          }
+          if (
+            isCustomCode(customCode, API_CUSTOM_CODES.PLAN_OR_SUBSCRIPTION_LIMIT) ||
+            isLikelyPlanOrSubscriptionLimitMessage(msg)
+          ) {
+            if (!isLoginPage()) {
+              const hint = i18n.t("SUBSCRIPTION.TOAST_PLAN_LIMIT_HEADING");
+              const body = (msg || "").trim();
+              showEmsg(body ? `${hint} — ${body}` : hint, "warning", 6500);
+            }
+            return Promise.reject(new Error(msg));
+          }
+          showEmsg(msg || DEFAULT_ERROR_MESSAGE, "error");
         }
         // Don't show toast here - let components handle their own error display
         return Promise.reject(new Error(msg));
@@ -172,6 +296,15 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       // Clean up abort controller on error response
       if (key) {
         abortControllers.delete(key);
+      }
+
+      const httpStatus = error?.response?.status;
+      if (httpStatus === 403 && !isLoginPage()) {
+        if (!isUpgradePlanPage()) {
+          showEmsg(i18n.t("SUBSCRIPTION.TOAST_HTTP_403_PLAN"), "warning", 5000);
+          redirectToUpgradePlanSilently();
+        }
+        return Promise.reject(error);
       }
 
       // COMPLETE SILENT HANDLING OF ABORT/CANCEL EVENTS
@@ -195,8 +328,27 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
 
       const normalized = msg.toLowerCase();
 
+      if (shouldDispatchPlanExpiredLogoutFromMessage(msg)) {
+        if (!isLoginPage()) {
+          showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_EXPIRED_SIGN_OUT"), "error", 6500);
+        }
+        dispatchPlanExpiredLogout();
+        return Promise.reject(error);
+      }
+
+      if (isCustomCode(customCode, API_CUSTOM_CODES.SUBSCRIPTION_READ_ONLY)) {
+        markSubscriptionReadOnlyMode();
+        if (!isLoginPage()) {
+          toastSubscriptionReadOnly(msg);
+        }
+        return Promise.reject(error);
+      }
+
       // Check for permission denied responses
-      if (customCode === 1001 || normalized.includes("permission")) {
+      if (
+        isCustomCode(customCode, API_CUSTOM_CODES.PERMISSION_DENIED) ||
+        normalized.includes("permission")
+      ) {
         if (!isLoginPage()) {
           const logoutEvent = new CustomEvent('triggerIdleLogout', { 
             detail: { message: msg, fallbackText: "Permission denied - session timeout" } 
@@ -213,6 +365,22 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
             detail: { message: msg, fallbackText: "Account inactive - session timeout" } 
           });
           window.dispatchEvent(logoutEvent);
+        }
+      } else if (
+        isCustomCode(customCode, API_CUSTOM_CODES.PLAN_OR_SUBSCRIPTION_LIMIT) ||
+        isLikelyPlanOrSubscriptionLimitMessage(msg)
+      ) {
+        if (!isLoginPage()) {
+          const hint = i18n.t("SUBSCRIPTION.TOAST_PLAN_LIMIT_HEADING");
+          const body = (msg || "").trim();
+          showEmsg(body ? `${hint} — ${body}` : hint, "warning", 6500);
+        }
+      } else if (
+        shouldSilentRedirectToUpgradePlanFromMessage(msg) &&
+        redirectToUpgradePlanSilently()
+      ) {
+        if (!isLoginPage()) {
+          showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_FORBIDDEN_UPGRADE"), "warning", 5000);
         }
       } else {
         // Don't show toast here - let components handle their own error display

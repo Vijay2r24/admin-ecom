@@ -23,26 +23,22 @@ import {
   RefreshCw,
   Warehouse,
 } from 'lucide-react';
-import { getPermissionCode } from '../utils/permissionUtils';
- 
+import { permissionIdsInclude } from '../utils/permissionUtils';
+import {
+  getMenuPermissionCodeForHref,
+  isHrefAllowedBySubscriptionPlan,
+  isTenantAdminRole,
+} from '../utils/planAccessUtils';
+import { WINDOW_CUSTOM_EVENTS } from '../contants/constants';
+
 const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [nExpandedSection, setExpandedSection] = useState(null);
   const [nHoveredSection, setHoveredSection] = useState(null);
+  const [subscriptionMenuTick, setSubscriptionMenuTick] = useState(0);
   const { t } = useTranslation();
 
-  const handleNavigation = (href) => (event) => {
-    if (!href || href === '#') return;
-    event.preventDefault();
-    startTransition(() => {
-      navigate(href);
-    });
-    if (isMobileOpen && onClose) {
-      onClose();
-    }
-  };
- 
   const aNavigation = useMemo(() => [
     {
       name: t('SIDEBAR.DASHBOARD'),
@@ -128,46 +124,97 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
     } catch {
       return [];
     }
-  }, []);
- 
- const allPermissions = useMemo(() => {
-  try {
-    // Direct array — not nested under data.rows
-    return JSON.parse(localStorage.getItem('AllPermissions')) || [];
-  } catch {
-    return [];
-  }
-}, []);
+  }, [location.pathname, subscriptionMenuTick]);
+
+  const allPermissions = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('AllPermissions')) || [];
+    } catch {
+      return [];
+    }
+  }, [location.pathname, subscriptionMenuTick]);
  
 const allowedPermissionCodes = useMemo(() => {
-  // Match PermissionID instead of ID/Code
+  // Match PermissionID instead of ID/Code (normalize string/UUID vs number)
   return allPermissions
-    .filter(perm => userPermissionIDs.includes(perm.PermissionID))
-    .map(perm => perm.PermissionID);
+    .filter((perm) =>
+      permissionIdsInclude(userPermissionIDs, perm.PermissionID)
+    )
+    .map((perm) => perm.PermissionID);
 }, [allPermissions, userPermissionIDs]);
  
  
-  const menuPermissionCode = useMemo(() => ({
-    '/dashboard': getPermissionCode('Menu Management', 'Dashboard'),
-    '/orders': getPermissionCode('Menu Management', 'Orders'),
-    '/stores': getPermissionCode('Menu Management', 'Stores'),
-    '/users': getPermissionCode('Menu Management', 'Users'),
-    '/userRoles': getPermissionCode('Menu Management', 'UserRoles'),
-    '/banners': getPermissionCode('Menu Management', 'Banners'),
-    '/notifications': getPermissionCode('Menu Management', 'Notification'),
-    '/pages': getPermissionCode('Menu Management', 'Pages'),
-    '/browse': getPermissionCode('Menu Management', 'Products'),
-    '/productList': getPermissionCode('Menu Management', 'Products'),
-    '/InventoryList': getPermissionCode('Menu Management', 'Inventory'),
-    // Add Payments permission code
-    '/payments': getPermissionCode('Menu Management', 'Payments'),
-  }), []);
- 
+  useEffect(() => {
+    const bump = () => setSubscriptionMenuTick((n) => n + 1);
+    window.addEventListener(
+      WINDOW_CUSTOM_EVENTS.SUBSCRIPTION_STORAGE_CHANGED,
+      bump
+    );
+    window.addEventListener(
+      WINDOW_CUSTOM_EVENTS.SUBSCRIPTION_READ_ONLY_CHANGED,
+      bump
+    );
+    window.addEventListener(
+      WINDOW_CUSTOM_EVENTS.PERMISSIONS_STORAGE_CHANGED,
+      bump
+    );
+    const onStorage = (e) => {
+      if (
+        e.key === "PermissionIDs" ||
+        e.key === "AllPermissions" ||
+        e.key === "sessionRoleName"
+      ) {
+        bump();
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(
+        WINDOW_CUSTOM_EVENTS.SUBSCRIPTION_STORAGE_CHANGED,
+        bump
+      );
+      window.removeEventListener(
+        WINDOW_CUSTOM_EVENTS.SUBSCRIPTION_READ_ONLY_CHANGED,
+        bump
+      );
+      window.removeEventListener(
+        WINDOW_CUSTOM_EVENTS.PERMISSIONS_STORAGE_CHANGED,
+        bump
+      );
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+
   const filteredNavigation = useMemo(() => {
+    let planFeatures = [];
+    try {
+      const sub = JSON.parse(localStorage.getItem("subscription"));
+      planFeatures = sub?.features || [];
+    } catch {
+      planFeatures = [];
+    }
+
+    const ignorePlanForAdmin = isTenantAdminRole();
     const isAllowed = (href) => {
-      const code = menuPermissionCode[href];
+      if (href === "/subscription" && !isTenantAdminRole()) {
+        return false;
+      }
+      if (
+        !isHrefAllowedBySubscriptionPlan(
+          href,
+          planFeatures,
+          ignorePlanForAdmin
+        )
+      ) {
+        return false;
+      }
+      /* Tenant admin: same plan bypass as above; show all modules/submodules (JWT may omit PermissionIDs). */
+      if (isTenantAdminRole()) {
+        return true;
+      }
+      const code = getMenuPermissionCodeForHref(href);
       if (!code) return true;
-      return allowedPermissionCodes.includes(code);
+      return permissionIdsInclude(allowedPermissionCodes, code);
     };
    
     return aNavigation
@@ -183,7 +230,7 @@ const allowedPermissionCodes = useMemo(() => {
         }
       })
       .filter(Boolean);
-  }, [aNavigation, allowedPermissionCodes, menuPermissionCode]);
+  }, [aNavigation, allowedPermissionCodes, location.pathname, subscriptionMenuTick]);
  
   useEffect(() => {
     const activeSection = filteredNavigation.find(item =>

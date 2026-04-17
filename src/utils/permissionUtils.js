@@ -1,4 +1,13 @@
 // Updated permissionUtils.js
+/** Compare permission UUIDs from JWT vs AllPermissions without type mismatch (string vs number). */
+export function permissionIdsInclude(permissionIDs, targetPermissionId) {
+  if (targetPermissionId == null || targetPermissionId === "") {
+    return false;
+  }
+  const ids = Array.isArray(permissionIDs) ? permissionIDs : [];
+  return ids.some((id) => String(id) === String(targetPermissionId));
+}
+
 export function getPermissionCode(module, name) {
   try {
     const allPermissions = JSON.parse(localStorage.getItem('AllPermissions'));
@@ -23,11 +32,13 @@ export function hasPermissionId(permissionCode) {
     const permissionIDs = JSON.parse(localStorage.getItem('PermissionIDs'));
     const rows = allPermissions || [];
 
-    const matchingPermission = rows.find(p => p.PermissionID === permissionCode);
+    const matchingPermission = rows.find(
+      (p) => String(p.PermissionID) === String(permissionCode)
+    );
 
     if (!matchingPermission) return false;
 
-    return Array.isArray(permissionIDs) && permissionIDs.includes(matchingPermission.PermissionID);
+    return permissionIdsInclude(permissionIDs, matchingPermission.PermissionID);
   } catch {
     return false;
   }

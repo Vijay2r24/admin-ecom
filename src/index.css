@@ -402,6 +402,11 @@ code {
   justify-content: center;
 }
 
+/* Above fixed sidebar (z-50) and overlays so tenant admins and all roles see ApiUtils / showEmsg toasts */
+.Toastify__toast-container {
+  z-index: 99999 !important;
+}
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
