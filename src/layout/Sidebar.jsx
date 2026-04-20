@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, startTransition } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Users,
@@ -33,7 +33,6 @@ import { WINDOW_CUSTOM_EVENTS } from '../contants/constants';
 
 const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [nExpandedSection, setExpandedSection] = useState(null);
   const [nHoveredSection, setHoveredSection] = useState(null);
   const [subscriptionMenuTick, setSubscriptionMenuTick] = useState(0);
@@ -247,11 +246,6 @@ const allowedPermissionCodes = useMemo(() => {
     setExpandedSection(nExpandedSection === section ? null : section);
   };
 
-  /** Returns an onClick handler so the layout can react (e.g. close sidebar) after navigation. */
-  const handleNavigation = () => () => {
-    onClose?.();
-  };
-
   const renderNavigationItem = (item) => {
     const checkIsActive = (navItem) => {
       if (!navItem.href || navItem.href === '#') return false;
@@ -306,7 +300,6 @@ const allowedPermissionCodes = useMemo(() => {
                       key={subItem.name}
                       to={subItem.href}
                       className={`flex items-center px-4 py-2 text-xs font-medium ${isSubActive ? 'bg-gray-100 text-gray-900 font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-custom-bg'}`}
-                      onClick={handleNavigation(subItem.href)}
                     >
                       <SubIcon className="mr-2.5 h-3.5 w-3.5" />
                       {subItem.name}
@@ -341,7 +334,6 @@ const allowedPermissionCodes = useMemo(() => {
                           ? 'text-custom-bg font-semibold'
                           : 'text-gray-600  hover:text-custom-bg'
                         }`}
-                      onClick={handleNavigation(subItem.href)}
                     >
                       <span className="mr-3">
                         <SubIcon className="h-3.5 w-3.5" />
@@ -362,7 +354,6 @@ const allowedPermissionCodes = useMemo(() => {
         key={item.name}
         to={item.href}
         className={`flex cursor-pointer items-center w-full py-2.5 px-3 text-xs font-semibold leading-none outline-none transition-all duration-100 ease-in-out focus:outline-none border-0 m-0 ${isActive ? 'text-gray-900 bg-gray-50' : 'text-gray-600 hover:text-custom-bg'} ${isActive ? 'border-l-2 border-custom-bg' : ''}`}
-        onClick={handleNavigation(item.href)}
       >
         <span className={`h-full flex items-center justify-center mr-3 w-4 ${isActive ? 'text-custom-bg' : ''}`}>
           <Icon className="h-4 w-4 align-middle" />
