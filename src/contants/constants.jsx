@@ -576,8 +576,6 @@ export const MODULES = {
   PAYMENT: "Payment Management",
   BANNER: "Banner Management",
   NOTIFICATION: "Send Notification",
-  PAYMENT: "Payment",
-  PRODUCT: 'Product Management',
   PAGE: 'Settings',
 };
 
