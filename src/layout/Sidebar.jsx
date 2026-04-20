@@ -246,7 +246,12 @@ const allowedPermissionCodes = useMemo(() => {
   const toggleSection = (section) => {
     setExpandedSection(nExpandedSection === section ? null : section);
   };
- 
+
+  /** Returns an onClick handler so the layout can react (e.g. close sidebar) after navigation. */
+  const handleNavigation = () => () => {
+    onClose?.();
+  };
+
   const renderNavigationItem = (item) => {
     const checkIsActive = (navItem) => {
       if (!navItem.href || navItem.href === '#') return false;
