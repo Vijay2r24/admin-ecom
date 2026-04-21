@@ -579,12 +579,12 @@ const AddUserRole = () => {
   const isEditingAdmin = roleId && isAdminRole();
 
   return (
-    <div className="flex flex-col min-h-screen">
+     <div className="w-full mx-auto pb-20 overflow-x-hidden">
       <ToastContainer />
       {loaderOverlay}
 
       {/* Main Content Area */}
-      <div className={`max-w-8xl mx-auto w-full flex-grow pb-24 px-4 lg:px-8`}>
+      <div className="w-full flex-grow pb-24 px-4 lg:px-8">
         <div>
           <div className="mb-8">
             <div className="flex items-center gap-4 mb-4">

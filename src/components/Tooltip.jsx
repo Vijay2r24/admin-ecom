@@ -14,7 +14,7 @@ const Tooltip = ({
   }
 
   const getPositionClasses = () => {
-    const baseClasses = 'absolute opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 px-3 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg shadow-xl border border-slate-700/50 max-w-fit max-h-20 whitespace-nowrap overflow-hidden leading-relaxed backdrop-blur-sm';
+    const baseClasses = 'absolute opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 px-3 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg shadow-xl border border-slate-700/50 w-max max-w-xs whitespace-normal break-words leading-relaxed backdrop-blur-sm';
     
     const positionClasses = {
       top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-3',

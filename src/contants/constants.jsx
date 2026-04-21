@@ -112,7 +112,7 @@ export const STATUS_DROPDOWN_OPTIONS = [
 ];
 
 export const DEFAULT_PAGE = 1;
-export const DASHBOARD_DEFAULT_LIMIT = 7;
+export const DASHBOARD_DEFAULT_LIMIT = 8;
 export const BANNER_WIDTH = 1200;
 export const BANNER_HEIGHT = 600;
 

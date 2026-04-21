@@ -26,6 +26,7 @@ const ThemeSettings = () => {
   const [logo, setLogo] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
   const [currentLogoDocumentId, setCurrentLogoDocumentId] = useState(null);
+  const [tenantSettingId, setTenantSettingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const { setTitle } = useTitle();
 
@@ -58,7 +59,7 @@ const ThemeSettings = () => {
       
       const response = await apiPatch(
         `${UPDATE_TENANT_THEME}/${tenantId}`,
-        { ThemeColour: primaryColor }
+        { ThemeColour: primaryColor, TenantSettingID: tenantSettingId }
       );
       
       // Check if response exists and has data
@@ -159,21 +160,21 @@ const ThemeSettings = () => {
       }
       
       if (settings) {
+        // Store TenantSettingID for theme updates
+        if (settings.TenantSettingID) {
+          setTenantSettingId(settings.TenantSettingID);
+        }
+
         // Set theme color if available
         if (settings.ThemeColour) {
           setPrimaryColor(settings.ThemeColour);
         }
         
-        // Set logo if available - Logo is an array, get the first one or find one with sortOrder 1
-        if (settings.Logo && settings.Logo.length > 0) {
-          // Find logo with sortOrder 1 or take the first one
-          const logo = settings.Logo.find(logo => logo.sortOrder === 1) || settings.Logo[0];
-          if (logo && logo.documentUrl) {
-            setLogo(logo.documentUrl);
-            // Store the current documentId for updates
-            if (logo.documentId) {
-              setCurrentLogoDocumentId(logo.documentId);
-            }
+        // Logo is an object (not array)
+        if (settings.Logo && settings.Logo.documentUrl) {
+          setLogo(settings.Logo.documentUrl);
+          if (settings.Logo.documentId) {
+            setCurrentLogoDocumentId(settings.Logo.documentId);
           }
         }
       }

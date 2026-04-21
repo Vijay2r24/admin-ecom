@@ -200,7 +200,7 @@ const SubscriptionPlan = () => {
               <button
                 className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${currentUserPlan === plan.name
                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 cursor-pointer"
+                    : "bg-custom-bg text-white hover:from-purple-600 hover:to-pink-600 cursor-pointer"
                   }`}
                 disabled={currentUserPlan === plan.name}
                 onClick={() => handleUpgradePlan(plan.name, plan.price, plan.period)}
@@ -218,7 +218,7 @@ const SubscriptionPlan = () => {
               key={index}
               onClick={() => setCurrentSlide(index)}
               className={`transition-all duration-300 rounded-full ${currentSlide === index
-                  ? "w-8 h-3 bg-gradient-to-r from-purple-500 to-pink-500"
+                  ? "w-8 h-3 bg-custom-bg"
                   : "w-3 h-3 bg-gray-300 hover:bg-gray-400"
                 }`}
               aria-label={`Go to plan ${index + 1}`}

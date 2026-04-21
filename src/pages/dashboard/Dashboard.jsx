@@ -874,7 +874,7 @@ const generateComparisonText = (startDate, endDate) => {
                 paginatedTopProducts.map((product, index) => (
                   <div
                     key={index}
-                    className="flex flex-col md:flex-row items-center bg-white rounded-lg shadow-sm px-3 py-2 hover:shadow-md transition min-h-[70px]"
+                    className="flex flex-col md:flex-row items-center bg-white rounded-lg shadow-sm px-3 py-2 transition min-h-[70px]"
                   >
                     <div className="flex-shrink-0 mb-2 md:mb-0 md:mr-4">
                       <img
