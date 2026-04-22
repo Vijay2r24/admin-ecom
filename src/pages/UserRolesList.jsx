@@ -19,6 +19,7 @@ import {
   STATUS_OPTIONS,
   FILTERS,
   PERMISSIONS,
+  FILTER_VALUES,
 } from "../contants/constants.jsx";
 import Loader from "../components/Loader";
 import SkeletonLoader from "../components/SkeletonLoader";
@@ -55,7 +56,7 @@ const UserRolesList = () => {
   const [sSearchTerm, setSearchTerm] = useState("");
   const [sViewMode, setViewMode] = useState("table");
   const [nCurrentPage, setCurrentPage] = useState(1);
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState(FILTER_VALUES.ALL);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [tableScrollTop, setTableScrollTop] = useState(0); 
   const itemsPerPage = ITEMS_PER_PAGE;
@@ -117,6 +118,10 @@ const UserRolesList = () => {
   ];
 
   useEffect(() => {
+    // Show loader initially
+    setInitialLoading(true);
+    
+    // Initial fetch for roles
     const filterParams = {
       pageNumber: nCurrentPage,
       pageSize: itemsPerPage,
@@ -124,6 +129,43 @@ const UserRolesList = () => {
     };
 
     if (selectedStatus && selectedStatus !== "all") {
+      filterParams.IsActive =
+        selectedStatus === "true" || selectedStatus === true;
+    }
+
+    const fetchData = async () => {
+      try {
+        await dispatch(fetchResource({ key: "roles", params: filterParams }));
+      } finally {
+        setFilterLoading(false);
+      }
+    };
+
+    fetchData();
+    
+    // Hide initial loader after a minimum time to ensure it's visible
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 800); // Minimum 800ms to show loader
+    
+    return () => clearTimeout(timer);
+  }, [dispatch]);
+
+  // Update initial loading when actual loading completes
+  useEffect(() => {
+    if (!bLoading && initialLoading) {
+      setInitialLoading(false);
+    }
+  }, [bLoading, initialLoading]);
+
+  useEffect(() => {
+    const filterParams = {
+      pageNumber: nCurrentPage,
+      pageSize: itemsPerPage,
+      searchText: sSearchTerm,
+    };
+
+    if (selectedStatus && selectedStatus !== FILTER_VALUES.ALL) {
       filterParams.IsActive =
         selectedStatus === "true" || selectedStatus === true;
     }
@@ -215,7 +257,7 @@ const UserRolesList = () => {
         pageSize: itemsPerPage,
         searchText: sSearchTerm,
       };
-      if (selectedStatus !== "all") {
+      if (selectedStatus !== FILTER_VALUES.ALL) {
         filterParams.IsActive =
           selectedStatus === "true" || selectedStatus === true;
       }

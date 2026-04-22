@@ -5,11 +5,10 @@ import Toolbar from "../../components/Toolbar";
 import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
-import { apiGet, apiDelete, apiPost } from "../../utils/ApiUtils.jsx";
+import { apiGet } from "../../utils/ApiUtils.jsx";
 import { SKELETON_TYPES } from "../../contants/constants";
 import {
   GETPRODUCTDETAILS,
-  DELETE_PRODUCT_WITH_IMAGES,
   UPDATE_PRODUCT_STATUS,
 } from "../../contants/apiRoutes";
 import Switch from "../../components/Switch.jsx";
@@ -19,22 +18,17 @@ import {
   STATUS,
   STATUS_OPTIONS,
 } from "../../contants/constants.jsx";
-import { MODULES, PERMISSIONS } from "../../contants/constants";
 import { PRODUCT_STATUS, PRODUCT_STATUS_LABELS } from "../../contants/constants";
 import {
   fetchResource,
   updateStatusById,
 } from "../../store/slices/allDataSlice.jsx";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
-import PlanGate from "../PlanGate";
 import { ToastContainer } from "react-toastify";
 import { exportProductReport } from "../../store/slices/exportSlice";
 import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
-import Loader from "../../components/Loader";
 import SkeletonLoader from "../../components/SkeletonLoader";
-import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
 
 const getStatusBadgeClass = (status) => {
   if (status === "active") return "status-active";
@@ -43,9 +37,7 @@ const getStatusBadgeClass = (status) => {
 };
 
 const getTotalStock = (inventory) => {
-  if (!Array.isArray(inventory) || inventory.length === 0) {
-    return 0;
-  }
+  if (!Array.isArray(inventory) || inventory.length === 0) return 0;
   return inventory.reduce((total, item) => total + (item.Quantity || 0), 0);
 };
 
@@ -59,9 +51,7 @@ const getFirstImage = (productVariantImages) => {
   return noImage;
 };
 
-const getBrandName = (product) => {
-  return product.BrandName || "N/A";
-};
+const getBrandName = (product) => product.BrandName || "N/A";
 
 const ProductList = () => {
   const [sSearchTerm, setSearchTerm] = useState("");
@@ -74,53 +64,31 @@ const ProductList = () => {
   const [aProducts, setProducts] = useState([]);
   const [bLoading, setLoading] = useState(true);
   const [sError, setError] = useState(null);
-  const [initialLoading, setInitialLoading] = useState(true); // Add initial loading state
+  const [initialLoading, setInitialLoading] = useState(true);
   const [nTotalItems, setTotalItems] = useState(0);
   const [nTotalPages, setTotalPages] = useState(0);
   const { setTitle } = useTitle();
-  const [deletePopup, setDeletePopup] = useState({
-    open: false,
-    productId: null,
-  });
-  const [statusPopup, setStatusPopup] = useState({
-    open: false,
-    productId: null,
-    newStatus: null,
-  });
+  const [statusPopup, setStatusPopup] = useState({ open: false, productId: null, newStatus: null });
   const [bFilterLoading, setFilterLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [bSubmitting, setSubmitting] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
-  const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
+  const [tableScrollTop, setTableScrollTop] = useState(0);
   const dispatch = useDispatch();
 
-  // Hide body scrollbar when component mounts
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    
-    // Re-enable scrollbar when component unmounts
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = "unset"; };
   }, []);
 
-  // Handle table scroll for floating header
   const handleTableScroll = useCallback((e) => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
 
-  // Fetch categories, brands, and stores from Redux
-  const categories = useSelector(
-    (state) => state.allData.resources.categories?.data || []
-  );
-  const brands = useSelector(
-    (state) => state.allData.resources.brands?.data || []
-  );
-  const stores = useSelector(
-    (state) => state.allData.resources.stores?.data || []
-  );
+  const categories = useSelector((state) => state.allData.resources.categories?.data || []);
+  const brands = useSelector((state) => state.allData.resources.brands?.data || []);
+  const stores = useSelector((state) => state.allData.resources.stores?.data || []);
 
-  // Fetch categories, brands, and stores when filter dropdown is opened
   useEffect(() => {
     if (bShowFilterDropdown) {
       dispatch(fetchResource({ key: "categories" }));
@@ -129,12 +97,7 @@ const ProductList = () => {
     }
   }, [bShowFilterDropdown, dispatch]);
 
-  const defaultFilters = {
-    category: "all",
-    brand: "all",
-    store: "all",
-    status: "all",
-  };
+  const defaultFilters = { category: "all", brand: "all", store: "all", status: "all" };
   const [oFilters, setFilters] = useState(defaultFilters);
 
   const handleClearFilters = () => {
@@ -142,9 +105,7 @@ const ProductList = () => {
     setCurrentPage(1);
   };
 
-  const handleEdit = (productId) => {
-    navigate(`/edit-product/${productId}`);
-  };
+  const handleEdit = (productId) => navigate(`/edit-product/${productId}`);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -156,25 +117,18 @@ const ProductList = () => {
         pageNumber: nCurrentPage,
         pageSize: itemsPerPage,
         searchText: sSearchTerm,
-        isUserProductList: true
+        isUserProductList: true,
       };
 
       if (oFilters.status && oFilters.status !== "all") {
         params.IsActive = oFilters.status === "true";
       }
-
-      // Map selected brand name to ID only when needed
       if (oFilters.brand && oFilters.brand !== "all") {
-        const selectedBrand = brands.find(
-          (b) => b.BrandName === oFilters.brand
-        );
+        const selectedBrand = brands.find((b) => b.BrandName === oFilters.brand);
         if (selectedBrand) params.brandId = [selectedBrand.BrandID];
       }
-
       if (oFilters.category && oFilters.category !== "all") {
-        const selectedCategory = categories.find(
-          (c) => c.CategoryName === oFilters.category
-        );
+        const selectedCategory = categories.find((c) => c.CategoryName === oFilters.category);
         if (selectedCategory) params.categoryId = [selectedCategory.CategoryID];
       }
 
@@ -185,9 +139,7 @@ const ProductList = () => {
         const rawProducts = Array.isArray(resData.data) ? resData.data : [];
         const transformedProducts = rawProducts.map((product) => {
           const firstVariant =
-            product.Variants.find((v) => v.IsActive) ||
-            product.Variants[0] ||
-            {};
+            product.Variants.find((v) => v.IsActive) || product.Variants[0] || {};
           return {
             ...product,
             subCategory: product.CategoryName,
@@ -196,8 +148,7 @@ const ProductList = () => {
             brandName: getBrandName(product),
             firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
             status:
-              product.IsActive &&
-              getTotalStock(firstVariant.Inventory || []) > 0
+              product.IsActive && getTotalStock(firstVariant.Inventory || []) > 0
                 ? "active"
                 : "out-of-stock",
           };
@@ -226,97 +177,42 @@ const ProductList = () => {
       setLoading(false);
       setFilterLoading(false);
     }
-  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
+  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]);
 
-  // Handle initial loading state
   useEffect(() => {
-    // Show loader initially
     setInitialLoading(true);
-    
-    // Hide initial loader after minimum time to ensure it's visible
-    const timer = setTimeout(() => {
-      setInitialLoading(false);
-    }, 800); // Minimum 800ms to show loader
-    
+    const timer = setTimeout(() => setInitialLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);
 
-  // Update initial loading when actual loading completes
   useEffect(() => {
-    if (!bLoading && initialLoading) {
-      setInitialLoading(false);
-    }
+    if (!bLoading && initialLoading) setInitialLoading(false);
   }, [bLoading, initialLoading]);
 
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-  useEffect(() => {
-    setTitle(t("PRODUCTS.TITLE"));
-  }, [setTitle, t]);
+  useEffect(() => { setTitle(t("PRODUCTS.TITLE")); }, [setTitle, t]);
 
   const categoryOptions = [
     { value: "all", label: t("COMMON.ALL") },
-    ...categories.map((cat) => ({
-      value: cat.CategoryName,
-      label: cat.CategoryName,
-    })),
+    ...categories.map((cat) => ({ value: cat.CategoryName, label: cat.CategoryName })),
   ];
-
   const brandOptions = [
     { value: "all", label: t("COMMON.ALL") },
-    ...brands.map((brand) => ({
-      value: brand.BrandName,
-      label: brand.BrandName,
-    })),
+    ...brands.map((brand) => ({ value: brand.BrandName, label: brand.BrandName })),
   ];
-
   const storeOptions = [
     { value: "all", label: t("COMMON.ALL") },
-    ...stores.map((store) => ({
-      value: store.StoreName,
-      label: store.StoreName,
-    })),
+    ...stores.map((store) => ({ value: store.StoreName, label: store.StoreName })),
   ];
-
-  const statusOptions = STATUS_OPTIONS.map((opt) => ({
-    value: opt.value,
-    label: t(opt.labelKey),
-  }));
+  const statusOptions = STATUS_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }));
 
   const handleDropdownInputChange = (inputValue, filterName) => {
-    if (filterName === "category") {
-      dispatch(
-        fetchResource({
-          key: "categories",
-          params:
-            inputValue && inputValue.trim() !== ""
-              ? { searchText: inputValue }
-              : {},
-        })
-      );
-    } else if (filterName === "brand") {
-      dispatch(
-        fetchResource({
-          key: "brands",
-          params:
-            inputValue && inputValue.trim() !== ""
-              ? { searchText: inputValue }
-              : {},
-        })
-      );
-    } else if (filterName === "store") {
-      dispatch(
-        fetchResource({
-          key: "stores",
-          params:
-            inputValue && inputValue.trim() !== ""
-              ? { searchText: inputValue }
-              : {},
-        })
-      );
-    }
+    const key = filterName === "category" ? "categories" : filterName === "brand" ? "brands" : "stores";
+    dispatch(fetchResource({
+      key,
+      params: inputValue?.trim() ? { searchText: inputValue } : {},
+    }));
   };
 
   const additionalFilters = [
@@ -328,8 +224,7 @@ const ProductList = () => {
       placeholder: t("PRODUCT_SETUP.TABS.CATEGORIES"),
       searchable: true,
       searchPlaceholder: t("COMMON.SEARCH_CATEGORY"),
-      onInputChange: (inputValue) =>
-        handleDropdownInputChange(inputValue, "category"),
+      onInputChange: (v) => handleDropdownInputChange(v, "category"),
     },
     {
       label: t("PRODUCT_SETUP.TABS.BRANDS"),
@@ -339,8 +234,7 @@ const ProductList = () => {
       placeholder: t("PRODUCT_SETUP.TABS.BRANDS"),
       searchable: true,
       searchPlaceholder: t("COMMON.SEARCH_BRAND"),
-      onInputChange: (inputValue) =>
-        handleDropdownInputChange(inputValue, "brand"),
+      onInputChange: (v) => handleDropdownInputChange(v, "brand"),
     },
     {
       label: t("COMMON.STATUS"),
@@ -351,96 +245,43 @@ const ProductList = () => {
   ];
 
   const handleFilterChange = (e, filterName) => {
-    if (initialLoadComplete) {
-      setFilterLoading(true);
-    }
-
-    setFilters({
-      ...oFilters,
-      [filterName]: e.target.value,
-    });
+    if (initialLoadComplete) setFilterLoading(true);
+    setFilters({ ...oFilters, [filterName]: e.target.value });
     setCurrentPage(1);
-  };
-
-  // Helper function to format dates for API
-  const formatDateForAPI = (date) => {
-    if (!date) return undefined;
-
-    // If it's a dayjs object
-    if (date.isValid && date.isValid()) {
-      return date.toISOString();
-    }
-
-    // If it's already a string
-    if (typeof date === "string") {
-      return date;
-    }
-
-    // If it's a Date object
-    if (date instanceof Date) {
-      return date.toISOString();
-    }
-
-    return undefined;
   };
 
   const handleExportProducts = async () => {
     setExportLoading(true);
     try {
-      // Find the brand and category IDs from the Redux state
       const brand = brands.find((b) => b.BrandName === oFilters.brand);
-      const category = categories.find(
-        (c) => c.CategoryName === oFilters.category
-      );
-
-      const isActiveFilter =
-        oFilters.status === "all" ? undefined : oFilters.status === "true";
-
-      await dispatch(
-        exportProductReport({
-          searchText: sSearchTerm,
-          isActive: isActiveFilter,
-          brandId: brand ? [brand.BrandID] : undefined,
-          categoryId: category ? [category.CategoryID] : undefined,
-        })
-      ).unwrap();
-
-      // Optional: show success message
-      // toast.success(t('PRODUCTS.EXPORT_SUCCESS'));
+      const category = categories.find((c) => c.CategoryName === oFilters.category);
+      const isActiveFilter = oFilters.status === "all" ? undefined : oFilters.status === "true";
+      await dispatch(exportProductReport({
+        searchText: sSearchTerm,
+        isActive: isActiveFilter,
+        brandId: brand ? [brand.BrandID] : undefined,
+        categoryId: category ? [category.CategoryID] : undefined,
+      })).unwrap();
     } catch (error) {
     } finally {
       setExportLoading(false);
     }
   };
 
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
+  const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, nTotalPages));
+  const handlePageClick = (page) => setCurrentPage(page);
 
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, nTotalPages));
-  };
+  useEffect(() => { setCurrentPage(1); }, [sSearchTerm, oFilters]);
 
-  const handlePageClick = (page) => {
-    setCurrentPage(page);
-  };
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [sSearchTerm, oFilters]);
-
-  // --- Status Update Handlers ---
   const handleStatusChange = (productId, currentIsActive) => {
-    // Open confirmation popup before updating status
     setStatusPopup({ open: true, productId, newStatus: !currentIsActive });
   };
 
   const handleStatusConfirm = async () => {
-    if (setSubmitting) setSubmitting(true);
+    setSubmitting(true);
     const { productId, newStatus } = statusPopup;
-
     try {
-      // Dispatch async status update request
       const result = await dispatch(
         updateStatusById({
           key: "products",
@@ -450,25 +291,13 @@ const ProductList = () => {
           idField: "ProductID",
         })
       ).unwrap();
-
       showEmsg(result.message, STATUS.SUCCESS);
-
-      // Refetch updated list after successful status change
-      const params = {
-        pageNumber: nCurrentPage,
-        pageSize: itemsPerPage,
-        searchText: sSearchTerm,
-      };
-      if (oFilters.status && oFilters.status !== "all") {
-        params.IsActive = oFilters.status;
-      }
       await fetchProducts();
     } catch (err) {
       showEmsg(err?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
-      // Reset popup state and stop loader
       setStatusPopup({ open: false, productId: null, newStatus: null });
-      hideLoaderWithDelay(setSubmitting);
+      setSubmitting(false);
     }
   };
 
@@ -476,12 +305,10 @@ const ProductList = () => {
     setStatusPopup({ open: false, productId: null, newStatus: null });
   };
 
+  const isLoading = bLoading || initialLoading || bFilterLoading;
+
   return (
-   <div 
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-    >
-      {/* Inline style tag for Webkit browsers (Chrome, Safari) */}
-      
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       <ToastContainer />
       <Toolbar
         searchTerm={sSearchTerm}
@@ -502,46 +329,24 @@ const ProductList = () => {
 
       {sViewMode === "table" ? (
         <div className="table-container-floating">
-          <div
-            className="table-wrapper-floating"
-            onScroll={handleTableScroll}
-          >
+          <div className="table-wrapper-floating" onScroll={handleTableScroll}>
             <table className="table-base">
-              {/* Floating Header */}
-              <thead
-                className={`table-head-floating ${
-                  tableScrollTop > 10 ? "table-head-floating-shadow" : ""
-                }`}
-              >
+              <thead className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""}`}>
                 <tr>
-                  <th className="table-head-cell-floating text-left">
-                    {t("PRODUCTS.TITLE")}
-                  </th>
-                  <th className="table-head-cell-floating text-center">
-                    {t("COMMON.CATEGORY")}
-                  </th>
-                  <th className="table-head-cell-floating text-center">
-                    {t("PRODUCTS.BRAND")}
-                  </th>
-                  <th className="table-head-cell-floating text-center">
-                    {t("COMMON.STATUS")}
-                  </th>
-                  <th className="table-head-cell-floating text-center">
-                    {t("COMMON.ACTIONS")}
-                  </th>
+                  <th className="table-head-cell-floating text-left">{t("PRODUCTS.TITLE")}</th>
+                  <th className="table-head-cell-floating text-center">{t("COMMON.CATEGORY")}</th>
+                  <th className="table-head-cell-floating text-center">{t("PRODUCTS.BRAND")}</th>
+                  <th className="table-head-cell-floating text-center">{t("COMMON.STATUS")}</th>
+                  <th className="table-head-cell-floating text-center">{t("COMMON.ACTIONS")}</th>
                 </tr>
               </thead>
-
               <tbody className="table-body">
-                {bLoading || initialLoading || bFilterLoading ? (
+                {isLoading ? (
                   <SkeletonLoader type={SKELETON_TYPES.PRODUCT_TABLE} rows={8} />
                 ) : sError ? (
                   <tr>
-                    <td colSpan={5} className="py-4">
-                      <PlanGate
-                        embed
-                        sectionTitle={t("PLAN_GATE.SECTIONS.PRODUCT_LIST")}
-                      />
+                    <td colSpan={5} className="py-8 text-center text-gray-500">
+                      {sError}
                     </td>
                   </tr>
                 ) : aProducts.length === 0 ? (
@@ -553,7 +358,6 @@ const ProductList = () => {
                 ) : (
                   aProducts.map((product) => (
                     <tr key={product.ProductID} className="table-row">
-                      {/* Product Name */}
                       <td className="table-cell text-left align-middle">
                         <div className="flex items-center p-2">
                           <div className="h-8 w-8 flex-shrink-0">
@@ -561,57 +365,32 @@ const ProductList = () => {
                               className="h-8 w-8 rounded object-cover"
                               src={product.firstImage}
                               alt={product.ProductName}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = noImage;
-                              }}
+                              onError={(e) => { e.target.onerror = null; e.target.src = noImage; }}
                             />
                           </div>
                           <div className="ml-3">
-                            <div
-                              className="font-medium text-xs text-gray-900 ellipsis-text"
-                              title={product.ProductName}
-                            >
+                            <div className="font-medium text-xs text-gray-900 ellipsis-text" title={product.ProductName}>
                               {product.ProductName}
                             </div>
                           </div>
                         </div>
                       </td>
-
-                      {/* Category */}
                       <td className="table-cell text-center align-middle">
-                        <div
-                          className="ellipsis-text text-xs text-gray-700"
-                          title={product.subCategory}
-                        >
+                        <div className="ellipsis-text text-xs text-gray-700" title={product.subCategory}>
                           {product.subCategory}
                         </div>
                       </td>
-
-                      {/* Brand */}
                       <td className="table-cell text-center align-middle">
-                        <div
-                          className="ellipsis-text text-xs text-gray-700"
-                          title={product.brandName}
-                        >
+                        <div className="ellipsis-text text-xs text-gray-700" title={product.brandName}>
                           {product.brandName}
                         </div>
                       </td>
-
-                      {/* Status */}
                       <td className="table-cell text-center align-middle">
                         <Switch
                           checked={product.IsActive}
-                          onChange={() =>
-                            handleStatusChange(
-                              product.ProductID,
-                              product.IsActive
-                            )
-                          }
+                          onChange={() => handleStatusChange(product.ProductID, product.IsActive)}
                         />
                       </td>
-
-                      {/* Actions */}
                       <td className="table-cell text-center align-middle">
                         <ActionButtons
                           id={product.ProductID}
@@ -629,41 +408,31 @@ const ProductList = () => {
       ) : (
         <div className="grid-container-floating">
           <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-              {sError ? (
-                <div className="col-span-full">
-                  <PlanGate
-                    embed
-                    sectionTitle={t("PLAN_GATE.SECTIONS.PRODUCT_LIST")}
-                  />
-                </div>
-              ) : bFilterLoading ? (
-                <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={6} className="p-4" />
-              ) : aProducts.length === 0 ? (
-                <div className="col-span-full text-center py-8 text-gray-500">
-                  {t("PRODUCTS.NO_PRODUCTS")}
-                </div>
-              ) : (
-                aProducts.map((product) => (
+          {isLoading ? (
+              <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={6} />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                {sError ? (
+                  <div className="col-span-full text-center py-8 text-gray-500">
+                    {sError}
+                  </div>
+                ) : aProducts.length === 0 ? (
+                  <div className="col-span-full text-center py-8 text-gray-500">
+                    {t("PRODUCTS.NO_PRODUCTS")}
+                  </div>
+                ) : (
+                  aProducts.map((product) => (
                   <div
                     key={product.ProductID}
                     className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200"
                   >
                     <div className="flex items-center justify-between">
-                      <span
-                        className={`px-2 py-0.5 inline-flex text-[10px] leading-4 font-semibold rounded-full ${getStatusBadgeClass(
-                          product.status
-                        )}`}
-                      >
+                      <span className={`px-2 py-0.5 inline-flex text-[10px] leading-4 font-semibold rounded-full ${getStatusBadgeClass(product.status)}`}>
                         {product.status === PRODUCT_STATUS.ACTIVE ? PRODUCT_STATUS_LABELS.ACTIVE : PRODUCT_STATUS_LABELS.OUT_OF_STOCK}
                       </span>
-
-                      {/* Status Switch */}
                       <Switch
                         checked={product.IsActive}
-                        onChange={() =>
-                          handleStatusChange(product.ProductID, product.IsActive)
-                        }
+                        onChange={() => handleStatusChange(product.ProductID, product.IsActive)}
                       />
                     </div>
                     <div className="flex items-center gap-3 mt-2">
@@ -681,27 +450,16 @@ const ProductList = () => {
                         />
                       </div>
                       <div className="flex-1">
-                        <div
-                          className="text-xs font-medium text-gray-900 ellipsis-text"
-                          title={product.ProductName}
-                        >
+                        <div className="text-xs font-medium text-gray-900 ellipsis-text" title={product.ProductName}>
                           {product.ProductName}
                         </div>
                       </div>
                     </div>
-                    <div
-                      className="text-xs text-gray-700 mt-2 ellipsis-text"
-                      title={product.subCategory}
-                    >
-                      <span className="font-medium">{t("COMMON.CATEGORY")}</span>{" "}
-                      {product.subCategory}
+                    <div className="text-xs text-gray-700 mt-2 ellipsis-text" title={product.subCategory}>
+                      <span className="font-medium">{t("COMMON.CATEGORY")}</span>{" "}{product.subCategory}
                     </div>
-                    <div
-                      className="text-xs text-gray-700 mt-2 ellipsis-text"
-                      title={product.brandName}
-                    >
-                      <span className="font-medium">{t("PRODUCTS.BRAND")}</span>{" "}
-                      {product.brandName}
+                    <div className="text-xs text-gray-700 mt-2 ellipsis-text" title={product.brandName}>
+                      <span className="font-medium">{t("PRODUCTS.BRAND")}</span>{" "}{product.brandName}
                     </div>
                     <ActionButtons
                       id={product.ProductID}
@@ -712,9 +470,11 @@ const ProductList = () => {
                 ))
               )}
             </div>
+          )}
           </div>
         </div>
       )}
+
       {!sError && nTotalItems > 0 && (
         (bLoading || bFilterLoading) ? (
           <SkeletonLoader type="pagination" />
@@ -734,11 +494,7 @@ const ProductList = () => {
       {statusPopup.open && (
         <FullscreenErrorPopup
           title={t("PRODUCTS.CONFIRM_STATUS_TITLE")}
-          message={
-            statusPopup.newStatus
-              ? t("PRODUCTS.CONFIRM_ACTIVATE_MESSAGE")
-              : t("PRODUCTS.CONFIRM_DEACTIVATE_MESSAGE")
-          }
+          message={statusPopup.newStatus ? t("PRODUCTS.CONFIRM_ACTIVATE_MESSAGE") : t("PRODUCTS.CONFIRM_DEACTIVATE_MESSAGE")}
           onClose={handleStatusPopupClose}
           onConfirm={handleStatusConfirm}
           isSubmitting={bSubmitting}
