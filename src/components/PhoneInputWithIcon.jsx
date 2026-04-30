@@ -4,6 +4,7 @@ import "react-phone-number-input/style.css";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { DEFAULT_COUNTRY } from "../contants/constants";
 import { getPhonePayload } from "../utils/getPhonePayload";
+import { useTranslation } from "react-i18next";
 
 const PhoneInputWithIcon = forwardRef(
   (
@@ -13,6 +14,7 @@ const PhoneInputWithIcon = forwardRef(
       name,
       value,
       onChange,
+      onBlur,
       placeholder,
       error,
       Icon,
@@ -22,11 +24,32 @@ const PhoneInputWithIcon = forwardRef(
     },
     ref
   ) => {
-
+     const { t } = useTranslation();
+    // react-phone-number-input gives us an E.164 string (e.g. "+919876543210") or undefined
     const handlePhoneChange = (val) => {
-      const payload = getPhonePayload(val);
-      onChange(payload); 
+      const payload = getPhonePayload(val || "");
+      onChange(payload);
     };
+
+    const handleBlur = () => {
+      if (onBlur) {
+        // Synthesise a blur event-like object so AddUser's handleBlur can read name/value
+        onBlur({ target: { name, value: value || "" } });
+      }
+    };
+
+    // Determine if the current value is invalid (non-empty but fails validation)
+    const showInlineWarning =
+      !error &&
+      value &&
+      value.trim() !== "" &&
+      (() => {
+        try {
+          return !isValidPhoneNumber(value);
+        } catch {
+          return false;
+        }
+      })();
 
     return (
       <div className="w-full">
@@ -50,8 +73,9 @@ const PhoneInputWithIcon = forwardRef(
             ref={ref}
             id={id}
             name={name}
-            value={value}
+            value={value || ""}
             onChange={handlePhoneChange}
+            onBlur={handleBlur}
             defaultCountry={defaultCountry}
             international
             countryCallingCodeEditable={false}
@@ -72,14 +96,17 @@ const PhoneInputWithIcon = forwardRef(
           )}
         </div>
 
-        {/* Validation Message */}
+        {/* Validation Message — show parent error first, then inline warning */}
         {error ? (
-          <p className="mt-1.5 text-sm text-red flex items-center">
-            <span className="mr-1">⚠️</span>
+          <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+            <span>⚠️</span>
             {error}
           </p>
-        ) : value && !isValidPhoneNumber(value) ? (
-          <p className="mt-1.5 text-sm text-red flex items-center"></p>
+        ) : showInlineWarning ? (
+          <p className="mt-1.5 text-sm text-yellow-600 flex items-center gap-1">
+            <span>⚠️</span>
+            {t("ADD_USER.VALIDATION.PHONENUMBER_VALID")}
+          </p>
         ) : null}
       </div>
     );

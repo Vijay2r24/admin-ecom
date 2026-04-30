@@ -69,7 +69,7 @@ const UserRolesList = () => {
   });
   const [roles, setRoles] = useState([]);
   const [bFilterLoading, setFilterLoading] = useState(false);
-
+  const[initialLoading, setInitialLoading] = useState(true);
 
   const permissionIdForEdit = getPermissionCode(
     PERMISSIONS.ROLE_MANAGEMENT,
