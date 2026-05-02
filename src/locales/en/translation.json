@@ -993,6 +993,8 @@
       "LAST_NAME_MAX_LENGTH": "Last name must be less than 50 characters",
       "COUNTRY_CODE_REQUIRED": "Country code is required (e.g. +1, +91)",
       "PHONE_TOO_SHORT": "Phone number is too short",
+      "PHONE_TOO_LONG": "Phone number is too long",
+      "PHONENUMBER_VALID":"Enter a valid phone number",
       "INVALID_COUNTRY_CODE": "Invalid country code",
       "GENDER_REQUIRED": "Gender is required",
       "STORES_REQUIRED": "At least one store must be selected",

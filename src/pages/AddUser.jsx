@@ -387,23 +387,27 @@ const AddUser = () => {
 
   const validatePhone = (phone) => {
     if (isFormDataLoading && id && !phone) return "";
-    if (!phone?.trim()) {
+    const trimmed = phone?.trim() || "";
+    if (!trimmed) {
       return t("ADD_USER.PHONE_REQUIRED");
     }
-    if (!isValidPhoneNumber(phone)) {
-      return t("ADD_USER.VALIDATION.PHONE_INVALID");
-    }
-    if (!phone.startsWith("+")) {
+    if (!trimmed.startsWith("+")) {
       return t("ADD_USER.VALIDATION.COUNTRY_CODE_REQUIRED");
     }
-    const phoneWithoutSpaces = phone.replace(/\s/g, "");
-    const digitsAfterPlus = phoneWithoutSpaces.substring(1);
-    if (digitsAfterPlus.length < 8) {
+    // Strip spaces for digit-length check
+    const digitsOnly = trimmed.replace(/\D/g, "");
+    if (digitsOnly.length < 7) {
       return t("ADD_USER.VALIDATION.PHONE_TOO_SHORT");
     }
-    const countryCodeMatch = phone.match(/^\+\d{1,3}/);
-    if (!countryCodeMatch) {
-      return t("ADD_USER.VALIDATION.INVALID_COUNTRY_CODE");
+    if (digitsOnly.length > 15) {
+      return t("ADD_USER.VALIDATION.PHONE_TOO_LONG");
+    }
+    try {
+      if (!isValidPhoneNumber(trimmed)) {
+        return t("ADD_USER.VALIDATION.PHONE_INVALID");
+      }
+    } catch {
+      return t("ADD_USER.VALIDATION.PHONE_INVALID");
     }
     return "";
   };
@@ -1543,6 +1547,7 @@ const AddUser = () => {
                     name="phone"
                     value={oFormData.phone} // holds formatted number
                     onChange={handlePhoneChange} // updated handler
+                    onBlur={handleBlur}
                     placeholder={t("COMMON.ENTER_PHONE_NUMBER")}
                     Icon={Phone}
                     error={oErrors.phone}

@@ -17,6 +17,16 @@ self.addEventListener('fetch', (event) => {
   if (!event.request.url.startsWith('http')) return;
   if (event.request.url.includes('/api/')) return;
 
+  // For navigation requests (HTML pages), always go network-first so Edge
+  // always gets a fresh document with the correct <title> tag.
+  // Fall back to cached index.html only when truly offline.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
@@ -28,10 +38,6 @@ self.addEventListener('fetch', (event) => {
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         return response;
       }).catch(() => {
-        // For navigation requests, return cached index.html as fallback
-        if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
-        }
         return new Response('', { status: 408, statusText: 'Offline' });
       });
     })
