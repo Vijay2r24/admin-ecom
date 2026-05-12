@@ -2152,6 +2152,15 @@ const AddProductForm = () => {
                   enqueueFilesForCrop={enqueueFilesForCrop}
                   removeImage={removeImage}
                   setVariants={setVariants}
+                  localAttributeOptions={Object.fromEntries(
+                    aAttributes.map((a) => [
+                      a.AttributeTypeID,
+                      (a.AttributeValueIDs || []).map((vid, idx) => ({
+                        id: vid,
+                        label: a.valueLabels?.[idx] || vid,
+                      })),
+                    ])
+                  )}
                 />
               )}
             </div>

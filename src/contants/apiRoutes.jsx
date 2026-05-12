@@ -78,6 +78,7 @@ export const GET_PRODUCT_BY_ID = `/getProductById`;
 export const UPDATE_PRODUCT_WITH_IMAGES = `/updateProductWithImages`;
 export const getAttributeTypeById = `/attributetype`;
 export const getAttributeById = `/getAttributeById`;
+export const GET_ALL_SUBSCRIPTION_PLAN_FEATURES = `/getAllSubscriptionPlanFeatures`;
 export const SEND_NOTIFICATIONS = `/pushNotification`;
 export const UPDATE_BANNER_STATUS = `/updateBannerStatus`;
 export const UPDATE_BANNER_SORTORDER = `/updateBannerSortOrder`;

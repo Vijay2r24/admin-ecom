@@ -23,7 +23,7 @@ export const useInactivityTimer = () => {
     }
     
     // Only set timer if user is logged in
-    if (isUserLoggedIn()) {
+    if (user) {
       timeoutRef.current = setTimeout(() => {
         setShowNotification(true);
         setTimeRemaining(10);
@@ -37,7 +37,7 @@ export const useInactivityTimer = () => {
         timeoutRef.current = logoutTimer;
       }, INACTIVITY_TIMEOUT);
     }
-  }, [dispatch, isUserLoggedIn]);
+  }, [dispatch, user]);
 
   const handleActivity = useCallback(() => {
     lastActivityRef.current = Date.now();
@@ -80,7 +80,7 @@ export const useInactivityTimer = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Only initialize timer if user is logged in
-    if (isUserLoggedIn()) {
+    if (user) {
       resetTimer();
     }
 
@@ -95,15 +95,15 @@ export const useInactivityTimer = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [handleActivity, handleVisibilityChange, resetTimer, isUserLoggedIn]);
+  }, [handleActivity, handleVisibilityChange, resetTimer, user]);
 
-  // Return a function to manually reset the timer (useful for testing)
+  // Return a function to manually reset timer (useful for testing)
   return {
     resetTimer,
     handleActivity,
     showNotification,
     timeRemaining,
     handleLogoutNow,
-    isUserLoggedIn: isUserLoggedIn()
+    isUserLoggedIn: !!user
   };
 };

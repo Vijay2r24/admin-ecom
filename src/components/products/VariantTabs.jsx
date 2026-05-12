@@ -155,13 +155,50 @@ export default function VariantTabs({
                       (v) => v.id === variant.id
                     );
 
+                    // Show only non-grouping attributes in the variant title
+                    const nonGroupAttrs = (variant.attributes || []).filter(
+                      (a) =>
+                        String(a.AttributeTypeID) !==
+                        String(groupingAttributeTypeID)
+                    );
+
+                    const variantLabel =
+                      nonGroupAttrs.length > 0
+                        ? nonGroupAttrs
+                            .map((attr) => {
+                              const valueId = attr.AttributeValueIDs?.[0];
+                              const options =
+                                localAttributeOptions?.[
+                                  attr.AttributeTypeID
+                                ] || [];
+                              const found = options.find(
+                                (o) => String(o.id) === String(valueId)
+                              );
+                              if (found) return found.label;
+                              const valObj = attributes.find(
+                                (a) =>
+                                  String(
+                                    a.AttributeValueID || a.attributeValueID
+                                  ) === String(valueId)
+                              );
+                              return (
+                                valObj?.Value ||
+                                attr.Value ||
+                                attr.value ||
+                                valueId
+                              );
+                            })
+                            .filter(Boolean)
+                            .join(" - ")
+                        : getVariantName(variant);
+
                     return (
                       <div key={variant.id} className="bg-gray-50 mb-4">
                         <Accordion
                           title={
                             <div className="flex justify-between w-full items-center">
                               <span className="font-semibold text-gray-900">
-                                Variant: {getVariantName(variant)}
+                                Variant: {variantLabel}
                               </span>
                               <span className="text-gray-400 text-sm">
                                 #{originalIndex + 1}
@@ -173,7 +210,7 @@ export default function VariantTabs({
                             {/* HEADER & DELETE ACTION */}
                             <div className="flex justify-between items-center mb-4">
                               <h4 className="text-md font-semibold text-gray-800">
-                                {getVariantName(variant)}
+                                {variantLabel}
                               </h4>
 
                               <button

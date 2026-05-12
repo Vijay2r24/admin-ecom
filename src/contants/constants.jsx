@@ -97,6 +97,15 @@ export const STATUS_OPTIONS = [
 export const ITEMS_PER_PAGE = 10;
 export const LOCALE = "en-US";
 export const CURRENCY = "INR";
+
+export const SUBSCRIPTION_PLAN = {
+  DEFAULT_CURRENCY:    "INR",
+  LOCALE_FORMAT:       "en-IN",
+  FEATURE_VALUE_TRUE:  "true",
+  FEATURE_VALUE_FALSE: "false",
+  UNLIMITED_VALUE:     -1,
+  UNLIMITED_LABEL:     "Unlimited",
+};
 export const ORDER_STATUS = {
   DELIVERED: "Delivered",
   PENDING: "Pending",

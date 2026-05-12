@@ -119,7 +119,7 @@
     "TITLE": "Subscription Plans",
     "BILLING_MONTHLY": "Monthly",
     "BILLING_YEARLY": "Yearly",
-    "FREE_TRIAL": "7 days free trial",
+    "FREE_TRIAL": "days free trial",
     "CURRENT_PLAN": "Your Current Plan",
     "UPGRADE_PLAN": "Upgrade Plan",
     "ACTIVE": "Active",
@@ -127,7 +127,8 @@
     "CHOOSE_PLAN_DESC": "Select a subscription plan that fits your needs. Upgrade anytime to unlock more features and grow your business without limits.",
     "UPGRADE_REQUEST_TITLE": "Plan Upgrade Request",
     "UPGRADE_REQUEST_MSG": "To upgrade your plan to {{plan}}, please contact the administrator for assistance.",
-    "CURRENCY": "INR"
+    "CURRENCY": "INR",
+    "NO_PLANS": "No plans available for this billing cycle."
   },
   "SUBSCRIPTION": {
     "DEFAULT_PLAN_LABEL": "current plan",
