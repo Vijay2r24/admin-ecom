@@ -992,6 +992,8 @@ export const MOCK_NOTIFICATIONS = [
 
 export const SKELETON_TYPES = {
   PRODUCT_TABLE: 'product-table',
+  PRODUCT_INVENTORY_TABLE: 'product-inventory-table',
+  VARIANT_INVENTORY_TABLE: 'variant-inventory-table',
   PAYMENT_TABLE: 'payment-table',
   BULK_IMPORT_TABLE: 'bulk-import-table',
   ATTRIBUTE_TYPE_TABLE: 'attribute-type-table',

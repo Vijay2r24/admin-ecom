@@ -38,6 +38,88 @@ const SkeletonLoader = ({ type = SKELETON_TYPES.DEFAULT, rows = 3, className = '
           </>
         );
 
+      case SKELETON_TYPES.PRODUCT_INVENTORY_TABLE:
+        return (
+          <>
+            {[...Array(rows)].map((_, rowIndex) => (
+              <tr key={rowIndex} className="table-row">
+                {/* Products column */}
+                <td className="table-cell text-left align-middle">
+                  <div className="flex items-center p-2">
+                    <div className="h-10 w-10 bg-gray-200 rounded animate-pulse flex-shrink-0" />
+                    <div className="ml-3">
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-36" />
+                    </div>
+                  </div>
+                </td>
+                {/* Quantity column */}
+                <td className="table-cell text-center align-middle">
+                  <div className="h-3 bg-gray-200 rounded animate-pulse w-12 mx-auto" />
+                </td>
+                {/* Status (Switch) column */}
+                <td className="table-cell text-center align-middle">
+                  <div className="h-6 w-12 bg-gray-200 rounded-full animate-pulse mx-auto" />
+                </td>
+                {/* Actions column */}
+                <td className="table-cell text-center align-middle">
+                  <div className="flex gap-1 justify-center">
+                    <div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </>
+        );
+
+      case SKELETON_TYPES.VARIANT_INVENTORY_TABLE:
+        return (
+          <>
+            {[...Array(rows)].map((_, rowIndex) => (
+              <tr key={rowIndex} className="table-row">
+                {/* Variant column */}
+                <td className="table-cell text-center align-middle">
+                  <div className="flex flex-col items-center gap-1 px-2 py-1">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-16" />
+                    <div className="h-2 bg-gray-200 rounded animate-pulse w-24" />
+                  </div>
+                </td>
+                {/* Image column */}
+                <td className="table-cell text-center align-middle">
+                  <div className="flex justify-center">
+                    <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                </td>
+                {/* Price column */}
+                <td className="table-cell text-center align-middle">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-14" />
+                    <div className="h-2 bg-gray-200 rounded animate-pulse w-8" />
+                  </div>
+                </td>
+                {/* Stock column */}
+                <td className="table-cell text-center align-middle">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-8" />
+                    <div className="h-2 bg-gray-200 rounded animate-pulse w-16" />
+                  </div>
+                </td>
+                {/* Status (Switch) column */}
+                <td className="table-cell text-center align-middle">
+                  <div className="flex justify-center">
+                    <div className="h-6 w-12 bg-gray-200 rounded-full animate-pulse" />
+                  </div>
+                </td>
+                {/* Actions column */}
+                <td className="table-cell text-center align-middle">
+                  <div className="flex justify-center">
+                    <div className="h-7 w-7 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </>
+        );
+
       case SKELETON_TYPES.PAYMENT_TABLE:
         return (
           <>

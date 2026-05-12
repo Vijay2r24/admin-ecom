@@ -7,7 +7,7 @@ import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { apiGet } from "../../utils/ApiUtils.jsx";
 import {
-  GET_INVENTORY_LIST,
+  GETPRODUCTDETAILS,
   UPDATE_PRODUCT_STATUS,
   UPDATE_PRODUCT_VARIANT_STATUS,
 } from "../../contants/apiRoutes";
@@ -17,7 +17,6 @@ import {
   ITEMS_PER_PAGE,
   STATUS,
   STATUS_OPTIONS,
-  LEVEL_OPTIONS,
   STOCK_SORT_OPTIONS,
   STATUS_BADGE_CLASSES,
   DEFAULT_PAGE,
@@ -28,7 +27,6 @@ import {
   MODULES,
   PERMISSIONS,
   BODY_OVERFLOW,
-  VIEW_LEVELS,
   PRODUCT_ID_FIELDS,
 } from "../../contants/constants.jsx";
 import { X } from "lucide-react";
@@ -82,6 +80,7 @@ const ProductInventory = () => {
   const [variantPopup, setVariantPopup] = useState({
     open: false,
     productId: null,
+    groupByAttributeValue: null,
   });
   const [variantStatusPopup, setVariantStatusPopup] = useState({
     open: false,
@@ -92,11 +91,12 @@ const ProductInventory = () => {
     productVariantId: null,
   });
   // Add this function to handle viewing variants
-  const handleViewVariants = (productId) => {
+  const handleViewVariants = (productId, groupByAttributeValue) => {
     startTransition(() => {
       setVariantPopup({
         open: true,
         productId,
+        groupByAttributeValue: groupByAttributeValue ?? null,
       });
     });
   };
@@ -125,6 +125,7 @@ const ProductInventory = () => {
     setVariantPopup({
       open: false,
       productId: null,
+      groupByAttributeValue: null,
     });
   };
 
@@ -184,11 +185,6 @@ const ProductInventory = () => {
   const hasUpdateProductVariantStatusPermission = hasPermissionId(permissionIdForUpdateProductVariantStatus);
   const hasViewVariantStoresPermission = hasPermissionId(permissionIdForViewVariantStores);
 
-  const levelOptions = LEVEL_OPTIONS.map((opt) => ({
-    value: opt.value,
-    label: t(opt.labelKey),
-  }));
-
   const stockSortOptions = STOCK_SORT_OPTIONS.map((opt) => ({
     value: opt.value,
     label: t(opt.labelKey),
@@ -227,7 +223,6 @@ const ProductInventory = () => {
   }, [bShowFilterDropdown, dispatch]);
 
   const defaultFilters = {
-    level: VIEW_LEVELS.PRODUCT,
     category: FILTER_VALUES.ALL,
     brand: FILTER_VALUES.ALL,
     store: FILTER_VALUES.ALL,
@@ -256,9 +251,6 @@ const ProductInventory = () => {
         pageSize: itemsPerPage,
         searchText: sSearchTerm,
       };
-
-      // View level - always send since we only have product/variant options
-      params.viewLevel = oFilters.level; // VIEW_LEVELS.PRODUCT | VIEW_LEVELS.VARIANT
 
       // Stock sorting
       if (oFilters.stockSort === "stock_asc") {
@@ -299,36 +291,45 @@ const ProductInventory = () => {
         if (selectedStore) params.storeId = [selectedStore.StoreID];
       }
 
-      const oResponse = await apiGet(GET_INVENTORY_LIST, params, token);
+      const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
       const resData = oResponse?.data;
 
       if (resData?.status.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const rawProducts = Array.isArray(resData.data) ? resData.data : [];
 
-        const transformedProducts = rawProducts.map((product) => ({
-          ProductID: product.ProductID,
-          ProductVariantID: product.ProductVariantID, // Add ProductVariantID for variant level
-          ProductName: product.ProductName,
-          Quantity: product.Quantity,
-          IsActive: product.IsActive,
-          Editable: product.editable,
-          SKU: product.SKU, // Add SKU for variant level
-          Stores: product.Stores, // Add Stores array for variant level
+        const transformedProducts = rawProducts.map((product) => {
+          // Aggregate quantity across all variants
+          const totalQuantity = Array.isArray(product.Variants)
+            ? product.Variants.reduce((sum, v) => sum + (v.Quantity || 0), 0)
+            : 0;
 
-          // image - handle both ProductImage and ProductVariantImage
-          firstImage:
-            product.ProductImage?.documentUrl ||
-            product.ProductVariantImage?.documentUrl ||
-            null,
+          // Determine active status: product is active if any variant is active
+          const isActive = Array.isArray(product.Variants)
+            ? product.Variants.some((v) => v.IsActive)
+            : false;
 
-          // status logic
-          status:
-            product.IsActive && product.Quantity > 0
-              ? PRODUCT_STATUS_VALUES.ACTIVE
-              : product.IsActive && product.Quantity <= 0
-                ? PRODUCT_STATUS_VALUES.OUT_OF_STOCK
-                : PRODUCT_STATUS_VALUES.INACTIVE,
-        }));
+          // First image from first variant
+          const firstVariant = Array.isArray(product.Variants) && product.Variants.length > 0
+            ? product.Variants[0]
+            : null;
+          const firstImage =
+            firstVariant?.ProductVariantImages?.[0]?.documentUrl || null;
+
+          return {
+            ProductID: product.ProductId,
+            ProductName: product.ProductName,
+            Quantity: totalQuantity,
+            IsActive: isActive,
+            GroupByAttributeValue: firstVariant?.GroupByAttributeValue ?? null,
+            firstImage,
+            status:
+              isActive && totalQuantity > 0
+                ? PRODUCT_STATUS_VALUES.ACTIVE
+                : isActive && totalQuantity <= 0
+                  ? PRODUCT_STATUS_VALUES.OUT_OF_STOCK
+                  : PRODUCT_STATUS_VALUES.INACTIVE,
+          };
+        });
 
         setProducts(transformedProducts);
         setTotalItems(resData.pagination?.totalRecords || 0);
@@ -357,7 +358,7 @@ const ProductInventory = () => {
         setInitialLoadComplete(true);
       }
     }
-  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]); // Removed brands, categories, initialLoadComplete
+  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]);
 
   useEffect(() => {
     fetchProducts();
@@ -405,12 +406,6 @@ const ProductInventory = () => {
   };
 
   const additionalFilters = [
-    {
-      label: t("COMMON.VIEW_LEVEL"),
-      name: "level",
-      value: oFilters.level,
-      options: levelOptions,
-    },
     {
       label: t("COMMON.SORT_BY_STOCK"),
       name: "stockSort",
@@ -500,15 +495,8 @@ const ProductInventory = () => {
       return;
     }
 
-    // Check if view level is product - show variants popup instead of confirmation
-    if (oFilters.level === VIEW_LEVELS.PRODUCT) {
-      handleOpenVariantStatusPopup(productId);
-    } else {
-      // For variant level, show confirmation popup as before
-      startTransition(() => {
-        setStatusPopup({ open: true, productId, newStatus: !currentIsActive });
-      });
-    }
+    // Always show variants popup since we're at product level
+    handleOpenVariantStatusPopup(productId);
   };
 
   const handleStatusConfirm = async () => {
@@ -516,41 +504,21 @@ const ProductInventory = () => {
     const { productId, newStatus } = statusPopup;
 
     try {
-      // Use different API route and ID field based on view level
-      const isVariantLevel = oFilters.level === VIEW_LEVELS.VARIANT;
-      const apiRoute = isVariantLevel
-        ? UPDATE_PRODUCT_VARIANT_STATUS
-        : UPDATE_PRODUCT_STATUS;
-      const idField = isVariantLevel ? PRODUCT_ID_FIELDS.PRODUCT_VARIANT_ID : PRODUCT_ID_FIELDS.PRODUCT_ID;
-
-      // Dispatch async status update request
       const result = await dispatch(
         updateStatusById({
           key: "products",
           id: productId,
           newStatus,
-          apiRoute,
-          idField,
+          apiRoute: UPDATE_PRODUCT_STATUS,
+          idField: PRODUCT_ID_FIELDS.PRODUCT_ID,
         }),
       ).unwrap();
 
       showEmsg(result.message, STATUS.SUCCESS);
-
-      // Refetch updated list after successful status change
-      const params = {
-        pageNumber: nCurrentPage,
-        pageSize: itemsPerPage,
-        searchText: sSearchTerm,
-        level: oFilters.level,
-      };
-      if (oFilters.status && oFilters.status !== FILTER_VALUES.ALL) {
-        params.IsActive = oFilters.status;
-      }
       await fetchProducts();
     } catch (err) {
       showEmsg(err?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
-      // Reset popup state and stop loader
       setStatusPopup({ open: false, productId: null, newStatus: null });
       hideLoaderWithDelay(setSubmitting);
     }
@@ -600,11 +568,6 @@ const ProductInventory = () => {
                   <th className="table-head-cell-floating text-center">
                     {t("COMMON.QUANTITY")}
                   </th>
-                  {oFilters.level === VIEW_LEVELS.VARIANT && (
-                    <th className="table-head-cell-floating text-center">
-                      {t("COMMON.STORES")}
-                    </th>
-                  )}
                   <th className="table-head-cell-floating text-center">
                     {t("COMMON.STATUS")}
                   </th>
@@ -616,11 +579,11 @@ const ProductInventory = () => {
 
               <tbody className="table-body">
                 {bLoading || bFilterLoading ? (
-                  <SkeletonLoader type={SKELETON_TYPES.PRODUCT_TABLE} rows={itemsPerPage} />
+                  <SkeletonLoader type={SKELETON_TYPES.PRODUCT_INVENTORY_TABLE} rows={itemsPerPage} />
                 ) : aProducts.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={oFilters.level === VIEW_LEVELS.VARIANT ? 6 : 4}
+                      colSpan={4}
                       className="py-8 text-center text-gray-500"
                     >
                       {t("PRODUCT_INVENTORY.NO_PRODUCTS")}
@@ -629,11 +592,7 @@ const ProductInventory = () => {
                 ) : (
                   aProducts.map((product) => (
                     <tr
-                      key={
-                        oFilters.level === VIEW_LEVELS.VARIANT
-                          ? product.ProductVariantID
-                          : product.ProductID
-                      }
+                      key={product.ProductID}
                       className="table-row"
                     >
                       {/* Product Name */}
@@ -675,31 +634,13 @@ const ProductInventory = () => {
                         </div>
                       </td>
 
-                      {/* Stores - only for variant level */}
-                      {oFilters.level === VIEW_LEVELS.VARIANT && (
-                        <td className="table-cell text-center align-middle">
-                          <div
-                            className="ellipsis-text text-xs"
-                            title={product.Stores?.map((s) => s.StoreName).join(
-                              ", ",
-                            )}
-                          >
-                            {product.Stores?.length > 0
-                              ? `${product.Stores.length} ${product.Stores.length === 1 ? t("COMMON.STORE") : t("COMMON.STORES")}`
-                              : t("COMMON.NO_STORES")}
-                          </div>
-                        </td>
-                      )}
-
                       {/* Status */}
                       <td className="table-cell text-center align-middle">
                         <Switch
                           checked={product.IsActive}
                           onChange={() =>
                             handleStatusChange(
-                              oFilters.level === VIEW_LEVELS.VARIANT
-                                ? product.ProductVariantID
-                                : product.ProductID,
+                              product.ProductID,
                               product.IsActive,
                             )
                           }
@@ -711,22 +652,10 @@ const ProductInventory = () => {
                       <td className="table-cell text-center align-middle">
                         <ActionButtons
                           id={product.ProductID}
-                          onViewVariants={
-                            oFilters.level === VIEW_LEVELS.PRODUCT
-                              ? () => handleViewVariants(product.ProductID)
-                              : () =>
-                                  handleViewStoreInventoryWithPermission(
-                                    product.ProductVariantID,
-                                  )
+                          onViewVariants={() =>
+                            handleViewVariants(product.ProductID, product.GroupByAttributeValue)
                           }
-                          variantButtonText={
-                            oFilters.level === VIEW_LEVELS.PRODUCT
-                              ? t("PRODUCT_INVENTORY.VIEW_VARIANTS")
-                              : t("PRODUCT_INVENTORY.VIEW_STORES")
-                          }
-                          disableVariantButton={
-                            oFilters.level === VIEW_LEVELS.VARIANT && !hasViewVariantStoresPermission
-                          }
+                          variantButtonText={t("PRODUCT_INVENTORY.VIEW_VARIANTS")}
                         />
                       </td>
                     </tr>
@@ -748,11 +677,7 @@ const ProductInventory = () => {
             ) : (
               aProducts.map((product) => (
                 <div
-                  key={
-                    oFilters.level === VIEW_LEVELS.VARIANT
-                      ? product.ProductVariantID
-                      : product.ProductID
-                  }
+                  key={product.ProductID}
                   className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-200"
                 >
                   <div className="relative h-[60%] min-h-[220px] bg-gray-100">
@@ -783,9 +708,7 @@ const ProductInventory = () => {
                         checked={product.IsActive}
                         onChange={() =>
                           handleStatusChange(
-                            oFilters.level === VIEW_LEVELS.VARIANT
-                              ? product.ProductVariantID
-                              : product.ProductID,
+                            product.ProductID,
                             product.IsActive,
                           )
                         }
@@ -820,36 +743,6 @@ const ProductInventory = () => {
                           {product.Quantity}
                         </span>
                       </div>
-
-                      {/* SKU - only for variant level */}
-                      {oFilters.level === VIEW_LEVELS.VARIANT && (
-                        <div
-                          className="text-xs text-gray-700 line-clamp-1"
-                          title={product.SKU}
-                        >
-                          <span className="font-medium">
-                            {t("COMMON.SKU")}:
-                          </span>{" "}
-                          {product.SKU || t("COMMON.N_A")}
-                        </div>
-                      )}
-
-                      {/* Stores - only for variant level */}
-                      {oFilters.level === VIEW_LEVELS.VARIANT && (
-                        <div
-                          className="text-xs text-gray-700 line-clamp-1"
-                          title={product.Stores?.map((s) => s.StoreName).join(
-                            ", ",
-                          )}
-                        >
-                          <span className="font-medium">
-                            {t("COMMON.STORES")}:
-                          </span>{" "}
-                          {product.Stores?.length > 0
-                            ? `${product.Stores.length} ${product.Stores.length === 1 ? t("COMMON.STORE") : t("COMMON.STORES")}`
-                            : t("COMMON.NO_STORES")}
-                        </div>
-                      )}
                     </div>
 
                     {/* Actions */}
@@ -858,22 +751,10 @@ const ProductInventory = () => {
                         id={product.ProductID}
                         onEdit={handleEdit}
                         viewLink={`/productdetails/${product.ProductID}`}
-                        onViewVariants={
-                          oFilters.level === VIEW_LEVELS.PRODUCT
-                            ? () => handleViewVariants(product.ProductID)
-                            : () =>
-                                handleViewStoreInventoryWithPermission(
-                                  product.ProductVariantID,
-                                )
+                        onViewVariants={() =>
+                          handleViewVariants(product.ProductID, product.GroupByAttributeValue)
                         }
-                        variantButtonText={
-                          oFilters.level === VIEW_LEVELS.PRODUCT
-                            ? t("PRODUCT_INVENTORY.VIEW_VARIANTS")
-                            : t("PRODUCT_INVENTORY.VIEW_STORES")
-                        }
-                        disableVariantButton={
-                          oFilters.level === VIEW_LEVELS.VARIANT && !hasViewVariantStoresPermission
-                        }
+                        variantButtonText={t("PRODUCT_INVENTORY.VIEW_VARIANTS")}
                       />
                     </div>
                   </div>
@@ -898,6 +779,7 @@ const ProductInventory = () => {
         <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"><Loader /></div>}>
           <ProductVariantsPopup
             productId={variantPopup.productId}
+            groupByAttributeValue={variantPopup.groupByAttributeValue}
             onClose={handleCloseVariantPopup}
           />
         </Suspense>

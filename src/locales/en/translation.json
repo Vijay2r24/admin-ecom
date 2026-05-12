@@ -770,6 +770,8 @@
     "AVG_MRP": "Avg. MRP",
     "INVENTORY_UPDATED": "Inventory updated successfully!",
     "STORE_INVENTORY_UPDATED": "Store inventory status updated successfully!",
+    "DISCOUNT_MAKES_PRICE_ZERO": "Discount cannot make the final price zero or negative. Value has been capped.",
+    "FINAL_PRICE_MUST_BE_POSITIVE": "Final price must be greater than zero. Please reduce the discount.",
     "INVENTORY_LOCATIONS": "Inventory Locations",
     "NO_STORE_INVENTORY": "No inventory found for this variant",
     "INVENTORY_DETAILS":"Inventory Details",
