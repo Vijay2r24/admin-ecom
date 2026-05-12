@@ -5,6 +5,7 @@ import PlanGate from "../pages/PlanGate";
 import {
   getFirstAccessibleHrefForSession,
   isTenantAdminRole,
+  isPathnameRestrictedByPlan,
 } from "../utils/planAccessUtils";
 import { permissionIdsInclude } from "../utils/permissionUtils";
 
@@ -22,26 +23,40 @@ function readPermissionAllowed(permissionCode) {
 }
 
 /**
+ * Route guard with three distinct behaviours depending on role:
+ *
+ *  ┌─────────────┬──────────────────────────┬──────────────────────────┐
+ *  │ Role        │ Plan-restricted path     │ Permission-denied path   │
+ *  ├─────────────┼──────────────────────────┼──────────────────────────┤
+ *  │ Admin       │ Show PlanGate (upgrade)  │ Admin has all perms      │
+ *  │ Other roles │ Redirect (can't upgrade) │ Redirect to first page   │
+ *  └─────────────┴──────────────────────────┴──────────────────────────┘
+ *
  * @param {{ permissionCode?: string|null, tenantAdminOnly?: boolean }} props
- * `tenantAdminOnly` — only tenant role name `admin` may open (upgrade / subscription pages).
  */
 const ProtectedRoute = ({ permissionCode, tenantAdminOnly, children }) => {
   const location = useLocation();
   const token = localStorage.getItem("token");
+  const isAdmin = isTenantAdminRole();
+
   const [hasPermission, setHasPermission] = useState(() =>
     permissionCode ? readPermissionAllowed(permissionCode) : true
   );
 
   useEffect(() => {
-    setHasPermission(permissionCode ? readPermissionAllowed(permissionCode) : true);
+    setHasPermission(
+      permissionCode ? readPermissionAllowed(permissionCode) : true
+    );
   }, [permissionCode]);
 
+  // ── 1. Not logged in ──────────────────────────────────────────────
   if (!token) {
     return <Navigate to="/" replace />;
   }
 
+  // ── 2. Tenant-admin-only pages (subscription, etc.) ───────────────
   if (tenantAdminOnly) {
-    if (!isTenantAdminRole()) {
+    if (!isAdmin) {
       const next = getFirstAccessibleHrefForSession();
       const target =
         next && next !== location.pathname ? next : "/not-authorized";
@@ -50,8 +65,11 @@ const ProtectedRoute = ({ permissionCode, tenantAdminOnly, children }) => {
     return <Layout>{children}</Layout>;
   }
 
-  if (!hasPermission) {
-    if (isTenantAdminRole()) {
+  // ── 3. Plan-based restriction ─────────────────────────────────────
+  //   Admin sees PlanGate so they can upgrade.
+  //   Non-admin is redirected silently — they cannot upgrade the plan.
+  if (isPathnameRestrictedByPlan(location.pathname)) {
+    if (isAdmin) {
       return (
         <Layout>
           <PlanGate />
@@ -61,11 +79,19 @@ const ProtectedRoute = ({ permissionCode, tenantAdminOnly, children }) => {
     const next = getFirstAccessibleHrefForSession();
     const target =
       next && next !== location.pathname ? next : "/not-authorized";
-    return (
-      <Layout>
-        <Navigate to={target} replace />
-      </Layout>
-    );
+    return <Navigate to={target} replace />;
+  }
+
+  // ── 4. Permission check (non-admin, plan allows the module) ───────
+  if (!hasPermission) {
+    if (isAdmin) {
+      // Admin role should have all permissions; if somehow missing, still show content
+      return <Layout>{children}</Layout>;
+    }
+    const next = getFirstAccessibleHrefForSession();
+    const target =
+      next && next !== location.pathname ? next : "/not-authorized";
+    return <Navigate to={target} replace />;
   }
 
   return <Layout>{children}</Layout>;

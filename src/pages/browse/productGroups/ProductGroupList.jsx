@@ -9,6 +9,7 @@ import Tooltip from "../../../components/Tooltip";
 import { useProductGroups } from "../../../context/AllDataContext";
 import { STATUS, STATUS_VALUES, PERMISSIONS, MODULES } from "../../../contants/constants";
 import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
+import { useCreateAccess } from "../../../hooks/useCreateAccess";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import {UPDATE_PRODUCT_GROUPSTATUS } from "../../../contants/apiRoutes";
 
@@ -31,6 +32,12 @@ const ProductGroupList = ({ onCreate }) => {
   const hasEditProductGroupPermission = hasPermissionId(permissionIdForEditProductGroup);
   const hasUpdateProductGroupStatusPermission = hasPermissionId(permissionIdForUpdateProductGroupStatus);
   const hasViewProductGroupDetailsPermission = hasPermissionId(permissionIdForViewProductGroupDetails);
+
+  const { canCreate: canAddProductGroup, disabledReason: addProductGroupDisabledReason } =
+    useCreateAccess(permissionIdForAddProductGroup, {
+      noPermissionMsg: t("PRODUCT_GROUPS.NO_CREATE_PERMISSION", "You do not have permission to add product groups."),
+      limitReachedMsg: t("PRODUCT_GROUPS.LIMIT_REACHED", "You have reached your product group creation limit."),
+    });
 
   const [statusPopup, setStatusPopup] = useState({
     open: false,
@@ -74,9 +81,8 @@ const ProductGroupList = ({ onCreate }) => {
   };
 
   const handleCreateProductGroup = () => {
-    // Check permission before allowing product group creation
-    if (!hasAddProductGroupPermission) {
-      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+    if (!canAddProductGroup) {
+      showEmsg(addProductGroupDisabledReason || t("COMMON.NO_PERMISSION"), STATUS.WARNING);
       return;
     }
     onCreate();
@@ -172,7 +178,9 @@ const ProductGroupList = ({ onCreate }) => {
           showFilterButton={true}
           onCreate={handleCreateProductGroup}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          disableCreate={!hasAddProductGroupPermission}
+          actionType="PRODUCT_GROUP"
+          disableCreate={!canAddProductGroup}
+          disableCreateReason={addProductGroupDisabledReason}
           additionalFilters={
             bShowFilters
               ? [

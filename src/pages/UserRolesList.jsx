@@ -25,6 +25,7 @@ import Loader from "../components/Loader";
 import SkeletonLoader from "../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
+import { useCreateAccess } from "../hooks/useCreateAccess";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchResource,
@@ -76,6 +77,14 @@ const UserRolesList = () => {
     PERMISSIONS.EDIT_ROLE
   );
   const hasEditPermission = hasPermissionId(permissionIdForEdit);
+
+  // Create access — permission + limit check
+  const addRolePermissionCode = getPermissionCode(PERMISSIONS.ROLE_MANAGEMENT, PERMISSIONS.ADD_ROLE);
+  const { canCreate: canAddRole, disabledReason: addRoleDisabledReason } =
+    useCreateAccess(addRolePermissionCode, {
+      noPermissionMsg: t("ROLES.NO_CREATE_PERMISSION", "You do not have permission to add roles."),
+      limitReachedMsg: t("ROLES.LIMIT_REACHED", "You have reached your role creation limit."),
+    });
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -295,8 +304,11 @@ const UserRolesList = () => {
         handleFilterChange={handleFilterChange}
         searchPlaceholder={t("USER_ROLES_LIST.SEARCH_PLACEHOLDER")}
         isBrowsePage={false}
-        onCreate={() => navigate("/addUserRole")}
+        onCreate={() => { if (canAddRole) navigate("/addUserRole"); }}
         createLabel={t("USER_ROLES_LIST.ADD_ROLE")}
+        disableCreate={!canAddRole}
+        disableCreateReason={addRoleDisabledReason}
+        actionType="ROLE"
       />
       {sViewMode === "table" ? (
         <div className="table-container-floating">

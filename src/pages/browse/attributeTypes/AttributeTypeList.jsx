@@ -24,6 +24,7 @@ import {
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
+import { useCreateAccess } from "../../../hooks/useCreateAccess";
 import {
   fetchResource,
   updateStatusById,
@@ -76,6 +77,12 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
   const hasUpdateAttributeTypeStatusPermission = hasPermissionId(permissionIdForUpdateAttributeTypeStatus);
   const hasViewAttributeTypeDetailsPermission = hasPermissionId(permissionIdForViewAttributeTypeDetails);
 
+  const { canCreate: canAddAttributeType, disabledReason: addAttributeTypeDisabledReason } =
+    useCreateAccess(permissionIdForAddAttributeType, {
+      noPermissionMsg: t("ATTRIBUTE_TYPES.NO_CREATE_PERMISSION", "You do not have permission to add attribute types."),
+      limitReachedMsg: t("ATTRIBUTE_TYPES.LIMIT_REACHED", "You have reached your attribute type creation limit."),
+    });
+
   // Hide body scrollbar when component mounts
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -123,9 +130,8 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
   };
 
   const handleCreateAttributeType = () => {
-    // Check permission before allowing attribute type creation
-    if (!hasAddAttributeTypePermission) {
-      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+    if (!canAddAttributeType) {
+      showEmsg(addAttributeTypeDisabledReason || t("COMMON.NO_PERMISSION"), STATUS.WARNING);
       return;
     }
     onCreate();
@@ -222,8 +228,9 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
           // --- Permission-based Create Button ---
           onCreate={handleCreateAttributeType}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          disableCreate={!hasAddAttributeTypePermission}
-          
+          disableCreate={!canAddAttributeType}
+          disableCreateReason={addAttributeTypeDisabledReason}
+          actionType="ATTRIBUTE_TYPE"
           additionalFilters={
             bShowFilter
               ? [

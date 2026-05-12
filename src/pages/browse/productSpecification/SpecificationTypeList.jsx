@@ -36,6 +36,7 @@ import {
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
+import { useCreateAccess } from "../../../hooks/useCreateAccess";
 import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
 import ActionButtons from "../../../components/ActionButtons";
 
@@ -90,6 +91,12 @@ const SpecificationTypeList = ({ setSubmitting }) => {
   const hasEditSpecificationTypePermission = hasPermissionId(permissionIdForEditSpecificationType);
   const hasUpdateSpecificationTypeStatusPermission = hasPermissionId(permissionIdForUpdateSpecificationTypeStatus);
   const hasViewSpecificationTypeDetailsPermission = hasPermissionId(permissionIdForViewSpecificationTypeDetails);
+
+  const { canCreate: canAddSpecificationType, disabledReason: addSpecificationTypeDisabledReason } =
+    useCreateAccess(permissionIdForAddSpecificationType, {
+      noPermissionMsg: t("SPECIFICATION_TYPES.NO_CREATE_PERMISSION", "You do not have permission to add specification types."),
+      limitReachedMsg: t("SPECIFICATION_TYPES.LIMIT_REACHED", "You have reached your specification type creation limit."),
+    });
 
   // Create/Edit form state
   const [editForm, setEditForm] = useState({
@@ -173,9 +180,8 @@ const SpecificationTypeList = ({ setSubmitting }) => {
 
   // Open "create" form
   const handleCreate = () => {
-    // Check permission before allowing specification type creation
-    if (!hasAddSpecificationTypePermission) {
-      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+    if (!canAddSpecificationType) {
+      showEmsg(addSpecificationTypeDisabledReason || t("COMMON.NO_PERMISSION"), STATUS.WARNING);
       return;
     }
     setEditForm({
@@ -391,7 +397,8 @@ const SpecificationTypeList = ({ setSubmitting }) => {
           // --- Permission-based Create Button ---
           onCreate={handleCreate}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          disableCreate={!hasAddSpecificationTypePermission}
+          disableCreate={!canAddSpecificationType}
+          disableCreateReason={addSpecificationTypeDisabledReason}
           
           additionalFilters={
             bShowFilters

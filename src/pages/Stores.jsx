@@ -19,6 +19,7 @@ import Loader from "../components/Loader";
 import SkeletonLoader from "../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
+import { useCreateAccess } from "../hooks/useCreateAccess";
 import { fetchResource, updateStatusById } from "../store/slices/allDataSlice";
 import { exportStoreReport } from "../store/slices/exportSlice";
 
@@ -76,6 +77,14 @@ const Stores = () => {
     PERMISSIONS.GENERATE_STORE_REPORT
   );
   const hasExportPermission = hasPermissionId(permissionIdForExport);
+
+  // Create access — permission + limit check
+  const addStorePermissionCode = getPermissionCode(MODULES.STORE, PERMISSIONS.ADD_STORE);
+  const { canCreate: canAddStore, disabledReason: addStoreDisabledReason } =
+    useCreateAccess(addStorePermissionCode, {
+      noPermissionMsg: t("STORES.NO_CREATE_PERMISSION", "You do not have permission to add stores."),
+      limitReachedMsg: t("STORES.LIMIT_REACHED", "You have reached your store creation limit. Please upgrade your plan."),
+    });
 
   const statusOptions = STATUS_OPTIONS.map((opt) => ({
     value: opt.value,
@@ -398,8 +407,11 @@ const Stores = () => {
         onExport={handleExportStores}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
         exportDisabled={!hasExportPermission}
-        onCreate={() => navigate("/add-store")}
+        onCreate={() => { if (canAddStore) navigate("/add-store"); }}
         createLabel={t("STORES.ADD_STORE")}
+        actionType="STORE"
+        disableCreate={!canAddStore}
+        disableCreateReason={addStoreDisabledReason}
       />
 
       {viewMode === "table" ? (

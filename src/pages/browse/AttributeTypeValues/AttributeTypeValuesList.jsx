@@ -25,6 +25,7 @@ import {
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
+import { useCreateAccess } from "../../../hooks/useCreateAccess";
 import {
   fetchResource,
   updateStatusById,
@@ -81,6 +82,12 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
   const hasEditAttributePermission = hasPermissionId(permissionIdForEditAttribute);
   const hasUpdateAttributeStatusPermission = hasPermissionId(permissionIdForUpdateAttributeStatus);
   const hasViewAttributeDetailsPermission = hasPermissionId(permissionIdForViewAttributeDetails);
+
+  const { canCreate: canAddAttribute, disabledReason: addAttributeDisabledReason } =
+    useCreateAccess(permissionIdForAddAttribute, {
+      noPermissionMsg: t("ATTRIBUTES.NO_CREATE_PERMISSION", "You do not have permission to add attributes."),
+      limitReachedMsg: t("ATTRIBUTES.LIMIT_REACHED", "You have reached your attribute creation limit."),
+    });
 
   const iTotalPages = Math.ceil(iTotalItems / iItemsPerPage);
 
@@ -167,9 +174,8 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
   };
 
   const handleCreateAttribute = () => {
-    // Check permission before allowing attribute creation
-    if (!hasAddAttributePermission) {
-      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+    if (!canAddAttribute) {
+      showEmsg(addAttributeDisabledReason || t("COMMON.NO_PERMISSION"), STATUS.WARNING);
       return;
     }
     onCreate();
@@ -216,11 +222,12 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
             showViewToggle={false}
             isBrowsePage={true}
             showFilterButton={true}
-            
+            actionType="ATTRIBUTE"
             // --- Permission-based Create Button ---
             onCreate={handleCreateAttribute}
             createLabel={t("PRODUCT_SETUP.CREATE")}
-            disableCreate={!hasAddAttributePermission}
+            disableCreate={!canAddAttribute}
+            disableCreateReason={addAttributeDisabledReason}
             
             additionalFilters={
               bShowFilter

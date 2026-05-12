@@ -28,6 +28,7 @@ import {
   getMenuPermissionCodeForHref,
   isHrefAllowedBySubscriptionPlan,
   isTenantAdminRole,
+  PLAN_FEATURE_TOKEN_BY_HREF,
 } from '../utils/planAccessUtils';
 import { WINDOW_CUSTOM_EVENTS } from '../contants/constants';
 
@@ -186,31 +187,47 @@ const allowedPermissionCodes = useMemo(() => {
 
   const filteredNavigation = useMemo(() => {
     let planFeatures = [];
+    let hasFeatureGating = false;
     try {
       const sub = JSON.parse(localStorage.getItem("subscription"));
       planFeatures = sub?.features || [];
+      hasFeatureGating = Boolean(sub?.hasFeatureGating);
     } catch {
       planFeatures = [];
     }
 
-    const ignorePlanForAdmin = isTenantAdminRole();
+    const isAdmin = isTenantAdminRole();
+
+    // Plan-allowed check that respects hasFeatureGating (no empty-array bypass)
+    const isPlanAllowed = (href) => {
+      if (href === "/subscription") return true; // gated separately
+      const token = PLAN_FEATURE_TOKEN_BY_HREF[href];
+      if (!token) return true; // no plan token → unrestricted
+      if (hasFeatureGating) {
+        const want = token.toLowerCase().trim();
+        return planFeatures.some((f) => String(f).toLowerCase().trim() === want);
+      }
+      return isHrefAllowedBySubscriptionPlan(href, planFeatures, false);
+    };
+
     const isAllowed = (href) => {
-      if (href === "/subscription" && !isTenantAdminRole()) {
+      // Subscription page: admin only
+      if (href === "/subscription") {
+        return isAdmin;
+      }
+
+      // Admin: show ALL modules in sidebar (clicking plan-restricted ones shows PlanGate via ProtectedRoute)
+      // Non-admin: hide modules not in plan — they can't upgrade
+      if (!isAdmin && !isPlanAllowed(href)) {
         return false;
       }
-      if (
-        !isHrefAllowedBySubscriptionPlan(
-          href,
-          planFeatures,
-          ignorePlanForAdmin
-        )
-      ) {
-        return false;
-      }
-      /* Tenant admin: same plan bypass as above; show all modules/submodules (JWT may omit PermissionIDs). */
-      if (isTenantAdminRole()) {
+
+      // Admin bypasses permission checks
+      if (isAdmin) {
         return true;
       }
+
+      // Non-admin: also check role-based permissions
       const code = getMenuPermissionCodeForHref(href);
       if (!code) return true;
       return permissionIdsInclude(allowedPermissionCodes, code);

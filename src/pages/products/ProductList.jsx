@@ -29,6 +29,9 @@ import { exportProductReport } from "../../store/slices/exportSlice";
 import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import SkeletonLoader from "../../components/SkeletonLoader";
+import { getPermissionCode } from "../../utils/permissionUtils";
+import { MODULES, PERMISSIONS } from "../../contants/constants.jsx";
+import { useCreateAccess } from "../../hooks/useCreateAccess";
 
 const getStatusBadgeClass = (status) => {
   if (status === "active") return "status-active";
@@ -88,6 +91,14 @@ const ProductList = () => {
   const categories = useSelector((state) => state.allData.resources.categories?.data || []);
   const brands = useSelector((state) => state.allData.resources.brands?.data || []);
   const stores = useSelector((state) => state.allData.resources.stores?.data || []);
+
+  // Create access — permission + limit check
+  const addProductPermissionCode = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.CREATE_PRODUCT);
+  const { canCreate: canAddProduct, disabledReason: addProductDisabledReason } =
+    useCreateAccess(addProductPermissionCode, {
+      noPermissionMsg: "You do not have permission to create products.",
+      limitReachedMsg: "You have reached your product creation limit. Please upgrade your plan.",
+    });
 
   useEffect(() => {
     if (bShowFilterDropdown) {
@@ -323,6 +334,7 @@ const ProductList = () => {
         onClearFilters={handleClearFilters}
         onCreate={() => navigate("/Addproduct")}
         onAddVariants={() => navigate("/AddVariants")}
+        actionType="PRODUCT"
         onExport={handleExportProducts}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />

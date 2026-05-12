@@ -17,6 +17,7 @@ import Loader from "../components/Loader";
 import SkeletonLoader from "../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
+import { useCreateAccess } from "../hooks/useCreateAccess";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchResource, updateStatusById } from "../store/slices/allDataSlice";
@@ -84,6 +85,14 @@ const Users = () => {
     PERMISSIONS.EDIT_USER
   );
   const hasEditPermission = hasPermissionId(permissionIdForEdit);
+
+  // Create access — permission + limit check
+  const addUserPermissionCode = getPermissionCode(MODULES.USER, PERMISSIONS.ADD_USER);
+  const { canCreate: canAddUser, disabledReason: addUserDisabledReason } =
+    useCreateAccess(addUserPermissionCode, {
+      noPermissionMsg: t("USERS.NO_CREATE_PERMISSION", "You do not have permission to add users."),
+      limitReachedMsg: t("USERS.LIMIT_REACHED", "You have reached your user creation limit. Please upgrade your plan."),
+    });
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
@@ -443,6 +452,7 @@ const Users = () => {
         isBrowsePage={false}
         onCreate={() => navigate("/add-user")}
         createLabel={t("USERS.ADD_USER")}
+        actionType="USER"
       />
 
       {/* table view */}
