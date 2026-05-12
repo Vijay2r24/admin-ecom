@@ -156,3 +156,4 @@ export const UPDATE_PRODUCT_VARIANT_STATUS='/updateProductVariantStatus';
 export const UPDATE_STORE_INVENTORY_STATUS='/updateStoreInventoryStatus';
 export const GET_PRODUCT_VARIANT='/getProductVariantStores';
 export const GET_INVENTORY_VARIANTS='/getInventoryVariants';
+export const GET_SUBSCRIPTION_PLAN_FEATURES='/getSubscriptionPlanFeatures';

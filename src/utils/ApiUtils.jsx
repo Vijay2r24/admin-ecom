@@ -12,6 +12,7 @@ import {
 import {
   isTenantAdminRole,
   markSubscriptionReadOnlyMode,
+  markUserCreateLimitBlocked,
 } from "./planAccessUtils";
 import i18n from "../i18n.js";
 
@@ -276,6 +277,8 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
             isCustomCode(customCode, API_CUSTOM_CODES.PLAN_OR_SUBSCRIPTION_LIMIT) ||
             isLikelyPlanOrSubscriptionLimitMessage(msg)
           ) {
+            // Mark the create limit as blocked so useCreateAccess disables buttons
+            markUserCreateLimitBlocked();
             if (!isLoginPage()) {
               const hint = i18n.t("SUBSCRIPTION.TOAST_PLAN_LIMIT_HEADING");
               const body = (msg || "").trim();
@@ -370,6 +373,8 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
         isCustomCode(customCode, API_CUSTOM_CODES.PLAN_OR_SUBSCRIPTION_LIMIT) ||
         isLikelyPlanOrSubscriptionLimitMessage(msg)
       ) {
+        // Mark the create limit as blocked so useCreateAccess disables buttons
+        markUserCreateLimitBlocked();
         if (!isLoginPage()) {
           const hint = i18n.t("SUBSCRIPTION.TOAST_PLAN_LIMIT_HEADING");
           const body = (msg || "").trim();

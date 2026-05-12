@@ -36,6 +36,8 @@ export const WINDOW_CUSTOM_EVENTS = {
   SUBSCRIPTION_STORAGE_CHANGED: "subscriptionStorageChanged",
   /** Emitted when `PermissionIDs` / `AllPermissions` are updated so Sidebar re-filters menus */
   PERMISSIONS_STORAGE_CHANGED: "permissionsStorageChanged",
+  /** Emitted when the user create limit blocked flag changes (set/cleared) */
+  USER_CREATE_LIMIT_CHANGED: "userCreateLimitChanged",
 };
 
 /** Backend `customCode` values used in ApiUtils response handling */

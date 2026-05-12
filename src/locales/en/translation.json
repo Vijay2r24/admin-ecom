@@ -1423,6 +1423,19 @@
     "FILTERED_STORES":"Filtered Store",
     "INVENTORY_LOCATIONS":"inventory locations"
   },
+  "CREATE_ACTION": {
+    "NO_PERMISSION": "You do not have permission to create this item.",
+    "NO_PERMISSION_TOOLTIP": "Contact your administrator to get create permissions.",
+    "LIMIT_EXCEEDED": "You have reached your plan limit. Please upgrade to continue.",
+    "LIMIT_EXCEEDED_TOOLTIP": "Upgrade your plan to create more items.",
+    "PLAN_NOT_AVAILABLE": "This feature is not available in your current plan.",
+    "PLAN_NOT_AVAILABLE_TOOLTIP": "Upgrade your plan to access this feature.",
+    "UNKNOWN_ERROR": "Unable to validate create permissions. Please try again.",
+    "UNKNOWN_ERROR_TOOLTIP": "Please refresh the page and try again.",
+    "CREATING": "Creating...",
+    "CREATE_SUCCESS": "Item created successfully.",
+    "CREATE_ERROR": "Failed to create item. Please try again."
+  },
   "PRODUCT_INVENTORY": {
     "TITLE": "Product Inventory",
     "SEARCH_PLACEHOLDER": "Search products...",

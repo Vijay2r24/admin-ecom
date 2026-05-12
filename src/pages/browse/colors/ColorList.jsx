@@ -21,6 +21,7 @@ import {
   MODULES,
 } from "../../../contants/constants";
 import { getPermissionCode,hasPermissionId } from "../../../utils/permissionUtils";
+import { useCreateAccess } from "../../../hooks/useCreateAccess";
 
 const ColorList = ({ onCreate, onBack, setSubmitting }) => {
   const [sSearchQuery, setSearchQuery] = useState("");
@@ -53,6 +54,12 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
   const hasEditColourPermission = hasPermissionId(permissionIdForEditColour);
   const hasUpdateColourStatusPermission = hasPermissionId(permissionIdForUpdateColourStatus);
   const hasViewColourDetailsPermission = hasPermissionId(permissionIdForViewColourDetails);
+
+  const { canCreate: canAddColour, disabledReason: addColourDisabledReason } =
+    useCreateAccess(permissionIdForAddColour, {
+      noPermissionMsg: t("COLOURS.NO_CREATE_PERMISSION", "You do not have permission to add colours."),
+      limitReachedMsg: t("COLOURS.LIMIT_REACHED", "You have reached your colour creation limit."),
+    });
   
 
   // Hide body scrollbar when component mounts
@@ -117,9 +124,8 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
   };
 
   const handleCreateColor = () => {
-    // Check permission before allowing color creation
-    if (!hasAddColourPermission) {
-      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+    if (!canAddColour) {
+      showEmsg(addColourDisabledReason || t("COMMON.NO_PERMISSION"), STATUS.WARNING);
       return;
     }
     onCreate();
@@ -147,8 +153,9 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
           showFilterButton={false}
           onCreate={handleCreateColor}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          disableCreate={!hasAddColourPermission}
-          
+          actionType="COLOR"
+          disableCreate={!canAddColour}
+          disableCreateReason={addColourDisabledReason}
           handleFilterChange={bShowFilters ? handleFilterChange : undefined}
         />
       </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import CreateButton from './CreateButton';
 
 const FloatingFooter = ({ 
   onCancel, 
@@ -14,7 +15,9 @@ const FloatingFooter = ({
   showSubmit = true,
   customButtons,
   className = "",
-  align = "end" // "start", "center", "end", "between"
+  align = "end", // "start", "center", "end", "between"
+  actionType = null, // Add actionType for permission validation
+  onValidationError = null // Callback for validation errors
 }) => {
   const { t } = useTranslation();
 
@@ -55,14 +58,28 @@ const FloatingFooter = ({
           
           {/* Submit button */}
           {showSubmit && (
-            <button
-              className="btn-primary truncate w-full sm:w-auto px-3 py-1.5 text-sm hover:bg-hover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              type="button"
-              disabled={isSubmitting || submitDisabled}
-              onClick={onSubmit}
-            >
-              {defaultSubmitLabel}
-            </button>
+            actionType ? (
+              <CreateButton
+                actionType={actionType}
+                onClick={onSubmit}
+                loading={isSubmitting}
+                disabled={submitDisabled}
+                className="truncate w-full sm:w-auto px-3 py-1.5 text-sm"
+                onError={onValidationError}
+                refreshAfterCreate={true}
+              >
+                {defaultSubmitLabel}
+              </CreateButton>
+            ) : (
+              <button
+                className="btn-primary truncate w-full sm:w-auto px-3 py-1.5 text-sm hover:bg-hover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                type="button"
+                disabled={isSubmitting || submitDisabled}
+                onClick={onSubmit}
+              >
+                {defaultSubmitLabel}
+              </button>
+            )
           )}
         </div>
       </div>

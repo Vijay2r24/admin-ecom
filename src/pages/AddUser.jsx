@@ -2062,6 +2062,10 @@ const AddUser = () => {
           onSubmit={handleSubmit}
           isSubmitting={bSubmitting}
           isEditMode={!!id}
+          actionType="USER"
+          onValidationError={(error) => {
+            console.error('User creation validation error:', error);
+          }}
         />
       )}
     </div>

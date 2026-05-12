@@ -3,12 +3,13 @@ import { Plus, MoreVertical, Image as ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { apiGet,apiPut, apiPatch, apiDelete } from "../utils/ApiUtils";
+import CreateButton from "../components/CreateButton";
 import {
   GET_ALL_BANNERS,
   UPDATE_BANNER_STATUS,
   DELETE_BANNER,
 } from "../contants/apiRoutes";
-import { SKELETON_TYPES } from "../contants/constants";
+import { SKELETON_TYPES, MODULES, PERMISSIONS } from "../contants/constants";
 import { showEmsg } from "../utils/ShowEmsg";
 import { useTitle } from "../context/TitleContext";
 import {
@@ -16,6 +17,8 @@ import {
   STATUS,
   STATUS_VALUE_NAMES,
 } from "../contants/constants";
+import { getPermissionCode } from "../utils/permissionUtils";
+import { useCreateAccess } from "../hooks/useCreateAccess";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { ToastContainer, toast } from "react-toastify";
 import noImage from "../../assets/images/missing-pictur.jpg";
@@ -43,6 +46,14 @@ const Banners = () => {
     id: null,
     currentStatus: null,
   });
+
+  // Create access — permission + limit check
+  const createBannerPermissionCode = getPermissionCode(MODULES.BANNER, PERMISSIONS.CREATE_BANNER);
+  const { canCreate: canCreateBanner, disabledReason: createBannerDisabledReason, showBlockedToast: showBannerBlockedToast } =
+    useCreateAccess(createBannerPermissionCode, {
+      noPermissionMsg: t("BANNERS.NO_CREATE_PERMISSION", "You do not have permission to create banners."),
+      limitReachedMsg: t("BANNERS.LIMIT_REACHED", "You have reached your banner creation limit. Please upgrade your plan."),
+    });
 
   useEffect(() => {
     setTitle(t("BANNER_FORM.TITLE"));
@@ -207,14 +218,14 @@ const Banners = () => {
           {t("BANNER_FORM.VIEW_ACTIVE_BANNERS")}
         </button>
 
-        <button
-          type="button"
-          className="inline-flex items-center justify-center mr-4 px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold text-white bg-custom-bg hover:bg-bg-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-bg transition gap-1.5"
+        <CreateButton
+          actionType="BANNER"
           onClick={() => navigate("/banners-create")}
+          className="inline-flex items-center justify-center mr-4 px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-bg text-white bg-custom-bg hover:bg-bg-hover"
         >
           <Plus className="h-3.5 w-3.5" />
-          {t("BANNER_FORM.CREATE_BANNER")}
-        </button>
+          {t("BANNERS.ADD_BANNER")}
+        </CreateButton>
       </div>
       <div>
         {sError && (

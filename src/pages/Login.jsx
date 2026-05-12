@@ -25,7 +25,8 @@ import {
     VALIDATE_OTP,
     GET_ALL_PERMISSIONS,
     GET_USER_BY_ID,
-    RESET_USER_PASSWORD, // Add this import
+    RESET_USER_PASSWORD,
+    GET_SUBSCRIPTION_PLAN_FEATURES,
 } from "../contants/apiRoutes";
 
 import { showEmsg } from "../utils/ShowEmsg";
@@ -55,6 +56,7 @@ import {
     clearSubscriptionReadOnlyMode,
     getFirstAccessibleHrefForSession,
     isPlanExpiredFromLoginPayload,
+    storePlanFeaturesFromCatalog,
 } from "../utils/planAccessUtils";
 
 // Add these constants
@@ -345,6 +347,24 @@ const Login = () => {
                     }
                 } catch (error) {
                     console.error("Failed to fetch user details:", error);
+                }
+
+                // Fetch plan catalog and populate subscription features when
+                // login response doesn't include AllowedFeatures.
+                try {
+                    const sub = JSON.parse(localStorage.getItem("subscription") || "{}");
+                    if (!sub.hasFeatureGating) {
+                        const planName = sub.planName || data.PlanName || "Basic";
+                        const catalogRes = await apiGet(
+                            GET_SUBSCRIPTION_PLAN_FEATURES,
+                            {},
+                            data.token
+                        );
+                        const catalogData = catalogRes?.data?.data ?? catalogRes?.data;
+                        storePlanFeaturesFromCatalog(planName, catalogData);
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch plan features:", e);
                 }
 
                 setTimeout(() => {

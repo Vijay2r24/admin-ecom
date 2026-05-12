@@ -29,6 +29,7 @@ import {
 } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
+import { useCreateAccess } from "../../../hooks/useCreateAccess";
 
 const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
   const { t } = useTranslation();
@@ -73,6 +74,12 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
   const hasAddCategoryPermission = hasPermissionId(permissionIdForAddCategory);
   const hasEditCategoryPermission = hasPermissionId(permissionIdForEditCategory);
   const hasUpdateCategoryStatusPermission = hasPermissionId(permissionIdForUpdateCategoryStatus);
+
+  const { canCreate: canAddCategory, disabledReason: addCategoryDisabledReason } =
+    useCreateAccess(permissionIdForAddCategory, {
+      noPermissionMsg: t("CATEGORIES.NO_CREATE_PERMISSION", "You do not have permission to add categories."),
+      limitReachedMsg: t("CATEGORIES.LIMIT_REACHED", "You have reached your category creation limit."),
+    });
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
@@ -123,9 +130,8 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
   };
 
   const handleCreateCategory = () => {
-    // Check permission before allowing category creation
-    if (!hasAddCategoryPermission) {
-      showEmsg(t("COMMON.NO_PERMISSION"), STATUS.ERROR);
+    if (!canAddCategory) {
+      showEmsg(addCategoryDisabledReason || t("COMMON.NO_PERMISSION"), STATUS.WARNING);
       return;
     }
     onCreate();
@@ -243,7 +249,9 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
           // --- Permission-based Create Button ---
           onCreate={handleCreateCategory}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          disableCreate={!hasAddCategoryPermission}
+          disableCreate={!canAddCategory}
+          disableCreateReason={addCategoryDisabledReason}
+          actionType="CATEGORY"
 
           additionalFilters={
             bShowFilters
