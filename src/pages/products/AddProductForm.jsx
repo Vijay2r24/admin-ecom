@@ -1571,7 +1571,7 @@ const AddProductForm = () => {
           </div>
 
           {/* Specifications */}
-          <div>
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-visible relative">
             <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center">
                 <Tag className="h-6 w-6 mr-3 text-custom-bg" />
@@ -1688,7 +1688,7 @@ const AddProductForm = () => {
           </div>
 
           {/* Attributes section */}
-          <div className="mt-8 pt-6">
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-visible relative">
             <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center">
                 <Layers className="h-6 w-6 mr-3 text-custom-bg" />
