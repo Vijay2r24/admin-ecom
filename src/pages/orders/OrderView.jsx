@@ -29,8 +29,9 @@ import TextAreaWithIcon from "../../components/TextAreaWithIcon";
 import StatusBadge from "./StatusBadge";
 import { showEmsg } from "../../utils/ShowEmsg";
 import { useTitle } from "../../context/TitleContext";
-import { STATUS, MODULES, PERMISSIONS, TOOLTIP_MESSAGES,DATA_TYPES } from "../../contants/constants";
+import { STATUS, MODULES, PERMISSIONS, TOOLTIP_MESSAGES, DATA_TYPES, SKELETON_TYPES } from "../../contants/constants";
 import Loader from "../../components/Loader";
+import SkeletonLoader from "../../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../../utils/loaderUtils";
 import BackButton from "../../components/BackButton";
 import { fetchResource } from "../../store/slices/allDataSlice";
@@ -173,7 +174,7 @@ const OrderView = () => {
     );
 
     setEditedStatus(item.status || "");
-    setEditedStatusId(currentStatus?.OrderStatusID || currentStatus?.StatusID || null);
+    setEditedStatusId(null);
     setEditedRemarks("");
     setShowEditDialog(true);
   };
@@ -395,12 +396,13 @@ const OrderView = () => {
         (status) => {
           const statusId = status.OrderStatusID || status.StatusID;
           const statusName = status.OrderStatus || status.StatusName;
-          const sortOrder = status.SortOrder || 0;
-          
+          const sortOrder = status.SortOrder ?? 0;
+
           return (
             status &&
             statusId &&
             statusName &&
+            typeof sortOrder === "number" &&
             sortOrder > currentSortOrder
           );
         }
@@ -409,8 +411,9 @@ const OrderView = () => {
         value: status.OrderStatusID || status.StatusID,
         label: status.OrderStatus || status.StatusName,
         color: status.Colour?.HexCode || status.Color?.HexCode || "#000000",
-      }));
-      
+      }))
+      .filter((opt) => opt.value && opt.label);
+
     return nextStatuses;
   }, [oEditingItem, orderStatusArray]);
 
@@ -418,10 +421,8 @@ const OrderView = () => {
 
   if (bLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-caption text-lg">
-          {t("VIEW_ORDER.LOADING_ORDER_DETAILS")}
-        </div>
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 py-4">
+        <SkeletonLoader type={SKELETON_TYPES.ORDER_VIEW} rows={3} />
       </div>
     );
   }
