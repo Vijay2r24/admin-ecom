@@ -31,6 +31,7 @@ const Payments = () => {
   const [payments, setPayments] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
   const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
 
   const [sSearchTerm, setSearchTerm] = useState("");
@@ -46,7 +47,7 @@ const Payments = () => {
 
   const [oFilters, setFilters] = useState(defaultFilters);
   const [bSubmitting, setSubmitting] = useState(false);
-  const [bFilterLoading, setFilterLoading] = useState(true);
+  const [bFilterLoading, setFilterLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
 
@@ -308,6 +309,7 @@ const Payments = () => {
 
   const fetchPaymentsData = async () => {
     try {
+      setPaymentsLoading(true);
       const token = localStorage.getItem("token");
 
       // Format dates for API
@@ -341,6 +343,8 @@ const Payments = () => {
         setTotalPages(response.data.pagination?.totalPages || 1);
       }
     } catch (err) {
+    } finally {
+      setPaymentsLoading(false);
     }
   };
 
@@ -463,7 +467,7 @@ const Payments = () => {
                 </tr>
               </thead>
               <tbody className="table-body">
-                {bFilterLoading ? (
+                {bFilterLoading || paymentsLoading ? (
                   <SkeletonLoader type={SKELETON_TYPES.PAYMENT_TABLE} rows={6} />
                 ) : payments.length === 0 ? (
                   <tr>
@@ -568,15 +572,17 @@ const Payments = () => {
                 : 'calc(100vh - 180px)'
             }}
           >
-          {bFilterLoading ? (
-            <SkeletonLoader type={SKELETON_TYPES.PAYMENT_GRID} rows={8} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 auto-rows-min">
+          {bFilterLoading || paymentsLoading ? (
+            <div className="col-span-full flex justify-center py-8">
+              <Loader size="medium" />
+            </div>
           ) : payments.length === 0 ? (
             <div className="col-span-full text-center py-8 text-gray-500">
               {t("PAYMENTS.NO_PAYMENTS_FOUND")}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 auto-rows-min">
-            {payments.map((payment) => (
+            payments.map((payment) => (
               <div
                 key={payment.PaymentID}
                 className="bg-white rounded-xl shadow-md border border-gray-200 p-4 hover:shadow-lg transition-all duration-200 min-h-[200px] flex flex-col"
@@ -652,9 +658,8 @@ const Payments = () => {
                 </div>
               </div>
             ))
-            }
-            </div>
           )}
+            </div>
           </div>
         </div>
       )}
@@ -669,7 +674,7 @@ const Payments = () => {
       )}
 
       <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-        {bFilterLoading ? (
+        {bFilterLoading || paymentsLoading ? (
           <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
         ) : (
           totalPages > 1 && (

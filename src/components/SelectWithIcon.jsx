@@ -56,8 +56,14 @@ const SelectWithIcon = forwardRef(
         const selectedOption = options.find(option => String(option.value) === String(value));
         if (selectedOption) {
           return [selectedOption, ...baseFiltered];
+        } else if (value) {
+          // If the selected option is not in the options array at all (due to API filtering),
+          // create a fallback option to ensure it remains visible
+          return [{
+            value: value,
+            label: selectedOptionLabels[0] || value,
+          }, ...baseFiltered];
         }
-        // Do NOT create a fallback option for missing values — just return the filtered list
       }
       
       return baseFiltered;
