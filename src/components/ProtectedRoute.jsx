@@ -1,13 +1,23 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../layout/Layout";
 import { Navigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PlanGate from "../pages/PlanGate";
 import {
+  getEffectivePlanHref,
   getFirstAccessibleHrefForSession,
   isTenantAdminRole,
   isPathnameRestrictedByPlan,
 } from "../utils/planAccessUtils";
 import { permissionIdsInclude } from "../utils/permissionUtils";
+import {
+  hasAnyProductSetupViewPermission,
+  isProductSetupPath,
+} from "../utils/productSetupPermissionUtils";
+import {
+  APP_ROUTES,
+  PLAN_GATE_SECTION_I18N_BY_ROUTE,
+} from "../contants/constants";
 
 function readPermissionAllowed(permissionCode) {
   if (!permissionCode) {
@@ -36,6 +46,7 @@ function readPermissionAllowed(permissionCode) {
  */
 const ProtectedRoute = ({ permissionCode, tenantAdminOnly, children }) => {
   const location = useLocation();
+  const { t } = useTranslation();
   const token = localStorage.getItem("token");
   const isAdmin = isTenantAdminRole();
 
@@ -59,30 +70,50 @@ const ProtectedRoute = ({ permissionCode, tenantAdminOnly, children }) => {
     if (!isAdmin) {
       const next = getFirstAccessibleHrefForSession();
       const target =
-        next && next !== location.pathname ? next : "/not-authorized";
+        next && next !== location.pathname
+          ? next
+          : APP_ROUTES.NOT_AUTHORIZED;
       return <Navigate to={target} replace />;
     }
     return <Layout>{children}</Layout>;
   }
 
-  // ── 3. Plan-based restriction ─────────────────────────────────────
+  // ── 3. Product Setup — requires at least one view permission (all roles) ──
+  if (isProductSetupPath(location.pathname)) {
+    if (!hasAnyProductSetupViewPermission()) {
+      const next = getFirstAccessibleHrefForSession();
+      const target =
+        next && next !== location.pathname
+          ? next
+          : APP_ROUTES.NOT_AUTHORIZED;
+      return <Navigate to={target} replace />;
+    }
+  }
+
+  // ── 4. Plan-based restriction ─────────────────────────────────────
   //   Admin sees PlanGate so they can upgrade.
   //   Non-admin is redirected silently — they cannot upgrade the plan.
   if (isPathnameRestrictedByPlan(location.pathname)) {
     if (isAdmin) {
+      const effectiveHref = getEffectivePlanHref(location.pathname);
+      const sectionKey =
+        effectiveHref && PLAN_GATE_SECTION_I18N_BY_ROUTE[effectiveHref];
+      const sectionTitle = sectionKey ? t(sectionKey) : "";
       return (
         <Layout>
-          <PlanGate />
+          <PlanGate sectionTitle={sectionTitle} />
         </Layout>
       );
     }
     const next = getFirstAccessibleHrefForSession();
     const target =
-      next && next !== location.pathname ? next : "/not-authorized";
+      next && next !== location.pathname
+        ? next
+        : APP_ROUTES.NOT_AUTHORIZED;
     return <Navigate to={target} replace />;
   }
 
-  // ── 4. Permission check (non-admin, plan allows the module) ───────
+  // ── 5. Permission check (non-admin, plan allows the module) ───────
   if (!hasPermission) {
     if (isAdmin) {
       // Admin role should have all permissions; if somehow missing, still show content
@@ -90,7 +121,9 @@ const ProtectedRoute = ({ permissionCode, tenantAdminOnly, children }) => {
     }
     const next = getFirstAccessibleHrefForSession();
     const target =
-      next && next !== location.pathname ? next : "/not-authorized";
+      next && next !== location.pathname
+        ? next
+        : APP_ROUTES.NOT_AUTHORIZED;
     return <Navigate to={target} replace />;
   }
 

@@ -67,6 +67,118 @@ export const PRODUCT_DETAILS_TAB = {
   SPECS: "specs",
 };
 
+/** Application route paths (keep in sync with React Router `Route` paths). */
+export const APP_ROUTES = {
+  HOME: "/",
+  DASHBOARD: "/dashboard",
+  ORDERS: "/orders",
+  BROWSE: "/browse",
+  PRODUCT_LIST: "/productList",
+  INVENTORY_LIST: "/InventoryList",
+  STORES: "/stores",
+  USERS: "/users",
+  USER_ROLES: "/userRoles",
+  BANNERS: "/banners",
+  NOTIFICATIONS: "/notifications",
+  BULK_IMPORT: "/bulk-import",
+  BULK_IMAGES: "/bulk-images",
+  PAYMENTS: "/payments",
+  THEME_SETTINGS: "/theme-settings",
+  SUBSCRIPTION: "/subscription",
+  NOT_AUTHORIZED: "/not-authorized",
+  UPGRADE_PLAN: "/upgrade-plan",
+};
+
+/** Product Setup (`/browse`) tab keys — keep in sync with plan + permission maps. */
+export const PRODUCT_SETUP_TAB = {
+  BRANDS: "brands",
+  CATEGORIES: "categories",
+  ATTRIBUTE_TYPES: "attributeTypes",
+  COLORS: "colors",
+  ATTRIBUTES: "attributes",
+  SPECIFICATION_TYPES: "specificationTypes",
+};
+
+/** i18n keys for Product Setup tabs (titles + plan-gate section labels). */
+export const PRODUCT_SETUP_TAB_I18N = {
+  [PRODUCT_SETUP_TAB.BRANDS]: {
+    title: "PRODUCT_SETUP.TABS.BRANDS",
+    planGateSection: "PLAN_GATE.SECTIONS.BRANDS",
+  },
+  [PRODUCT_SETUP_TAB.CATEGORIES]: {
+    title: "PRODUCT_SETUP.TABS.CATEGORIES",
+    planGateSection: "PLAN_GATE.SECTIONS.CATEGORIES",
+  },
+  [PRODUCT_SETUP_TAB.ATTRIBUTE_TYPES]: {
+    title: "PRODUCT_SETUP.TABS.ATTRIBUTE_TYPES",
+    planGateSection: "PLAN_GATE.SECTIONS.ATTRIBUTE_TYPES",
+  },
+  [PRODUCT_SETUP_TAB.COLORS]: {
+    title: "PRODUCT_SETUP.TABS.COLORS",
+    planGateSection: "PLAN_GATE.SECTIONS.COLORS",
+  },
+  [PRODUCT_SETUP_TAB.ATTRIBUTES]: {
+    title: "PRODUCT_SETUP.TABS.ATTRIBUTES",
+    planGateSection: "PLAN_GATE.SECTIONS.ATTRIBUTES",
+  },
+  [PRODUCT_SETUP_TAB.SPECIFICATION_TYPES]: {
+    title: "PRODUCT_SETUP.TABS.SPECIFICATION_TYPE",
+    planGateSection: "PLAN_GATE.SECTIONS.SPECIFICATION_TYPE",
+  },
+};
+
+/** `location.state` flags when returning to Product Setup from an edit screen. */
+export const BROWSE_NAV_STATE = {
+  FROM_CATEGORY_EDIT: "fromCategoryEdit",
+  FROM_ATTRIBUTE_TYPE_EDIT: "fromAttributeTypeEdit",
+  FROM_BRAND_EDIT: "fromBrandEdit",
+  FROM_COLOR_EDIT: "fromColorEdit",
+  FROM_ATTRIBUTE_EDIT: "fromAttributeEdit",
+  FROM_PRODUCT_GROUP_EDIT: "fromProductGroupEdit",
+};
+
+/** Subscription plan feature tokens (API `AllowedFeatures` / catalog). */
+export const PLAN_FEATURE_TOKEN = {
+  DASHBOARD: "dashboard",
+  ORDERS: "orders",
+  PRODUCTS: "products",
+  INVENTORY: "inventory",
+  STORES: "stores",
+  USERS: "users",
+  ROLES: "roles",
+  BANNERS: "banners",
+  NOTIFICATIONS: "notifications",
+  VIEW_NOTIFICATIONS: "view_notifications",
+  BULK_IMPORT: "bulk_import",
+  BULK_IMAGES: "bulk_images",
+  PAYMENTS: "payments",
+  TENANT_SETTINGS: "tenant_settings",
+  SUBSCRIPTION: "subscription",
+  PRODUCT_SETUP_BRANDS: "product_setup_brands",
+  PRODUCT_SETUP_CATEGORIES: "product_setup_categories",
+  PRODUCT_SETUP_ATTRIBUTE_TYPES: "product_setup_attribute_types",
+  PRODUCT_SETUP_COLORS: "product_setup_colors",
+  PRODUCT_SETUP_ATTRIBUTES: "product_setup_attributes",
+  PRODUCT_SETUP_SPECIFICATION_TYPES: "product_setup_specification_types",
+};
+
+/** Normalized API / catalog feature labels (lowercase, single spaces). */
+export const PLAN_FEATURE_API_LABEL = {
+  VIEW_NOTIFICATION: "view notification",
+  VIEW_NOTIFICATIONS: "view notifications",
+  VIEW_PREFIX: "view ",
+  NOTIFICATION_KEYWORD: "notification",
+};
+
+/** Plan-gate section title i18n keys by route (used in `ProtectedRoute`). */
+export const PLAN_GATE_SECTION_I18N_BY_ROUTE = {
+  [APP_ROUTES.DASHBOARD]: "PLAN_GATE.SECTIONS.DASHBOARD",
+  [APP_ROUTES.BANNERS]: "PLAN_GATE.SECTIONS.BANNERS",
+  [APP_ROUTES.NOTIFICATIONS]: "PLAN_GATE.SECTIONS.NOTIFICATIONS",
+  [APP_ROUTES.BULK_IMPORT]: "PLAN_GATE.SECTIONS.BULK_IMPORT",
+  [APP_ROUTES.BULK_IMAGES]: "PLAN_GATE.SECTIONS.BULK_IMAGES",
+};
+
 export const DEFAULT_COLOR = "#000000";
 
 export const COLORS = {
@@ -107,6 +219,28 @@ export const SUBSCRIPTION_PLAN = {
   FEATURE_VALUE_FALSE: "false",
   UNLIMITED_VALUE:     -1,
   UNLIMITED_LABEL:     "Unlimited",
+};
+
+/** Keys under `subscription.planLimits` / `subscription.usage` in localStorage. */
+export const PLAN_LIMIT_RESOURCE = {
+  PRODUCTS: PLAN_FEATURE_TOKEN.PRODUCTS,
+  USERS: PLAN_FEATURE_TOKEN.USERS,
+  STORES: PLAN_FEATURE_TOKEN.STORES,
+  BANNERS: PLAN_FEATURE_TOKEN.BANNERS,
+  ROLES: PLAN_FEATURE_TOKEN.ROLES,
+};
+
+/** Login / profile numeric cap field names per resource (first match wins). */
+export const PLAN_LIMIT_LOGIN_FIELDS_BY_RESOURCE = {
+  [PLAN_LIMIT_RESOURCE.PRODUCTS]: [
+    "MaxProducts",
+    "ProductLimit",
+    "maxProducts",
+    "ProductsLimit",
+    "MaxProductCount",
+  ],
+  [PLAN_LIMIT_RESOURCE.USERS]: ["MaxUsers", "UserLimit", "maxUsers"],
+  [PLAN_LIMIT_RESOURCE.STORES]: ["MaxStores", "StoreLimit", "maxStores"],
 };
 export const ORDER_STATUS = {
   DELIVERED: "Delivered",
@@ -587,7 +721,10 @@ export const MODULES = {
   PAYMENT: "Payment Management",
   BANNER: "Banner Management",
   NOTIFICATION: "Send Notification",
-  PAGE: 'Settings',
+  NOTIFICATION_MANAGEMENT: "Notification Management",
+  BULK_IMPORT: "Bulk Import Management",
+  TENANT_SETTINGS: "Tenant Settings Management",
+  PAGE: "Settings",
 };
 
 // Permission mappings for role management
@@ -647,6 +784,7 @@ export const PERMISSIONS = {
   CREATE_BANNER: "Create Banner",
   UPDATE_BANNER: "Update Banner",
   UPDATE_BANNER_SEQUENCE: "Update Banner Sequence",
+  VIEW_NOTIFICATIONS: "View Notifications",
   SEND_NOTIFICATION: "Send Notification",
   VIEW_PRODUCTS: "View Products",
   CREATE_PRODUCT: "Create Product",
@@ -763,7 +901,10 @@ export const PERMISSIONS = {
   EDIT_STORE_INVENTORY: "Edit Store Inventory",
   UPDATE_STORE_INVENTORY_STATUS: "Update Store Inventory Status",
   UPDATE_PRODUCT_VARIANT_STATUS: "Update Product Variant Status",
-  VIEW_VARIANT_STORES: "View Variant Stores"
+  VIEW_VARIANT_STORES: "View Variant Stores",
+  VIEW_BULK_IMPORT: "View Bulk Import",
+  UPLOAD_BULK_IMPORT_IMAGES: "Upload Bulk Import Images",
+  VIEW_TENANT_SETTINGS: "View Tenant Settings",
 };
 
 export const QUICK_FILTER_VALUES = [

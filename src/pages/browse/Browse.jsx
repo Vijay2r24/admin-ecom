@@ -10,7 +10,6 @@ import ColorList from "./colors/ColorList";
 import ColorCreate from "./colors/CreateColor";
 import AttributeList from "./AttributeTypeValues/AttributeTypeValuesList";
 import AttributeCreate from "./AttributeTypeValues/CreateAttributeTypeValuesList";
-import ProductGroupList from "./productGroups/ProductGroupList";
 import CreateProductGroup from "./productGroups/CreateProductGroup";
 import {
   Package,
@@ -21,20 +20,73 @@ import {
   Boxes,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation, Navigate } from "react-router-dom";
 import { useTitle } from "../../context/TitleContext";
 import SpecificationTypeList from "./productSpecification/SpecificationTypeList";
-import { VIEW_TYPES, FORM_MODES } from "../../contants/constants";
+import {
+  APP_ROUTES,
+  BROWSE_NAV_STATE,
+  FORM_MODES,
+  PRODUCT_SETUP_TAB,
+  PRODUCT_SETUP_TAB_I18N,
+  VIEW_TYPES,
+} from "../../contants/constants";
 import PlanGate from "../PlanGate";
 import {
+  getFirstAccessibleHrefForSession,
   getSubscriptionFeaturesFromStorage,
   isProductSetupTabAllowedByPlan,
   isTenantAdminRole,
 } from "../../utils/planAccessUtils";
+import { hasProductSetupTabViewPermission } from "../../utils/productSetupPermissionUtils";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
+
+/** Tab key → list/create components and icon (non-i18n UI wiring). */
+const PRODUCT_SETUP_TAB_COMPONENTS = {
+  [PRODUCT_SETUP_TAB.BRANDS]: {
+    list: BrandList,
+    create: BrandCreate,
+    icon: Package,
+  },
+  [PRODUCT_SETUP_TAB.CATEGORIES]: {
+    list: CategoryList,
+    create: CategoryCreate,
+    icon: Tag,
+  },
+  [PRODUCT_SETUP_TAB.ATTRIBUTE_TYPES]: {
+    list: AttributeTypeList,
+    create: AttributeTypeCreate,
+    icon: Settings,
+  },
+  [PRODUCT_SETUP_TAB.COLORS]: {
+    list: ColorList,
+    create: ColorCreate,
+    icon: Palette,
+  },
+  [PRODUCT_SETUP_TAB.ATTRIBUTES]: {
+    list: AttributeList,
+    create: AttributeCreate,
+    icon: Layers,
+  },
+  [PRODUCT_SETUP_TAB.SPECIFICATION_TYPES]: {
+    list: SpecificationTypeList,
+    create: CreateProductGroup,
+    icon: Boxes,
+  },
+};
+
+/** `location.state` flag → Product Setup tab to select after navigation. */
+const BROWSE_NAV_STATE_TO_TAB = {
+  [BROWSE_NAV_STATE.FROM_CATEGORY_EDIT]: PRODUCT_SETUP_TAB.CATEGORIES,
+  [BROWSE_NAV_STATE.FROM_ATTRIBUTE_TYPE_EDIT]: PRODUCT_SETUP_TAB.ATTRIBUTE_TYPES,
+  [BROWSE_NAV_STATE.FROM_BRAND_EDIT]: PRODUCT_SETUP_TAB.BRANDS,
+  [BROWSE_NAV_STATE.FROM_COLOR_EDIT]: PRODUCT_SETUP_TAB.COLORS,
+  [BROWSE_NAV_STATE.FROM_ATTRIBUTE_EDIT]: PRODUCT_SETUP_TAB.ATTRIBUTES,
+  [BROWSE_NAV_STATE.FROM_PRODUCT_GROUP_EDIT]: PRODUCT_SETUP_TAB.SPECIFICATION_TYPES,
+};
 
 const Browse = () => {
   const [nSelectedTab, setSelectedTab] = useState(0);
@@ -44,56 +96,27 @@ const Browse = () => {
   const location = useLocation();
   const { setTitle } = useTitle();
 
-  const aTabs = [
-    {
-      name: t("PRODUCT_SETUP.TABS.BRANDS"),
-      planTabKey: "brands",
-      sectionTitleKey: "PLAN_GATE.SECTIONS.BRANDS",
-      list: BrandList,
-      create: BrandCreate,
-      icon: Package,
-    },
-    {
-      name: t("PRODUCT_SETUP.TABS.CATEGORIES"),
-      planTabKey: "categories",
-      sectionTitleKey: "PLAN_GATE.SECTIONS.CATEGORIES",
-      list: CategoryList,
-      create: CategoryCreate,
-      icon: Tag,
-    },
-    {
-      name: t("PRODUCT_SETUP.TABS.ATTRIBUTE_TYPES"),
-      planTabKey: "attributeTypes",
-      sectionTitleKey: "PLAN_GATE.SECTIONS.ATTRIBUTE_TYPES",
-      list: AttributeTypeList,
-      create: AttributeTypeCreate,
-      icon: Settings,
-    },
-    {
-      name: t("PRODUCT_SETUP.TABS.COLORS"),
-      planTabKey: "colors",
-      sectionTitleKey: "PLAN_GATE.SECTIONS.COLORS",
-      list: ColorList,
-      create: ColorCreate,
-      icon: Palette,
-    },
-    {
-      name: t("PRODUCT_SETUP.TABS.ATTRIBUTES"),
-      planTabKey: "attributes",
-      sectionTitleKey: "PLAN_GATE.SECTIONS.ATTRIBUTES",
-      list: AttributeList,
-      create: AttributeCreate,
-      icon: Layers,
-    },
-    {
-      name: t("PRODUCT_SETUP.TABS.SPECIFICATION_TYPE"),
-      planTabKey: "specificationTypes",
-      sectionTitleKey: "PLAN_GATE.SECTIONS.SPECIFICATION_TYPE",
-      list: SpecificationTypeList,
-      create: CreateProductGroup,
-      icon: Boxes,
-    },
-  ];
+  const aTabs = useMemo(
+    () =>
+      Object.values(PRODUCT_SETUP_TAB).map((tabKey) => {
+        const i18n = PRODUCT_SETUP_TAB_I18N[tabKey];
+        const components = PRODUCT_SETUP_TAB_COMPONENTS[tabKey];
+        return {
+          planTabKey: tabKey,
+          name: t(i18n.title),
+          sectionTitleKey: i18n.planGateSection,
+          list: components.list,
+          create: components.create,
+          icon: components.icon,
+        };
+      }),
+    [t]
+  );
+
+  const visibleTabs = useMemo(
+    () => aTabs.filter((tab) => hasProductSetupTabViewPermission(tab.planTabKey)),
+    [aTabs]
+  );
 
   const planFeatures = useMemo(() => getSubscriptionFeaturesFromStorage(), [
     location.pathname,
@@ -101,70 +124,39 @@ const Browse = () => {
   const ignorePlanForAdmin = isTenantAdminRole();
 
   useEffect(() => {
-    if (location.state && location.state.fromCategoryEdit) {
-      const categoryTabIndex = aTabs.findIndex(
-        (tab) => tab.name === t("PRODUCT_SETUP.TABS.CATEGORIES")
-      );
-      if (categoryTabIndex !== -1) {
-        setSelectedTab(categoryTabIndex);
-      }
-      setViewMode(VIEW_TYPES.LIST);
-      window.history.replaceState({}, document.title);
-    } else if (location.state && location.state.fromAttributeTypeEdit) {
-      const attributeTypeTabIndex = aTabs.findIndex(
-        (tab) => tab.name === t("PRODUCT_SETUP.TABS.ATTRIBUTE_TYPES")
-      );
-      if (attributeTypeTabIndex !== -1) {
-        setSelectedTab(attributeTypeTabIndex);
-      }
-      setViewMode(VIEW_TYPES.LIST);
-      window.history.replaceState({}, document.title);
-    } else if (location.state && location.state.fromBrandEdit) {
-      const brandTabIndex = aTabs.findIndex(
-        (tab) => tab.name === t("PRODUCT_SETUP.TABS.BRANDS")
-      );
-      if (brandTabIndex !== -1) {
-        setSelectedTab(brandTabIndex);
-      }
-      setViewMode(VIEW_TYPES.LIST);
-      window.history.replaceState({}, document.title);
-    } else if (location.state && location.state.fromColorEdit) {
-      const colorTabIndex = aTabs.findIndex(
-        (tab) => tab.name === t("PRODUCT_SETUP.TABS.COLORS")
-      );
-      if (colorTabIndex !== -1) {
-        setSelectedTab(colorTabIndex);
-      }
-      setViewMode(VIEW_TYPES.LIST);
-      window.history.replaceState({}, document.title);
-    } else if (location.state && location.state.fromAttributeEdit) {
-      const attributeTabIndex = aTabs.findIndex(
-        (tab) => tab.name === t("PRODUCT_SETUP.TABS.ATTRIBUTES")
-      );
-      if (attributeTabIndex !== -1) {
-        setSelectedTab(attributeTabIndex);
-      }
-      setViewMode(VIEW_TYPES.LIST);
-      window.history.replaceState({}, document.title);
-    } else if (location.state && location.state.fromProductGroupEdit) {
-      const productGroupTabIndex = aTabs.findIndex(
-        (tab) => tab.name === t("PRODUCT_SETUP.TABS.PRODUCT_GROUPS")
-      );
-      if (productGroupTabIndex !== -1) {
-        setSelectedTab(productGroupTabIndex);
-      }
-      setViewMode(VIEW_TYPES.LIST);
-      window.history.replaceState({}, document.title);
+    if (nSelectedTab >= visibleTabs.length) {
+      setSelectedTab(0);
     }
-  }, [location.state, t]);
+  }, [visibleTabs.length, nSelectedTab]);
+
+  useEffect(() => {
+    if (!location.state) return;
+
+    const matchedEntry = Object.entries(BROWSE_NAV_STATE_TO_TAB).find(
+      ([stateKey]) => location.state[stateKey]
+    );
+    if (!matchedEntry) return;
+
+    const [, tabKey] = matchedEntry;
+    const tabIndex = visibleTabs.findIndex((tab) => tab.planTabKey === tabKey);
+    if (tabIndex !== -1) {
+      setSelectedTab(tabIndex);
+    }
+    setViewMode(VIEW_TYPES.LIST);
+    window.history.replaceState({}, document.title);
+  }, [location.state, visibleTabs]);
 
   useEffect(() => {
     setTitle(t("PRODUCT_SETUP.PRODUCT_SETUP"));
   }, [setTitle, t]);
 
+  if (visibleTabs.length === 0) {
+    const next = getFirstAccessibleHrefForSession();
+    return <Navigate to={next || APP_ROUTES.NOT_AUTHORIZED} replace />;
+  }
+
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2">
-      {/* Tabs Section */}
       <div className="overflow-visible">
         <Tab.Group
           selectedIndex={nSelectedTab}
@@ -175,11 +167,11 @@ const Browse = () => {
         >
           <div className="overflow-x-auto">
             <Tab.List className="flex space-x-4 min-w-max border-b border-gray-200 px-4 sm:px-6">
-              {aTabs.map((tab) => {
+              {visibleTabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <Tab
-                    key={tab.name}
+                    key={tab.planTabKey}
                     className={({ selected }) =>
                       classNames(
                         "flex items-center px-3 sm:px-5 py-2 sm:py-3 text-sm font-medium border-b-2 transition duration-150 ease-in-out whitespace-nowrap",
@@ -198,27 +190,20 @@ const Browse = () => {
           </div>
 
           <Tab.Panels>
-            {aTabs.map((tab, idx) => (
-              <Tab.Panel key={idx} className="p-4 sm:p-6">
+            {visibleTabs.map((tab, idx) => (
+              <Tab.Panel key={tab.planTabKey} className="p-4 sm:p-6">
                 {isProductSetupTabAllowedByPlan(
                   tab.planTabKey,
                   planFeatures,
                   ignorePlanForAdmin
                 ) ? (
                   sViewMode === VIEW_TYPES.LIST ? (
-                    <tab.list
-                      onCreate={() => setViewMode(FORM_MODES.CREATE)}
-                    />
+                    <tab.list onCreate={() => setViewMode(FORM_MODES.CREATE)} />
                   ) : (
-                    <tab.create
-                      setViewMode={setViewMode}
-                    />
+                    <tab.create setViewMode={setViewMode} />
                   )
                 ) : (
-                  <PlanGate
-                    embed
-                    sectionTitle={t(tab.sectionTitleKey)}
-                  />
+                  <PlanGate embed sectionTitle={t(tab.sectionTitleKey)} />
                 )}
               </Tab.Panel>
             ))}

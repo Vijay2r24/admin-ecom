@@ -32,6 +32,10 @@ import SkeletonLoader from "../../components/SkeletonLoader";
 import { getPermissionCode } from "../../utils/permissionUtils";
 import { MODULES, PERMISSIONS } from "../../contants/constants.jsx";
 import { useCreateAccess } from "../../hooks/useCreateAccess";
+import {
+  PLAN_LIMIT_RESOURCE,
+  updatePlanResourceUsage,
+} from "../../utils/planAccessUtils";
 
 const getStatusBadgeClass = (status) => {
   if (status === "active") return "status-active";
@@ -96,8 +100,10 @@ const ProductList = () => {
   const addProductPermissionCode = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.CREATE_PRODUCT);
   const { canCreate: canAddProduct, disabledReason: addProductDisabledReason } =
     useCreateAccess(addProductPermissionCode, {
-      noPermissionMsg: "You do not have permission to create products.",
-      limitReachedMsg: "You have reached your product creation limit. Please upgrade your plan.",
+      actionType: "PRODUCT",
+      noPermissionMsg: t("PRODUCTS.NO_CREATE_PERMISSION"),
+      limitReachedMsg: t("PRODUCTS.LIMIT_REACHED"),
+      planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
     });
 
   useEffect(() => {
@@ -165,8 +171,10 @@ const ProductList = () => {
           };
         });
         setProducts(transformedProducts);
-        setTotalItems(resData.pagination?.totalRecords || 0);
+        const totalRecords = resData.pagination?.totalRecords || 0;
+        setTotalItems(totalRecords);
         setTotalPages(resData.pagination?.totalPages || 0);
+        updatePlanResourceUsage(PLAN_LIMIT_RESOURCE.PRODUCTS, totalRecords);
       } else {
         setError(resData?.message || t("COMMON.API_ERROR"));
         setProducts([]);
@@ -335,6 +343,8 @@ const ProductList = () => {
         onCreate={() => navigate("/Addproduct")}
         onAddVariants={() => navigate("/AddVariants")}
         actionType="PRODUCT"
+        disableCreate={!canAddProduct}
+        disableCreateReason={addProductDisabledReason}
         onExport={handleExportProducts}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />

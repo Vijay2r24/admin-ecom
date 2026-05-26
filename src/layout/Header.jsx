@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Bell, Menu, Dot, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
 import { useTitle } from "../context/TitleContext";
@@ -216,12 +216,13 @@ const Header = ({ onMenuClick }) => {
                 )}
               </ul>
               <div className="p-2 text-center border-t border-gray-200 bg-gray-50 rounded-b-md flex justify-between items-center">
-                <a
-                  href="/notifications"
+                <Link
+                  to="/notifications"
                   className="text-blue-600 text-xs font-semibold hover:underline"
+                  onClick={() => setShowNotifications(false)}
                 >
                   {t("COMMON.VIEW_ALL")}
-                </a>
+                </Link>
                 {notifications.length > 0 && (
                   <button
                     onClick={clearNotifications}

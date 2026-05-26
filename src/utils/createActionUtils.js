@@ -1,7 +1,16 @@
 import { toast } from 'react-toastify';
 import { getPermissionCode, permissionIdsInclude, hasPermissionId } from './permissionUtils';
-import { MODULES, PERMISSIONS } from '../contants/constants';
-import { isUserCreateLimitBlocked, getSubscriptionFeaturesFromStorage } from './planAccessUtils';
+import { MODULES, PERMISSIONS, PLAN_FEATURE_TOKEN } from '../contants/constants';
+import {
+  isFeatureTokenAllowedByPlan,
+  isProductCreateLimitBlocked,
+  isUserCreateLimitBlocked,
+} from './planAccessUtils';
+
+const CREATE_LIMIT_CHECKS = {
+  isUserCreateLimitBlocked,
+  isProductCreateLimitBlocked,
+};
 
 /**
  * Centralized validation result for create actions
@@ -27,8 +36,8 @@ export const CREATE_ACTION_TYPES = {
   PRODUCT: {
     module: MODULES.PRODUCT,
     permission: PERMISSIONS.CREATE_PRODUCT,
-    featureToken: 'products',
-    limitCheck: 'isProductCreateLimitBlocked'
+    featureToken: PLAN_FEATURE_TOKEN.PRODUCTS,
+    limitCheck: 'isProductCreateLimitBlocked',
   },
   STORE: {
     module: MODULES.STORE,
@@ -151,15 +160,11 @@ export function isCreateLimitExceeded(actionType) {
       return false;
     }
 
-    // Check if the specific limit check function exists
-    if (actionConfig.limitCheck && typeof window[actionConfig.limitCheck] === 'function') {
-      return window[actionConfig.limitCheck]();
-    }
-
-    // Fallback to general user limit check for now
-    // This should be expanded as more limit checks are implemented
-    if (actionConfig.limitCheck === 'isUserCreateLimitBlocked') {
-      return isUserCreateLimitBlocked();
+    const limitFn = actionConfig.limitCheck
+      ? CREATE_LIMIT_CHECKS[actionConfig.limitCheck]
+      : null;
+    if (typeof limitFn === 'function') {
+      return limitFn();
     }
 
     return false;
@@ -182,23 +187,12 @@ export function isFeatureAvailableInPlan(actionType) {
       return false;
     }
 
-    const allowedFeatures = getSubscriptionFeaturesFromStorage();
-    
-    // If no features are defined, assume all features are available
-    if (!Array.isArray(allowedFeatures) || allowedFeatures.length === 0) {
+    const featureToken = actionConfig.featureToken;
+    if (!featureToken) {
       return true;
     }
 
-    // Check if the feature token is in the allowed features
-    const featureToken = actionConfig.featureToken;
-    if (!featureToken) {
-      return true; // No feature token means it's not gated
-    }
-
-    const normalizedFeatureToken = String(featureToken).toLowerCase().trim();
-    return allowedFeatures.some(
-      (feature) => String(feature).toLowerCase().trim() === normalizedFeatureToken
-    );
+    return isFeatureTokenAllowedByPlan(featureToken);
   } catch (error) {
     console.error('Error checking plan availability:', error);
     return false;

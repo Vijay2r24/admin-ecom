@@ -1,8 +1,18 @@
 import {
-  WINDOW_CUSTOM_EVENTS,
+  APP_ROUTES,
+  MODULES,
+  PERMISSIONS,
+  PLAN_FEATURE_API_LABEL,
+  PLAN_FEATURE_TOKEN,
+  PLAN_LIMIT_LOGIN_FIELDS_BY_RESOURCE,
+  PLAN_LIMIT_RESOURCE,
   PRODUCT_DETAILS_TAB,
+  PRODUCT_SETUP_TAB,
+  SUBSCRIPTION_PLAN,
+  WINDOW_CUSTOM_EVENTS,
 } from "../contants/constants";
 import { getPermissionCode, permissionIdsInclude } from "./permissionUtils";
+import { hasAnyProductSetupViewPermission } from "./productSetupPermissionUtils";
 
 const SUBSCRIPTION_READ_ONLY_LS = "subscriptionReadOnly";
 const USER_CREATE_LIMIT_BLOCKED_LS = "userCreateLimitBlocked";
@@ -81,21 +91,21 @@ export function isUserCreateLimitBlocked() {
  * Align these token strings with your API's `AllowedFeatures` values.
  */
 export const PLAN_FEATURE_TOKEN_BY_HREF = {
-  "/dashboard": "dashboard",
-  "/orders": "orders",
-  "/browse": "products",
-  "/productList": "products",
-  "/InventoryList": "inventory",
-  "/stores": "stores",
-  "/users": "users",
-  "/userRoles": "roles",
-  "/banners": "banners",
-  "/notifications": "notifications",
-  "/bulk-import": "bulk_import",
-  "/bulk-images": "bulk_images",
-  "/payments": "payments",
-  "/theme-settings": "tenant_settings",
-  "/subscription": "subscription",
+  [APP_ROUTES.DASHBOARD]: PLAN_FEATURE_TOKEN.DASHBOARD,
+  [APP_ROUTES.ORDERS]: PLAN_FEATURE_TOKEN.ORDERS,
+  [APP_ROUTES.BROWSE]: PLAN_FEATURE_TOKEN.PRODUCTS,
+  [APP_ROUTES.PRODUCT_LIST]: PLAN_FEATURE_TOKEN.PRODUCTS,
+  [APP_ROUTES.INVENTORY_LIST]: PLAN_FEATURE_TOKEN.INVENTORY,
+  [APP_ROUTES.STORES]: PLAN_FEATURE_TOKEN.STORES,
+  [APP_ROUTES.USERS]: PLAN_FEATURE_TOKEN.USERS,
+  [APP_ROUTES.USER_ROLES]: PLAN_FEATURE_TOKEN.ROLES,
+  [APP_ROUTES.BANNERS]: PLAN_FEATURE_TOKEN.BANNERS,
+  [APP_ROUTES.NOTIFICATIONS]: PLAN_FEATURE_TOKEN.NOTIFICATIONS,
+  [APP_ROUTES.BULK_IMPORT]: PLAN_FEATURE_TOKEN.BULK_IMPORT,
+  [APP_ROUTES.BULK_IMAGES]: PLAN_FEATURE_TOKEN.BULK_IMAGES,
+  [APP_ROUTES.PAYMENTS]: PLAN_FEATURE_TOKEN.PAYMENTS,
+  [APP_ROUTES.THEME_SETTINGS]: PLAN_FEATURE_TOKEN.TENANT_SETTINGS,
+  [APP_ROUTES.SUBSCRIPTION]: PLAN_FEATURE_TOKEN.SUBSCRIPTION,
 };
 
 /**
@@ -104,50 +114,125 @@ export const PLAN_FEATURE_TOKEN_BY_HREF = {
  * Keys are lowercase / trimmed.
  */
 export const FEATURE_NAME_TO_TOKEN = {
-  dashboard: "dashboard",
-  "dashboard access": "dashboard",
-  "dashboard module": "dashboard",
-  orders: "orders",
-  "order management": "orders",
-  "order access": "orders",
-  products: "products",
-  "product management": "products",
-  "product access": "products",
-  "product list": "products",
-  inventory: "inventory",
-  "product inventory": "inventory",
-  "inventory management": "inventory",
-  "inventory access": "inventory",
-  stores: "stores",
-  "store management": "stores",
-  "store access": "stores",
-  users: "users",
-  "user management": "users",
-  "user access": "users",
-  roles: "roles",
-  "role management": "roles",
-  "user roles": "roles",
-  "role access": "roles",
-  banners: "banners",
-  "banner management": "banners",
-  "banner access": "banners",
-  notifications: "notifications",
-  "notification management": "notifications",
-  "notification access": "notifications",
-  "bulk import": "bulk_import",
-  bulk_import: "bulk_import",
-  "bulk import management": "bulk_import",
-  "bulk images": "bulk_images",
-  bulk_images: "bulk_images",
-  "bulk image management": "bulk_images",
-  payments: "payments",
-  "payment management": "payments",
-  "payment access": "payments",
-  "tenant settings": "tenant_settings",
-  tenant_settings: "tenant_settings",
-  "theme settings": "tenant_settings",
-  "application settings": "tenant_settings",
+  dashboard: PLAN_FEATURE_TOKEN.DASHBOARD,
+  "dashboard access": PLAN_FEATURE_TOKEN.DASHBOARD,
+  "dashboard module": PLAN_FEATURE_TOKEN.DASHBOARD,
+  orders: PLAN_FEATURE_TOKEN.ORDERS,
+  "order management": PLAN_FEATURE_TOKEN.ORDERS,
+  "order access": PLAN_FEATURE_TOKEN.ORDERS,
+  products: PLAN_FEATURE_TOKEN.PRODUCTS,
+  "product management": PLAN_FEATURE_TOKEN.PRODUCTS,
+  "product access": PLAN_FEATURE_TOKEN.PRODUCTS,
+  "product list": PLAN_FEATURE_TOKEN.PRODUCTS,
+  inventory: PLAN_FEATURE_TOKEN.INVENTORY,
+  "product inventory": PLAN_FEATURE_TOKEN.INVENTORY,
+  "inventory management": PLAN_FEATURE_TOKEN.INVENTORY,
+  "inventory access": PLAN_FEATURE_TOKEN.INVENTORY,
+  stores: PLAN_FEATURE_TOKEN.STORES,
+  "store management": PLAN_FEATURE_TOKEN.STORES,
+  "store access": PLAN_FEATURE_TOKEN.STORES,
+  users: PLAN_FEATURE_TOKEN.USERS,
+  "user management": PLAN_FEATURE_TOKEN.USERS,
+  "user access": PLAN_FEATURE_TOKEN.USERS,
+  roles: PLAN_FEATURE_TOKEN.ROLES,
+  "role management": PLAN_FEATURE_TOKEN.ROLES,
+  "user roles": PLAN_FEATURE_TOKEN.ROLES,
+  "role access": PLAN_FEATURE_TOKEN.ROLES,
+  banners: PLAN_FEATURE_TOKEN.BANNERS,
+  "banner management": PLAN_FEATURE_TOKEN.BANNERS,
+  "banner access": PLAN_FEATURE_TOKEN.BANNERS,
+  notifications: PLAN_FEATURE_TOKEN.NOTIFICATIONS,
+  "notification management": PLAN_FEATURE_TOKEN.NOTIFICATIONS,
+  "notification access": PLAN_FEATURE_TOKEN.NOTIFICATIONS,
+  "bulk import": PLAN_FEATURE_TOKEN.BULK_IMPORT,
+  bulk_import: PLAN_FEATURE_TOKEN.BULK_IMPORT,
+  "bulk import management": PLAN_FEATURE_TOKEN.BULK_IMPORT,
+  "bulk images": PLAN_FEATURE_TOKEN.BULK_IMAGES,
+  bulk_images: PLAN_FEATURE_TOKEN.BULK_IMAGES,
+  "bulk image management": PLAN_FEATURE_TOKEN.BULK_IMAGES,
+  payments: PLAN_FEATURE_TOKEN.PAYMENTS,
+  "payment management": PLAN_FEATURE_TOKEN.PAYMENTS,
+  "payment access": PLAN_FEATURE_TOKEN.PAYMENTS,
+  "tenant settings": PLAN_FEATURE_TOKEN.TENANT_SETTINGS,
+  tenant_settings: PLAN_FEATURE_TOKEN.TENANT_SETTINGS,
+  "theme settings": PLAN_FEATURE_TOKEN.TENANT_SETTINGS,
+  "application settings": PLAN_FEATURE_TOKEN.TENANT_SETTINGS,
+  [PLAN_FEATURE_API_LABEL.VIEW_NOTIFICATION]: PLAN_FEATURE_TOKEN.VIEW_NOTIFICATIONS,
+  [PLAN_FEATURE_API_LABEL.VIEW_NOTIFICATIONS]: PLAN_FEATURE_TOKEN.VIEW_NOTIFICATIONS,
+  [PLAN_FEATURE_TOKEN.VIEW_NOTIFICATIONS]: PLAN_FEATURE_TOKEN.VIEW_NOTIFICATIONS,
+  view_notification: PLAN_FEATURE_TOKEN.VIEW_NOTIFICATIONS,
+  "send notification": PLAN_FEATURE_TOKEN.NOTIFICATIONS,
+  "send notifications": PLAN_FEATURE_TOKEN.NOTIFICATIONS,
 };
+
+/** @deprecated Use {@link PLAN_FEATURE_TOKEN.NOTIFICATIONS}. */
+export const NOTIFICATIONS_MODULE_TOKEN = PLAN_FEATURE_TOKEN.NOTIFICATIONS;
+
+/**
+ * Normalizes one API/catalog feature string to a canonical plan token.
+ * "View Notification(s)" from login must not unlock the notifications management module.
+ */
+export function normalizePlanFeatureToken(raw) {
+  if (raw == null || raw === "") return null;
+
+  const name = String(raw)
+    .toLowerCase()
+    .trim()
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ");
+
+  const moduleTokens = new Set(Object.values(PLAN_FEATURE_TOKEN_BY_HREF));
+  if (moduleTokens.has(name)) return name;
+
+  if (FEATURE_NAME_TO_TOKEN[name]) {
+    return FEATURE_NAME_TO_TOKEN[name];
+  }
+
+  if (
+    name === PLAN_FEATURE_API_LABEL.VIEW_NOTIFICATION ||
+    name === PLAN_FEATURE_API_LABEL.VIEW_NOTIFICATIONS ||
+    name.replace(/_/g, " ") === PLAN_FEATURE_TOKEN.VIEW_NOTIFICATIONS ||
+    (name.startsWith(PLAN_FEATURE_API_LABEL.VIEW_PREFIX) &&
+      name.includes(PLAN_FEATURE_API_LABEL.NOTIFICATION_KEYWORD))
+  ) {
+    return PLAN_FEATURE_TOKEN.VIEW_NOTIFICATIONS;
+  }
+
+  if (!name.startsWith(PLAN_FEATURE_API_LABEL.VIEW_PREFIX)) {
+    for (const [key, tok] of Object.entries(FEATURE_NAME_TO_TOKEN)) {
+      if (key.startsWith(PLAN_FEATURE_API_LABEL.VIEW_PREFIX)) continue;
+      if (name.includes(key)) return tok;
+    }
+  }
+
+  return name;
+}
+
+/** Deduplicated canonical tokens for subscription storage and plan checks. */
+export function normalizePlanFeatureTokens(rawFeatures) {
+  if (!Array.isArray(rawFeatures)) return [];
+  const out = [];
+  for (const raw of rawFeatures) {
+    const token = normalizePlanFeatureToken(raw);
+    if (token && !out.includes(token)) out.push(token);
+  }
+  return out;
+}
+
+/** True when the push notifications management module is included in the current plan. */
+export function isNotificationsModuleAllowedByPlan() {
+  try {
+    const sub = JSON.parse(localStorage.getItem("subscription"));
+    if (!sub) return true;
+    const features = Array.isArray(sub.features) ? sub.features : [];
+    const hasFeatureGating = Boolean(sub.hasFeatureGating);
+    if (!hasFeatureGating && features.length === 0) return true;
+    const want = PLAN_FEATURE_TOKEN.NOTIFICATIONS;
+    return features.some((f) => String(f).toLowerCase().trim() === want);
+  } catch {
+    return true;
+  }
+}
 
 /** Tenant admin (role name "admin") still sees plan-gated nav for upgrade; role users rely on permissions + plan. */
 export function isTenantAdminRole() {
@@ -274,12 +359,14 @@ export function isHrefAllowedBySubscriptionPlan(
 
 /** Product Setup (/browse) — per tab. Broad `products` in AllowedFeatures unlocks all tabs. */
 export const PLAN_FEATURE_TOKEN_BY_PRODUCT_SETUP_TAB = {
-  brands: "product_setup_brands",
-  categories: "product_setup_categories",
-  attributeTypes: "product_setup_attribute_types",
-  colors: "product_setup_colors",
-  attributes: "product_setup_attributes",
-  specificationTypes: "product_setup_specification_types",
+  [PRODUCT_SETUP_TAB.BRANDS]: PLAN_FEATURE_TOKEN.PRODUCT_SETUP_BRANDS,
+  [PRODUCT_SETUP_TAB.CATEGORIES]: PLAN_FEATURE_TOKEN.PRODUCT_SETUP_CATEGORIES,
+  [PRODUCT_SETUP_TAB.ATTRIBUTE_TYPES]:
+    PLAN_FEATURE_TOKEN.PRODUCT_SETUP_ATTRIBUTE_TYPES,
+  [PRODUCT_SETUP_TAB.COLORS]: PLAN_FEATURE_TOKEN.PRODUCT_SETUP_COLORS,
+  [PRODUCT_SETUP_TAB.ATTRIBUTES]: PLAN_FEATURE_TOKEN.PRODUCT_SETUP_ATTRIBUTES,
+  [PRODUCT_SETUP_TAB.SPECIFICATION_TYPES]:
+    PLAN_FEATURE_TOKEN.PRODUCT_SETUP_SPECIFICATION_TYPES,
 };
 
 export function isProductSetupTabAllowedByPlan(
@@ -297,7 +384,7 @@ export function isProductSetupTabAllowedByPlan(
   const set = new Set(
     allowedFeatures.map((f) => String(f).toLowerCase().trim())
   );
-  if (set.has("products")) {
+  if (set.has(PLAN_FEATURE_TOKEN.PRODUCTS)) {
     return true;
   }
   if (!granular) {
@@ -328,7 +415,7 @@ export function isProductDetailTabAllowedByPlan(
   const set = new Set(
     allowedFeatures.map((f) => String(f).toLowerCase().trim())
   );
-  if (set.has("products")) {
+  if (set.has(PLAN_FEATURE_TOKEN.PRODUCTS)) {
     return true;
   }
   if (!granular) {
@@ -337,13 +424,219 @@ export function isProductDetailTabAllowedByPlan(
   return set.has(String(granular).toLowerCase().trim());
 }
 
-export function getSubscriptionFeaturesFromStorage() {
+function getSubscriptionFromStorage() {
   try {
-    const sub = JSON.parse(localStorage.getItem("subscription"));
-    return Array.isArray(sub?.features) ? sub.features : [];
+    return JSON.parse(localStorage.getItem("subscription"));
   } catch {
-    return [];
+    return null;
   }
+}
+
+export function getSubscriptionFeaturesFromStorage() {
+  const sub = getSubscriptionFromStorage();
+  return Array.isArray(sub?.features) ? sub.features : [];
+}
+
+function parseCatalogFeatureLimitValue(featureRow) {
+  const val =
+    featureRow?.SubscriptionPlanFeature?.FeatureValue ??
+    featureRow?.featureValue ??
+    featureRow?.FeatureValue ??
+    featureRow?.value;
+
+  if (val === SUBSCRIPTION_PLAN.FEATURE_VALUE_TRUE) {
+    return { enabled: true, limit: null };
+  }
+  if (val === SUBSCRIPTION_PLAN.FEATURE_VALUE_FALSE) {
+    return { enabled: false, limit: null };
+  }
+  if (
+    typeof val === "string" &&
+    val.toLowerCase().trim() === SUBSCRIPTION_PLAN.UNLIMITED_LABEL.toLowerCase()
+  ) {
+    return { enabled: true, limit: SUBSCRIPTION_PLAN.UNLIMITED_VALUE };
+  }
+
+  const num = Number(val);
+  if (!Number.isNaN(num)) {
+    return { enabled: num !== 0, limit: num };
+  }
+
+  return { enabled: true, limit: null };
+}
+
+/** Maps catalog / API feature labels to a plan limit resource key. */
+function inferPlanLimitResourceFromFeatureName(name) {
+  const n = String(name).toLowerCase().trim();
+  if (!n) return null;
+
+  if (n.includes("user") && !n.includes("role")) {
+    return PLAN_LIMIT_RESOURCE.USERS;
+  }
+  if (n.includes("store")) {
+    return PLAN_LIMIT_RESOURCE.STORES;
+  }
+  if (n.includes("banner")) {
+    return PLAN_LIMIT_RESOURCE.BANNERS;
+  }
+  if (
+    (n.includes("product") && !n.includes("group") && !n.includes("setup")) ||
+    n.includes("product list")
+  ) {
+    return PLAN_LIMIT_RESOURCE.PRODUCTS;
+  }
+
+  return null;
+}
+
+/**
+ * Reads enabled module tokens and numeric caps from a plan catalog feature list.
+ */
+export function extractPlanCatalogBundle(rawFeatures) {
+  if (!Array.isArray(rawFeatures)) {
+    return { tokens: [], limits: {} };
+  }
+
+  const tokens = [];
+  const limits = {};
+
+  for (const f of rawFeatures) {
+    const { enabled, limit } = parseCatalogFeatureLimitValue(f);
+    if (!enabled) continue;
+
+    const nameRaw =
+      f.FeatureName || f.featureName || f.Feature || f.feature || f.text || f.name || "";
+    const token = normalizePlanFeatureToken(nameRaw);
+    if (token && !tokens.includes(token)) {
+      tokens.push(token);
+    }
+
+    const resourceKey = inferPlanLimitResourceFromFeatureName(nameRaw);
+    if (resourceKey != null && limit != null && limits[resourceKey] == null) {
+      limits[resourceKey] = limit;
+    }
+
+    if (
+      resourceKey === PLAN_LIMIT_RESOURCE.PRODUCTS &&
+      !tokens.includes(PLAN_FEATURE_TOKEN.PRODUCTS)
+    ) {
+      tokens.push(PLAN_FEATURE_TOKEN.PRODUCTS);
+    }
+  }
+
+  return { tokens, limits };
+}
+
+/** Whether a plan feature token is included in the current subscription. */
+export function isFeatureTokenAllowedByPlan(featureToken) {
+  const sub = getSubscriptionFromStorage();
+  if (!sub) return true;
+
+  const features = normalizePlanFeatureTokens(
+    Array.isArray(sub.features) ? sub.features : []
+  );
+  const hasFeatureGating = Boolean(sub.hasFeatureGating);
+
+  if (!hasFeatureGating && features.length === 0) return true;
+
+  const want = String(featureToken).toLowerCase().trim();
+  return features.some((f) => String(f).toLowerCase().trim() === want);
+}
+
+export function getPlanResourceLimit(resourceKey) {
+  const sub = getSubscriptionFromStorage();
+  if (!sub?.planLimits || sub.planLimits[resourceKey] == null) {
+    return null;
+  }
+  const num = Number(sub.planLimits[resourceKey]);
+  return Number.isNaN(num) ? null : num;
+}
+
+export function getPlanResourceUsage(resourceKey) {
+  const sub = getSubscriptionFromStorage();
+  if (!sub?.usage || sub.usage[resourceKey] == null) {
+    return null;
+  }
+  const num = Number(sub.usage[resourceKey]);
+  return Number.isNaN(num) ? null : num;
+}
+
+export function updatePlanResourceUsage(resourceKey, count) {
+  let sub = getSubscriptionFromStorage() || {};
+  sub.usage = {
+    ...(sub.usage || {}),
+    [resourceKey]: Math.max(0, Number(count) || 0),
+  };
+
+  try {
+    localStorage.setItem("subscription", JSON.stringify(sub));
+  } catch {
+    return;
+  }
+
+  const limit = getPlanResourceLimit(resourceKey);
+  if (
+    limit != null &&
+    (limit === SUBSCRIPTION_PLAN.UNLIMITED_VALUE ||
+      limit < 0 ||
+      sub.usage[resourceKey] < limit)
+  ) {
+    clearUserCreateLimitBlocked();
+  }
+
+  dispatchSubscriptionStorageChanged({ usageUpdated: resourceKey });
+}
+
+export function isPlanResourceUnlimited(resourceKey) {
+  const limit = getPlanResourceLimit(resourceKey);
+  if (limit == null) return false;
+  return limit === SUBSCRIPTION_PLAN.UNLIMITED_VALUE || limit < 0;
+}
+
+/** True when product creation is blocked by plan module access or numeric cap. */
+export function isProductCreateLimitBlocked() {
+  if (isSubscriptionReadOnlyMode()) return true;
+  if (!isFeatureTokenAllowedByPlan(PLAN_FEATURE_TOKEN.PRODUCTS)) return true;
+
+  if (isPlanResourceUnlimited(PLAN_LIMIT_RESOURCE.PRODUCTS)) {
+    return false;
+  }
+
+  const limit = getPlanResourceLimit(PLAN_LIMIT_RESOURCE.PRODUCTS);
+  if (limit == null) {
+    return isUserCreateLimitBlocked();
+  }
+
+  const usage = getPlanResourceUsage(PLAN_LIMIT_RESOURCE.PRODUCTS);
+  if (usage != null && usage >= limit) {
+    return true;
+  }
+
+  return isUserCreateLimitBlocked();
+}
+
+function extractPlanLimitsFromLoginPayload(src) {
+  const limits = {};
+  if (!src || typeof src !== "object") return limits;
+
+  for (const [resourceKey, fields] of Object.entries(
+    PLAN_LIMIT_LOGIN_FIELDS_BY_RESOURCE
+  )) {
+    for (const field of fields) {
+      if (src[field] == null || src[field] === "") continue;
+      const num = Number(src[field]);
+      if (!Number.isNaN(num)) {
+        limits[resourceKey] = num;
+        break;
+      }
+    }
+  }
+
+  return limits;
+}
+
+function mergePlanLimits(existing, incoming) {
+  return { ...(existing || {}), ...(incoming || {}) };
 }
 
 /**
@@ -412,7 +705,9 @@ export function isPathnameRestrictedByPlan(pathname) {
   }
   if (!sub) return false;
 
-  const features = Array.isArray(sub.features) ? sub.features : [];
+  const features = normalizePlanFeatureTokens(
+    Array.isArray(sub.features) ? sub.features : []
+  );
   const hasFeatureGating = Boolean(sub.hasFeatureGating);
 
   // Legacy / no-plan mode: no explicit feature list → no restriction
@@ -501,16 +796,19 @@ export function applySubscriptionFromLoginPayload(data, options = {}) {
   const apiSentFeatures = Array.isArray(rawFeatures);
   const hasFeatureGating = apiSentFeatures || Boolean(prev?.hasFeatureGating);
   const features = apiSentFeatures
-    ? rawFeatures
+    ? normalizePlanFeatureTokens(rawFeatures)
     : hasFeatureGating && Array.isArray(prev?.features)
-      ? prev.features
+      ? normalizePlanFeatureTokens(prev.features)
       : [];
 
+  const loginLimits = extractPlanLimitsFromLoginPayload(src);
   const subscriptionData = {
     planID: src.SubscriptionPlanID || src.PlanID || src.planID || "free_tier",
     planName: src.PlanName || src.planName || "Basic",
     features,
     hasFeatureGating,
+    planLimits: mergePlanLimits(prev?.planLimits, loginLimits),
+    usage: prev?.usage || {},
     planExpiresAt:
       src.PlanExpiryDate ||
       src.SubscriptionExpiryDate ||
@@ -579,47 +877,7 @@ export function dispatchSubscriptionStorageChanged(detail = {}) {
  * Returns only features where enabled = true.
  */
 export function extractEnabledTokensFromCatalogFeatures(rawFeatures) {
-  if (!Array.isArray(rawFeatures)) return [];
-  const allTokenValues = new Set(Object.values(PLAN_FEATURE_TOKEN_BY_HREF));
-  const result = [];
-
-  for (const f of rawFeatures) {
-    const enabled =
-      f.IsEnabled !== undefined
-        ? Boolean(f.IsEnabled)
-        : f.isEnabled !== undefined
-          ? Boolean(f.isEnabled)
-          : f.enabled !== undefined
-            ? Boolean(f.enabled)
-            : true;
-    if (!enabled) continue;
-
-    const nameRaw =
-      f.FeatureName || f.featureName || f.Feature || f.feature || f.text || f.name || "";
-    const name = String(nameRaw).toLowerCase().trim();
-
-    // Direct lookup in FEATURE_NAME_TO_TOKEN
-    const token = FEATURE_NAME_TO_TOKEN[name];
-    if (token && !result.includes(token)) {
-      result.push(token);
-      continue;
-    }
-
-    // If name IS already a known token value, use it directly
-    if (allTokenValues.has(name) && !result.includes(name)) {
-      result.push(name);
-      continue;
-    }
-
-    // Substring match (e.g. "Show Dashboard Total Orders" contains "dashboard")
-    for (const [key, tok] of Object.entries(FEATURE_NAME_TO_TOKEN)) {
-      if (name.includes(key) && !result.includes(tok)) {
-        result.push(tok);
-        break;
-      }
-    }
-  }
-  return result;
+  return extractPlanCatalogBundle(rawFeatures).tokens;
 }
 
 /**
@@ -627,7 +885,7 @@ export function extractEnabledTokensFromCatalogFeatures(rawFeatures) {
  * Call this after login when AllowedFeatures is not in the login payload.
  *
  * @param {string} planName - The user's current plan name (e.g. "Basic")
- * @param {any} catalogResponseData - Raw response payload from GET_SUBSCRIPTION_PLAN_FEATURES
+ * @param {any} catalogResponseData - Raw response payload from GET_ALL_SUBSCRIPTION_PLAN_FEATURES
  * @returns {boolean} true if features were stored
  */
 export function storePlanFeaturesFromCatalog(planName, catalogResponseData) {
@@ -663,7 +921,7 @@ export function storePlanFeaturesFromCatalog(planName, catalogResponseData) {
       matchedPlan.planFeatures ||
       [];
 
-    const allowedTokens = extractEnabledTokensFromCatalogFeatures(rawFeatures);
+    const bundle = extractPlanCatalogBundle(rawFeatures);
 
     let sub;
     try {
@@ -672,14 +930,23 @@ export function storePlanFeaturesFromCatalog(planName, catalogResponseData) {
       sub = {};
     }
 
-    // Only update if there's no explicit AllowedFeatures from the login API
-    if (!sub.hasFeatureGating) {
-      sub.features = allowedTokens;
-      sub.hasFeatureGating = true;
-      localStorage.setItem("subscription", JSON.stringify(sub));
-      return true;
+    const mergedFeatures = normalizePlanFeatureTokens([
+      ...(Array.isArray(sub.features) ? sub.features : []),
+      ...bundle.tokens,
+    ]);
+
+    sub.features = mergedFeatures;
+    sub.planLimits = mergePlanLimits(sub.planLimits, bundle.limits);
+    sub.hasFeatureGating = true;
+
+    localStorage.setItem("subscription", JSON.stringify(sub));
+    dispatchSubscriptionStorageChanged({ planLimitsFromCatalog: true });
+
+    if (isPlanResourceUnlimited(PLAN_LIMIT_RESOURCE.PRODUCTS)) {
+      clearUserCreateLimitBlocked();
     }
-    return false;
+
+    return true;
   } catch {
     return false;
   }
@@ -690,58 +957,59 @@ export function storePlanFeaturesFromCatalog(planName, catalogResponseData) {
  * `ProtectedRoute` fallbacks when a module is not allowed.
  */
 export const APP_HOME_HREF_ORDER = [
-  "/dashboard",
-  "/orders",
-  "/browse",
-  "/productList",
-  "/InventoryList",
-  "/stores",
-  "/users",
-  "/userRoles",
-  "/banners",
-  "/notifications",
-  "/bulk-import",
-  "/bulk-images",
-  "/payments",
-  "/theme-settings",
-  "/subscription",
+  APP_ROUTES.DASHBOARD,
+  APP_ROUTES.ORDERS,
+  APP_ROUTES.BROWSE,
+  APP_ROUTES.PRODUCT_LIST,
+  APP_ROUTES.INVENTORY_LIST,
+  APP_ROUTES.STORES,
+  APP_ROUTES.USERS,
+  APP_ROUTES.USER_ROLES,
+  APP_ROUTES.BANNERS,
+  APP_ROUTES.NOTIFICATIONS,
+  APP_ROUTES.BULK_IMPORT,
+  APP_ROUTES.BULK_IMAGES,
+  APP_ROUTES.PAYMENTS,
+  APP_ROUTES.THEME_SETTINGS,
+  APP_ROUTES.SUBSCRIPTION,
 ];
 
 /** Mirrors `Sidebar` `menuPermissionCode` (same module/name strings as `getPermissionCode`). */
 export function getMenuPermissionCodeForHref(href) {
   switch (href) {
-    case "/dashboard":
-      return getPermissionCode("Dashboard Management", "View Dashboard");
-    case "/orders":
-    case "/payments":
-      return getPermissionCode("Order Management", "View Orders");
-    case "/browse":
-    case "/productList":
-      return getPermissionCode("Product Management", "View Products");
-    case "/InventoryList":
-      return getPermissionCode("Inventory Management", "View Inventories");
-    case "/stores":
-      return getPermissionCode("Store Management", "View Stores");
-    case "/users":
-      return getPermissionCode("User Management", "View Users");
-    case "/userRoles":
-      return getPermissionCode("Role Management", "View Roles");
-    case "/notifications":
-      return getPermissionCode("Notification Management", "Send Notification");
-    case "/banners":
-      return getPermissionCode("Banner Management", "View Banners");
-    case "/bulk-import":
-      return getPermissionCode("Bulk Import Management", "View Bulk Import");
-    case "/bulk-images":
+    case APP_ROUTES.DASHBOARD:
+      return getPermissionCode(MODULES.DASHBOARD, PERMISSIONS.VIEW_DASHBOARD);
+    case APP_ROUTES.ORDERS:
+    case APP_ROUTES.PAYMENTS:
+      return getPermissionCode(MODULES.ORDER, PERMISSIONS.VIEW_ORDERS);
+    case APP_ROUTES.PRODUCT_LIST:
+      return getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCTS);
+    case APP_ROUTES.INVENTORY_LIST:
+      return getPermissionCode(MODULES.INVENTORY, PERMISSIONS.VIEW_INVENTORY);
+    case APP_ROUTES.STORES:
+      return getPermissionCode(MODULES.STORE, PERMISSIONS.VIEW_STORE);
+    case APP_ROUTES.USERS:
+      return getPermissionCode(MODULES.USER, PERMISSIONS.VIEW_USER);
+    case APP_ROUTES.USER_ROLES:
+      return getPermissionCode(MODULES.ROLE, PERMISSIONS.VIEW_ROLE);
+    case APP_ROUTES.NOTIFICATIONS:
       return getPermissionCode(
-        "Bulk Import Management",
-        "Upload Bulk Import Images"
+        MODULES.NOTIFICATION_MANAGEMENT,
+        PERMISSIONS.VIEW_NOTIFICATIONS
       );
-    case "/theme-settings":
-    case "/tenant-settings":
+    case APP_ROUTES.BANNERS:
+      return getPermissionCode(MODULES.BANNER, PERMISSIONS.VIEW_BANNERS);
+    case APP_ROUTES.BULK_IMPORT:
+      return getPermissionCode(MODULES.BULK_IMPORT, PERMISSIONS.VIEW_BULK_IMPORT);
+    case APP_ROUTES.BULK_IMAGES:
       return getPermissionCode(
-        "Tenant Settings Management",
-        "View Tenant Settings"
+        MODULES.BULK_IMPORT,
+        PERMISSIONS.UPLOAD_BULK_IMPORT_IMAGES
+      );
+    case APP_ROUTES.THEME_SETTINGS:
+      return getPermissionCode(
+        MODULES.TENANT_SETTINGS,
+        PERMISSIONS.VIEW_TENANT_SETTINGS
       );
     default:
       return null;
@@ -774,7 +1042,9 @@ export function getFirstAccessibleHrefForSession() {
     sub = null;
   }
 
-  const planFeatures = Array.isArray(sub?.features) ? sub.features : [];
+  const planFeatures = normalizePlanFeatureTokens(
+    Array.isArray(sub?.features) ? sub.features : []
+  );
   const hasFeatureGating = Boolean(sub?.hasFeatureGating);
   const isAdmin = isTenantAdminRole();
 
@@ -796,7 +1066,12 @@ export function getFirstAccessibleHrefForSession() {
 
   const hrefAllowed = (href) => {
     // Subscription page: admin only
-    if (href === "/subscription") return isAdmin;
+    if (href === APP_ROUTES.SUBSCRIPTION) return isAdmin;
+
+    // Product Setup: requires at least one tab view permission (all roles)
+    if (href === APP_ROUTES.BROWSE && !hasAnyProductSetupViewPermission()) {
+      return false;
+    }
 
     // Plan restriction check — applies to both admin and non-admin
     if (!isHrefAllowedByPlanWithGating(href, planFeatures, hasFeatureGating)) {
@@ -819,6 +1094,6 @@ export function getFirstAccessibleHrefForSession() {
   }
 
   // If admin has no plan-allowed pages (all restricted), allow subscription page
-  if (isAdmin) return "/subscription";
+  if (isAdmin) return APP_ROUTES.SUBSCRIPTION;
   return null;
 }

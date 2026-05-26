@@ -7,6 +7,10 @@ import {
 } from "../utils/planAccessUtils";
 import { showEmsg } from "../utils/ShowEmsg";
 import { WINDOW_CUSTOM_EVENTS } from "../contants/constants";
+import {
+  validateCreateAction,
+  CREATE_ACTION_VALIDATION_RESULTS,
+} from "../utils/createActionUtils";
 
 /**
  * Reads from localStorage whether the given permissionCode is present in
@@ -20,6 +24,8 @@ import { WINDOW_CUSTOM_EVENTS } from "../contants/constants";
  * @param {string} [options.noPermissionMsg]   Toast shown when permission is missing.
  * @param {string} [options.limitReachedMsg]   Toast shown when creation limit is hit.
  * @param {string} [options.readOnlyMsg]       Toast shown when subscription is read-only.
+ * @param {string} [options.actionType]        Optional key from `CREATE_ACTION_TYPES` for plan + quota checks.
+ * @param {string} [options.planNotAvailableMsg] Toast when the module is not on the current plan.
  *
  * @returns {{
  *   canCreate: boolean,
@@ -35,6 +41,8 @@ export function useCreateAccess(permissionCode, options = {}) {
     noPermissionMsg = "You do not have permission to perform this action.",
     limitReachedMsg = "You have reached your creation limit. Please upgrade your plan to continue.",
     readOnlyMsg = "Your subscription is in read-only mode. Please renew or upgrade your plan.",
+    actionType = null,
+    planNotAvailableMsg = "This feature is not included in your current plan.",
   } = options;
 
   // ── Read state from localStorage ──────────────────────────────────
@@ -44,8 +52,22 @@ export function useCreateAccess(permissionCode, options = {}) {
       return { canCreate: false, reason: readOnlyMsg };
     }
 
-    // 2. Global limit block (e.g. max users reached, max products reached)
-    if (isUserCreateLimitBlocked()) {
+    // 2. Plan module + numeric limits (products, users, etc.)
+    if (actionType) {
+      const planValidation = validateCreateAction(actionType);
+      if (!planValidation.canCreate) {
+        if (
+          planValidation.status === CREATE_ACTION_VALIDATION_RESULTS.PLAN_NOT_AVAILABLE
+        ) {
+          return { canCreate: false, reason: planNotAvailableMsg };
+        }
+        if (
+          planValidation.status === CREATE_ACTION_VALIDATION_RESULTS.LIMIT_EXCEEDED
+        ) {
+          return { canCreate: false, reason: limitReachedMsg };
+        }
+      }
+    } else if (isUserCreateLimitBlocked()) {
       return { canCreate: false, reason: limitReachedMsg };
     }
 
@@ -62,7 +84,14 @@ export function useCreateAccess(permissionCode, options = {}) {
     }
 
     return { canCreate: true, reason: "" };
-  }, [permissionCode, noPermissionMsg, limitReachedMsg, readOnlyMsg]);
+  }, [
+    permissionCode,
+    noPermissionMsg,
+    limitReachedMsg,
+    readOnlyMsg,
+    actionType,
+    planNotAvailableMsg,
+  ]);
 
   const [state, setState] = useState(readState);
 

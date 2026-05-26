@@ -26,7 +26,7 @@ import {
     GET_ALL_PERMISSIONS,
     GET_USER_BY_ID,
     RESET_USER_PASSWORD,
-    GET_SUBSCRIPTION_PLAN_FEATURES,
+    GET_ALL_SUBSCRIPTION_PLAN_FEATURES,
 } from "../contants/apiRoutes";
 
 import { showEmsg } from "../utils/ShowEmsg";
@@ -356,7 +356,7 @@ const Login = () => {
                     if (!sub.hasFeatureGating) {
                         const planName = sub.planName || data.PlanName || "Basic";
                         const catalogRes = await apiGet(
-                            GET_SUBSCRIPTION_PLAN_FEATURES,
+                            GET_ALL_SUBSCRIPTION_PLAN_FEATURES,
                             {},
                             data.token
                         );

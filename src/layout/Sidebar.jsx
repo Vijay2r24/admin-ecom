@@ -28,9 +28,11 @@ import {
   getMenuPermissionCodeForHref,
   isHrefAllowedBySubscriptionPlan,
   isTenantAdminRole,
+  normalizePlanFeatureTokens,
   PLAN_FEATURE_TOKEN_BY_HREF,
 } from '../utils/planAccessUtils';
-import { WINDOW_CUSTOM_EVENTS } from '../contants/constants';
+import { APP_ROUTES, WINDOW_CUSTOM_EVENTS } from '../contants/constants';
+import { hasAnyProductSetupViewPermission } from '../utils/productSetupPermissionUtils';
 
 const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
   const location = useLocation();
@@ -57,7 +59,7 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
       icon: Package,
       section: 'Product Management',
       subItems: [
-        { name: t('SIDEBAR.PRODUCT_SETUP'), href: '/browse', icon: Settings },
+        { name: t('SIDEBAR.PRODUCT_SETUP'), href: APP_ROUTES.BROWSE, icon: Settings },
         { name: t('SIDEBAR.PRODUCTS'), href: '/productList', icon: Package, relatedPaths: ['/Addproduct','/edit-product','/AddVariants','/productdetails'] },
         { name: t('SIDEBAR.PRODUCT_INVENTORY'), href:'/InventoryList', icon:Warehouse},
       ]
@@ -190,7 +192,7 @@ const allowedPermissionCodes = useMemo(() => {
     let hasFeatureGating = false;
     try {
       const sub = JSON.parse(localStorage.getItem("subscription"));
-      planFeatures = sub?.features || [];
+      planFeatures = normalizePlanFeatureTokens(sub?.features || []);
       hasFeatureGating = Boolean(sub?.hasFeatureGating);
     } catch {
       planFeatures = [];
@@ -200,7 +202,7 @@ const allowedPermissionCodes = useMemo(() => {
 
     // Plan-allowed check that respects hasFeatureGating (no empty-array bypass)
     const isPlanAllowed = (href) => {
-      if (href === "/subscription") return true; // gated separately
+      if (href === APP_ROUTES.SUBSCRIPTION) return true; // gated separately
       const token = PLAN_FEATURE_TOKEN_BY_HREF[href];
       if (!token) return true; // no plan token → unrestricted
       if (hasFeatureGating) {
@@ -212,8 +214,13 @@ const allowedPermissionCodes = useMemo(() => {
 
     const isAllowed = (href) => {
       // Subscription page: admin only
-      if (href === "/subscription") {
+      if (href === APP_ROUTES.SUBSCRIPTION) {
         return isAdmin;
+      }
+
+      // Product Setup: hide when no view permission is assigned (all roles)
+      if (href === APP_ROUTES.BROWSE && !hasAnyProductSetupViewPermission()) {
+        return false;
       }
 
       // Admin: show ALL modules in sidebar (clicking plan-restricted ones shows PlanGate via ProtectedRoute)

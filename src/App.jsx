@@ -288,7 +288,7 @@ const App = () => {
               <Route
                 path="/browse"
                 element={
-                  <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCTS)}>
+                  <ProtectedRoute>
                     <Browse />
                   </ProtectedRoute>
                 }
@@ -559,7 +559,7 @@ const App = () => {
               <Route
                 path="/notifications"
                 element={
-                  <ProtectedRoute permissionCode={getPermissionCode("Notification Management", PERMISSIONS.SEND_NOTIFICATION)}>
+                  <ProtectedRoute permissionCode={getPermissionCode("Notification Management", PERMISSIONS.VIEW_NOTIFICATIONS)}>
                     <Notifications />
                   </ProtectedRoute>
                 }
