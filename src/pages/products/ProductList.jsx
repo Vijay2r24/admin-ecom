@@ -30,12 +30,9 @@ import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import SkeletonLoader from "../../components/SkeletonLoader";
 import { getPermissionCode } from "../../utils/permissionUtils";
-import { MODULES, PERMISSIONS } from "../../contants/constants.jsx";
+import { MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE } from "../../contants/constants.jsx";
 import { useCreateAccess } from "../../hooks/useCreateAccess";
-import {
-  PLAN_LIMIT_RESOURCE,
-  updatePlanResourceUsage,
-} from "../../utils/planAccessUtils";
+import { updatePlanResourceUsage } from "../../utils/planAccessUtils";
 
 const getStatusBadgeClass = (status) => {
   if (status === "active") return "status-active";
