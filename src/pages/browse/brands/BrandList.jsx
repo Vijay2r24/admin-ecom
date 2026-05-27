@@ -78,8 +78,10 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
 
   const { canCreate: canAddBrand, disabledReason: addBrandDisabledReason } =
     useCreateAccess(permissionIdForAddBrand, {
+      actionType: "BRAND",
       noPermissionMsg: t("BRANDS.NO_CREATE_PERMISSION", "You do not have permission to add brands."),
       limitReachedMsg: t("BRANDS.LIMIT_REACHED", "You have reached your brand creation limit."),
+      planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
     });
 
   useEffect(() => {

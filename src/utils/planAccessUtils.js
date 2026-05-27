@@ -79,10 +79,16 @@ export function clearUserCreateLimitBlocked() {
 
 export function isUserCreateLimitBlocked() {
   try {
-    return localStorage.getItem(USER_CREATE_LIMIT_BLOCKED_LS) === "1";
+    if (localStorage.getItem(USER_CREATE_LIMIT_BLOCKED_LS) === "1") {
+      return true;
+    }
   } catch {
-    return false;
+    /* ignore */
   }
+  return isPlanResourceCreateLimitBlocked(
+    PLAN_LIMIT_RESOURCE.USERS,
+    PLAN_FEATURE_TOKEN.USERS
+  );
 }
 
 /**
@@ -150,6 +156,13 @@ export const FEATURE_NAME_TO_TOKEN = {
   "bulk images": PLAN_FEATURE_TOKEN.BULK_IMAGES,
   bulk_images: PLAN_FEATURE_TOKEN.BULK_IMAGES,
   "bulk image management": PLAN_FEATURE_TOKEN.BULK_IMAGES,
+  "product setup brands": PLAN_FEATURE_TOKEN.PRODUCT_SETUP_BRANDS,
+  "product setup categories": PLAN_FEATURE_TOKEN.PRODUCT_SETUP_CATEGORIES,
+  "product setup attribute types": PLAN_FEATURE_TOKEN.PRODUCT_SETUP_ATTRIBUTE_TYPES,
+  "product setup colors": PLAN_FEATURE_TOKEN.PRODUCT_SETUP_COLORS,
+  "product setup attributes": PLAN_FEATURE_TOKEN.PRODUCT_SETUP_ATTRIBUTES,
+  "product setup specification types": PLAN_FEATURE_TOKEN.PRODUCT_SETUP_SPECIFICATION_TYPES,
+  "product setup specifications": PLAN_FEATURE_TOKEN.PRODUCT_SETUP_SPECIFICATION_TYPES,
   payments: PLAN_FEATURE_TOKEN.PAYMENTS,
   "payment management": PLAN_FEATURE_TOKEN.PAYMENTS,
   "payment access": PLAN_FEATURE_TOKEN.PAYMENTS,
@@ -527,6 +540,16 @@ export function extractPlanCatalogBundle(rawFeatures) {
   return { tokens, limits };
 }
 
+/** Broad `products` module token unlocks product setup / details sub-features. */
+function isProductFamilyFeatureToken(token) {
+  const t = String(token).toLowerCase().trim();
+  return (
+    t === PLAN_FEATURE_TOKEN.PRODUCTS ||
+    t.startsWith("product_setup_") ||
+    t.startsWith("product_details_")
+  );
+}
+
 /** Whether a plan feature token is included in the current subscription. */
 export function isFeatureTokenAllowedByPlan(featureToken) {
   const sub = getSubscriptionFromStorage();
@@ -540,7 +563,18 @@ export function isFeatureTokenAllowedByPlan(featureToken) {
   if (!hasFeatureGating && features.length === 0) return true;
 
   const want = String(featureToken).toLowerCase().trim();
-  return features.some((f) => String(f).toLowerCase().trim() === want);
+  if (features.some((f) => String(f).toLowerCase().trim() === want)) {
+    return true;
+  }
+
+  const hasProductsModule = features.some(
+    (f) => String(f).toLowerCase().trim() === PLAN_FEATURE_TOKEN.PRODUCTS
+  );
+  if (hasProductsModule && isProductFamilyFeatureToken(want)) {
+    return true;
+  }
+
+  return false;
 }
 
 export function getPlanResourceLimit(resourceKey) {
@@ -593,26 +627,37 @@ export function isPlanResourceUnlimited(resourceKey) {
   return limit === SUBSCRIPTION_PLAN.UNLIMITED_VALUE || limit < 0;
 }
 
-/** True when product creation is blocked by plan module access or numeric cap. */
-export function isProductCreateLimitBlocked() {
+/** True when usage has reached a known numeric cap (not used for product-setup sub-modules). */
+export function isPlanResourceCreateLimitBlocked(resourceKey, featureToken = null) {
   if (isSubscriptionReadOnlyMode()) return true;
-  if (!isFeatureTokenAllowedByPlan(PLAN_FEATURE_TOKEN.PRODUCTS)) return true;
 
-  if (isPlanResourceUnlimited(PLAN_LIMIT_RESOURCE.PRODUCTS)) {
+  if (featureToken != null && !isFeatureTokenAllowedByPlan(featureToken)) {
+    return true;
+  }
+
+  if (isPlanResourceUnlimited(resourceKey)) {
     return false;
   }
 
-  const limit = getPlanResourceLimit(PLAN_LIMIT_RESOURCE.PRODUCTS);
+  const limit = getPlanResourceLimit(resourceKey);
   if (limit == null) {
-    return isUserCreateLimitBlocked();
+    return false;
   }
 
-  const usage = getPlanResourceUsage(PLAN_LIMIT_RESOURCE.PRODUCTS);
+  const usage = getPlanResourceUsage(resourceKey);
   if (usage != null && usage >= limit) {
     return true;
   }
 
-  return isUserCreateLimitBlocked();
+  return false;
+}
+
+/** True when product creation is blocked by plan module access or numeric cap. */
+export function isProductCreateLimitBlocked() {
+  return isPlanResourceCreateLimitBlocked(
+    PLAN_LIMIT_RESOURCE.PRODUCTS,
+    PLAN_FEATURE_TOKEN.PRODUCTS
+  );
 }
 
 function extractPlanLimitsFromLoginPayload(src) {

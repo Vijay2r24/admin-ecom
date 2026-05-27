@@ -35,8 +35,10 @@ const ProductGroupList = ({ onCreate }) => {
 
   const { canCreate: canAddProductGroup, disabledReason: addProductGroupDisabledReason } =
     useCreateAccess(permissionIdForAddProductGroup, {
+      actionType: "PRODUCT_GROUP",
       noPermissionMsg: t("PRODUCT_GROUPS.NO_CREATE_PERMISSION", "You do not have permission to add product groups."),
       limitReachedMsg: t("PRODUCT_GROUPS.LIMIT_REACHED", "You have reached your product group creation limit."),
+      planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
     });
 
   const [statusPopup, setStatusPopup] = useState({

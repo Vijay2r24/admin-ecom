@@ -66,8 +66,13 @@ export function useCreateAccess(permissionCode, options = {}) {
         ) {
           return { canCreate: false, reason: limitReachedMsg };
         }
+        if (
+          planValidation.status === CREATE_ACTION_VALIDATION_RESULTS.NO_PERMISSION
+        ) {
+          return { canCreate: false, reason: noPermissionMsg };
+        }
       }
-    } else if (isUserCreateLimitBlocked()) {
+    } else if (!actionType && isUserCreateLimitBlocked()) {
       return { canCreate: false, reason: limitReachedMsg };
     }
 

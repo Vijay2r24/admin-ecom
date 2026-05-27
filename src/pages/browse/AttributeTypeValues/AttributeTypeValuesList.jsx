@@ -85,8 +85,10 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
 
   const { canCreate: canAddAttribute, disabledReason: addAttributeDisabledReason } =
     useCreateAccess(permissionIdForAddAttribute, {
+      actionType: "ATTRIBUTE",
       noPermissionMsg: t("ATTRIBUTES.NO_CREATE_PERMISSION", "You do not have permission to add attributes."),
       limitReachedMsg: t("ATTRIBUTES.LIMIT_REACHED", "You have reached your attribute creation limit."),
+      planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
     });
 
   const iTotalPages = Math.ceil(iTotalItems / iItemsPerPage);

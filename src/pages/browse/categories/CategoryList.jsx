@@ -77,8 +77,10 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
 
   const { canCreate: canAddCategory, disabledReason: addCategoryDisabledReason } =
     useCreateAccess(permissionIdForAddCategory, {
+      actionType: "CATEGORY",
       noPermissionMsg: t("CATEGORIES.NO_CREATE_PERMISSION", "You do not have permission to add categories."),
       limitReachedMsg: t("CATEGORIES.LIMIT_REACHED", "You have reached your category creation limit."),
+      planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
     });
 
   // Hide body scrollbar when component mounts

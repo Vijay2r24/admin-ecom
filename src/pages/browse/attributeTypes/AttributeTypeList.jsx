@@ -79,8 +79,10 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
 
   const { canCreate: canAddAttributeType, disabledReason: addAttributeTypeDisabledReason } =
     useCreateAccess(permissionIdForAddAttributeType, {
+      actionType: "ATTRIBUTE_TYPE",
       noPermissionMsg: t("ATTRIBUTE_TYPES.NO_CREATE_PERMISSION", "You do not have permission to add attribute types."),
       limitReachedMsg: t("ATTRIBUTE_TYPES.LIMIT_REACHED", "You have reached your attribute type creation limit."),
+      planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
     });
 
   // Hide body scrollbar when component mounts

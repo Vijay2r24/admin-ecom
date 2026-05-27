@@ -57,8 +57,10 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
 
   const { canCreate: canAddColour, disabledReason: addColourDisabledReason } =
     useCreateAccess(permissionIdForAddColour, {
+      actionType: "COLOR",
       noPermissionMsg: t("COLOURS.NO_CREATE_PERMISSION", "You do not have permission to add colours."),
       limitReachedMsg: t("COLOURS.LIMIT_REACHED", "You have reached your colour creation limit."),
+      planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
     });
   
 
