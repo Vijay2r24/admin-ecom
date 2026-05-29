@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, X, Edit } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const SelectWithIcon = forwardRef(
@@ -21,6 +21,9 @@ const SelectWithIcon = forwardRef(
       disabled = false,
       className = "",
       onInputChange,
+      onEditOption,
+      onClose,
+      onOpen,
       ...rest
     },
     ref
@@ -115,6 +118,10 @@ const SelectWithIcon = forwardRef(
       } else {
         newValue = optionValue;
         setIsOpen(false);
+        // Call onClose callback if provided
+        if (onClose) {
+          onClose();
+        }
       }
 
       const scrollY = window.scrollY;
@@ -139,6 +146,10 @@ const SelectWithIcon = forwardRef(
       ) {
         setIsOpen(false);
         setSearchTerm("");
+        // Call onClose callback if provided
+        if (onClose) {
+          onClose();
+        }
       }
     };
 
@@ -157,12 +168,14 @@ const SelectWithIcon = forwardRef(
 
     return (
       <div className="w-full">
-        <label
-          htmlFor={id}
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
-          {label}
-        </label>
+        {label && (
+          <label
+            htmlFor={id}
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            {label}
+          </label>
+        )}
 
         <div className="relative group" ref={selectRef}>
           <div
@@ -180,6 +193,10 @@ const SelectWithIcon = forwardRef(
                   if (!prev) {
                     setSearchTerm("");
                     setHighlightedIndex(-1);
+                    // Call onOpen callback if provided
+                    if (onOpen) {
+                      onOpen();
+                    }
                     onInputChange?.("");
                   }
                   return !prev;
@@ -348,6 +365,7 @@ const SelectWithIcon = forwardRef(
                           ? Array.isArray(value) && value.includes(opt.value)
                           : value == opt.value;
                         const isHighlighted = index === nHighlightedIndex;
+                        const isAddNewOption = opt.value === "add-new";
 
                         return (
                           <li
@@ -355,8 +373,12 @@ const SelectWithIcon = forwardRef(
                             className={`cursor-pointer select-none relative py-2 text-sm
                             ${multiple ? "pl-12 pr-4" : "pl-4 pr-4"}
                             ${isHighlighted
-                                ? "bg-custom-bg text-white"
-                                : "text-gray-900 hover:bg-gray-100"
+                                ? isAddNewOption 
+                                  ? "bg-red-500 text-white"
+                                  : "bg-custom-bg text-white"
+                                : isAddNewOption
+                                  ? "text-gray-900 hover:bg-red-50"
+                                  : "text-gray-900 hover:bg-gray-100"
                               }
                             ${isSelected && !isHighlighted ? "bg-blue-50" : ""}`}
                             onClick={(e) => {
@@ -395,7 +417,29 @@ const SelectWithIcon = forwardRef(
                                   </div>
                                 </div>
                               )}
-                              <span className="block truncate">{opt.label}</span>
+                              <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center gap-2">
+                                {opt.icon && <opt.icon className={`h-4 w-4 ${isAddNewOption && isHighlighted ? "text-white" : "text-custom-bg"}`} />}
+                                <span className="block truncate">{opt.label}</span>
+                              </div>
+                              {!isAddNewOption && opt.value && opt.value !== "" && onEditOption && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEditOption(opt);
+                                    // Close the dropdown
+                                    setIsOpen(false);
+                                    // Call onClose callback if provided
+                                    if (onClose) {
+                                      onClose();
+                                    }
+                                  }}
+                                  className="p-1 rounded hover:bg-gray-200 transition-colors"
+                                >
+                                  <Edit className="h-3 w-3 text-gray-600" />
+                                </button>
+                              )}
+                            </div>
                             </div>
                           </li>
                         );

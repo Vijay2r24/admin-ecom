@@ -23,6 +23,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useInactivityTimer } from './hooks/useInactivityTimer';
 import InactivityNotification from './components/InactivityNotification';
 import InactivityManager from './components/InactivityManager';
+import IdleLogout from './components/IdleLogout';
 
 // Remove all title attributes to prevent white tooltips
 const removeTitleAttributes = () => {
@@ -256,6 +257,14 @@ const App = () => {
 
   return (
     <Provider store={store}>
+      <IdleLogout
+        isLoggedIn={!!localStorage.getItem("token")}
+        onLogout={() => {
+          store.dispatch(logout());
+          localStorage.removeItem("token");
+          localStorage.removeItem("userDetails");
+        }}
+      />
       <InactivityManager>
         <AllDataProvider>
           <TitleProvider>

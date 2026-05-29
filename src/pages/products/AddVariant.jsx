@@ -829,7 +829,16 @@ export default function CreateVariant() {
   useEffect(() => {
     dispatch(fetchResource({ key: "allStores" }));
     dispatch(fetchResource({ key: "stores" }));
+    dispatch(fetchResource({ key: "packagingBoxes" }));
+    dispatch(fetchResource({ key: "weightUnits" }));
   }, [dispatch]);
+
+  const packagingBoxes = useSelector(
+    (state) => state.allData.resources.packagingBoxes?.data || []
+  );
+  const weightUnits = useSelector(
+    (state) => state.allData.resources.weightUnits?.data || []
+  );
 
   const fetchProducts = useCallback(
     async (query) => {
@@ -1327,23 +1336,27 @@ export default function CreateVariant() {
 
       const attributesArray = (variant.attributes || []).map((a) => ({
         AttributeTypeID: a.AttributeTypeID,
-        AttributeValueIDs: a.AttributeValueIDs,
-      }));
+        AttributeValueID: Array.isArray(a.AttributeValueIDs)
+          ? a.AttributeValueIDs[0]
+          : a.AttributeValueID || a.attributeValueID,
+      })).filter((a) => a.AttributeTypeID && a.AttributeValueID);
 
       // Only include documentMetadata if there are actual images
       const hasImages = documentMetadata.length > 0;
 
       payloadVariants.push({
-        // ProductID is at root in curl, but maybe also inside variants?
-        // Curl shows: data="{\"ProductID\":..., \"Variants\":[...]}"
-        // So ProductID is top level of data JSON.
-
         MRP: Number(variant.MRP) || 0,
         SellingPrice: Number(variant.SellingPrice) || 0,
-        DiscountPercentage: Number(variant.ProductDiscount) || 0, // Mapping ProductDiscount to DiscountPercentage
+        DiscountPercentage: Number(variant.ProductDiscount) || 0,
         Quantity: Number(variant.Quantity) || 0,
         Attributes: attributesArray,
-        StoreIDs: selectedStores, // Array of strings
+        StoreIDs: selectedStores,
+        // Shipping fields flat on variant
+        ...(variant.shippingData?.weight && { Weight: Number(variant.shippingData.weight) }),
+        ...(variant.shippingData?.weightUnit && { Unit: variant.shippingData.weightUnit }),
+        ...(variant.shippingData?.countryOfOrigin && { CountryCode: variant.shippingData.countryOfOrigin }),
+        ...(variant.shippingData?.hsCode && { HSCode: variant.shippingData.hsCode }),
+        ...(variant.shippingData?.package && { PackagingBoxID: variant.shippingData.package }),
         ...(hasImages && { documentMetadata }),
       });
     }
@@ -1403,10 +1416,8 @@ export default function CreateVariant() {
       // The backend expects AttributeTypeID and AttributeValueIDs
       const attributesArray = (variant.Attributes || []).map((a) => ({
         AttributeTypeID: a.AttributeTypeID,
-        AttributeValueIDs: [
-          a.AttributeValueID || a.AttributeValueId || a.attributeValueID,
-        ],
-      }));
+        AttributeValueID: a.AttributeValueID || a.AttributeValueId || a.attributeValueID,
+      })).filter((a) => a.AttributeTypeID && a.AttributeValueID);
 
       // Check if variant has new images to include documentMetadata
       const hasNewImages = variant.images && variant.images.some(img => img.file);
@@ -2125,6 +2136,8 @@ export default function CreateVariant() {
                             removeImage={removeVariantImage}
                             localAttributeOptions={localAttributeOptions}
                             setVariants={setAVariants}
+                            packagingBoxes={packagingBoxes}
+                            weightUnits={weightUnits}
                           />
                         </div>
                       </div>
@@ -2327,6 +2340,8 @@ export default function CreateVariant() {
                           setVariants={setAttachedVariants}
                           localAttributeOptions={{}}
                           hideUpload={true}
+                          packagingBoxes={packagingBoxes}
+                          weightUnits={weightUnits}
                         />
                       </div>
                     )}

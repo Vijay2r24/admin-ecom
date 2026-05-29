@@ -459,3 +459,8 @@ code {
 
 /* Alternative: Force hide all native tooltips */
 /* This ensures only custom Tooltip components are used */
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-16px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

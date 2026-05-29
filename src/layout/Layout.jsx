@@ -22,7 +22,7 @@ const Layout = ({ children }) => {
     <div className="min-h-screen bg-gray-50">
       <div
         className={`  
-          fixed top-0 left-0 z-50 h-screen transition-all duration-300 ease-in-out
+          fixed top-0 left-0 z-30 h-screen transition-all duration-300 ease-in-out
           ${bIsMobileSidebarOpen ? 'w-56' : 'w-0'} lg:${bIsSidebarOpen ? (bIsCollapsed? 'w-16' : 'w-56') : 'w-0'}
         `}
       >

@@ -1,6 +1,6 @@
 // AddProductForm.jsx
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { Plus, X, Upload, Tag, Hash, ShoppingBag, Layers } from "lucide-react";
+import { Plus, X, Upload, Tag, Hash, ShoppingBag, Layers, Scale } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import TextInputWithIcon from "../../components/TextInputWithIcon";
 import SelectWithIcon from "../../components/SelectWithIcon";
@@ -43,6 +43,9 @@ import VariantPreviewCard from "../../pages/products/VariantPreviewCard.jsx";
 import Accordion from "../../components/products/Accordion.jsx";
 import ImageManagement from "../../components/products/ImagesManager.jsx";
 import VariantTabs from "../../components/products/VariantTabs.jsx";
+import ShippingSection from "../../components/products/ShippingSection.jsx";
+import AddPackageModal from "../../components/products/AddPackageModal.jsx";
+import EditPackageModal from "../../components/products/EditPackageModal.jsx";
 import FloatingFooter from "../../components/FloatingFooter.jsx";
 
 /* ------------------------- AddProductForm — patched ------------------------- */
@@ -86,6 +89,16 @@ const AddProductForm = () => {
     TenantID: localStorage.getItem("tenantID"),
     SpecificationTypeID: "",
   });
+
+  const [shippingData, setShippingData] = useState({
+    package: "",
+    weight: "",
+    weightUnit: "kg",
+    countryOfOrigin: "",
+    hsCode: "",
+  });
+
+  const [customPackages, setCustomPackages] = useState([]);
   const [aSpecifications, setSpecifications] = useState([
     {
       SpecificationTypeID: "",
@@ -97,6 +110,10 @@ const AddProductForm = () => {
   const [groupingAttributeTypeID, setGroupingAttributeTypeID] = useState("");
   const [showReorderModal, setShowReorderModal] = useState(false);
   const [reorderVariantIndex, setReorderVariantIndex] = useState(null);
+  const [showAddPackageModal, setShowAddPackageModal] = useState(false);
+  const [showEditPackageModal, setShowEditPackageModal] = useState(false);
+  const [editingPackage, setEditingPackage] = useState(null);
+  const [currentShippingVariantIndex, setCurrentShippingVariantIndex] = useState(null);
   const [tempImages, setTempImages] = useState([]);
   const [hasFetchedProduct, setHasFetchedProduct] = useState(false);
 
@@ -188,6 +205,15 @@ const AddProductForm = () => {
   const specificationTypes = useSelector(
     (state) => state.allData.resources.specificationType?.data || []
   );
+  const packagingBoxes = useSelector(
+    (state) => state.allData.resources.packagingBoxes?.data || []
+  );
+  const weightUnits = useSelector(
+    (state) => state.allData.resources.weightUnits?.data || []
+  );
+  const countries = useSelector(
+    (state) => state.allData.resources.countries?.data || []
+  );
 
   useEffect(() => {
     dispatch(fetchResource({ key: "brands" }));
@@ -195,6 +221,9 @@ const AddProductForm = () => {
     dispatch(fetchResource({ key: "stores" }));
     dispatch(fetchResource({ key: "attributeTypes" }));
     dispatch(fetchResource({ key: "specificationType" }));
+    dispatch(fetchResource({ key: "packagingBoxes" }));
+    dispatch(fetchResource({ key: "weightUnits" }));
+    dispatch(fetchResource({ key: "countries" }));
   }, [dispatch]);
 
   // -------------------------
@@ -304,6 +333,17 @@ const AddProductForm = () => {
             // Set groupingAttributeTypeID from product metadata if exists
             if (product.Metadata?.GroupBy) {
               setGroupingAttributeTypeID(product.Metadata.GroupBy);
+            }
+
+            // Set shipping data if exists
+            if (product.Shipping) {
+              setShippingData({
+                package: product.Shipping.Package || "",
+                weight: product.Shipping.Weight || "",
+                weightUnit: product.Shipping.WeightUnit || "kg",
+                countryOfOrigin: product.Shipping.CountryOfOrigin || "",
+                hsCode: product.Shipping.HSCode || "",
+              });
             }
 
             setSpecifications(
@@ -772,6 +812,29 @@ const AddProductForm = () => {
     }));
   };
 
+  const handleShippingChange = (name, value) => {
+    setShippingData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setValidationErrors((prev) => ({
+      ...prev,
+      [`shipping_${name}`]: undefined,
+    }));
+  };
+
+  const handleAddPackage = (newPackage) => {
+    setCustomPackages((prev) => [...prev, newPackage]);
+    
+    // If "Use as default" is checked, set it as the selected package
+    if (newPackage.useAsDefault) {
+      setShippingData((prev) => ({
+        ...prev,
+        package: newPackage.value,
+      }));
+    }
+  };
+
   const handleVariantChange = (index, field, value) => {
     setVariants((prevVariants) => {
       const newVariants = [...prevVariants];
@@ -1207,7 +1270,12 @@ const AddProductForm = () => {
 
     const Variants = aVariants.map((variant, vIndex) => {
       const attributesForPayload = Array.isArray(variant.attributes)
-        ? variant.attributes
+        ? variant.attributes.map((attr) => ({
+            AttributeTypeID: attr.AttributeTypeID,
+            AttributeValueID: Array.isArray(attr.AttributeValueIDs)
+              ? attr.AttributeValueIDs[0]
+              : attr.AttributeValueID || attr.AttributeValueId || attr.attributeValueID,
+          })).filter((a) => a.AttributeTypeID && a.AttributeValueID)
         : [];
 
       const images = Array.isArray(variant.images) ? variant.images : [];
@@ -1317,13 +1385,17 @@ const AddProductForm = () => {
         DiscountPercentage:
           Number(variant.DiscountPercentage || variant.ProductDiscount) || 0,
         SellingPrice: Number(variant.SellingPrice) || 0,
-        // Only use selected StoreIDs from form, not from Inventory
         StoreIDs: Array.isArray(oFormData.StoreID)
           ? oFormData.StoreID
           : oFormData.StoreID
             ? [oFormData.StoreID]
             : [],
-        // IsActive: true,
+        // Shipping fields flat on variant
+        ...(variant.shippingData?.weight && { Weight: Number(variant.shippingData.weight) }),
+        ...(variant.shippingData?.weightUnit && { Unit: variant.shippingData.weightUnit }),
+        ...(variant.shippingData?.countryOfOrigin && { CountryCode: variant.shippingData.countryOfOrigin }),
+        ...(variant.shippingData?.hsCode && { HSCode: variant.shippingData.hsCode }),
+        ...(variant.shippingData?.package && { PackagingBoxID: variant.shippingData.package }),
       };
 
       // Only include documentMetadata if there are image changes
@@ -1343,14 +1415,10 @@ const AddProductForm = () => {
       ProductDescription: oFormData.ProductDescription,
       BrandID: oFormData.BrandID,
       CategoryID: oFormData.CategoryID,
+      ...(groupingAttributeTypeID && { GroupBy: groupingAttributeTypeID }),
       IsActive: true,
       Specifications,
       Variants,
-      ...(groupingAttributeTypeID && {
-        Metadata: {
-          GroupBy: groupingAttributeTypeID
-        }
-      })
     };
 
     const formData = new FormData();
@@ -2075,6 +2143,108 @@ const AddProductForm = () => {
                           </div>
                         </div>
                       </div>
+
+                      {/* Shipping Information */}
+                      <div className="mt-6">
+                        <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                            {t("PRODUCT_CREATION.SHIPPING_INFORMATION")}
+                          </h4>
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <SelectWithIcon
+                              label="Package"
+                              id={`package-${index}`}
+                              name="package"
+                              value={variant.shippingData?.package || ""}
+                              onChange={(e) => {
+                                if (e.target.value === "add-new") {
+                                  setCurrentShippingVariantIndex(index);
+                                  setShowAddPackageModal(true);
+                                  return;
+                                }
+                                handleVariantChange(index, "shippingData", {
+                                  ...(variant.shippingData || {}),
+                                  package: e.target.value,
+                                });
+                              }}
+                              options={[
+                                { value: "add-new", label: "Add New", isSpecial: true, icon: ({ className }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg> },
+                                ...packagingBoxes.map((box) => ({
+                                  value: box.PackagingBoxID,
+                                  label: box.PackageName || box.Name || box.PackagingBoxID,
+                                })),
+                                ...customPackages,
+                              ]}
+                              Icon={({ className }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>}
+                              placeholder="Select package"
+                              onEditOption={(packageOption) => {
+                                setEditingPackage({
+                                  ...packageOption,
+                                  PackagingBoxID: packageOption.PackagingBoxID || packageOption.value,
+                                });
+                                setCurrentShippingVariantIndex(index);
+                                setShowEditPackageModal(true);
+                              }}
+                            />
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Weight</label>
+                              <div className="flex gap-2">
+                                <div className="flex-1">
+                                  <TextInputWithIcon
+                                    id={`weight-${index}`}
+                                    name="weight"
+                                    value={variant.shippingData?.weight || ""}
+                                    onChange={(e) => handleVariantChange(index, "shippingData", { ...(variant.shippingData || {}), weight: e.target.value })}
+                                    placeholder="0.0"
+                                    type="number"
+                                    step="0.1"
+                                    Icon={Scale}
+                                  />
+                                </div>
+                                <div className="w-24">
+                                  <SelectWithIcon
+                                    id={`weightUnit-${index}`}
+                                    name="weightUnit"
+                                    value={variant.shippingData?.weightUnit || ""}
+                                    onChange={(e) => handleVariantChange(index, "shippingData", { ...(variant.shippingData || {}), weightUnit: e.target.value })}
+                                    options={weightUnits.map((u) => {
+                                      const val = typeof u === "string" ? u : (u.Unit || u.value || u);
+                                      return { label: val, value: val };
+                                    })}
+                                    Icon={Scale}
+                                    placeholder="Unit"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <SelectWithIcon
+                              label="Country of origin"
+                              id={`country-${index}`}
+                              name="countryOfOrigin"
+                              value={variant.shippingData?.countryOfOrigin || ""}
+                              onChange={(e) => handleVariantChange(index, "shippingData", { ...(variant.shippingData || {}), countryOfOrigin: e.target.value })}
+                              options={countries.map((c) => ({
+                                value: c.CountryCode || c.value,
+                                label: c.CountryName || c.label,
+                              }))}
+                              Icon={() => <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>}
+                              placeholder="Select country"
+                            />
+                            <TextInputWithIcon
+                              label="HS Code"
+                              id={`hsCode-${index}`}
+                              name="hsCode"
+                              value={variant.shippingData?.hsCode || ""}
+                              onChange={(e) => handleVariantChange(index, "shippingData", { ...(variant.shippingData || {}), hsCode: e.target.value })}
+                              placeholder="Enter HS code"
+                              Icon={() => <span className="text-xs font-bold text-gray-400">#</span>}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2152,6 +2322,9 @@ const AddProductForm = () => {
                   enqueueFilesForCrop={enqueueFilesForCrop}
                   removeImage={removeImage}
                   setVariants={setVariants}
+                  packagingBoxes={packagingBoxes}
+                  weightUnits={weightUnits}
+                  countries={countries}
                   localAttributeOptions={Object.fromEntries(
                     aAttributes.map((a) => [
                       a.AttributeTypeID,
@@ -2293,6 +2466,44 @@ const AddProductForm = () => {
           </div>
         </div>
       )}
+
+      {/* Add Package Modal */}
+      <AddPackageModal
+        isOpen={showAddPackageModal}
+        onClose={() => { setShowAddPackageModal(false); setCurrentShippingVariantIndex(null); }}
+        onAddPackage={(newPackage) => {
+          // Refresh packaging boxes from API
+          dispatch(fetchResource({ key: "packagingBoxes" }));
+          if (currentShippingVariantIndex !== null && newPackage.PackagingBoxID) {
+            handleVariantChange(currentShippingVariantIndex, "shippingData", {
+              ...(aVariants[currentShippingVariantIndex].shippingData || {}),
+              package: newPackage.PackagingBoxID,
+            });
+          }
+          setShowAddPackageModal(false);
+          setCurrentShippingVariantIndex(null);
+        }}
+      />
+
+      {/* Edit Package Modal */}
+      <EditPackageModal
+        isOpen={showEditPackageModal}
+        onClose={() => { setShowEditPackageModal(false); setEditingPackage(null); setCurrentShippingVariantIndex(null); }}
+        packageData={editingPackage}
+        onUpdatePackage={(updatedPackage) => {
+          dispatch(fetchResource({ key: "packagingBoxes" }));
+          setCustomPackages((prev) => prev.map((p) => p.value === updatedPackage.value ? updatedPackage : p));
+          if (currentShippingVariantIndex !== null && updatedPackage.PackagingBoxID) {
+            handleVariantChange(currentShippingVariantIndex, "shippingData", {
+              ...(aVariants[currentShippingVariantIndex].shippingData || {}),
+              package: updatedPackage.PackagingBoxID,
+            });
+          }
+          setShowEditPackageModal(false);
+          setEditingPackage(null);
+          setCurrentShippingVariantIndex(null);
+        }}
+      />
     </div>
   );
 };

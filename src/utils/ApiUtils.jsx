@@ -303,6 +303,35 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
 
       const httpStatus = error?.response?.status;
       if (httpStatus === 403 && !isLoginPage()) {
+        const errCustomCode = error?.response?.data?.customCode;
+        const errMsg = error?.response?.data?.message || "";
+        const errNormalized = errMsg.toLowerCase();
+
+        // Deactivated account → trigger logout sticker
+        if (
+          errNormalized.includes("deactivated") ||
+          errNormalized.includes("inactive") ||
+          errNormalized.includes("account has been deactivated")
+        ) {
+          const logoutEvent = new CustomEvent('triggerIdleLogout', {
+            detail: { message: errMsg || "Your account has been deactivated. Please contact an administrator." }
+          });
+          window.dispatchEvent(logoutEvent);
+          return Promise.reject(error);
+        }
+
+        // Permission denied (customCode 1001) → trigger logout sticker
+        if (
+          isCustomCode(errCustomCode, API_CUSTOM_CODES.PERMISSION_DENIED) ||
+          errNormalized.includes("does not have permission")
+        ) {
+          const logoutEvent = new CustomEvent('triggerIdleLogout', {
+            detail: { message: errMsg || "You do not have permission. Please log out and log in again." }
+          });
+          window.dispatchEvent(logoutEvent);
+          return Promise.reject(error);
+        }
+
         if (!isUpgradePlanPage()) {
           showEmsg(i18n.t("SUBSCRIPTION.TOAST_HTTP_403_PLAN"), "warning", 5000);
           redirectToUpgradePlanSilently();

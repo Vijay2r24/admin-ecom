@@ -958,6 +958,18 @@ export const FILTER_VALUES = {
   FALSE: "false",
 };
 
+export const FIELD_NAMES = {
+  PACKAGE: "package",
+};
+
+export const SELECT_VALUES = {
+  ADD_NEW: "add-new",
+};
+
+export const SECTION_TITLES = {
+  SHIPPING_INFORMATION: "Shipping Information",
+};
+
 // UI Constants
 export const SCROLL_SHADOW_THRESHOLD = 10;
 

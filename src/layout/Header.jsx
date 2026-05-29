@@ -8,7 +8,6 @@ import { useNotifications } from "../hooks/useNotifications";
 import { fetchUserDetails, clearUserDetails } from "../store/slices/allDataSlice";
 import { logout } from "../store/slices/authSlice";
 import { NOTIFICATION_TYPES } from "../contants/constants";
-import IdleLogout from "../components/IdleLogout";
 import user from "../../assets/images/user.jpg";
 
 
@@ -138,14 +137,6 @@ const Header = ({ onMenuClick }) => {
         </div>
 
         <div className="relative flex items-center gap-2">
-
-          <IdleLogout isLoggedIn={isLoggedIn} onLogout={() => {
-            localStorage.removeItem("token");
-            localStorage.removeItem("userDetails");
-            dispatch(clearUserDetails());
-            dispatch(logout());
-            navigate("/");
-          }} />
 
           <button
             ref={bellRef}

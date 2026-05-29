@@ -21,6 +21,7 @@ import {
   GET_CITIES_BY_STATE,
   GET_ALL_SPECIFICATIONS
 } from "../../contants/apiRoutes";
+import { GET_ALL_PACKAGING_BOXES, GET_WEIGHT_UNITS } from "../../contants/apiRoutes";
 import { STATUS } from "../../contants/constants";
 import {
   applySubscriptionFromLoginPayload,
@@ -82,6 +83,15 @@ const aResourceConfigs = [
     api: GET_ALL_SPECIFICATIONS,
     totalKey: "totalRecords",
     idField: "SpecificationTypeID",
+  },
+  {
+    key: "packagingBoxes",
+    api: GET_ALL_PACKAGING_BOXES,
+    idField: "PackagingBoxID",
+  },
+  {
+    key: "weightUnits",
+    api: GET_WEIGHT_UNITS,
   }
 ];
 
@@ -299,6 +309,8 @@ const allDataSlice = createSlice({
       paymentTypes: { data: [], loading: false, error: null },
       specificationType: { data: [], loading: false, error: null },
       colors: { data: [], loading: false, error: null },
+      packagingBoxes: { data: [], loading: false, error: null },
+      weightUnits: { data: [], loading: false, error: null },
     },
     userDetails: null,
     userDetailsError: null,
