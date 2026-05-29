@@ -1223,6 +1223,7 @@
   "BANNERS": {
     "TITLE": "Banner Management",
     "ACTIVE_BANNERS": "Active Banners",
+    "ADD_BANNER":"Add Banner",
     "SEQUENCED": "Sequenced",
     "SAVE_SEQUENCES": "Save Sequences",
     "DRAG_TO_REORDER": "Drag to reorder",
@@ -1302,6 +1303,7 @@
     "DELETE": "Delete",
     "CLEAR_SEARCH": "Clear search",
     "NO_PERMISSION": "You don't have permission to perform this action",
+    "NO_PERMISSION_TOOLTIP": "You don't have permission to perform this action. Contact your administrator.",
     "ACCESS_DENIED": "Access Denied",
     "NO_PERMISSION_TO_VIEW_INVENTORY": "You don't have permission to view inventory data",
     "NO_PERMISSION_TO_VIEW_VARIANT_STORES": "You don't have permission to view variant stores",

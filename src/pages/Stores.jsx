@@ -13,7 +13,7 @@ import { UPDATE_STORE_STATUS, DELETE_STORE } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS, FILTER_VALUES } from "../contants/constants";
 import { apiDelete } from "../utils/ApiUtils";
 import Loader from "../components/Loader";
 import SkeletonLoader from "../components/SkeletonLoader";
@@ -47,7 +47,7 @@ const Stores = () => {
   const [sSearchTerm, setSearchTerm] = useState("");
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
   const defaultFilters = {
-    status: "",
+    status: FILTER_VALUES.ALL,
     startDate: "",
     endDate: "",
   };
@@ -82,7 +82,7 @@ const Stores = () => {
   const addStorePermissionCode = getPermissionCode(MODULES.STORE, PERMISSIONS.ADD_STORE);
   const { canCreate: canAddStore, disabledReason: addStoreDisabledReason } =
     useCreateAccess(addStorePermissionCode, {
-      noPermissionMsg: t("STORES.NO_CREATE_PERMISSION", "You do not have permission to add stores."),
+      noPermissionMsg: t("STORES.NO_CREATE_PERMISSION"),
       limitReachedMsg: t("STORES.LIMIT_REACHED", "You have reached your store creation limit. Please upgrade your plan."),
     });
 
@@ -209,7 +209,7 @@ const Stores = () => {
       setStatusPopup({ open: false, storeId: null, newStatus: null });
 
       const isActiveFilter =
-        oFilters.status === "" ? undefined : oFilters.status === "true";
+        oFilters.status === FILTER_VALUES.ALL ? undefined : oFilters.status === "true";
 
       // Refresh the stores list after status update
       dispatch(
@@ -244,7 +244,7 @@ const Stores = () => {
       showEmsg(backendMessage, STATUS.SUCCESS);
 
       const isActiveFilter =
-        oFilters.status === "" ? undefined : oFilters.status === "true";
+        oFilters.status === FILTER_VALUES.ALL ? undefined : oFilters.status === "true";
 
       // Refresh the stores list after deletion
       dispatch(
@@ -311,7 +311,7 @@ const Stores = () => {
       const startDate = formatDateForAPI(oFilters.startDate);
       const endDate = formatDateForAPI(oFilters.endDate);
       const isActiveFilter =
-        oFilters.status === "" ? undefined : oFilters.status === "true";
+        oFilters.status === FILTER_VALUES.ALL ? undefined : oFilters.status === "true";
 
       await dispatch(
         exportStoreReport({
@@ -331,7 +331,7 @@ const Stores = () => {
     const fetchStoresData = async () => {
       try {
         const isActiveFilter =
-          oFilters.status === "" ? undefined : oFilters.status === "true";
+          oFilters.status === FILTER_VALUES.ALL ? undefined : oFilters.status === "true";
 
         await dispatch(
           fetchResource({

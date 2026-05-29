@@ -28,6 +28,7 @@ const Notifications = () => {
   const { setTitle, setBackButton } = useTitle();
 
   const [activeTab, setActiveTab] = useState("notification");
+  const [bSending, setSending] = useState(false);
   const [oPushFormData, setPushFormData] = useState({
     title: "",
     message: "",
@@ -355,10 +356,8 @@ const Notifications = () => {
   const handlePushSubmit = async (e) => {
     e.preventDefault();
     
-    // Run comprehensive validation
     const isValid = validatePushForm();
     if (!isValid) {
-      // Scroll to first error
       const firstErrorField = Object.keys(pushValidationErrors)[0];
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
@@ -374,7 +373,7 @@ const Notifications = () => {
     }
     
     const token = localStorage.getItem("token");
-    
+    setSending(true);
     try {
       if (activeTab === "notification") {
         // Regular notification (FormData)

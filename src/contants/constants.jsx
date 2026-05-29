@@ -196,15 +196,15 @@ export const CUSTOM_COLORS = {
 };
 
 export const STATUS_VALUES = {
-  ALL: "",
+  ALL: "all",
   BOOLEAN_ACTIVE: "true",
   BOOLEAN_INACTIVE: "false",
 };
 
 // Make sure it matches what your API expects
 export const STATUS_OPTIONS = [
-  { value: "", labelKey: "COMMON.ALL" },
-  { value: "true", labelKey: "COMMON.ACTIVE" }, 
+  { value: "all", labelKey: "COMMON.ALL" },
+  { value: "true", labelKey: "COMMON.ACTIVE" },
   { value: "false", labelKey: "COMMON.INACTIVE" },
 ];
 

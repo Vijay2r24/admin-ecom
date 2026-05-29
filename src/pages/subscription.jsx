@@ -96,7 +96,7 @@ const SubscriptionPlan = () => {
   const total = availablePlans.length;
 
   // Find current plan from API data
-  const currentUserPlan = plans.find((p) => p.isCurrentPlan === true && p.currentPlanStatus === "Active")?.name || null;
+  const currentUserPlan = plans.find((p) => p.isCurrentPlan === true)?.name || null;
 
   const prev = useCallback(() =>
     setCurrentSlide((s) => Math.max(s - 2, 0)), []);
@@ -183,7 +183,7 @@ const SubscriptionPlan = () => {
                 .slice(currentSlide, currentSlide + 2)
                 .map((plan) => {
                 const style     = CARD_STYLES[plan.color] || CARD_STYLES.blue;
-                const isCurrent = currentUserPlan === plan.name;
+                const isCurrent = plan.isCurrentPlan === true;
 
                 return (
                   <div

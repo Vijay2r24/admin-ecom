@@ -265,7 +265,7 @@ const ProductInventory = () => {
 
       // Status filter
       if (oFilters.status && oFilters.status !== FILTER_VALUES.ALL) {
-        params.status = oFilters.status === FILTER_VALUES.TRUE;
+        params.IsActive = oFilters.status === FILTER_VALUES.TRUE;
       }
 
       // Brand filter

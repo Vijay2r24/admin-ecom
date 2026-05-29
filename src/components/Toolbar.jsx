@@ -424,12 +424,16 @@ const FilterCombobox = ({ filter, handleComboboxChange, t }) => {
       </label>
       <Combobox
         value={selectedOptions}
-        onChange={(option) => handleComboboxChange(option, filter.name)}
+        onChange={(option) => {
+          handleComboboxChange(option, filter.name);
+          setQuery(""); // reset search after selection
+        }}
         multiple={filter.multiple}
       >
         {({ open }) => {
           useEffect(() => {
             setIsOptionsOpen(open);
+            if (!open) setQuery(""); // reset query when dropdown closes
           }, [open]);
 
           return (
@@ -438,7 +442,8 @@ const FilterCombobox = ({ filter, handleComboboxChange, t }) => {
                 <div className="flex items-center w-full px-3 gap-2">
                   <Combobox.Input
                     spellCheck={false}
-                    className="w-full border-none p-0 text-xs leading-5 text-gray-900 focus:ring-0 bg-transparent outline-none shadow-none truncate"
+                    readOnly={!filter.searchable}
+                    className={`w-full border-none p-0 text-xs leading-5 text-gray-900 focus:ring-0 bg-transparent outline-none shadow-none truncate ${!filter.searchable ? 'cursor-pointer' : ''}`}
                     displayValue={(option) => {
                       if (filter.multiple && Array.isArray(filter.value) && filter.value.length > 0) {
                         const firstOpt = filter.options?.find(o => o.value === filter.value[0]);
@@ -451,6 +456,7 @@ const FilterCombobox = ({ filter, handleComboboxChange, t }) => {
                     }}
                     placeholder={filter.placeholder || `Select ${filter.label || filter.name}`}
                     onChange={(event) => {
+                      if (!filter.searchable) return;
                       setQuery(event.target.value);
                       if (filter.onInputChange) {
                         filter.onInputChange(event.target.value);

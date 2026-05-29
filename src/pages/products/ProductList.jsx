@@ -5,7 +5,7 @@ import Toolbar from "../../components/Toolbar";
 import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
-import { apiGet } from "../../utils/ApiUtils.jsx";
+import { apiGet, apiPatch } from "../../utils/ApiUtils.jsx";
 import { SKELETON_TYPES } from "../../contants/constants";
 import {
   GETPRODUCTDETAILS,
@@ -28,6 +28,7 @@ import { ToastContainer } from "react-toastify";
 import { exportProductReport } from "../../store/slices/exportSlice";
 import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
+import Tooltip from "../../components/Tooltip";
 import SkeletonLoader from "../../components/SkeletonLoader";
 import { getPermissionCode } from "../../utils/permissionUtils";
 import { MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE } from "../../contants/constants.jsx";
@@ -40,9 +41,14 @@ const getStatusBadgeClass = (status) => {
   return "status-active";
 };
 
-const getTotalStock = (inventory) => {
-  if (!Array.isArray(inventory) || inventory.length === 0) return 0;
-  return inventory.reduce((total, item) => total + (item.Quantity || 0), 0);
+const getTotalStock = (variant) => {
+  // New API: Quantity directly on variant
+  if (variant?.Quantity !== undefined) return variant.Quantity || 0;
+  // Old API: Inventory array
+  if (Array.isArray(variant?.Inventory)) {
+    return variant.Inventory.reduce((total, item) => total + (item.Quantity || 0), 0);
+  }
+  return 0;
 };
 
 const getFirstImage = (productVariantImages) => {
@@ -135,7 +141,7 @@ const ProductList = () => {
       };
 
       if (oFilters.status && oFilters.status !== "all") {
-        params.IsActive = oFilters.status === "true";
+        params.IsActive = oFilters.status === "true" ? true : false;
       }
       if (oFilters.brand && oFilters.brand !== "all") {
         const selectedBrand = brands.find((b) => b.BrandName === oFilters.brand);
@@ -152,19 +158,26 @@ const ProductList = () => {
       if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const rawProducts = Array.isArray(resData.data) ? resData.data : [];
         const transformedProducts = rawProducts.map((product) => {
-          const firstVariant =
-            product.Variants.find((v) => v.IsActive) || product.Variants[0] || {};
+          const variants = Array.isArray(product.Variants) ? product.Variants : [];
+          const firstVariant = variants.find((v) => v.IsActive) || variants[0] || {};
+          const stock = getTotalStock(firstVariant);
+          const productId = product.ProductID || product.ProductId;
+          // IsActive: use product root if present, else derive from variants
+          const isActive = product.IsActive !== undefined && product.IsActive !== null
+            ? Boolean(product.IsActive)
+            : variants.length > 0
+              ? variants.some((v) => v.IsActive === true)
+              : false;
           return {
             ...product,
+            ProductID: productId,
+            IsActive: isActive,
             subCategory: product.CategoryName,
             MRP: firstVariant.MRP || "0.00",
-            quantity: getTotalStock(firstVariant.Inventory || []),
+            quantity: stock,
             brandName: getBrandName(product),
             firstImage: getFirstImage(firstVariant.ProductVariantImages || []),
-            status:
-              product.IsActive && getTotalStock(firstVariant.Inventory || []) > 0
-                ? "active"
-                : "out-of-stock",
+            status: isActive && stock > 0 ? "active" : "out-of-stock",
           };
         });
         setProducts(transformedProducts);
@@ -298,19 +311,16 @@ const ProductList = () => {
     setSubmitting(true);
     const { productId, newStatus } = statusPopup;
     try {
-      const result = await dispatch(
-        updateStatusById({
-          key: "products",
-          id: productId,
-          newStatus,
-          apiRoute: UPDATE_PRODUCT_STATUS,
-          idField: "ProductID",
-        })
-      ).unwrap();
-      showEmsg(result.message, STATUS.SUCCESS);
-      await fetchProducts();
+      const token = localStorage.getItem("token");
+      const res = await apiPatch(`${UPDATE_PRODUCT_STATUS}/${productId}`, { IsActive: newStatus }, token);
+      if (res?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
+        showEmsg(res.data.message || t("COMMON.STATUS_UPDATED"), STATUS.SUCCESS);
+        await fetchProducts();
+      } else {
+        showEmsg(res?.data?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
+      }
     } catch (err) {
-      showEmsg(err?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
+      showEmsg(err?.response?.data?.message || err?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
       setStatusPopup({ open: false, productId: null, newStatus: null });
       setSubmitting(false);
@@ -388,21 +398,27 @@ const ProductList = () => {
                             />
                           </div>
                           <div className="ml-3">
-                            <div className="font-medium text-xs text-gray-900 ellipsis-text" title={product.ProductName}>
-                              {product.ProductName}
-                            </div>
+                            <Tooltip text={product.ProductName} position="top" align="left">
+                              <div className="font-medium text-xs text-gray-900 ellipsis-text">
+                                {product.ProductName}
+                              </div>
+                            </Tooltip>
                           </div>
                         </div>
                       </td>
                       <td className="table-cell text-center align-middle">
-                        <div className="ellipsis-text text-xs text-gray-700" title={product.subCategory}>
-                          {product.subCategory}
-                        </div>
+                        <Tooltip text={product.subCategory} position="top">
+                          <div className="ellipsis-text text-xs text-gray-700">
+                            {product.subCategory}
+                          </div>
+                        </Tooltip>
                       </td>
                       <td className="table-cell text-center align-middle">
-                        <div className="ellipsis-text text-xs text-gray-700" title={product.brandName}>
-                          {product.brandName}
-                        </div>
+                        <Tooltip text={product.brandName} position="top">
+                          <div className="ellipsis-text text-xs text-gray-700">
+                            {product.brandName}
+                          </div>
+                        </Tooltip>
                       </td>
                       <td className="table-cell text-center align-middle">
                         <Switch
@@ -469,9 +485,11 @@ const ProductList = () => {
                         />
                       </div>
                       <div className="flex-1">
-                        <div className="text-xs font-medium text-gray-900 ellipsis-text" title={product.ProductName}>
-                          {product.ProductName}
-                        </div>
+                        <Tooltip text={product.ProductName} position="top" align="left">
+                          <div className="text-xs font-medium text-gray-900 ellipsis-text">
+                            {product.ProductName}
+                          </div>
+                        </Tooltip>
                       </div>
                     </div>
                     <div className="text-xs text-gray-700 mt-2 ellipsis-text" title={product.subCategory}>

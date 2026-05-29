@@ -208,7 +208,7 @@ const Users = () => {
 
     // only include IsActive when it's NOT "all" and NOT empty
     if (oFilters.status && oFilters.status !== "all") {
-      params.IsActive = oFilters.status;
+      params.IsActive = oFilters.status === "true";
     }
 
     return params;
