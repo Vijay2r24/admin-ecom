@@ -1173,6 +1173,8 @@ export const SKELETON_TYPES = {
   STORE_GRID: 'store-grid',
   ORDER_TABLE: 'order-table',
   ORDER_GRID: 'order-grid',
+  ORDER_VIEW: 'order-view',
+  PAYMENT_GRID: 'payment-grid',
   BANNER_GRID: 'banner-grid',
   USER_ROLES_TABLE: 'user-roles-table',
   PAGINATION: 'pagination',
