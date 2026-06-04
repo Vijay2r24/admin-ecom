@@ -3,28 +3,40 @@ import { X } from 'lucide-react';
 import { INACTIVITY_NOTIFICATION } from '../contants/constants';
 import { useTranslation } from 'react-i18next';
 
-const InactivityNotification = ({ isVisible, onLogout, timeRemaining = 10, isUserInactive = false }) => {
+const InactivityNotification = ({ isVisible, onLogout, onContinue, timeRemaining = 30, isUserInactive = false }) => {
   const { t } = useTranslation();
   const [countdown, setCountdown] = useState(timeRemaining);
 
+  // Reset countdown whenever the dialog becomes visible
   useEffect(() => {
-    if (isVisible && countdown > 0) {
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            onLogout();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
+    if (isVisible) {
+      setCountdown(timeRemaining);
     }
+  }, [isVisible, timeRemaining]);
+
+  useEffect(() => {
+    if (!isVisible || countdown <= 0) return;
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          onLogout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, [isVisible, countdown, onLogout]);
 
   if (!isVisible) return null;
+
+  const handleContinue = () => {
+    setCountdown(timeRemaining); 
+    if (onContinue) onContinue(); 
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -66,7 +78,7 @@ const InactivityNotification = ({ isVisible, onLogout, timeRemaining = 10, isUse
             </button>
             {!isUserInactive && (
               <button
-                onClick={() => setCountdown(timeRemaining)}
+                onClick={handleContinue}
                 className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-md transition-colors"
               >
                 {t(INACTIVITY_NOTIFICATION.BUTTONS.CONTINUE_SESSION.labelKey)}

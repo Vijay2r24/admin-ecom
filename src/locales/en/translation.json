@@ -1716,5 +1716,14 @@
     "UPDATE_SPECIFICATION_TYPE_STATUS_TOOLTIP": "Update specification type status",
     "EDIT_PRODUCT_GROUP_TOOLTIP": "Edit product group details",
     "UPDATE_PRODUCT_GROUP_STATUS_TOOLTIP": "Update product group status"
+  },
+  "INACTIVITY": {
+    "SESSION_TIMEOUT_WARNING": "Session Timeout Warning",
+    "ACCOUNT_INACTIVE": "Account Inactive",
+    "SESSION_TIMEOUT_MESSAGE": "You have been inactive for a while. You will be logged out automatically.",
+    "ACCOUNT_INACTIVE_MESSAGE": "Your account has been marked as inactive. Please contact an administrator.",
+    "LOGOUT_NOW": "Logout Now",
+    "CONTINUE_SESSION": "Continue Session",
+    "SECONDS": "seconds remaining"
   }
 }

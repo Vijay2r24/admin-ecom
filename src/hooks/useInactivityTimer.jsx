@@ -2,108 +2,131 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/slices/authSlice';
 
-const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
+const WARNING_COUNTDOWN_SECONDS = 30;       // Countdown shown before auto-logout
 
 export const useInactivityTimer = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  const timeoutRef = useRef(null);
-  const lastActivityRef = useRef(Date.now());
-  const [showNotification, setShowNotification] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(10);
 
-  // Check if user is logged in
-  const isUserLoggedIn = useCallback(() => {
-    return !!user; // Any logged-in user should be tracked
-  }, [user]);
+  // Treat user as logged in if Redux user is set OR a token exists in localStorage.
+  // This handles the case where the page is refreshed and Redux is not yet rehydrated
+  // but the session token is still valid.
+  const isLoggedIn = !!user || !!localStorage.getItem('token');
+
+  // All mutable state lives in refs so callbacks never go stale
+  const inactivityTimeoutRef = useRef(null);
+  const logoutTimeoutRef = useRef(null);
+  const isLoggingOutRef = useRef(false);
+  const showNotificationRef = useRef(false);
+  const dispatchRef = useRef(dispatch);
+
+  // Keep dispatchRef current without triggering re-renders
+  dispatchRef.current = dispatch;
+
+  const [showNotification, setShowNotification] = useState(false);
+
+  // ── Helpers (stable — use only refs, no closure over changing values) ──
+
+  const clearAllTimers = useCallback(() => {
+    clearTimeout(inactivityTimeoutRef.current);
+    clearTimeout(logoutTimeoutRef.current);
+    inactivityTimeoutRef.current = null;
+    logoutTimeoutRef.current = null;
+  }, []);
+
+  const performLogout = useCallback(() => {
+    if (isLoggingOutRef.current) return;
+    isLoggingOutRef.current = true;
+    clearAllTimers();
+    showNotificationRef.current = false;
+    setShowNotification(false);
+    dispatchRef.current(logout());
+    // Use replace so the browser back button doesn't return to a protected page
+    window.location.replace('/');
+  }, [clearAllTimers]);
 
   const resetTimer = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
-    // Only set timer if user is logged in
-    if (user) {
-      timeoutRef.current = setTimeout(() => {
-        setShowNotification(true);
-        setTimeRemaining(10);
-        
-        // Auto logout after 10 seconds of showing notification
-        const logoutTimer = setTimeout(() => {
-          dispatch(logout());
-          window.location.href = '/login';
-        }, 10000);
-        
-        timeoutRef.current = logoutTimer;
-      }, INACTIVITY_TIMEOUT);
-    }
-  }, [dispatch, user]);
+    if (isLoggingOutRef.current) return;
+    if (!localStorage.getItem('token')) return; // Not logged in
+
+    clearAllTimers();
+    showNotificationRef.current = false;
+    setShowNotification(false);
+
+    inactivityTimeoutRef.current = setTimeout(() => {
+      // 15 minutes idle — show warning
+      showNotificationRef.current = true;
+      setShowNotification(true);
+
+      // Auto-logout after countdown expires
+      logoutTimeoutRef.current = setTimeout(() => {
+        performLogout();
+      }, WARNING_COUNTDOWN_SECONDS * 1000);
+    }, INACTIVITY_TIMEOUT);
+  }, [clearAllTimers, performLogout]);
+
+  // ── Public API ──────────────────────────────────────────────────────────
 
   const handleActivity = useCallback(() => {
-    lastActivityRef.current = Date.now();
+    if (isLoggingOutRef.current) return;
+    if (showNotificationRef.current) return; // Don't reset while warning is visible
     resetTimer();
-    setShowNotification(false);
   }, [resetTimer]);
 
-  const handleVisibilityChange = useCallback(() => {
-    if (document.hidden) {
-      // Tab is hidden, don't update activity
-      return;
-    }
-    
-    // Tab is visible again, update activity
-    handleActivity();
-  }, [handleActivity]);
+  const handleContinueSession = useCallback(() => {
+    if (isLoggingOutRef.current) return;
+    resetTimer(); // Restarts the full 15-min idle timer
+  }, [resetTimer]);
 
   const handleLogoutNow = useCallback(() => {
-    dispatch(logout());
-    window.location.href = '/login';
-    setShowNotification(false);
-  }, [dispatch]);
+    performLogout();
+  }, [performLogout]);
+
+  // ── Effect: attach/detach listeners only when login state changes ───────
 
   useEffect(() => {
     const events = [
-      'mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click',
-      'focus', 'blur', 'load'
+      'mousedown', 'mousemove', 'keypress', 'scroll',
+      'touchstart', 'click', 'focus',
     ];
 
-    const handleUserActivity = (event) => {
-      handleActivity();
+    const onActivity = () => {
+      if (isLoggingOutRef.current) return;
+      if (showNotificationRef.current) return;
+      resetTimer();
     };
 
-    // Add event listeners for user activity
-    events.forEach(event => {
-      document.addEventListener(event, handleUserActivity, true);
-    });
+    const onVisibilityChange = () => {
+      if (!document.hidden) onActivity();
+    };
 
-    // Handle page visibility changes
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    events.forEach(e => document.addEventListener(e, onActivity, true));
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
-    // Only initialize timer if user is logged in
-    if (user) {
-      resetTimer();
+    if (isLoggedIn) {
+      // User is logged in (via Redux or token in localStorage after page refresh)
+      isLoggingOutRef.current = false;
+      resetTimer(); // Start the idle countdown
+    } else {
+      clearAllTimers(); // User logged out — stop timers
     }
 
-    // Cleanup
     return () => {
-      events.forEach(event => {
-        document.removeEventListener(event, handleUserActivity, true);
-      });
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      events.forEach(e => document.removeEventListener(e, onActivity, true));
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      clearAllTimers();
     };
-  }, [handleActivity, handleVisibilityChange, resetTimer, user]);
+  }, [isLoggedIn]); // Re-run when login state changes (covers page refresh case too)
+  // resetTimer and clearAllTimers are stable (no changing deps), safe to omit
 
-  // Return a function to manually reset timer (useful for testing)
   return {
-    resetTimer,
-    handleActivity,
     showNotification,
-    timeRemaining,
+    timeRemaining: WARNING_COUNTDOWN_SECONDS,
     handleLogoutNow,
-    isUserLoggedIn: !!user
+    handleContinueSession,
+    handleActivity,
+    resetTimer,
+    isUserLoggedIn: isLoggedIn,
   };
 };
