@@ -297,7 +297,40 @@ const ProductInventory = () => {
       if (resData?.status.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const rawProducts = Array.isArray(resData.data) ? resData.data : [];
 
-        const transformedProducts = rawProducts.map((product) => {
+        // Group products by ProductID to handle duplicates from backend
+        const productMap = new Map();
+
+        rawProducts.forEach((product) => {
+          // Handle both ProductId and ProductID field names from backend
+          const productId = product.ProductId || product.ProductID;
+          
+          if (!productId) return; // Skip if no valid product ID
+
+          // If product already exists in map, merge the variants
+          if (productMap.has(productId)) {
+            const existingProduct = productMap.get(productId);
+            const newVariants = Array.isArray(product.Variants) ? product.Variants : [];
+            const existingVariants = Array.isArray(existingProduct.Variants) ? existingProduct.Variants : [];
+            
+            // Merge variants, avoiding duplicates by VariantID
+            const variantMap = new Map();
+            [...existingVariants, ...newVariants].forEach(v => {
+              const variantId = v.ProductVariantID || v.VariantID;
+              if (variantId && !variantMap.has(variantId)) {
+                variantMap.set(variantId, v);
+              }
+            });
+            
+            existingProduct.Variants = Array.from(variantMap.values());
+            productMap.set(productId, existingProduct);
+          } else {
+            // Add new product to map
+            productMap.set(productId, { ...product, ProductId: productId });
+          }
+        });
+
+        // Transform the deduplicated products
+        const transformedProducts = Array.from(productMap.values()).map((product) => {
           // Aggregate quantity across all variants
           const totalQuantity = Array.isArray(product.Variants)
             ? product.Variants.reduce((sum, v) => sum + (v.Quantity || 0), 0)

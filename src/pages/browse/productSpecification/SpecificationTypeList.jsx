@@ -94,7 +94,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
 
   const { canCreate: canAddSpecificationType, disabledReason: addSpecificationTypeDisabledReason } =
     useCreateAccess(permissionIdForAddSpecificationType, {
-      actionType: "PRODUCT_GROUP",
+      actionType: "PRODUCT_SETUP_SPECIFICATION_TYPES",
       noPermissionMsg: t("SPECIFICATION_TYPES.NO_CREATE_PERMISSION", "You do not have permission to add specification types."),
       limitReachedMsg: t("SPECIFICATION_TYPES.LIMIT_REACHED", "You have reached your specification type creation limit."),
       planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
@@ -399,7 +399,7 @@ const SpecificationTypeList = ({ setSubmitting }) => {
           // --- Permission-based Create Button ---
           onCreate={handleCreate}
           createLabel={t("PRODUCT_SETUP.CREATE")}
-          actionType="PRODUCT_GROUP"
+          actionType="PRODUCT_SETUP_SPECIFICATION_TYPES"
           disableCreate={!canAddSpecificationType}
           disableCreateReason={addSpecificationTypeDisabledReason}
           

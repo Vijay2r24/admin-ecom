@@ -94,7 +94,8 @@ const ProfileDetails = () => {
         city: userDetails.CityName || "",
         state: userDetails.StateName || "",
         zipCode: userDetails.Zipcode || "",
-        joinDate: userDetails.CreatedDate || new Date().toISOString(),
+        // Handle both CreatedAt and CreatedDate field names from backend
+        joinDate: userDetails.CreatedAt || userDetails.CreatedDate || new Date().toISOString(),
         avatar: userDetails.ProfileImageUrl && userDetails.ProfileImageUrl.length > 0 
           ? userDetails.ProfileImageUrl[0].documentUrl 
           : null,

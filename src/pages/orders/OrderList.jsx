@@ -335,18 +335,28 @@ const OrderList = () => {
         searchText: sSearchTerm,
         pageNumber: nCurrentPage,
         pageSize: nProductsPerPage,
-        // --- 7. Pass Store ID as Array ---
-        storeId: Array.isArray(oFilters.store) && oFilters.store.length > 0
-          ? oFilters.store
-          : undefined,
-        paymentStatusId:
-          Array.isArray(oFilters.paymentStatus) && oFilters.paymentStatus.length > 0
-            ? oFilters.paymentStatus
-            : undefined,
         startDate: startDate,
         endDate: endDate,
       };
 
+      // Only add storeId if specific stores are selected (not all stores)
+      // If all stores are selected, don't pass the storeId parameter at all
+      const allStoreIds = aStores.map(store => store.StoreID);
+      const selectedStoreIds = Array.isArray(oFilters.store) ? oFilters.store : [];
+      const areAllStoresSelected = selectedStoreIds.length > 0 && 
+                                   selectedStoreIds.length === allStoreIds.length &&
+                                   allStoreIds.every(id => selectedStoreIds.includes(id));
+
+      if (!areAllStoresSelected && selectedStoreIds.length > 0) {
+        params.storeId = selectedStoreIds;
+      }
+
+      // Only add paymentStatusId if payment statuses are specifically selected
+      if (Array.isArray(oFilters.paymentStatus) && oFilters.paymentStatus.length > 0) {
+        params.paymentStatusId = oFilters.paymentStatus;
+      }
+
+      // Remove undefined values from params
       Object.keys(params).forEach((key) => {
         if (params[key] === undefined) {
           delete params[key];
@@ -495,26 +505,35 @@ const OrderList = () => {
       const startDate = formatDateForAPI(oFilters.startDate);
       const endDate = formatDateForAPI(oFilters.endDate);
 
-      await dispatch(
-        exportOrderReport({
-          searchText: sSearchTerm,
-          // --- 8. Pass Store ID as Array ---
-          storeId: Array.isArray(oFilters.store) && oFilters.store.length > 0
-            ? oFilters.store
-            : undefined,
-          paymentStatusId:
-            Array.isArray(oFilters.paymentStatus) && oFilters.paymentStatus.length > 0
-              ? oFilters.paymentStatus
-              : undefined,
-          startDate: startDate,
-          endDate: endDate,
-        })
-      ).unwrap();
+      const exportParams = {
+        searchText: sSearchTerm,
+        startDate: startDate,
+        endDate: endDate,
+      };
+
+      // Only add storeId if specific stores are selected (not all stores)
+      // If all stores are selected, don't pass the storeId parameter at all
+      const allStoreIds = aStores.map(store => store.StoreID);
+      const selectedStoreIds = Array.isArray(oFilters.store) ? oFilters.store : [];
+      const areAllStoresSelected = selectedStoreIds.length > 0 && 
+                                   selectedStoreIds.length === allStoreIds.length &&
+                                   allStoreIds.every(id => selectedStoreIds.includes(id));
+
+      if (!areAllStoresSelected && selectedStoreIds.length > 0) {
+        exportParams.storeId = selectedStoreIds;
+      }
+
+      // Only add paymentStatusId if payment statuses are specifically selected
+      if (Array.isArray(oFilters.paymentStatus) && oFilters.paymentStatus.length > 0) {
+        exportParams.paymentStatusId = oFilters.paymentStatus;
+      }
+
+      await dispatch(exportOrderReport(exportParams)).unwrap();
     } catch (error) {
     } finally {
       setExportLoading(false);
     }
-  }, [dispatch, sSearchTerm, oFilters, t, hasExportPermission]);
+  }, [dispatch, sSearchTerm, oFilters, aStores, t, hasExportPermission]);
 
   const handleTableScroll = useCallback((e) => {
     setTableScrollTop(e.target.scrollTop);
