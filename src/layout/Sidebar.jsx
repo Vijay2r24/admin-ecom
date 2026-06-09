@@ -22,6 +22,7 @@ import {
   Upload,
   RefreshCw,
   Warehouse,
+  FileX ,
 } from 'lucide-react';
 import { permissionIdsInclude } from '../utils/permissionUtils';
 import {
@@ -106,6 +107,12 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
       href: '/payments',
       icon: CreditCard,
       relatedPaths: ['/payment-details']
+    },
+      {
+      name: t('SIDEBAR.CANCELLATIONS'),
+      href: '/cancellations',
+      icon: FileX ,
+      relatedPaths: ['/cancellation-details']
     },
       
     {

@@ -113,7 +113,57 @@
     "BULK_IMAGES": "Bulk Images",
     "DATA_IMPORT": "Data Import",
     "LOW_STOCK": "Low Stock",
-    "PRODUCT_INVENTORY":"Product Inventory"
+    "PRODUCT_INVENTORY":"Product Inventory",
+    "CANCELLATIONS":"Cancellations"
+  },
+  "REASON_MANAGEMENT": {
+    "TITLE": "Reason Management",
+    "SUBTITLE": "Manage cancellation, return, and replacement reasons by category",
+    "ADD_BTN": "Create Reason",
+    "SEARCH_PLACEHOLDER": "Search by reason, code, or category...",
+    "NO_REASONS_FOUND": "No reasons found",
+    "LOADING_CATEGORIES": "Loading categories...",
+    "NO_CATEGORIES": "No categories available",
+    "TABLE": {
+      "SNO": "S.No",
+      "CATEGORY": "Category",
+      "REASON_TYPE": "Reason Type",
+      "REASON_CODE": "Reason Code",
+      "REASON_LABEL": "Reason Label",
+      "REQUIRES_COMMENT": "Requires Comment",
+      "REQUIRES_ATTACHMENT": "Requires Attachment",
+      "STATUS": "Status",
+      "ACTIONS": "Actions"
+    },
+    "MODAL": {
+      "CREATE_TITLE": "Create Reason",
+      "EDIT_TITLE": "Edit Reason",
+      "CATEGORY_LABEL": "Product Category",
+      "CATEGORY_PLACEHOLDER": "Select Category",
+      "REASON_TYPE_LABEL": "Reason Type",
+      "REASON_CODE_LABEL": "Reason Code",
+      "REASON_CODE_PLACEHOLDER": "e.g., DEFECTIVE_PRODUCT",
+      "REASON_LABEL_LABEL": "Reason Label",
+      "REASON_LABEL_PLACEHOLDER": "e.g., Product is damaged",
+      "REQUIRES_COMMENT_LABEL": "Requires Comment",
+      "REQUIRES_ATTACHMENT_LABEL": "Requires Attachment",
+      "ACTIVE_LABEL": "Active",
+      "CANCEL_BTN": "Cancel",
+      "CREATE_BTN": "Add",
+      "UPDATE_BTN": "Update"
+    },
+    "REASON_TYPES": {
+      "ALL": "All",
+      "CANCEL": "Cancellation",
+      "RETURN": "Return",
+      "REPLACE": "Replacement"
+    },
+    "CONFIRM_ACTIVATE": "Are you sure you want to activate this reason?",
+    "CONFIRM_DEACTIVATE": "Are you sure you want to deactivate this reason?",
+    "YES": "Yes",
+    "NO": "No",
+    "EDIT_TOOLTIP": "Edit",
+    "DELETE_TOOLTIP": "Delete"
   },
   "SUBSCRIPTIONPLANS": {
     "TITLE": "Subscription Plans",

@@ -209,8 +209,20 @@ export const STATUS_OPTIONS = [
 ];
 
 export const ITEMS_PER_PAGE = 10;
+export const VISIBLE_LIMIT = 2; // Number of visible items before showing "more" button
 export const LOCALE = "en-US";
 export const CURRENCY = "INR";
+
+export const REASON_TYPES = {
+  CANCEL: 'Cancel',
+  RETURN: 'Return',
+  REPLACE: 'Replace',
+};
+
+export const YES_NO_VALUES = {
+  YES: 'Yes',
+  NO: 'No',
+};
 
 export const SUBSCRIPTION_PLAN = {
   DEFAULT_CURRENCY:    "INR",
@@ -263,6 +275,7 @@ export const BANNER_HEIGHT = 600;
 
 export const FILTERS = {
   STATUS: "status",
+  REASON_TYPE: "reasonType",
 };
 
 export const FORM_MODES = {
