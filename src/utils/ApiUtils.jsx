@@ -205,11 +205,11 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
   instance.interceptors.request.use((config) => {
     const lsToken = localStorage.getItem("token");
     if (lsToken) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${lsToken}`;
+      config.headers.set("Authorization", `Bearer ${lsToken}`);
     }
-    
-    
+
+    config.headers.set("tenant-domain", window.location.hostname);
+
     return config;
   });
 
