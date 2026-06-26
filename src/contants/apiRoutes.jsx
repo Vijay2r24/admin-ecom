@@ -170,3 +170,4 @@ export const UPDATE_REASON='/updateReason';
 export const GET_REASONS_LIST='/getReasonList';
 export const GET_REASONSBYID='/getReasonById';
 export const UPDATE_REASONS_STATUS='/updateReasonStatus';
+export const GET_LOW_STOCK = `/getLowStockProducts`;

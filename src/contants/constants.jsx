@@ -87,6 +87,7 @@ export const APP_ROUTES = {
   SUBSCRIPTION: "/subscription",
   NOT_AUTHORIZED: "/not-authorized",
   UPGRADE_PLAN: "/upgrade-plan",
+  LOW_STOCK: "/low-stock",
 };
 
 /** Product Setup (`/browse`) tab keys — keep in sync with plan + permission maps. */

@@ -63,6 +63,7 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
         { name: t('SIDEBAR.PRODUCT_SETUP'), href: APP_ROUTES.BROWSE, icon: Settings },
         { name: t('SIDEBAR.PRODUCTS'), href: '/productList', icon: Package, relatedPaths: ['/Addproduct','/edit-product','/AddVariants','/productdetails'] },
         { name: t('SIDEBAR.PRODUCT_INVENTORY'), href:'/InventoryList', icon:Warehouse},
+        { name: t('SIDEBAR.LOW_STOCK'), href: APP_ROUTES.LOW_STOCK, icon: RefreshCw },
       ]
     },
     {

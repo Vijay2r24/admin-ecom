@@ -80,6 +80,7 @@ import SubscriptionPlan from './pages/subscription';
 import PlanGate from './pages/PlanGate';
 import Cancellations from './pages/Cancellation.jsx';
 import CreateReason from './pages/CreateReason.jsx';
+import LowStock from './pages/products/LoweStock.jsx';
 
 const PublicRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -618,6 +619,16 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <ProductDetails />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Low Stock */}
+                <Route
+                  path="/low-stock"
+                  element={
+                    <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCTS)}>
+                      <LowStock />
                     </ProtectedRoute>
                   }
                 />
