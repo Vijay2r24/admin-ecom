@@ -43,7 +43,7 @@ const TextInputWithIcon = forwardRef(
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className={`block w-full pl-10 pr-3 py-2.5 border ${error ? "border-red-300" : "border-gray-200"
+            className={`block w-full pl-10 ${inputSlot ? "pr-10" : "pr-3"} py-2.5 border ${error ? "border-red-300" : "border-gray-200"
               } rounded-md focus:outline-none focus:border-custom-bg transition-all duration-200 group-hover:border-custom-bg bg-white shadow-sm appearance-none placeholder:text-xs text-xs ${className}`}
             {...rest}
           />

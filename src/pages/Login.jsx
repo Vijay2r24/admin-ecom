@@ -12,6 +12,8 @@ import {
     CheckCircle,
     XCircle,
     Pencil,
+    Eye,
+    EyeOff,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import TextInputWithIcon from "../components/TextInputWithIcon";
@@ -98,6 +100,7 @@ const Login = () => {
     const [sConfirmPassword, setConfirmPassword] = useState("");
     const [bShowNewPassword, setShowNewPassword] = useState(false);
     const [bShowConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [bShowPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     const { fetchUserDetails } = useUserDetails();
@@ -605,12 +608,26 @@ const Login = () => {
                             label={t("LOGIN.PASSWORD")}
                             id="password"
                             name="password"
-                            type="password"
+                            type={bShowPassword ? "text" : "password"}
                             placeholder={t("LOGIN.PASSWORD_PLACEHOLDER")}
                             value={oFormData.password}
                             onChange={(e) => handleChange("password", e.target.value)}
                             Icon={Lock}
                             required
+                            className="[&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
+                            inputSlot={
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    className="text-gray-400 hover:text-custom-bg transition-colors duration-200"
+                                    aria-label={bShowPassword ? PASSWORD_ARIA.HIDE : PASSWORD_ARIA.SHOW}
+                                >
+                                    {bShowPassword
+                                        ? <EyeOff className="h-4 w-4" />
+                                        : <Eye className="h-4 w-4" />
+                                    }
+                                </button>
+                            }
                         />
                         {sError.password && (
                             <p className="text-sm text-red-500 mt-1">{sError.password}</p>
@@ -734,11 +751,13 @@ const Login = () => {
                                     onClick={() =>
                                         setShowNewPassword((v) => !v)
                                     }
-                                    className="text-gray-500 hover:text-custom-bg"
-                                    aria-label={bShowNewPassword? PASSWORD_ARIA.HIDE: PASSWORD_ARIA.SHOW
-                                    }
+                                    className="text-gray-400 hover:text-custom-bg transition-colors duration-200"
+                                    aria-label={bShowNewPassword ? PASSWORD_ARIA.HIDE : PASSWORD_ARIA.SHOW}
                                 >
-                                    {bShowNewPassword? PASSWORD_LABELS.HIDE: PASSWORD_LABELS.SHOW}
+                                    {bShowNewPassword
+                                        ? <EyeOff className="h-4 w-4" />
+                                        : <Eye className="h-4 w-4" />
+                                    }
                                 </button>
                             }
                         />
@@ -782,17 +801,12 @@ const Login = () => {
                                     onClick={() =>
                                         setShowConfirmPassword((v) => !v)
                                     }
-                                    className="text-gray-500 hover:text-custom-bg"
-                                    aria-label={
-                                        bShowConfirmPassword
-                                            ? PASSWORD_ARIA.HIDE
-                                            : PASSWORD_ARIA.SHOW
-                                    }
+                                    className="text-gray-400 hover:text-custom-bg transition-colors duration-200"
+                                    aria-label={bShowConfirmPassword ? PASSWORD_ARIA.HIDE : PASSWORD_ARIA.SHOW}
                                 >
-                                    {
-                                        bShowConfirmPassword
-                                            ? PASSWORD_LABELS.HIDE
-                                            : PASSWORD_LABELS.SHOW
+                                    {bShowConfirmPassword
+                                        ? <EyeOff className="h-4 w-4" />
+                                        : <Eye className="h-4 w-4" />
                                     }
                                 </button>
                             }
