@@ -10,7 +10,7 @@ import Switch from "../../../components/Switch";
 import Tooltip from "../../../components/Tooltip";
 import Loader from "../../../components/Loader";
 import SkeletonLoader from "../../../components/SkeletonLoader";
-import { SKELETON_TYPES } from "../../../contants/constants";
+import EmptyState from "../../../components/EmptyState";import { SKELETON_TYPES } from "../../../contants/constants";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import { UPDATE_ATTRIBUTRE_VALUE_STATUS } from "../../../contants/apiRoutes";
 import {
@@ -287,18 +287,12 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
                   </tr>
                 ) : aAttributes.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-gray-500">
-                      <div>
-                        {t("PRODUCT_SETUP.ATTRIBUTES.EMPTY.MESSAGE")}
-                        {sSearchQuery && (
-                          <button
-                            onClick={() => setSearchQuery("")}
-                            className="mt-2 text-[#5B45E0] hover:text-[#4c39c7]"
-                          >
-                            {t("COMMON.CLEAR_SEARCH")}
-                          </button>
-                        )}
-                      </div>
+                    <td colSpan={4}>
+                      <EmptyState
+                        title={t("PRODUCT_SETUP.ATTRIBUTES.EMPTY_MESSAGE")}
+                        description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                        compact
+                      />
                     </td>
                   </tr>
                 ) : (

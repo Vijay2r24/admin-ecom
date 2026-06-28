@@ -145,13 +145,24 @@ const OrderToolbar = ({
               </div>
               <input
                 type="text"
-                className="block w-full pl-8 pr-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-custom-bg focus:border-custom-bg text-xs h-full"
+                className="block w-full pl-8 pr-8 py-1.5 border border-gray-300 rounded-md focus:ring-custom-bg focus:border-custom-bg text-xs h-full"
                 placeholder={
                   searchPlaceholder || t("TOOLBAR.SEARCH_PLACEHOLDER")
                 }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
+              {searchTerm && (
+                <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center">
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    title="Clear search"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

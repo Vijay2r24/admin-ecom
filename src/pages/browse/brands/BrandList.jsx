@@ -18,6 +18,7 @@ import Switch from "../../../components/Switch";
 import Tooltip from "../../../components/Tooltip";
 import Loader from "../../../components/Loader";
 import SkeletonLoader from "../../../components/SkeletonLoader";
+import EmptyState from "../../../components/EmptyState";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -280,20 +281,12 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                 <SkeletonLoader type={SKELETON_TYPES.BRAND_TABLE} rows={6} />
               ) : aBrands.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-gray-500">
-                    <div>
-                      <p className="text-lg mb-4">
-                        {t("PRODUCT_SETUP.BRANDS.NO_BRANDS_FOUND")}
-                      </p>
-                      {sSearchQuery && (
-                        <button
-                          onClick={() => setSearchQuery("")}
-                          className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
-                        >
-                          {t("COMMON.CLEAR_SEARCH")}
-                        </button>
-                      )}
-                    </div>
+                  <td colSpan={4}>
+                    <EmptyState
+                      title={t("PRODUCT_SETUP.BRANDS.NO_BRANDS_FOUND")}
+                      description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                      compact
+                    />
                   </td>
                 </tr>
               ) : (
@@ -450,20 +443,16 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       )}
 
       {/* Pagination Controls */}
-      {iTotalItems > 0 && (
-        bLoading ? (
-          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
-        ) : (
-          <Pagination
-            currentPage={nCurrentPage}
-            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-            totalItems={iTotalItems}
-            itemsPerPage={iItemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
-        )
+      {!bLoading && !sError && (
+        <Pagination
+          currentPage={nCurrentPage}
+          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+          totalItems={iTotalItems}
+          itemsPerPage={iItemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
       )}
 
       {/* Confirmation Popup */}

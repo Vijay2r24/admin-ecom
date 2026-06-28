@@ -14,7 +14,7 @@ import { showEmsg } from "../../../utils/ShowEmsg";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Loader from "../../../components/Loader";
 import SkeletonLoader from "../../../components/SkeletonLoader";
-import {
+import EmptyState from "../../../components/EmptyState";import {
   CREATE_SPECIFICATION_TYPE,
   GET_SPECIFICATION_TYPE_ID,
   UPDATE_SPECIFICATION_TYPE,
@@ -462,18 +462,13 @@ const SpecificationTypeList = ({ setSubmitting }) => {
                 </tr>
               ) : aSpecificationTypes.length === 0 && !editForm.open ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
-                    <div>
-                      {t("PRODUCT_SETUP.SPECIFICATION_TYPES.EMPTY.MESSAGE")}
-                      {sSearchQuery && (
-                        <button
-                          onClick={() => setSearchQuery("")}
-                          className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
-                        >
-                          {t("COMMON.CLEAR_SEARCH")}
-                        </button>
-                      )}
-                    </div>
+                  <td colSpan={5}>
+                    <EmptyState
+                      type="products"
+                      title={t("PRODUCT_SETUP.SPECIFICATION_TYPES.EMPTY.MESSAGE")}
+                      description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                      compact
+                    />
                   </td>
                 </tr>
               ) : (
@@ -677,20 +672,16 @@ const SpecificationTypeList = ({ setSubmitting }) => {
       </div>
 
       {/* Pagination - Fixed at bottom */}
-      {iTotalItems > 0 && (
-        bLoading ? (
-          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
-        ) : (
-          <Pagination
-            currentPage={nCurrentPage}
-            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-            totalItems={iTotalItems}
-            itemsPerPage={iItemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
-        )
+      {!bLoading && !sError && (
+        <Pagination
+          currentPage={nCurrentPage}
+          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+          totalItems={iTotalItems}
+          itemsPerPage={iItemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
       )} 
 
       {/* Confirmation popup for status change */}

@@ -1,7 +1,7 @@
 import axios from "axios";
-import Swal from "sweetalert2";
 import { BASE_URL } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
+<<<<<<< Updated upstream
 import {
   API_CUSTOM_CODES,
   MESSAGES,
@@ -15,18 +15,16 @@ import {
   markUserCreateLimitBlocked,
 } from "./planAccessUtils";
 import i18n from "../i18n.js";
+=======
+import { MESSAGES, STATUS } from "../contants/constants";
+>>>>>>> Stashed changes
 
 /* ------------------------------------------------------------------
    LOGOUT + NOTIFICATION FUNCTIONS
 ------------------------------------------------------------------ */
 
-const INACTIVE_USER_MESSAGE = MESSAGES.INACTIVE_USER_MESSAGE;
 const DEFAULT_ERROR_MESSAGE = MESSAGES.DEFAULT_ERROR_MESSAGE;
 
-const handleLogout = () => {
-  localStorage.clear();
-  window.location.href = "/";
-};
 
 /* ---------------- BLOCK POPUP ON LOGIN PAGE ---------------- */
 const isLoginPage = () => {
@@ -34,6 +32,7 @@ const isLoginPage = () => {
   return path === "/" || path === "/login";
 };
 
+<<<<<<< Updated upstream
 const isUpgradePlanPage = () =>
   window.location.pathname.toLowerCase() === "/upgrade-plan";
 
@@ -171,6 +170,8 @@ const showLogoutNotification = (message, fallbackText = INACTIVE_USER_MESSAGE) =
   */
 };
 
+=======
+>>>>>>> Stashed changes
 /* ------------------------------------------------------------------
    ABORT CONTROLLER STORE — Prevent duplicate API calls
 ------------------------------------------------------------------ */
@@ -207,9 +208,14 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
     if (lsToken) {
       config.headers.set("Authorization", `Bearer ${lsToken}`);
     }
+<<<<<<< Updated upstream
 
     config.headers.set("tenant-domain", window.location.hostname);
 
+=======
+    
+    config.headers.set("tenant-domain", "ecommerce-qa.admin.b2yinfy.com");
+>>>>>>> Stashed changes
     return config;
   });
 
@@ -253,7 +259,11 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
           normalized.includes("account has been deactivated")
         ) {
           if (!isLoginPage()) {
+<<<<<<< Updated upstream
             console.error("User inactive/deactivated - triggering IdleLogout");
+=======
+            console.log("User inactive/deactivated - triggering IdleLogout");
+>>>>>>> Stashed changes
             const logoutEvent = new CustomEvent('triggerIdleLogout', { 
               detail: { message: msg, fallbackText: "Account inactive - session timeout" } 
             });
@@ -354,7 +364,7 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
                error?.message || 
                DEFAULT_ERROR_MESSAGE;
         customCode = error?.response?.data?.customCode;
-      } catch (e) {
+      } catch {
         msg = DEFAULT_ERROR_MESSAGE;
       }
 

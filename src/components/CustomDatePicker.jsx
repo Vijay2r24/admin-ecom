@@ -498,10 +498,10 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
   const isDateSelected = dateRange.start && dateRange.end;
 
   return (
-    <div className="relative" ref={calendarRef}>
+    <div className="relative w-full h-full" ref={calendarRef}>
       <div
-        className={`flex items-center justify-between gap-1.5 w-full px-2.5 py-1.5 border border-gray-300 rounded-md bg-white ${STYLES.backgroundColor.hover} transition-colors focus:outline-none ${STYLES.border.focus} h-full cursor-pointer`}
-        style={{ minWidth: "320px" }}
+        className={`flex items-center justify-between gap-1.5 w-full px-2.5 py-2.5 border border-gray-200 rounded-md bg-white ${STYLES.backgroundColor.hover} transition-colors focus:outline-none ${STYLES.border.focus} h-full cursor-pointer shadow-sm text-xs`}
+        style={{ minWidth: 0 }}
         onClick={() => setShowDropdown((prev) => !prev)}
         role="button"
         tabIndex={0}
@@ -509,7 +509,7 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
       >
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <Calendar size={12} className={STYLES.textColor.secondary} />
-          <span className="text-gray-700 whitespace-nowrap font-medium flex-1 text-left text-xs">
+          <span className="text-gray-700 truncate font-medium flex-1 text-left text-xs">
             {displayText || t("SELECT_DATE_TIME")}
           </span>
         </div>

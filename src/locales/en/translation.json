@@ -648,6 +648,9 @@
       "CONFIRM_DEACTIVATE": "Are you sure you want to deactivate this item?",
       "SEARCH_PLACEHOLDER": "Search Specification Types...",
       "EDIT_DISABLED_TOOLTIP": "Editing disabled for inactive specification types. Activate the specification type to enable editing.",
+      "EMPTY": {
+        "MESSAGE": "No specification types found"
+      },
       "TABLE": {
         "NAME": "Name"
       }
@@ -1412,6 +1415,7 @@
     "SELECT_SPECIFIC_STORE": "Select specific store(s)",
     "CROP_IMAGE": "Crop Image",
     "ENTER_STREET_ADDRESS": "Enter street address",
+    "TRY_ADJUSTING_SEARCH_FILTERS": "Try adjusting your search or filters.",
     "UNEXPECTED_ERROR": "An unexpected error occurred.",
     "STATUS_UPDATE_ERROR": "An unexpected error occurred during status update.",
     "SUCCESS": "Operation successful!",
@@ -1574,7 +1578,8 @@
     "FILTERS": "Filters"
   },
   "SELECT": {
-    "SEARCH_PLACEHOLDER": "Search..."
+    "SEARCH_PLACEHOLDER": "Search...",
+    "MAX_SELECTIONS_REACHED": "You can select up to {{max}} stores for the charts."
   },
   "CONTEXT": {
     "ERROR_FETCHING_DATA": "An error occurred while fetching data.",

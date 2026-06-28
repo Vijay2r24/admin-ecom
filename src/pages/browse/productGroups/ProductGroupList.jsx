@@ -6,6 +6,7 @@ import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Switch from "../../../components/Switch";
 import Tooltip from "../../../components/Tooltip";
+import EmptyState from "../../../components/EmptyState";
 import { useProductGroups } from "../../../context/AllDataContext";
 import { STATUS, STATUS_VALUES, PERMISSIONS, MODULES } from "../../../contants/constants";
 import { getPermissionCode, hasPermissionId } from "../../../utils/permissionUtils";
@@ -289,19 +290,9 @@ const ProductGroupList = ({ onCreate }) => {
       </div>
 
       {isEmpty && (
-        <div className="text-center py-12">
-          <div className="text-gray-500">
-            {t("PRODUCT_SETUP.PRODUCT_GROUPS.EMPTY.MESSAGE")}
-          </div>
-          {sSearchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="mt-2 text-[#5B45E0] hover:text-[#4c39c7]"
-            >
-              {t("COMMON.CLEAR_SEARCH")}
-            </button>
-          )}
-        </div>
+        <EmptyState
+          title={t("PRODUCT_SETUP.PRODUCT_GROUPS.EMPTY.MESSAGE")}
+        />
       )}
 
       <Pagination

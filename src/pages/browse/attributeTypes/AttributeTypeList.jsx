@@ -10,7 +10,7 @@ import Switch from "../../../components/Switch";
 import Tooltip from "../../../components/Tooltip";
 import Loader from "../../../components/Loader";
 import SkeletonLoader from "../../../components/SkeletonLoader";
-import { UPDATE_ATTRIBUTE_TYPE_STATUS } from "../../../contants/apiRoutes";
+import EmptyState from "../../../components/EmptyState";import { UPDATE_ATTRIBUTE_TYPE_STATUS } from "../../../contants/apiRoutes";
 import { SKELETON_TYPES } from "../../../contants/constants";
 import {
   ITEMS_PER_PAGE,
@@ -291,18 +291,12 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
                 </tr>
               ) : aAttributeTypes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
-                    <div>
-                      {t("PRODUCT_SETUP.ATTRIBUTE_TYPE.EMPTY_MESSAGE")}
-                      {sSearchQuery && (
-                        <button
-                          onClick={() => setSearchQuery("")}
-                          className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
-                        >
-                          {t("COMMON.CLEAR_SEARCH")}
-                        </button>
-                      )}
-                    </div>
+                  <td colSpan={5}>
+                    <EmptyState
+                      title={t("PRODUCT_SETUP.ATTRIBUTE_TYPE.EMPTY_MESSAGE")}
+                      description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                      compact
+                    />
                   </td>
                 </tr>
               ) : (
@@ -406,20 +400,16 @@ const AttributeTypeList = ({ onCreate, onBack, setSubmitting }) => {
       </div>
 
       {/* Pagination Controls */}
-      {iTotalItems > 0 && (
-        bLoading ? (
-          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
-        ) : (
-          <Pagination
-            currentPage={iCurrentPage}
-            totalPages={iTotalPages}
-            totalItems={iTotalItems}
-            itemsPerPage={iItemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
-        )
+      {!bLoading && !sError && (
+        <Pagination
+          currentPage={iCurrentPage}
+          totalPages={iTotalPages}
+          totalItems={iTotalItems}
+          itemsPerPage={iItemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
       )}
 
       {statusPopup.open && (

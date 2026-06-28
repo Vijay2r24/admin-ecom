@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, forwardRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X, Edit } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { showEmsg } from "../utils/ShowEmsg";
 
 const SelectWithIcon = forwardRef(
   (
@@ -18,6 +19,8 @@ const SelectWithIcon = forwardRef(
       loading,
       multiple = false,
       maxVisibleItems = 3,
+      /** When `multiple`, caps how many options can be selected (e.g. dashboard graphs). */
+      maxSelections,
       disabled = false,
       className = "",
       onInputChange,
@@ -29,6 +32,8 @@ const SelectWithIcon = forwardRef(
     ref
   ) => {
     const { t } = useTranslation();
+    /** UUIDs / ids from API are strings; avoid `includes` vs `==` mismatches (e.g. number vs string). */
+    const sameVal = (a, b) => String(a ?? "") === String(b ?? "");
     const [isOpen, setIsOpen] = useState(false);
     const [sSearchTerm, setSearchTerm] = useState("");
     const [nHighlightedIndex, setHighlightedIndex] = useState(-1);
@@ -40,9 +45,12 @@ const SelectWithIcon = forwardRef(
 
     const selectedOptionLabels = Array.isArray(value)
       ? options
-        .filter((option) => value.includes(option.value))
+        .filter(
+          (option) =>
+            Array.isArray(value) && value.some((v) => sameVal(v, option.value))
+        )
         .map((option) => option.label || option.value)
-      : [options.find((option) => option.value == value)?.label || placeholder];
+      : [options.find((option) => sameVal(option.value, value))?.label || placeholder];
 
     const displayLabel =
       multiple && Array.isArray(value) && value.length === 0
@@ -55,8 +63,8 @@ const SelectWithIcon = forwardRef(
       );
       
       // Always include the currently selected value in filtered options
-      if (!multiple && value && !baseFiltered.some(option => String(option.value) === String(value))) {
-        const selectedOption = options.find(option => String(option.value) === String(value));
+      if (!multiple && value && !baseFiltered.some((option) => sameVal(option.value, value))) {
+        const selectedOption = options.find((option) => sameVal(option.value, value));
         if (selectedOption) {
           return [selectedOption, ...baseFiltered];
         }
@@ -71,13 +79,27 @@ const SelectWithIcon = forwardRef(
       multiple &&
       Array.isArray(value) &&
       filteredOptions.length > 0 &&
-      filteredOptions.every((option) => value.includes(option.value));
+      filteredOptions.every(
+        (option) => value.some((v) => sameVal(v, option.value))
+      );
 
     const handleSelectAll = () => {
       if (disabled) return;
       if (!multiple) return;
       const allValues = filteredOptions.map((option) => option.value);
-      const newValue = allSelected ? [] : allValues;
+      let newValue = allSelected ? [] : allValues;
+      if (
+        !allSelected &&
+        typeof maxSelections === "number" &&
+        maxSelections > 0 &&
+        newValue.length > maxSelections
+      ) {
+        newValue = newValue.slice(0, maxSelections);
+        showEmsg(
+          t("SELECT.MAX_SELECTIONS_REACHED", { max: maxSelections }),
+          "warning"
+        );
+      }
 
       onChange({ target: { name, value: newValue } });
     };
@@ -89,6 +111,13 @@ const SelectWithIcon = forwardRef(
       multiple && Array.isArray(value)
         ? Math.max(0, value.length - maxVisibleItems)
         : 0;
+
+    const selectionAtMax =
+      multiple &&
+      typeof maxSelections === "number" &&
+      maxSelections > 0 &&
+      Array.isArray(value) &&
+      value.length >= maxSelections;
 
     useEffect(() => {
       if (isOpen && selectRef.current) {
@@ -104,9 +133,24 @@ const SelectWithIcon = forwardRef(
     const handleSelect = (optionValue) => {
       let newValue;
       if (multiple) {
+        const isRemoving =
+          Array.isArray(value) && value.some((v) => sameVal(v, optionValue));
+        if (
+          !isRemoving &&
+          typeof maxSelections === "number" &&
+          maxSelections > 0 &&
+          Array.isArray(value) &&
+          value.length >= maxSelections
+        ) {
+          showEmsg(
+            t("SELECT.MAX_SELECTIONS_REACHED", { max: maxSelections }),
+            "warning"
+          );
+          return;
+        }
         newValue = Array.isArray(value)
-          ? value.includes(optionValue)
-            ? value.filter((val) => val !== optionValue)
+          ? isRemoving
+            ? value.filter((val) => !sameVal(val, optionValue))
             : [...value, optionValue]
           : [optionValue];
       } else {
@@ -128,7 +172,7 @@ const SelectWithIcon = forwardRef(
       e.stopPropagation();
       if (disabled) return;
       if (!multiple || !Array.isArray(value)) return;
-      const newValue = value.filter((val) => val !== itemValue);
+      const newValue = value.filter((val) => !sameVal(val, itemValue));
       onChange({ target: { name, value: newValue } });
     };
 
@@ -219,8 +263,8 @@ const SelectWithIcon = forwardRef(
               {multiple && Array.isArray(value) && value.length > 0 ? (
                 <>
                   {visibleItems.map((itemValue) => {
-                    const itemLabel = options.find(
-                      (opt) => opt.value == itemValue
+                    const itemLabel = options.find((opt) =>
+                      sameVal(opt.value, itemValue)
                     )?.label;
                     return itemLabel ? (
                       <span
@@ -356,16 +400,22 @@ const SelectWithIcon = forwardRef(
 
                       {filteredOptions.map((opt, index) => {
                         const isSelected = multiple
-                          ? Array.isArray(value) && value.includes(opt.value)
-                          : value == opt.value;
+                          ? Array.isArray(value) &&
+                            value.some((v) => sameVal(v, opt.value))
+                          : sameVal(value, opt.value);
                         const isHighlighted = index === nHighlightedIndex;
+<<<<<<< Updated upstream
                         const isAddNewOption = opt.value === "add-new";
+=======
+                        const blocked = selectionAtMax && !isSelected;
+>>>>>>> Stashed changes
 
                         return (
                           <li
                             key={opt.value}
-                            className={`cursor-pointer select-none relative py-2 text-sm
+                            className={`select-none relative py-2 text-sm
                             ${multiple ? "pl-12 pr-4" : "pl-4 pr-4"}
+                            ${blocked ? "opacity-45 cursor-not-allowed" : "cursor-pointer"}
                             ${isHighlighted
                                 ? isAddNewOption 
                                   ? "bg-red-500 text-white"
@@ -377,6 +427,15 @@ const SelectWithIcon = forwardRef(
                             ${isSelected && !isHighlighted ? "bg-blue-50" : ""}`}
                             onClick={(e) => {
                               e.stopPropagation();
+                              if (blocked) {
+                                showEmsg(
+                                  t("SELECT.MAX_SELECTIONS_REACHED", {
+                                    max: maxSelections,
+                                  }),
+                                  "warning"
+                                );
+                                return;
+                              }
                               handleSelect(opt.value);
                             }}
                             onMouseEnter={() => setHighlightedIndex(index)}

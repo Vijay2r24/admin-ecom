@@ -151,7 +151,7 @@ const Header = ({ onMenuClick }) => {
           >
             <Bell className="h-4 w-4" />
             {hasUnreadNotifications && (
-              <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold shadow-md ring-1 ring-red-500 ring-offset-1 z-20">
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold leading-none shadow-sm ring-1 ring-white z-20">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}

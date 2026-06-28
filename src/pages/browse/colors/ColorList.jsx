@@ -10,7 +10,7 @@ import Pagination from "../../../components/Pagination";
 import FullscreenErrorPopup from "../../../components/FullscreenErrorPopup";
 import Loader from "../../../components/Loader";
 import SkeletonLoader from "../../../components/SkeletonLoader";
-import { SKELETON_TYPES } from "../../../contants/constants";
+import EmptyState from "../../../components/EmptyState";import { SKELETON_TYPES } from "../../../contants/constants";
 import {
   ITEMS_PER_PAGE,
   DEFAULT_PAGE,
@@ -217,7 +217,18 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
               </thead>
 
               <tbody className="table-body">
-                {localColors.map((color) => (
+                {localColors.length === 0 ? (
+                  <tr>
+                    <td colSpan={2}>
+                      <EmptyState
+                        title={t("PRODUCT_SETUP.COLORS.EMPTY.MESSAGE")}
+                        description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                        compact
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  localColors.map((color) => (
                   <tr key={color.ColourID} className="table-row items-center hover:bg-gray-50">
                     {/* Color Name & Circle */}
                     <td className="table-cell text-left align-middle px-6 py-4">
@@ -245,47 +256,26 @@ const ColorList = ({ onCreate, onBack, setSubmitting }) => {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {iTotalItems === 0 && !bLoading && !sError && (
-        <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="text-gray-500">
-            {t("PRODUCT_SETUP.COLORS.EMPTY.MESSAGE")}
-          </div>
-          {sSearchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setFilters({ status: STATUS_VALUES.ALL });
-              }}
-              className="mt-2 text-[#5B45E0] hover:text-[#4c39c7] font-medium"
-            >
-              {t("COMMON.CLEAR_SEARCH")}
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Pagination Controls - Fixed at bottom */}
-      {iTotalItems > 0 && (
-        bLoading ? (
-          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
-        ) : (
-          <Pagination
-            currentPage={nCurrentPage}
-            totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-            totalItems={iTotalItems}
-            itemsPerPage={iItemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
-        )
+      {!bLoading && !sError && (
+        <Pagination
+          currentPage={nCurrentPage}
+          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+          totalItems={iTotalItems}
+          itemsPerPage={iItemsPerPage}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handlePageClick={handlePageClick}
+        />
       )}
     </div>
   );
