@@ -1,7 +1,6 @@
 import axios from "axios";
 import { BASE_URL } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
-<<<<<<< Updated upstream
 import {
   API_CUSTOM_CODES,
   MESSAGES,
@@ -15,9 +14,6 @@ import {
   markUserCreateLimitBlocked,
 } from "./planAccessUtils";
 import i18n from "../i18n.js";
-=======
-import { MESSAGES, STATUS } from "../contants/constants";
->>>>>>> Stashed changes
 
 /* ------------------------------------------------------------------
    LOGOUT + NOTIFICATION FUNCTIONS
@@ -32,7 +28,6 @@ const isLoginPage = () => {
   return path === "/" || path === "/login";
 };
 
-<<<<<<< Updated upstream
 const isUpgradePlanPage = () =>
   window.location.pathname.toLowerCase() === "/upgrade-plan";
 
@@ -111,67 +106,11 @@ const redirectToUpgradePlanSilently = () => {
 };
 
 const showLogoutNotification = (message, fallbackText = INACTIVE_USER_MESSAGE) => {
-  // Trigger IdleLogout behavior instead of SweetAlert2 popup
-  
-  // Create a custom event to trigger IdleLogout countdown
   const logoutEvent = new CustomEvent('triggerIdleLogout', { 
     detail: { message, fallbackText } 
   });
   window.dispatchEvent(logoutEvent);
-  
-  return;
-  
-  // Original SweetAlert2 code commented out
-  /*
-  const html = `
-    <div style="display:flex;flex-direction:column;gap:8px;text-align:left;">
-      <p style="margin:0;">${fallbackText}</p>
-      ${message
-      ? `<p style="margin:0;color:#dc2626;font-weight:600;">Error: ${message}</p>`
-      : ""
-    }
-      <p style="margin:0;font-size:14px;color:#1f2937;">
-        Auto logout in <span data-swal-timer-countdown>10</span> seconds.
-      </p>
-    </div>
-  `;
-
-  let timerInterval;
-
-  Swal.fire({
-    html,
-    icon: STATUS.WARNING,
-    confirmButtonText: "Logout Now",
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    timer: TOAST_DURATION.TO_LONG,
-    timerProgressBar: true,
-    width: "32rem",
-    customClass: { confirmButton: "btn btn-primary" },
-    buttonsStyling: false,
-
-    didOpen: () => {
-      const container = Swal.getHtmlContainer();
-      const countdownEl = container?.querySelector("[data-swal-timer-countdown]");
-
-      timerInterval = setInterval(() => {
-        const timerLeft = Swal.getTimerLeft();
-        if (!timerLeft || !countdownEl) return;
-        countdownEl.textContent = Math.ceil(timerLeft / 1000);
-      }, 100);
-    },
-
-    willClose: () => clearInterval(timerInterval),
-  }).then((result) => {
-    if (result.dismiss === Swal.DismissReason.timer || result.isConfirmed) {
-      handleLogout();
-    }
-  });
-  */
 };
-
-=======
->>>>>>> Stashed changes
 /* ------------------------------------------------------------------
    ABORT CONTROLLER STORE — Prevent duplicate API calls
 ------------------------------------------------------------------ */
@@ -208,14 +147,9 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
     if (lsToken) {
       config.headers.set("Authorization", `Bearer ${lsToken}`);
     }
-<<<<<<< Updated upstream
 
-    config.headers.set("tenant-domain", window.location.hostname);
-
-=======
-    
     config.headers.set("tenant-domain", "ecommerce-qa.admin.b2yinfy.com");
->>>>>>> Stashed changes
+
     return config;
   });
 
@@ -259,11 +193,7 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
           normalized.includes("account has been deactivated")
         ) {
           if (!isLoginPage()) {
-<<<<<<< Updated upstream
             console.error("User inactive/deactivated - triggering IdleLogout");
-=======
-            console.log("User inactive/deactivated - triggering IdleLogout");
->>>>>>> Stashed changes
             const logoutEvent = new CustomEvent('triggerIdleLogout', { 
               detail: { message: msg, fallbackText: "Account inactive - session timeout" } 
             });

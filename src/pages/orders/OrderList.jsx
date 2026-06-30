@@ -752,7 +752,6 @@ const OrderList = () => {
           ) : bFilterLoading ? (
             <SkeletonLoader type={SKELETON_TYPES.ORDER_GRID} rows={6} className="p-4" />
           ) : sError ? (
-<<<<<<< Updated upstream
             <div className="col-span-full text-center py-8 text-gray-600">
               {sError}
             </div>
@@ -760,11 +759,6 @@ const OrderList = () => {
             <div className="col-span-full text-center py-8 text-gray-600">
               {t("ORDERS.NO_ORDERS_FOUND")}
             </div>
-=======
-            <EmptyState type="error" title={sError} description="Please try again or adjust your filters." compact />
-          ) : aOrders.length === 0 ? (
-            <EmptyState type="empty-box" title={t("ORDERS.NO_ORDERS_FOUND")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
->>>>>>> Stashed changes
           ) : (
             aOrders.map((order) => (
               <div

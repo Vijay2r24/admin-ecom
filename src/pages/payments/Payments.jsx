@@ -569,17 +569,6 @@ const Payments = () => {
                 : 'calc(100vh - 180px)'
             }}
           >
-<<<<<<< Updated upstream
-          {bFilterLoading ? (
-            <SkeletonLoader type={SKELETON_TYPES.PAYMENT_GRID} rows={8} />
-          ) : payments.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-gray-500">
-              {t("PAYMENTS.NO_PAYMENTS_FOUND")}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 auto-rows-min">
-            {payments.map((payment) => (
-=======
             {bFilterLoading || paymentsLoading ? (
               <div className="p-4">
                 <SkeletonLoader type={SKELETON_TYPES.PAYMENT_GRID} rows={6} />
@@ -589,7 +578,6 @@ const Payments = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 auto-rows-min">
                 {payments.map((payment) => (
->>>>>>> Stashed changes
               <div
                 key={payment.PaymentID}
                 className="bg-white rounded-xl shadow-md border border-gray-200 p-4 hover:shadow-lg transition-all duration-200 min-h-[200px] flex flex-col"

@@ -46,6 +46,7 @@
     "react-spinners": "^0.17.0",
     "react-tailwindcss-datepicker": "^1.7.3",
     "react-toastify": "^11.0.5",
+    "recharts": "^3.9.0",
     "sweetalert2": "^11.26.3"
   },
   "devDependencies": {

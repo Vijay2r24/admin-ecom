@@ -30,16 +30,10 @@ import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import Tooltip from "../../components/Tooltip";
 import SkeletonLoader from "../../components/SkeletonLoader";
-<<<<<<< Updated upstream
 import { getPermissionCode } from "../../utils/permissionUtils";
 import { MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE } from "../../contants/constants.jsx";
 import { useCreateAccess } from "../../hooks/useCreateAccess";
 import { updatePlanResourceUsage } from "../../utils/planAccessUtils";
-=======
-import EmptyState from "../../components/EmptyState";
-import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
->>>>>>> Stashed changes
 
 const getStatusBadgeClass = (status) => {
   if (status === "active") return "status-active";
@@ -380,13 +374,8 @@ const ProductList = () => {
                   <SkeletonLoader type={SKELETON_TYPES.PRODUCT_TABLE} rows={8} />
                 ) : sError ? (
                   <tr>
-<<<<<<< Updated upstream
                     <td colSpan={5} className="py-8 text-center text-gray-500">
                       {sError}
-=======
-                    <td colSpan={5}>
-                      <EmptyState type="error" title={sError} compact />
->>>>>>> Stashed changes
                     </td>
                   </tr>
                 ) : aProducts.length === 0 ? (
@@ -454,7 +443,6 @@ const ProductList = () => {
       ) : (
         <div className="grid-container-floating">
           <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
-<<<<<<< Updated upstream
           {isLoading ? (
               <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={6} />
             ) : (
@@ -469,16 +457,7 @@ const ProductList = () => {
                   </div>
                 ) : (
                   aProducts.map((product) => (
-=======
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-              {bLoading || initialLoading || bFilterLoading ? (
-                <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={6} className="p-4" />
-              ) : aProducts.length === 0 ? (
-                <EmptyState type="products" title={t("PRODUCTS.NO_PRODUCTS")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
-              ) : (
-                aProducts.map((product) => (
->>>>>>> Stashed changes
-                  <div
+                    <div
                     key={product.ProductID}
                     className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200"
                   >
@@ -532,7 +511,6 @@ const ProductList = () => {
           </div>
         </div>
       )}
-<<<<<<< Updated upstream
 
       {!sError && nTotalItems > 0 && (
         (bLoading || bFilterLoading) ? (
@@ -548,18 +526,6 @@ const ProductList = () => {
             handlePageClick={handlePageClick}
           />
         )
-=======
-      {!sError && !bLoading && !bFilterLoading && (
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={nTotalPages}
-          totalItems={nTotalItems}
-          itemsPerPage={itemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
->>>>>>> Stashed changes
       )}
 
       {statusPopup.open && (

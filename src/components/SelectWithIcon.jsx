@@ -404,11 +404,8 @@ const SelectWithIcon = forwardRef(
                             value.some((v) => sameVal(v, opt.value))
                           : sameVal(value, opt.value);
                         const isHighlighted = index === nHighlightedIndex;
-<<<<<<< Updated upstream
                         const isAddNewOption = opt.value === "add-new";
-=======
                         const blocked = selectionAtMax && !isSelected;
->>>>>>> Stashed changes
 
                         return (
                           <li
