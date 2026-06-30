@@ -11,7 +11,10 @@ export function permissionIdsInclude(permissionIDs, targetPermissionId) {
 export function getPermissionCode(module, name) {
   try {
     const allPermissions = JSON.parse(localStorage.getItem('AllPermissions'));
-    const rows = allPermissions || []; // Remove .data?.rows since your data is direct array
+    const permissionIDs = JSON.parse(localStorage.getItem('PermissionIDs'));
+    const rows = allPermissions || [];
+    
+    
     
     const found = rows.find(
       perm =>
@@ -19,9 +22,16 @@ export function getPermissionCode(module, name) {
         perm.Name?.toLowerCase().trim() === name.toLowerCase().trim()
     );
     
-    // Return PermissionID as Code since Code field doesn't exist
+    if (found) {
+      const hasPermission = permissionIDs && permissionIDs.includes(found.PermissionID);
+      
+    } else {
+      
+    }
+    
     return found ? found.PermissionID : null;
-  } catch {
+  } catch (error) {
+  
     return null;
   }
 }

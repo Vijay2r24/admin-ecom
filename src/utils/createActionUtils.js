@@ -5,11 +5,13 @@ import {
   isFeatureTokenAllowedByPlan,
   isProductCreateLimitBlocked,
   isUserCreateLimitBlocked,
+  isBannerCreateLimitBlocked,
 } from './planAccessUtils';
 
 const CREATE_LIMIT_CHECKS = {
   isUserCreateLimitBlocked,
   isProductCreateLimitBlocked,
+  isBannerCreateLimitBlocked,
 };
 
 /**
@@ -130,19 +132,19 @@ export function hasCreatePermission(actionType) {
   try {
     const actionConfig = CREATE_ACTION_TYPES[actionType];
     if (!actionConfig) {
-      console.error(`Unknown action type: ${actionType}`);
+      
       return false;
     }
 
     const permissionCode = getPermissionCode(actionConfig.module, actionConfig.permission);
     if (!permissionCode) {
-      console.error(`Permission code not found for ${actionConfig.module}:${actionConfig.permission}`);
+   
       return false;
     }
 
     return hasPermissionId(permissionCode);
   } catch (error) {
-    console.error('Error checking create permission:', error);
+    
     return false;
   }
 }
@@ -156,7 +158,7 @@ export function isCreateLimitExceeded(actionType) {
   try {
     const actionConfig = CREATE_ACTION_TYPES[actionType];
     if (!actionConfig) {
-      console.error(`Unknown action type: ${actionType}`);
+     
       return false;
     }
 
@@ -169,7 +171,7 @@ export function isCreateLimitExceeded(actionType) {
 
     return false;
   } catch (error) {
-    console.error('Error checking create limit:', error);
+   
     return false;
   }
 }
@@ -183,7 +185,7 @@ export function isFeatureAvailableInPlan(actionType) {
   try {
     const actionConfig = CREATE_ACTION_TYPES[actionType];
     if (!actionConfig) {
-      console.error(`Unknown action type: ${actionType}`);
+      
       return false;
     }
 
@@ -194,7 +196,7 @@ export function isFeatureAvailableInPlan(actionType) {
 
     return isFeatureTokenAllowedByPlan(featureToken);
   } catch (error) {
-    console.error('Error checking plan availability:', error);
+   
     return false;
   }
 }
@@ -240,7 +242,7 @@ export function validateCreateAction(actionType) {
       message: null
     };
   } catch (error) {
-    console.error('Error validating create action:', error);
+    
     return {
       status: CREATE_ACTION_VALIDATION_RESULTS.UNKNOWN_ERROR,
       canCreate: false,
@@ -363,7 +365,7 @@ export function refreshAfterCreate() {
       sessionStorage.removeItem('createActionValidationCache');
     }
   } catch (error) {
-    console.error('Error refreshing after create:', error);
+    
   }
 }
 

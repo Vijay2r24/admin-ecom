@@ -254,6 +254,7 @@ export const PLAN_LIMIT_LOGIN_FIELDS_BY_RESOURCE = {
   ],
   [PLAN_LIMIT_RESOURCE.USERS]: ["MaxUsers", "UserLimit", "maxUsers"],
   [PLAN_LIMIT_RESOURCE.STORES]: ["MaxStores", "StoreLimit", "maxStores"],
+  [PLAN_LIMIT_RESOURCE.BANNERS]: ["MaxBanners", "BannerLimit", "maxBanners"],
 };
 export const ORDER_STATUS = {
   DELIVERED: "Delivered",
@@ -795,11 +796,11 @@ export const PERMISSIONS = {
   ADD_ROLE: "Add Role",
   EDIT_ROLE: "Edit Role",
   VIEW_BANNERS: "View Banners",
-  CREATE_BANNER: "Create Banner",
-  UPDATE_BANNER: "Update Banner",
+  CREATE_BANNER: "Add Banner",
+  UPDATE_BANNER: "Edit Banner",
   UPDATE_BANNER_SEQUENCE: "Update Banner Sequence",
-  VIEW_NOTIFICATIONS: "View Notifications",
-  SEND_NOTIFICATION: "Send Notification",
+  VIEW_NOTIFICATIONS: "View Notification",
+  SEND_NOTIFICATION: "Push Notification",
   VIEW_PRODUCTS: "View Products",
   CREATE_PRODUCT: "Create Product",
   UPDATE_PRODUCT: "Update Product",

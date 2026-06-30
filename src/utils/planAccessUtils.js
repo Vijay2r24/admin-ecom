@@ -660,6 +660,14 @@ export function isProductCreateLimitBlocked() {
   );
 }
 
+/** True when banner creation is blocked by plan module access or numeric cap. */
+export function isBannerCreateLimitBlocked() {
+  return isPlanResourceCreateLimitBlocked(
+    PLAN_LIMIT_RESOURCE.BANNERS,
+    PLAN_FEATURE_TOKEN.BANNERS
+  );
+}
+
 function extractPlanLimitsFromLoginPayload(src) {
   const limits = {};
   if (!src || typeof src !== "object") return limits;
