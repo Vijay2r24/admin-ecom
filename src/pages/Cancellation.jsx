@@ -31,7 +31,7 @@ const CategoryCell = ({ categories, t }) => {
   const hidden  = categories.length - VISIBLE_LIMIT;
 
   return (
-    <div className="flex flex-wrap gap-1 justify-center items-center">
+    <div className="flex flex-wrap gap-1 justify-start items-center">
       {visible.map(cat => (
         <span
           key={cat.ReasonContextMappingID}
@@ -238,10 +238,10 @@ const Cancellations = () => {
           <table className="table-base">
             <thead className="table-head-floating">
               <tr>
-                <th className="table-head-cell-floating text-center">{t('REASON_MANAGEMENT.TABLE.CATEGORY')}</th>
-                <th className="table-head-cell-floating text-center">{t('REASON_MANAGEMENT.TABLE.REASON_TYPE')}</th>
+                <th className="table-head-cell-floating text-left">{t('REASON_MANAGEMENT.TABLE.CATEGORY')}</th>
+                <th className="table-head-cell-floating text-left">{t('REASON_MANAGEMENT.TABLE.REASON_TYPE')}</th>
 
-                <th className="table-head-cell-floating text-center">{t('REASON_MANAGEMENT.TABLE.REASON_LABEL')}</th>
+                <th className="table-head-cell-floating text-left">{t('REASON_MANAGEMENT.TABLE.REASON_LABEL')}</th>
                 <th className="table-head-cell-floating text-center">{t('REASON_MANAGEMENT.TABLE.STATUS')}</th>
                 <th className="table-head-cell-floating text-center">{t('REASON_MANAGEMENT.TABLE.ACTIONS')}</th>
               </tr>
@@ -256,16 +256,16 @@ const Cancellations = () => {
               ) : (
                 allReasons.map((reason) => (
                   <tr key={reason.reasonID} className="table-row">
-                    <td className="table-cell text-center align-middle">
+                    <td className="table-cell text-left align-middle">
                       <CategoryCell categories={reason.categories} t={t} />
                     </td>
-                    <td className="table-cell text-center align-middle">
+                    <td className="table-cell text-left align-middle">
                       <span className={`status-badge ${getReasonTypeBadgeColor(reason.reasonType)}`}>
                         {getReasonTypeLabel(reason.reasonType)}
                       </span>
                     </td>
                    
-                    <td className="table-cell text-center align-middle">
+                    <td className="table-cell text-left align-middle">
                       <span className="text-xs text-gray-900">{reason.reasonLabel}</span>
                     </td>
                     <td className="table-cell text-center align-middle">

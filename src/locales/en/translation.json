@@ -163,7 +163,16 @@
     "YES": "Yes",
     "NO": "No",
     "EDIT_TOOLTIP": "Edit",
-    "DELETE_TOOLTIP": "Delete"
+    "DELETE_TOOLTIP": "Delete",
+    "SUCCESS_CREATE": "Reason created successfully",
+    "SUCCESS_UPDATE": "Reason updated successfully",
+    "SUCCESS_ACTIVATE": "Reason activated successfully",
+    "SUCCESS_DEACTIVATE": "Reason deactivated successfully",
+    "ERROR_CREATE": "Failed to create reason",
+    "ERROR_UPDATE": "Failed to update reason",
+    "ERROR_UPDATE_STATUS": "Failed to update reason status",
+    "ERROR_FETCH_DETAILS": "Failed to fetch reason details",
+    "ERROR_CATEGORY_REQUIRED": "Please select at least one category"
   },
   "SUBSCRIPTIONPLANS": {
     "TITLE": "Subscription Plans",
@@ -1403,6 +1412,7 @@
     "EXPORT": "Export",
     "UNKNOWN_CUSTOMER": "Unknown Customer",
     "MORE": "more",
+    "SHOW_LESS": "Show less",
     "ERROR_MESSAGE": "An error occurred. Please try again.",
     "FAILED_OPERATION": "Failed to perform operation.",
     "SEARCH_PLACEHOLDER": "Search...",
