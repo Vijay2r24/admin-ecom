@@ -20,9 +20,18 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Overlay - behind sidebar */}
+      {bIsMobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar - above overlay */}
       <div
         className={`  
-          fixed top-0 left-0 z-30 h-screen transition-all duration-300 ease-in-out
+          fixed top-0 left-0 z-50 h-screen transition-all duration-300 ease-in-out
           ${bIsMobileSidebarOpen ? 'w-56' : 'w-0'} lg:${bIsSidebarOpen ? (bIsCollapsed? 'w-16' : 'w-56') : 'w-0'}
         `}
       >
@@ -31,14 +40,10 @@ const Layout = ({ children }) => {
           isCollapsed={bIsCollapsed} 
           onToggle={toggleSidebar} 
           isMobileOpen={bIsMobileSidebarOpen}
+          onMobileClose={() => setIsMobileSidebarOpen(false)}
         />
       </div>
-      {bIsMobileSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden"
-          onClick={() => setIsMobileSidebarOpen(false)}
-        />
-      )}
+      
       <div 
         className={`
           flex flex-col min-h-screen transition-all duration-300

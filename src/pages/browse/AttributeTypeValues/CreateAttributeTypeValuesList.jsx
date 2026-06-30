@@ -43,12 +43,6 @@ const CreateAttribute = () => {
   const [oFieldTouched, setFieldTouched] = useState({});
   const [bSubmitting, setSubmitting] = useState(false);
 
-  // Required fields configuration
-  const requiredFields = {
-    Value: true,
-    AttributeTypeID: true,
-  };
-
   // Redux state for attribute types
   const attributeTypesState = useSelector((state) => state.allData.resources.attributeTypes);
   const aAttributeTypes = attributeTypesState?.data || [];
@@ -57,6 +51,18 @@ const CreateAttribute = () => {
 
   // Filter active attribute types
   const activeAttributeTypes = aAttributeTypes.filter(attrType => attrType.IsActive === true);
+
+  // Get selected attribute type name to check if it's color
+  const selectedAttributeType = aAttributeTypes.find(
+    (type) => type.AttributeTypeID === oFormData.AttributeTypeID
+  );
+  const isColorType = selectedAttributeType?.Name?.toLowerCase() === "color";
+
+  // Required fields configuration
+  const requiredFields = {
+    Value: true,
+    AttributeTypeID: true,
+  };
 
   const goBackToBrowse = () => {
     navigate("/browse", { state: { fromAttributeEdit: true } });
@@ -78,6 +84,10 @@ const CreateAttribute = () => {
   };
 
   const validateUnit = (unit) => {
+    // If attribute type is Color, unit is required
+    if (isColorType && (!unit || unit.trim() === "")) {
+      return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.UNIT_REQUIRED_FOR_COLOR") ;
+    }
     if (unit && unit.trim().length > 50) {
       return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.UNIT_MAX_LENGTH");
     }
@@ -118,7 +128,7 @@ const CreateAttribute = () => {
     }));
 
     return error;
-  }, [t, oFieldTouched]);
+  }, [t, oFieldTouched, isColorType]);
 
   /**
    * Mark field as touched
@@ -153,7 +163,15 @@ const CreateAttribute = () => {
       [name]: value,
     }));
     validateField(name, value, true);
-  }, [validateField]);
+    
+    // If AttributeTypeID changes, revalidate Unit field (for color requirement)
+    if (name === "AttributeTypeID") {
+      // Give a small delay to let state update
+      setTimeout(() => {
+        validateField("Unit", oFormData.Unit, oFieldTouched.Unit);
+      }, 50);
+    }
+  }, [validateField, oFormData.Unit, oFieldTouched.Unit]);
 
   /**
    * Handle select blur - specifically for dropdowns
@@ -408,7 +426,12 @@ const CreateAttribute = () => {
           </div>
           <div className="w-full md:w-1/2">
             <TextInputWithIcon
-              label={t("COMMON.UNIT")}
+              label={
+                <span>
+                  {t("COMMON.UNIT")}
+                  {isColorType && <span className="text-red-500 ml-1">*</span>}
+                </span>
+              }
               id="Unit"
               name="Unit"
               value={oFormData.Unit}
@@ -418,6 +441,7 @@ const CreateAttribute = () => {
               error={oErrors.Unit}
               isValid={oFieldValid.Unit}
               Icon={Info}
+              required={isColorType}
               showCharCount={true}
               maxChars={50}
               currentChars={oFormData.Unit?.length || 0}

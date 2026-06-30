@@ -116,6 +116,7 @@ const AddProductForm = () => {
   const [currentShippingVariantIndex, setCurrentShippingVariantIndex] = useState(null);
   const [tempImages, setTempImages] = useState([]);
   const [hasFetchedProduct, setHasFetchedProduct] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Global images map: { [groupKey]: [images...] }
   const [groupGlobalImages, setGroupGlobalImages] = useState({});
@@ -267,6 +268,7 @@ const AddProductForm = () => {
   useEffect(() => {
     if (productId) {
       const fetchProduct = async () => {
+        setIsLoading(true);
         try {
           const token = localStorage.getItem("token");
           const response = await apiGet(
@@ -529,6 +531,8 @@ const AddProductForm = () => {
           }
         } catch (error) {
           showEmsg(t("PRODUCT_CREATION.FETCH_PRODUCT_FAILED"), STATUS.ERROR);
+        } finally {
+          setIsLoading(false);
         }
       };
 
@@ -1502,6 +1506,15 @@ const AddProductForm = () => {
   // -------------------------
   // Render
   // -------------------------
+  // Show loader while fetching product data in edit mode
+  if (isLoading) {
+    return (
+      <div className="global-loader-overlay">
+        <Loader />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       {loaderOverlay}
@@ -1724,14 +1737,14 @@ const AddProductForm = () => {
           </div>
 
           {/* Product description */}
-          <div>
+          <div style={{ marginBottom: '5rem' }}>
             <label
               htmlFor="ProductDescription"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
               {t("PRODUCT_CREATION.PRODUCT_DESCRIPTION")}
             </label>
-            <div className="mb-10">
+            <div style={{ marginBottom: '5rem' }}>
               <ReactQuill
                 theme="snow"
                 value={oFormData.ProductDescription}
@@ -1743,20 +1756,20 @@ const AddProductForm = () => {
                 placeholder={t(
                   "PRODUCT_CREATION.PRODUCT_DESCRIPTION_PLACEHOLDER"
                 )}
-                className={`h-32 mb-10 ${oValidationErrors.ProductDescription ? "border-red-500" : ""
+                className={`h-32 ${oValidationErrors.ProductDescription ? "border-red-500" : ""
                   }`}
                 ref={productDescriptionRef}
               />
             </div>
             {oValidationErrors.ProductDescription && (
-              <p className="text-red-500 text-sm mt-1 mb-2">
+              <p className="text-red-500 text-sm" style={{ marginTop: '1rem' }}>
                 {oValidationErrors.ProductDescription}
               </p>
             )}
           </div>
 
           {/* Attributes section */}
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-visible relative">
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-visible relative" style={{ marginTop: '3rem' }}>
             <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center">
                 <Layers className="h-6 w-6 mr-3 text-custom-bg" />

@@ -65,18 +65,35 @@ const Payments = () => {
   const hasEditPermission = hasPermissionId(permissionIdForEdit);
 
   // Permission check for View Payment Details
-  const permissionIdForView = getPermissionCode(
-    "Payments Management", // Changed to match API
-    "View Payment Details"
+  // Admin users should always have view permission
+  const isAdmin = localStorage.getItem("sessionRoleName")?.toLowerCase().trim() === "admin";
+  
+  // Check if payment permissions exist in the system
+  const allPermissions = JSON.parse(localStorage.getItem("AllPermissions") || "[]");
+  const paymentViewPermExists = allPermissions.some(p => 
+    p.Module?.toLowerCase().includes("payment") && 
+    p.Name?.toLowerCase().includes("view")
   );
-  const hasViewPermission = hasPermissionId(permissionIdForView);
+  
+  const permissionIdForView = getPermissionCode(
+    MODULES.PAYMENT,
+    PERMISSIONS.VIEW_PAYMENT_DETAILS
+  );
+  
+  // If permission doesn't exist in system, grant to admin by default
+  const hasViewPermission = isAdmin || (paymentViewPermExists ? hasPermissionId(permissionIdForView) : true);
 
   // Permission check for Generate Payment Report
-  const permissionIdForExport = getPermissionCode(
-    "Payments Management", // Changed to match API
-    "Generate Payment Report"
+  const paymentExportPermExists = allPermissions.some(p => 
+    p.Module?.toLowerCase().includes("payment") && 
+    (p.Name?.toLowerCase().includes("report") || p.Name?.toLowerCase().includes("export"))
   );
-  const hasExportPermission = hasPermissionId(permissionIdForExport);
+  
+  const permissionIdForExport = getPermissionCode(
+    MODULES.PAYMENT,
+    PERMISSIONS.GENERATE_PAYMENT_REPORT
+  );
+  const hasExportPermission = isAdmin || (paymentExportPermExists ? hasPermissionId(permissionIdForExport) : true);
   const paymentStatusOptions = useSelector(
     (state) =>
       state.allData.resources.paymentStatus?.data?.map((status) => ({

@@ -35,7 +35,7 @@ import {
 import { APP_ROUTES, WINDOW_CUSTOM_EVENTS } from '../contants/constants';
 import { hasAnyProductSetupViewPermission } from '../utils/productSetupPermissionUtils';
 
-const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen }) => {
+const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen, onMobileClose }) => {
   const location = useLocation();
   const [nExpandedSection, setExpandedSection] = useState(null);
   const [nHoveredSection, setHoveredSection] = useState(null);
@@ -278,6 +278,13 @@ const allowedPermissionCodes = useMemo(() => {
     setExpandedSection(nExpandedSection === section ? null : section);
   };
 
+  // Handle navigation click - close mobile sidebar
+  const handleNavClick = () => {
+    if (isMobileOpen && onMobileClose) {
+      onMobileClose();
+    }
+  };
+
   const renderNavigationItem = (item) => {
     const checkIsActive = (navItem) => {
       if (!navItem.href || navItem.href === '#') return false;
@@ -331,6 +338,7 @@ const allowedPermissionCodes = useMemo(() => {
                     <Link
                       key={subItem.name}
                       to={subItem.href}
+                      onClick={handleNavClick}
                       className={`flex items-center px-4 py-2 text-xs font-medium ${isSubActive ? 'bg-gray-100 text-gray-900 font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-custom-bg'}`}
                     >
                       <SubIcon className="mr-2.5 h-3.5 w-3.5" />
@@ -362,6 +370,7 @@ const allowedPermissionCodes = useMemo(() => {
  
                     <Link
                       to={subItem.href}
+                      onClick={handleNavClick}
                       className={`flex m-1.5 cursor-pointer py-1.5 pl-8 text-xs font-medium transition-all duration-100 ease-in-out ${isSubActive
                           ? 'text-custom-bg font-semibold'
                           : 'text-gray-600  hover:text-custom-bg'
@@ -385,6 +394,7 @@ const allowedPermissionCodes = useMemo(() => {
       <Link
         key={item.name}
         to={item.href}
+        onClick={handleNavClick}
         className={`flex cursor-pointer items-center w-full py-2.5 px-3 text-xs font-semibold leading-none outline-none transition-all duration-100 ease-in-out focus:outline-none border-0 m-0 ${isActive ? 'text-gray-900 bg-gray-50' : 'text-gray-600 hover:text-custom-bg'} ${isActive ? 'border-l-2 border-custom-bg' : ''}`}
       >
         <span className={`h-full flex items-center justify-center mr-3 w-4 ${isActive ? 'text-custom-bg' : ''}`}>

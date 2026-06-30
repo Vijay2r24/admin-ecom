@@ -56,6 +56,8 @@ const ProductDetails = () => {
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [selectedImage, setSelectedImage] = useState(0);
   const [storeId, setStoreId] = useState("");
+  const [editInventoryData, setEditInventoryData] = useState(null);
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
 
   useEffect(() => {
     setTitle(`${t("PRODUCTS.PRODUCTS_DETAILS")}`);
@@ -354,7 +356,14 @@ const ProductDetails = () => {
                             }}
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {t("PRODUCTS.VARIANT_NUMBER", { n: index + 1 })}
+                              {variant.Attributes && variant.Attributes.length > 0
+                                ? variant.Attributes.map((attr) => {
+                                    const displayValue = attr.Unit
+                                      ? `${attr.Value} (${attr.Unit})`
+                                      : attr.Value;
+                                    return displayValue;
+                                  }).join(" / ")
+                                : t("PRODUCTS.VARIANT_NUMBER", { n: index + 1 })}
                             </td>
 
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
@@ -659,6 +668,93 @@ const ProductDetails = () => {
             ))}
         </div>
       </div>
+
+      {/* Edit Inventory Modal */}
+      {isInventoryModalOpen && editInventoryData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              {t("INVENTORY.EDIT_INVENTORY_TITLE")}
+            </h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("INVENTORY.QUANTITY")}
+                </label>
+                <input
+                  type="number"
+                  value={editInventoryData.quantity}
+                  onChange={(e) =>
+                    setEditInventoryData({
+                      ...editInventoryData,
+                      quantity: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-custom-bg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("INVENTORY.SELLING_PRICE")}
+                </label>
+                <input
+                  type="number"
+                  value={editInventoryData.sellingPrice}
+                  onChange={(e) =>
+                    setEditInventoryData({
+                      ...editInventoryData,
+                      sellingPrice: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-custom-bg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("INVENTORY.DISCOUNT_PERCENT")}
+                </label>
+                <input
+                  type="number"
+                  value={editInventoryData.discount}
+                  onChange={(e) =>
+                    setEditInventoryData({
+                      ...editInventoryData,
+                      discount: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-custom-bg"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setIsInventoryModalOpen(false);
+                  setEditInventoryData(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                {t("PRODUCT_CREATION.CANCEL")}
+              </button>
+              <button
+                onClick={() => {
+                  // TODO: Add API call to save changes
+                  console.log("Save inventory:", editInventoryData);
+                  setIsInventoryModalOpen(false);
+                  setEditInventoryData(null);
+                }}
+                className="px-4 py-2 bg-custom-bg text-white rounded-md hover:bg-bg-hover transition-colors"
+              >
+                {t("PRODUCT_CREATION.SAVE_CHANGES")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

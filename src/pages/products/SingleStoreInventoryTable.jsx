@@ -71,7 +71,14 @@ export const SingleStoreInventoryTable = ({
                 return (
                   <tr key={variant.VariantID}>
                     <td className="px-6 py-3">
-                      {attrs.Size?.value || t("INVENTORY.NA")} / {attrs.Color?.value || t("INVENTORY.NA")}
+                      {variant.Attributes && variant.Attributes.length > 0
+                        ? variant.Attributes.map((attr) => {
+                            const displayValue = attr.Unit
+                              ? `${attr.Value} (${attr.Unit})`
+                              : attr.Value;
+                            return displayValue;
+                          }).join(" / ")
+                        : t("INVENTORY.NO_ATTRIBUTES")}
                     </td>
 
                     <td className="px-6 py-3">{inv.Quantity}</td>

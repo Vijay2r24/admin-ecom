@@ -95,6 +95,7 @@ const ThemeSettings = () => {
       const tenantId = getTenantId();
       const formData = new FormData();
       formData.append('data', JSON.stringify({
+        TenantID: tenantId,
         documentMetadata: [{
           image: "application_logo",
           sortOrder: 1,
