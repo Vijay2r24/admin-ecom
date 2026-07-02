@@ -88,7 +88,14 @@ const Cancellations = () => {
     return () => setTitle('');
   }, [setTitle, t]);
 
- 
+  // Hide body scrollbar when component mounts (same as Stores list)
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   /* ── fetch ── */
   const fetchReasons = async (params = {}, silent = false) => {
@@ -196,7 +203,7 @@ const Cancellations = () => {
 
   /* ── render ── */
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col">
       {bSubmitting && (
         <div className="global-loader-overlay">
           <Loader />
@@ -289,9 +296,10 @@ const Cancellations = () => {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* Pagination */}
-        {nTotalRecords > 0 && (
+      {nTotalRecords > 0 && (
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
           <Pagination
             currentPage={nCurrentPage}
             totalPages={nTotalPages}
@@ -301,8 +309,8 @@ const Cancellations = () => {
             handleNextPage={handleNextPage}
             handlePageClick={handlePageClick}
           />
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Status Confirmation */}
       {statusPopup.open && (

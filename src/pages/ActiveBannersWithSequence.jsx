@@ -11,7 +11,7 @@ import {
   ChevronDown,
   Eye,
   X,
-  ChevronLeft,
+  ChevronLeft, 
   ChevronRight,
   Pause,
   Play,
@@ -36,7 +36,6 @@ const ActiveBannersWithSequence = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedItemId, setDraggedItemId] = useState(null);
-  const [swapPreview, setSwapPreview] = useState(null);
   const [inputErrors, setInputErrors] = useState({});
   const [showPreview, setShowPreview] = useState(false);
   const [currentPreviewIndex, setCurrentPreviewIndex] = useState(0);
@@ -105,8 +104,8 @@ const ActiveBannersWithSequence = () => {
             BannerID: banner.BannerId || banner.BannerID,
             BannerName: banner.BannerName,
             Status: banner.IsActive ? STATUS_VALUE_NAMES.ACTIVE : STATUS_VALUE_NAMES.INACTIVE,
-            SequenceNumber: banner.SortOrder || index + 1, // Use SortOrder from backend
-            SortOrder: banner.SortOrder || index + 1, // Keep original SortOrder
+            SequenceNumber: index + 1, // Always use index-based sequence to avoid duplicates
+            SortOrder: banner.SortOrder || index + 1,
             BannerImages: banner.BannerImage
               ? banner.BannerImage.map((img) => ({
                 BannerImageID: img.documentId,
@@ -130,6 +129,15 @@ const ActiveBannersWithSequence = () => {
     }
   };
 
+  const [inputValues, setInputValues] = useState({});
+
+  // Sync inputValues when activeBanners changes (after drag/reorder)
+  useEffect(() => {
+    const vals = {};
+    activeBanners.forEach((b) => { vals[String(b.BannerID)] = String(b.SequenceNumber); });
+    setInputValues(vals);
+  }, [activeBanners]);
+
   const reorderSequences = (banners) => {
     return banners.map((banner, index) => ({
       ...banner,
@@ -140,40 +148,32 @@ const ActiveBannersWithSequence = () => {
   const onDragEnd = (result) => {
     setIsDragging(false);
     setDraggedItemId(null);
-    setSwapPreview(null);
 
     if (!result.destination) return;
+    if (result.destination.index === result.source.index) return;
 
     const items = Array.from(activeBanners);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
     const reorderedItems = reorderSequences(items);
+
+    // Sync inputValues immediately so inputs show correct numbers right after drop
+    const newInputVals = {};
+    reorderedItems.forEach((b) => { newInputVals[String(b.BannerID)] = String(b.SequenceNumber); });
+    setInputValues(newInputVals);
+
     setActiveBanners(reorderedItems);
     setInputErrors({});
   };
 
   const onDragUpdate = (update) => {
-    if (!update.destination) return;
-
-    const sourceIndex = update.source.index;
-    const destIndex = update.destination.index;
-
-    if (sourceIndex !== destIndex) {
-      setSwapPreview({
-        from: sourceIndex,
-        to: destIndex,
-        direction: destIndex > sourceIndex ? DIRECTIONS.DOWN : DIRECTIONS.UP,
-      });
-    } else {
-      setSwapPreview(null);
-    }
+    // no-op — swap preview removed to avoid stale transform conflicts
   };
 
   const onDragStart = (start) => {
     setIsDragging(true);
     setDraggedItemId(start.draggableId);
-    setSwapPreview(null);
   };
 
   const validateSequence = (value) => {
@@ -186,24 +186,41 @@ const ActiveBannersWithSequence = () => {
 
     if (!validateSequence(newSequence)) {
       setInputErrors((prev) => ({ ...prev, [bannerId]: true }));
+      // Reset input to current position
+      const current = activeBanners.find((b) => String(b.BannerID) === String(bannerId));
+      if (current) {
+        setInputValues((prev) => ({ ...prev, [bannerId]: String(current.SequenceNumber) }));
+      }
       return;
     }
 
     setInputErrors((prev) => ({ ...prev, [bannerId]: false }));
 
-    const bannerIndex = activeBanners.findIndex((b) => b.BannerID === bannerId);
+    const bannerIndex = activeBanners.findIndex((b) => String(b.BannerID) === String(bannerId));
     if (bannerIndex === -1) return;
+
+    // No movement needed
+    if (bannerIndex === sequenceNum - 1) {
+      setInputValues((prev) => ({ ...prev, [bannerId]: String(sequenceNum) }));
+      return;
+    }
 
     const items = [...activeBanners];
     const [movedBanner] = items.splice(bannerIndex, 1);
     items.splice(sequenceNum - 1, 0, movedBanner);
 
     const reorderedItems = reorderSequences(items);
+
+    // Sync inputValues immediately
+    const newInputVals = {};
+    reorderedItems.forEach((b) => { newInputVals[String(b.BannerID)] = String(b.SequenceNumber); });
+    setInputValues(newInputVals);
+
     setActiveBanners(reorderedItems);
   };
 
   const adjustSequence = (bannerId, direction) => {
-    const banner = activeBanners.find((b) => b.BannerID === bannerId);
+    const banner = activeBanners.find((b) => String(b.BannerID) === String(bannerId));
     if (!banner) return;
 
     const newSequence =
@@ -426,53 +443,25 @@ const ActiveBannersWithSequence = () => {
                 >
                   {activeBanners.map((banner, index) => (
                     <Draggable
-                      key={banner.BannerID}
-                      draggableId={banner.BannerID}
+                      key={String(banner.BannerID)}
+                      draggableId={String(banner.BannerID)}
                       index={index}
                     >
                       {(provided, snapshot) => {
-                        let transform = "";
-                        let zIndex = "auto";
-                        let transition =
-                          "all 0.3s cubic-bezier(0.2, 0, 0, 1)";
-
-                        if (swapPreview) {
-                          if (index === swapPreview.from) {
-                            zIndex = 50;
-                          } else if (
-                            swapPreview.direction === DIRECTIONS.DOWN &&
-                            index > swapPreview.from &&
-                            index <= swapPreview.to
-                          ) {
-                            transform = "translateY(-100%)";
-                          } else if (
-                            swapPreview.direction === DIRECTIONS.UP &&
-                            index < swapPreview.from &&
-                            index >= swapPreview.to
-                          ) {
-                            transform = "translateY(100%)";
-                          }
-                        }
-
                         return (
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className={`relative bg-white rounded-2xl shadow-sm border transition-all duration-300 ${snapshot.isDragging
+                            className={`relative bg-white rounded-2xl shadow-sm border transition-shadow duration-200 ${snapshot.isDragging
                               ? "shadow-2xl border-custom-bg/50 z-50 scale-105"
                               : "border-gray-200 hover:shadow-md"
-                              } ${inputErrors[banner.BannerID]
+                              } ${inputErrors[String(banner.BannerID)]
                                 ? "border-red-300"
                                 : ""
                               }`}
                             style={{
                               ...provided.draggableProps.style,
-                              transform: snapshot.isDragging
-                                ? `${provided.draggableProps.style?.transform} rotate(2deg)`
-                                : transform ||
-                                  provided.draggableProps.style?.transform,
-                              zIndex,
-                              transition,
+                              ...(snapshot.isDragging && { transform: `${provided.draggableProps.style?.transform} rotate(2deg)` }),
                             }}
                           >
                             <div
@@ -517,7 +506,7 @@ const ActiveBannersWithSequence = () => {
 
                                 <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-1 shadow-sm">
                                   <span className="text-sm font-semibold text-gray-700">
-                                    #{banner.SequenceNumber}
+                                    #{index + 1}
                                   </span>
                                 </div>
                               </div>
@@ -532,7 +521,7 @@ const ActiveBannersWithSequence = () => {
                                     </div>
 
                                     <div
-                                      className={`rounded-xl p-3 border transition-all ${inputErrors[banner.BannerID]
+                                      className={`rounded-xl p-3 border transition-all ${inputErrors[String(banner.BannerID)]
                                         ? "bg-red-50 border-red-200"
                                         : "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200"
                                         }`}
@@ -543,19 +532,29 @@ const ActiveBannersWithSequence = () => {
                                             type="number"
                                             min="1"
                                             max={activeBanners.length}
-                                            value={banner.SequenceNumber}
-                                            onChange={(e) =>
-                                              handleSequenceChange(
-                                                banner.BannerID,
-                                                e.target.value
-                                              )
-                                            }
-                                            className={`w-16 px-3 py-2 border rounded-lg text-center font-medium focus:ring-2 focus:outline-none transition-all duration-200 bg-white ${inputErrors[banner.BannerID]
+                                            value={inputValues[String(banner.BannerID)] ?? (index + 1)}
+                                            onChange={(e) => {
+                                              setInputValues((prev) => ({
+                                                ...prev,
+                                                [String(banner.BannerID)]: e.target.value,
+                                              }));
+                                              setInputErrors((prev) => ({ ...prev, [String(banner.BannerID)]: false }));
+                                            }}
+                                            onBlur={() => {
+                                              const val = inputValues[String(banner.BannerID)];
+                                              handleSequenceChange(String(banner.BannerID), val);
+                                            }}
+                                            onKeyDown={(e) => {
+                                              if (e.key === "Enter") {
+                                                e.target.blur();
+                                              }
+                                            }}
+                                            className={`w-16 px-3 py-2 border rounded-lg text-center font-medium focus:ring-2 focus:outline-none transition-all duration-200 bg-white ${inputErrors[String(banner.BannerID)]
                                               ? "border-red-400 focus:ring-red-200 focus:border-red-500"
                                               : "border-gray-300 focus:ring-custom-bg/20 focus:border-custom-bg/50"
                                               }`}
                                           />
-                                          {inputErrors[banner.BannerID] && (
+                                          {inputErrors[String(banner.BannerID)] && (
                                             <div className="absolute -bottom-5 left-0 right-0 text-center text-xs text-red-500">
                                               {t(
                                                 "BANNERS.INVALID_POSITION"
@@ -570,11 +569,6 @@ const ActiveBannersWithSequence = () => {
                               </div>
                             </div>
 
-                            {swapPreview?.from === index && (
-                              <div className="absolute -right-4 top-1/2 -translate-y-1/2 bg-custom-bg/70 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                {swapPreview.direction === DIRECTIONS.UP ? "↑" : "↓"}
-                              </div>
-                            )}
                           </div>
                         );
                       }}

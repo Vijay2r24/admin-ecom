@@ -20,6 +20,7 @@ import {
   Boxes,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { ToastContainer } from "react-toastify";
 import { useLocation, Navigate } from "react-router-dom";
 import { useTitle } from "../../context/TitleContext";
 import SpecificationTypeList from "./productSpecification/SpecificationTypeList";
@@ -150,22 +151,31 @@ const Browse = () => {
     setTitle(t("PRODUCT_SETUP.PRODUCT_SETUP"));
   }, [setTitle, t]);
 
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
   if (visibleTabs.length === 0) {
     const next = getFirstAccessibleHrefForSession();
     return <Navigate to={next || APP_ROUTES.NOT_AUTHORIZED} replace />;
   }
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2">
-      <div className="overflow-visible">
+    <div className="w-full px-2 sm:px-4 lg:px-2 flex flex-col bg-gray-50">
+      <div className="w-full overflow-visible flex flex-col">
         <Tab.Group
           selectedIndex={nSelectedTab}
           onChange={(index) => {
             setSelectedTab(index);
             setViewMode(VIEW_TYPES.LIST);
           }}
+          className="flex w-full flex-col"
         >
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto flex-shrink-0">
             <Tab.List className="flex space-x-4 min-w-max border-b border-gray-200 px-4 sm:px-6">
               {visibleTabs.map((tab) => {
                 const Icon = tab.icon;
@@ -189,9 +199,12 @@ const Browse = () => {
             </Tab.List>
           </div>
 
-          <Tab.Panels>
+          <Tab.Panels className="flex w-full flex-col">
             {visibleTabs.map((tab, idx) => (
-              <Tab.Panel key={tab.planTabKey} className="p-4 sm:p-6">
+              <Tab.Panel
+                key={tab.planTabKey}
+                className="flex w-full flex-col pt-2"
+              >
                 {isProductSetupTabAllowedByPlan(
                   tab.planTabKey,
                   planFeatures,
@@ -210,6 +223,7 @@ const Browse = () => {
           </Tab.Panels>
         </Tab.Group>
       </div>
+      <ToastContainer />
     </div>
   );
 };

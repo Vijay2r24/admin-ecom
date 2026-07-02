@@ -61,6 +61,17 @@ const isCustomCode = (value, code) =>
 
 const normalizeApiMessage = (message) => (message || "").toLowerCase();
 
+export const getApiResponseStatus = (data) =>
+  data?.status ?? data?.STATUS ?? data?.Status;
+
+export const getApiResponseMessage = (data, fallback = "") =>
+  data?.message || data?.MESSAGE || data?.Message || fallback;
+
+export const isApiResponseSuccess = (data) => {
+  const status = getApiResponseStatus(data);
+  return status?.toUpperCase() === STATUS.SUCCESS.toUpperCase();
+};
+
 /** Heuristic when backend does not send `customCode` for quota / seat / usage caps */
 const isLikelyPlanOrSubscriptionLimitMessage = (message) => {
   const m = normalizeApiMessage(message);
@@ -111,6 +122,7 @@ const showLogoutNotification = (message, fallbackText = INACTIVE_USER_MESSAGE) =
   });
   window.dispatchEvent(logoutEvent);
 };
+
 /* ------------------------------------------------------------------
    ABORT CONTROLLER STORE — Prevent duplicate API calls
 ------------------------------------------------------------------ */
@@ -242,6 +254,18 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       }
 
       const httpStatus = error?.response?.status;
+
+      // 500 Internal Server Error — show a single clear toast
+      if (httpStatus >= 500) {
+        const serverMsg = error?.response?.data?.message;
+        showEmsg(
+          serverMsg || i18n.t("COMMON.SERVER_ERROR"),
+          "error",
+          4000
+        );
+        return Promise.reject(error);
+      }
+
       if (httpStatus === 403 && !isLoginPage()) {
         const errCustomCode = error?.response?.data?.customCode;
         const errMsg = error?.response?.data?.message || "";

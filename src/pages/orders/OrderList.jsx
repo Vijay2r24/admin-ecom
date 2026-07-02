@@ -565,37 +565,36 @@ const OrderList = () => {
       />
 
       {sViewMode === "table" ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 relative">
+        <div className="table-container-floating flex-1 min-h-0">
           <div
-            className="table-wrapper-floating overflow-x-auto overflow-y-auto"
+            className="table-wrapper-floating scrollbar-hide overflow-y-auto !overflow-x-hidden"
             onScroll={handleTableScroll}
           >
-            <table className="table-base">
+            <table className="table-base w-full table-fixed">
               <thead
-                className={`table-head sticky top-0 z-0 transition-all duration-200 ${tableScrollTop > 10 ? "shadow-sm" : "shadow-sm"
-                  }`}
+                className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""}`}
               >
                 <tr>
-                  <th className="table-head-cell w-8"></th>
-                  <th className="table-head-cell text-left">
+                  <th className="table-head-cell-floating w-[4%]"></th>
+                  <th className="table-head-cell-floating text-left w-[18%]">
                     {t("ORDERS.TABLE.ORDER_REF")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell-floating w-[14%]">
                     {t("ORDERS.TABLE.ORDER_DATE")}
                   </th>
-                  <th className="table-head-cell text-left">
+                  <th className="table-head-cell-floating text-left w-[22%]">
                     {t("ORDERS.TABLE.CUSTOMER_NAME")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell-floating w-[12%]">
                     {t("ORDERS.TABLE.PHONE_NUMBER")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell-floating w-[12%]">
                     {t("ORDERS.TABLE.PAYMENT_STATUS")}
                   </th>
-                  <th className="table-head-cell">
+                  <th className="table-head-cell-floating w-[10%]">
                     {t("COMMON.TOTAL_ORDER_ITEMS")}
                   </th>
-                  <th className="table-head-cell">{t("COMMON.ACTIONS")}</th>
+                  <th className="table-head-cell-floating w-[8%]">{t("COMMON.ACTIONS")}</th>
                 </tr>
               </thead>
 
@@ -629,21 +628,18 @@ const OrderList = () => {
                           )}
                         </td>
 
-                        <td className="table-cell table-cell-text">
-                          <span
-                            className="ellipsis-text"
-                            title={order.orderRefId}
-                          >
+                        <td className="table-cell table-cell-text max-w-0">
+                          <span className="block truncate" title={order.orderRefId}>
                             {order.orderRefId}
                           </span>
                         </td>
 
-                        <td className="table-cell table-cell-text">
-                          <div className="flex flex-col">
-                            <div className="text-sm text-gray-700 whitespace-nowrap">
+                        <td className="table-cell table-cell-text max-w-0">
+                          <div className="flex flex-col min-w-0">
+                            <div className="text-sm text-gray-700 truncate">
                               {order.formattedOrderDate.split(",")[0]}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div className="text-xs text-gray-500 mt-1 truncate">
                               {order.formattedOrderDate
                                 .split(",")
                                 .slice(1)
@@ -653,17 +649,19 @@ const OrderList = () => {
                           </div>
                         </td>
 
-                        <td className="table-cell table-cell-text">
-                          <div className="text-sm text-gray-700 truncate max-w-[200px]">
+                        <td className="table-cell table-cell-text max-w-0">
+                          <div className="text-sm text-gray-700 truncate">
                             {order.customerName || t("COMMON.UNKNOWN_CUSTOMER")}
                           </div>
-                          <div className="text-xs text-gray-500 truncate max-w-[200px]">
+                          <div className="text-xs text-gray-500 truncate">
                             {order.email}
                           </div>
                         </td>
 
-                        <td className="table-cell table-cell-text text-right">
-                          {order.phoneNumber || "N/A"}
+                        <td className="table-cell table-cell-text text-center max-w-0">
+                          <span className="block truncate">
+                            {order.phoneNumber || "N/A"}
+                          </span>
                         </td>
 
                         <td className="table-cell text-center">
@@ -848,17 +846,21 @@ const OrderList = () => {
         </div>
       )}
 
-      {!bLoading && !bFilterLoading && !sError && (
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-          <Pagination
-            currentPage={nCurrentPage}
-            totalPages={sTotalPages}
-            totalItems={nTotalRecords}
-            itemsPerPage={nProductsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
+      {aOrders.length > 0 && (
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10 flex-shrink-0">
+          {bLoading || bFilterLoading ? (
+            <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
+          ) : (
+            <Pagination
+              currentPage={nCurrentPage}
+              totalPages={sTotalPages}
+              totalItems={nTotalRecords}
+              itemsPerPage={nProductsPerPage}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handlePageClick={handlePageClick}
+            />
+          )}
         </div>
       )}
     </div>

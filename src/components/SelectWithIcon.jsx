@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, forwardRef } from "react";
+﻿import { useState, useRef, useEffect, forwardRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X, Edit } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -68,7 +68,7 @@ const SelectWithIcon = forwardRef(
         if (selectedOption) {
           return [selectedOption, ...baseFiltered];
         }
-        // Do NOT create a fallback option for missing values — just return the filtered list
+        // Do NOT create a fallback option for missing values â€” just return the filtered list
       }
       
       return baseFiltered;
@@ -310,7 +310,7 @@ const SelectWithIcon = forwardRef(
 
           {error && (
             <p className="mt-1.5 text-sm text-red flex items-center">
-              <span className="mr-1">⚠️</span>
+              <span className="mr-1">âš ï¸</span>
               {error}
             </p>
           )}

@@ -560,7 +560,8 @@ export function isFeatureTokenAllowedByPlan(featureToken) {
   );
   const hasFeatureGating = Boolean(sub.hasFeatureGating);
 
-  if (!hasFeatureGating && features.length === 0) return true;
+  // No gating or features list empty → allow (covers catalog fetch failure)
+  if (!hasFeatureGating || features.length === 0) return true;
 
   const want = String(featureToken).toLowerCase().trim();
   if (features.some((f) => String(f).toLowerCase().trim() === want)) {

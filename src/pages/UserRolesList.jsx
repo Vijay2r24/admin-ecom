@@ -355,7 +355,12 @@ const UserRolesList = () => {
                     const isAdmin = isAdminRole(role);
 
                     return (
-                      <tr key={role.roleid || role.RoleID} className="table-row">
+                      <tr
+                        key={role.roleid || role.RoleID}
+                        className={`table-row transition-shadow ${
+                          role.IsActive === true ? "bg-emerald-50/20" : "bg-gray-50"
+                        }`}
+                      >
                         <td className="table-cell text-left align-middle">
                           <div className="flex justify-start items-center">
                             <Shield className="h-4 w-4 mr-2 text-gray-400" />
@@ -407,7 +412,7 @@ const UserRolesList = () => {
                               onEdit={() =>
                               handleEdit(role.RoleID, roleName, role.IsActive)
                               }
-                              disableEdit={isAdminRole({ RoleName: roleName }) || !hasEditPermission}
+                              disableEdit={!role.IsActive || isAdminRole({ RoleName: roleName }) || !hasEditPermission}
                             />
                           </div>
                         </td>
@@ -488,7 +493,7 @@ const UserRolesList = () => {
                   onEdit={() =>
                     handleEdit(role.RoleID, roleName, role.IsActive)
                   }
-                  disableEdit={isAdmin || !hasEditPermission}
+                  disableEdit={!role.IsActive || isAdmin || !hasEditPermission}
                 />
               </div>
             );

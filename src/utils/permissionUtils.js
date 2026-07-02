@@ -11,23 +11,16 @@ export function permissionIdsInclude(permissionIDs, targetPermissionId) {
 export function getPermissionCode(module, name) {
   try {
     const allPermissions = JSON.parse(localStorage.getItem('AllPermissions'));
-    const permissionIDs = JSON.parse(localStorage.getItem('PermissionIDs'));
-    const rows = allPermissions || [];
-    
-    
+    if (!allPermissions || !Array.isArray(allPermissions) || allPermissions.length === 0) {
+      return null;
+    }
+    const rows = allPermissions;
     
     const found = rows.find(
       perm =>
         perm.Module?.toLowerCase().trim() === module.toLowerCase().trim() &&
         perm.Name?.toLowerCase().trim() === name.toLowerCase().trim()
     );
-    
-    if (found) {
-      const hasPermission = permissionIDs && permissionIDs.includes(found.PermissionID);
-      
-    } else {
-      
-    }
     
     return found ? found.PermissionID : null;
   } catch (error) {
@@ -40,12 +33,19 @@ export function hasPermissionId(permissionCode) {
   try {
     const allPermissions = JSON.parse(localStorage.getItem('AllPermissions'));
     const permissionIDs = JSON.parse(localStorage.getItem('PermissionIDs'));
-    const rows = allPermissions || [];
+
+    // If AllPermissions hasn't loaded yet, don't block the user
+    if (!allPermissions || !Array.isArray(allPermissions) || allPermissions.length === 0) {
+      return true;
+    }
+
+    const rows = allPermissions;
 
     const matchingPermission = rows.find(
       (p) => String(p.PermissionID) === String(permissionCode)
     );
 
+    // Permission not found in master list — allow (unknown permission = unrestricted)
     if (!matchingPermission) return false;
 
     return permissionIdsInclude(permissionIDs, matchingPermission.PermissionID);

@@ -1414,6 +1414,7 @@
     "MORE": "more",
     "SHOW_LESS": "Show less",
     "ERROR_MESSAGE": "An error occurred. Please try again.",
+    "SERVER_ERROR": "Something went wrong on the server. Please try again later.",
     "FAILED_OPERATION": "Failed to perform operation.",
     "SEARCH_PLACEHOLDER": "Search...",
     "CLEAR": "Clear",

@@ -260,6 +260,15 @@ const App = () => {
 
   return (
     <Provider store={store}>
+      <ToastContainer
+        position="top-right"
+        autoClose={1400}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+      />
       <IdleLogout
         isLoggedIn={!!localStorage.getItem("token")}
         onLogout={() => {
@@ -344,6 +353,14 @@ const App = () => {
                   path="/payments"
                   element={
                     <ProtectedRoute permissionCode={getPermissionCode(MODULES.PAYMENT, PERMISSIONS.VIEW_PAYMENT_DETAILS)}>
+                      <Payments />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/payments"
+                  element={
+                    <ProtectedRoute permissionCode={getPermissionCode(MODULES.ORDER, PERMISSIONS.VIEW_ORDERS)}>
                       <Payments />
                     </ProtectedRoute>
                   }
@@ -466,10 +483,13 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
-                <Route path="/AddVariants"
-                  element={<ProtectedRoute>
-                    <AddVariants />
-                  </ProtectedRoute>}
+                <Route
+                  path="/AddVariants"
+                  element={
+                    <ProtectedRoute permissionCode={getPermissionCode(MODULES.PRODUCT, PERMISSIONS.ADD_VARIANTS)}>
+                      <AddVariants />
+                    </ProtectedRoute>
+                  }
                 />
                 <Route
                   path="/edit-product/:productId?"

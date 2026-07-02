@@ -9,8 +9,9 @@ import { X, ChevronRight, Package, Store, ShoppingBag, MapPin, DollarSign, Perce
 import { toast } from 'react-toastify';
 import Switch from "../../components/Switch.jsx";
 import Toolbar from "../../components/Toolbar.jsx";
+import Pagination from "../../components/Pagination.jsx";
 import { useTitle } from "../../context/TitleContext.jsx";
-import { VIEW_MODES } from "../../contants/constants.jsx";
+import { VIEW_MODES, ITEMS_PER_PAGE, DEFAULT_PAGE } from "../../contants/constants.jsx";
 
 const ProductVariantsPopup = ({ productId, onClose }) => {
   const { t } = useTranslation();
@@ -23,6 +24,8 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
   const [editedInventory, setEditedInventory] = useState({});
   const [saving, setSaving] = useState(false);
   const [tableScrollTop, setTableScrollTop] = useState(0);
+  const [nCurrentPage, setCurrentPage] = useState(DEFAULT_PAGE);
+  const itemsPerPage = ITEMS_PER_PAGE;
   const tableRef = useRef(null);
 
   // Generate dummy data
@@ -120,6 +123,29 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
       setLoading(false);
     }
   }, [productId, t]);
+
+  const totalVariants = productData?.Variants?.length || 0;
+  const totalPages = Math.max(1, Math.ceil(totalVariants / itemsPerPage));
+
+  useEffect(() => {
+    setCurrentPage(DEFAULT_PAGE);
+  }, [productId, totalVariants]);
+
+  useEffect(() => {
+    if (nCurrentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [nCurrentPage, totalPages]);
+
+  const paginatedVariants = productData?.Variants?.slice(
+    (nCurrentPage - 1) * itemsPerPage,
+    nCurrentPage * itemsPerPage
+  ) || [];
+
+  const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const handlePageClick = (page) => setCurrentPage(page);
 
   const handleTableScroll = () => {
     if (tableRef.current) {
@@ -338,7 +364,9 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
                     </td>
                   </tr>
                 ) : (
-                  productData?.Variants?.map((variant, index) => {
+                  paginatedVariants.map((variant, index) => {
+                    const variantIndex =
+                      (nCurrentPage - 1) * itemsPerPage + index;
                     const totalStock = getTotalStock(variant.Inventory || []);
                     const storeCount = variant.Inventory?.length || 0;
                     
@@ -357,7 +385,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
                               <div
                                 className="font-medium text-xs text-gray-900 ellipsis-text"
                               >
-                              {t("PRODUCTS.VARIANT_NUMBER", { n: index + 1 })}
+                              {t("PRODUCTS.VARIANT_NUMBER", { n: variantIndex + 1 })}
                               </div>
                               {variant.Attributes?.length > 0 && (
                                 <div className="text-xs text-gray-500">
@@ -375,7 +403,7 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
                               <img
                                 className="h-8 w-8 rounded object-cover"
                                 src={getVariantImage(variant)}
-                                alt={t("PRODUCTS.VARIANT_NUMBER", { n: index + 1 })}
+                                alt={t("PRODUCTS.VARIANT_NUMBER", { n: variantIndex + 1 })}
                                 onError={(e) => {
                                   e.target.onerror = null;
                                   e.target.src = noImage;
@@ -640,6 +668,20 @@ const ProductVariantsPopup = ({ productId, onClose }) => {
           </div>
         )}
       </div>
+
+      {!loading && totalVariants > 0 && (
+        <div className="border-t border-gray-200 flex-shrink-0">
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={totalPages}
+            totalItems={totalVariants}
+            itemsPerPage={itemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        </div>
+      )}
     </div>
   );
 };

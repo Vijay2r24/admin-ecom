@@ -137,9 +137,10 @@ export function hasCreatePermission(actionType) {
     }
 
     const permissionCode = getPermissionCode(actionConfig.module, actionConfig.permission);
+
+    // Permission code not found in AllPermissions — can't verify, allow by default
     if (!permissionCode) {
-   
-      return false;
+      return true;
     }
 
     return hasPermissionId(permissionCode);

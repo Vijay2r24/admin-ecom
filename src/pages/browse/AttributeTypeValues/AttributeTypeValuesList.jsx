@@ -19,7 +19,6 @@ import {
   STATUS,
   STATUS_VALUES,
   STATUS_OPTIONS,
-  customScrollbarStyles,
   PERMISSIONS,
   MODULES,
 } from "../../../contants/constants";
@@ -93,13 +92,7 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
 
   const iTotalPages = Math.ceil(iTotalItems / iItemsPerPage);
 
-  // Hide body scrollbar when component mounts
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, []);
+
 
   useEffect(() => {
     const params = {
@@ -150,9 +143,14 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
         })
       ).unwrap();
 
-      showEmsg(result.message, result.status || STATUS.SUCCESS);
+      showEmsg(
+        result.message || t("COMMON.STATUS_UPDATE_SUCCESS"),
+        result.status || STATUS.SUCCESS
+      );
     } catch (err) {
-      setErrorMessage(t("COMMON.API_ERROR"));
+      setErrorMessage(
+        err?.error || err?.message || t("COMMON.STATUS_UPDATE_ERROR")
+      );
       setShowErrorPopup(true);
     } finally {
       setStatusPopup({ open: false, attributeId: null, newStatus: null });
@@ -209,11 +207,8 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
   }
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
-      <style>{customScrollbarStyles}</style>
-
-      <div className="relative">
-        <div className="mb-6">
+    <div className="flex w-full flex-col">
+      <div className="mb-4 flex-shrink-0">
           <Toolbar
             searchTerm={sSearchQuery}
             setSearchTerm={setSearchQuery}
@@ -248,9 +243,9 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
         </div>
 
         {/* Loading/Error states or Table */}
-        <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+        <div className="table-container-floating w-full bg-white rounded-xl shadow-sm border border-gray-100 relative">
           <div
-            className="table-scroll-container overflow-x-auto overflow-y-auto"
+            className="table-scroll-container scrollbar-hide overflow-x-auto overflow-y-auto"
             onScroll={handleTableScroll}
           >
             <table className="table-base w-full">
@@ -393,25 +388,26 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
           </div>
         </div>
 
-        {bShowErrorPopup && (
-          <FullscreenErrorPopup
-            message={sErrorMessage}
-            onClose={() => setShowErrorPopup(false)}
-          />
-        )}
+      {bShowErrorPopup && (
+        <FullscreenErrorPopup
+          message={sErrorMessage}
+          onClose={() => setShowErrorPopup(false)}
+        />
+      )}
 
-        {statusPopup.open && (
-          <FullscreenErrorPopup
-            message={
-              statusPopup.newStatus
-                ? t("PRODUCT_SETUP.ATTRIBUTES.CONFIRM_ACTIVATE")
-                : t("PRODUCT_SETUP.ATTRIBUTES.CONFIRM_DEACTIVATE")
-            }
-            onClose={handleStatusPopupClose}
-            onConfirm={handleStatusConfirm}
-          />
-        )}
+      {statusPopup.open && (
+        <FullscreenErrorPopup
+          message={
+            statusPopup.newStatus
+              ? t("PRODUCT_SETUP.ATTRIBUTES.CONFIRM_ACTIVATE")
+              : t("PRODUCT_SETUP.ATTRIBUTES.CONFIRM_DEACTIVATE")
+          }
+          onClose={handleStatusPopupClose}
+          onConfirm={handleStatusConfirm}
+        />
+      )}
 
+      <div className="mt-4 bg-white border-t border-gray-200 flex-shrink-0">
         {bLoading ? (
           <SkeletonLoader type="pagination" />
         ) : (

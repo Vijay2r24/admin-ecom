@@ -7,7 +7,8 @@ const Tooltip = ({
   align = 'center',
   showArrow = true,
   className = '',
-  disabled = false
+  disabled = false,
+  fullWidth = false,
 }) => {
   if (disabled || !text) {
     return children;
@@ -68,7 +69,11 @@ const Tooltip = ({
   };
 
   return (
-    <div className="relative group inline-block">
+    <div
+      className={`relative group ${
+        fullWidth ? "block min-w-0 w-full max-w-full overflow-hidden" : "inline-block"
+      }`}
+    >
       {children}
       <div className={getPositionClasses()}>
         {text}

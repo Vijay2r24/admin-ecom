@@ -25,7 +25,6 @@ import {
   STATUS,
   STATUS_VALUES,
   STATUS_OPTIONS,
-  customScrollbarStyles,
   PERMISSIONS,
   MODULES,
 } from "../../../contants/constants";
@@ -84,13 +83,6 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       limitReachedMsg: t("BRANDS.LIMIT_REACHED", "You have reached your brand creation limit."),
       planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
     });
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, []);
 
   useEffect(() => {
     const params = {
@@ -167,7 +159,10 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
         })
       ).unwrap();
 
-      showEmsg(result.message, STATUS.SUCCESS);
+      showEmsg(
+        result.message || t("COMMON.STATUS_UPDATE_SUCCESS"),
+        STATUS.SUCCESS
+      );
 
       const params = {
         pageNumber: nCurrentPage,
@@ -179,7 +174,10 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       }
       dispatch(fetchResource({ key: "brands", params }));
     } catch (err) {
-      showEmsg(err?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
+      showEmsg(
+        err?.error || err?.message || t("COMMON.STATUS_UPDATE_ERROR"),
+        STATUS.ERROR
+      );
     } finally {
       setStatusPopup({ open: false, brandId: null, newStatus: null });
       hideLoaderWithDelay(setSubmitting);
@@ -208,11 +206,9 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
   }
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
-      <style>{customScrollbarStyles}</style>
-
+    <div className="flex w-full flex-col">
       {/* Toolbar with Search & Filters */}
-      <div className="mb-6">
+      <div className="mb-4 flex-shrink-0">
         <Toolbar
           searchTerm={sSearchQuery}
           setSearchTerm={setSearchQuery}
@@ -248,9 +244,9 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       </div>
 
       {/* Loading, Error, or Table */}
-      <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+      <div className="table-container-floating w-full bg-white rounded-xl shadow-sm border border-gray-100 relative">
         <div
-          className="table-scroll-container overflow-x-auto overflow-y-auto"
+          className="table-scroll-container scrollbar-hide overflow-x-auto overflow-y-auto"
           onScroll={handleTableScroll}
         >
           <table className="table-base w-full">
@@ -293,8 +289,8 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
                 aBrands.map((brand) => (
                   <tr
                     key={brand.BrandID}
-                    className={`table-row items-center hover:bg-gray-50 ${
-                      !brand.IsActive ? "bg-gray-50" : ""
+                    className={`table-row items-center hover:bg-gray-50 transition-shadow ${
+                      brand.IsActive ? "bg-emerald-50/20" : "bg-gray-50"
                     }`}
                   >
                     {/* Brand Name & Logo */}
@@ -443,16 +439,22 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
       )}
 
       {/* Pagination Controls */}
-      {!bLoading && !sError && (
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-          totalItems={iTotalItems}
-          itemsPerPage={iItemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+      {iTotalItems > 0 && (
+        <div className="mt-4 bg-white border-t border-gray-200 flex-shrink-0">
+          {bLoading ? (
+            <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
+          ) : (
+            <Pagination
+              currentPage={nCurrentPage}
+              totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+              totalItems={iTotalItems}
+              itemsPerPage={iItemsPerPage}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handlePageClick={handlePageClick}
+            />
+          )}
+        </div>
       )}
 
       {/* Confirmation Popup */}

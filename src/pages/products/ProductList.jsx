@@ -30,7 +30,7 @@ import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import Tooltip from "../../components/Tooltip";
 import SkeletonLoader from "../../components/SkeletonLoader";
-import { getPermissionCode } from "../../utils/permissionUtils";
+import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 import { MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE } from "../../contants/constants.jsx";
 import { useCreateAccess } from "../../hooks/useCreateAccess";
 import { updatePlanResourceUsage } from "../../utils/planAccessUtils";
@@ -99,8 +99,10 @@ const ProductList = () => {
   const brands = useSelector((state) => state.allData.resources.brands?.data || []);
   const stores = useSelector((state) => state.allData.resources.stores?.data || []);
 
-  // Create access — permission + limit check
   const addProductPermissionCode = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.CREATE_PRODUCT);
+  const addVariantPermissionCode = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.ADD_VARIANTS);
+  const hasAddVariantPermission = hasPermissionId(addVariantPermissionCode);
+
   const { canCreate: canAddProduct, disabledReason: addProductDisabledReason } =
     useCreateAccess(addProductPermissionCode, {
       actionType: "PRODUCT",
@@ -117,7 +119,7 @@ const ProductList = () => {
     }
   }, [bShowFilterDropdown, dispatch]);
 
-  const defaultFilters = { category: "all", brand: "all", store: "all", status: "all" };
+  const defaultFilters = { category: [], brand: [], store: "all", status: "all" };
   const [oFilters, setFilters] = useState(defaultFilters);
 
   const handleClearFilters = () => {
@@ -143,13 +145,17 @@ const ProductList = () => {
       if (oFilters.status && oFilters.status !== "all") {
         params.IsActive = oFilters.status === "true" ? true : false;
       }
-      if (oFilters.brand && oFilters.brand !== "all") {
-        const selectedBrand = brands.find((b) => b.BrandName === oFilters.brand);
-        if (selectedBrand) params.brandId = [selectedBrand.BrandID];
+      if (Array.isArray(oFilters.brand) && oFilters.brand.length > 0) {
+        const ids = oFilters.brand
+          .map((name) => brands.find((b) => b.BrandName === name)?.BrandID)
+          .filter(Boolean);
+        if (ids.length > 0) params.brandId = ids;
       }
-      if (oFilters.category && oFilters.category !== "all") {
-        const selectedCategory = categories.find((c) => c.CategoryName === oFilters.category);
-        if (selectedCategory) params.categoryId = [selectedCategory.CategoryID];
+      if (Array.isArray(oFilters.category) && oFilters.category.length > 0) {
+        const ids = oFilters.category
+          .map((name) => categories.find((c) => c.CategoryName === name)?.CategoryID)
+          .filter(Boolean);
+        if (ids.length > 0) params.categoryId = ids;
       }
 
       const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
@@ -223,11 +229,9 @@ const ProductList = () => {
   useEffect(() => { setTitle(t("PRODUCTS.TITLE")); }, [setTitle, t]);
 
   const categoryOptions = [
-    { value: "all", label: t("COMMON.ALL") },
     ...categories.map((cat) => ({ value: cat.CategoryName, label: cat.CategoryName })),
   ];
   const brandOptions = [
-    { value: "all", label: t("COMMON.ALL") },
     ...brands.map((brand) => ({ value: brand.BrandName, label: brand.BrandName })),
   ];
   const storeOptions = [
@@ -252,6 +256,7 @@ const ProductList = () => {
       options: categoryOptions,
       placeholder: t("PRODUCT_SETUP.TABS.CATEGORIES"),
       searchable: true,
+      multiple: true,
       searchPlaceholder: t("COMMON.SEARCH_CATEGORY"),
       onInputChange: (v) => handleDropdownInputChange(v, "category"),
     },
@@ -262,6 +267,7 @@ const ProductList = () => {
       options: brandOptions,
       placeholder: t("PRODUCT_SETUP.TABS.BRANDS"),
       searchable: true,
+      multiple: true,
       searchPlaceholder: t("COMMON.SEARCH_BRAND"),
       onInputChange: (v) => handleDropdownInputChange(v, "brand"),
     },
@@ -275,7 +281,8 @@ const ProductList = () => {
 
   const handleFilterChange = (e, filterName) => {
     if (initialLoadComplete) setFilterLoading(true);
-    setFilters({ ...oFilters, [filterName]: e.target.value });
+    const value = Array.isArray(e.target?.value) ? e.target.value : e.target.value;
+    setFilters({ ...oFilters, [filterName]: value });
     setCurrentPage(1);
   };
 
@@ -334,7 +341,7 @@ const ProductList = () => {
   const isLoading = bLoading || initialLoading || bFilterLoading;
 
   return (
-    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
+    <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col">
       <ToastContainer />
       <Toolbar
         searchTerm={sSearchTerm}
@@ -352,21 +359,29 @@ const ProductList = () => {
         actionType="PRODUCT"
         disableCreate={!canAddProduct}
         disableCreateReason={addProductDisabledReason}
+        disableAddVariants={!hasAddVariantPermission}
+        disableAddVariantsReason={t(
+          "PRODUCTS.NO_ADD_VARIANT_PERMISSION",
+          "You do not have permission to add variants."
+        )}
         onExport={handleExportProducts}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
       />
 
       {sViewMode === "table" ? (
-        <div className="table-container-floating">
-          <div className="table-wrapper-floating" onScroll={handleTableScroll}>
-            <table className="table-base">
+        <div className="table-container-floating flex-1 min-h-0">
+          <div
+            className="table-wrapper-floating scrollbar-hide overflow-y-auto !overflow-x-hidden"
+            onScroll={handleTableScroll}
+          >
+            <table className="table-base w-full table-fixed">
               <thead className={`table-head-floating ${tableScrollTop > 10 ? "table-head-floating-shadow" : ""}`}>
                 <tr>
-                  <th className="table-head-cell-floating text-left">{t("PRODUCTS.TITLE")}</th>
-                  <th className="table-head-cell-floating text-center">{t("COMMON.CATEGORY")}</th>
-                  <th className="table-head-cell-floating text-center">{t("PRODUCTS.BRAND")}</th>
-                  <th className="table-head-cell-floating text-center">{t("COMMON.STATUS")}</th>
-                  <th className="table-head-cell-floating text-center">{t("COMMON.ACTIONS")}</th>
+                  <th className="table-head-cell-floating text-left w-[38%]">{t("PRODUCTS.TITLE")}</th>
+                  <th className="table-head-cell-floating text-center w-[22%]">{t("COMMON.CATEGORY")}</th>
+                  <th className="table-head-cell-floating text-center w-[22%]">{t("PRODUCTS.BRAND")}</th>
+                  <th className="table-head-cell-floating text-center w-[9%]">{t("COMMON.STATUS")}</th>
+                  <th className="table-head-cell-floating text-center w-[9%]">{t("COMMON.ACTIONS")}</th>
                 </tr>
               </thead>
               <tbody className="table-body">
@@ -386,9 +401,14 @@ const ProductList = () => {
                   </tr>
                 ) : (
                   aProducts.map((product) => (
-                    <tr key={product.ProductID} className="table-row">
-                      <td className="table-cell text-left align-middle">
-                        <div className="flex items-center p-2">
+                    <tr
+                      key={product.ProductID}
+                      className={`table-row transition-shadow ${
+                        product.IsActive ? "bg-emerald-50/20" : "bg-gray-50"
+                      }`}
+                    >
+                      <td className="table-cell text-left align-middle max-w-0 w-[38%] overflow-hidden">
+                        <div className="flex items-center min-w-0 overflow-hidden py-1 pr-1">
                           <div className="h-8 w-8 flex-shrink-0">
                             <img
                               className="h-8 w-8 rounded object-cover"
@@ -397,40 +417,41 @@ const ProductList = () => {
                               onError={(e) => { e.target.onerror = null; e.target.src = noImage; }}
                             />
                           </div>
-                          <div className="ml-3">
-                            <Tooltip text={product.ProductName} position="top" align="left">
-                              <div className="font-medium text-xs text-gray-900 ellipsis-text">
+                          <div className="ml-3 min-w-0 flex-1 overflow-hidden">
+                            <Tooltip text={product.ProductName} position="top" align="left" fullWidth>
+                              <div className="font-medium text-xs text-gray-900 truncate">
                                 {product.ProductName}
                               </div>
                             </Tooltip>
                           </div>
                         </div>
                       </td>
-                      <td className="table-cell text-center align-middle">
-                        <Tooltip text={product.subCategory} position="top">
-                          <div className="ellipsis-text text-xs text-gray-700">
+                      <td className="table-cell text-center align-middle max-w-0 w-[22%] overflow-hidden">
+                        <Tooltip text={product.subCategory} position="top" fullWidth>
+                          <div className="truncate text-xs text-gray-700 mx-auto">
                             {product.subCategory}
                           </div>
                         </Tooltip>
                       </td>
-                      <td className="table-cell text-center align-middle">
-                        <Tooltip text={product.brandName} position="top">
-                          <div className="ellipsis-text text-xs text-gray-700">
+                      <td className="table-cell text-center align-middle max-w-0 w-[22%] overflow-hidden">
+                        <Tooltip text={product.brandName} position="top" fullWidth>
+                          <div className="truncate text-xs text-gray-700 mx-auto">
                             {product.brandName}
                           </div>
                         </Tooltip>
                       </td>
-                      <td className="table-cell text-center align-middle">
+                      <td className="table-cell text-center align-middle w-[9%] overflow-hidden">
                         <Switch
                           checked={product.IsActive}
                           onChange={() => handleStatusChange(product.ProductID, product.IsActive)}
                         />
                       </td>
-                      <td className="table-cell text-center align-middle">
+                      <td className="table-cell text-center align-middle w-[9%] overflow-hidden">
                         <ActionButtons
                           id={product.ProductID}
                           onEdit={handleEdit}
                           viewLink={`/productdetails/${product.ProductID}`}
+                          disableEdit={!product.IsActive}
                         />
                       </td>
                     </tr>
@@ -457,9 +478,11 @@ const ProductList = () => {
                   </div>
                 ) : (
                   aProducts.map((product) => (
-                    <div
+                  <div
                     key={product.ProductID}
-                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200"
+                    className={`rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200 ${
+                      product.IsActive ? "bg-white" : "bg-gray-50"
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className={`px-2 py-0.5 inline-flex text-[10px] leading-4 font-semibold rounded-full ${getStatusBadgeClass(product.status)}`}>
@@ -502,6 +525,7 @@ const ProductList = () => {
                       id={product.ProductID}
                       onEdit={handleEdit}
                       viewLink={`/productdetails/${product.ProductID}`}
+                      disableEdit={!product.IsActive}
                     />
                   </div>
                 ))
@@ -513,19 +537,21 @@ const ProductList = () => {
       )}
 
       {!sError && nTotalItems > 0 && (
-        (bLoading || bFilterLoading) ? (
-          <SkeletonLoader type="pagination" />
-        ) : (
-          <Pagination
-            currentPage={nCurrentPage}
-            totalPages={nTotalPages}
-            totalItems={nTotalItems}
-            itemsPerPage={itemsPerPage}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handlePageClick={handlePageClick}
-          />
-        )
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10 flex-shrink-0">
+          {(bLoading || bFilterLoading) ? (
+            <SkeletonLoader type="pagination" />
+          ) : (
+            <Pagination
+              currentPage={nCurrentPage}
+              totalPages={nTotalPages}
+              totalItems={nTotalItems}
+              itemsPerPage={itemsPerPage}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handlePageClick={handlePageClick}
+            />
+          )}
+        </div>
       )}
 
       {statusPopup.open && (

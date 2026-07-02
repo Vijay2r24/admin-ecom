@@ -49,6 +49,8 @@ const OrderToolbar = ({
   exportDisabled = false,
   disableCreate = false,
   disableCreateReason = "",
+  disableAddVariants = false,
+  disableAddVariantsReason = "",
   createProcessing = false, // true while a create API request is in-flight
   isBrowsePage = false, // New prop to identify browse pages
   actionType = null, // Add actionType for CreateButton validation
@@ -56,8 +58,14 @@ const OrderToolbar = ({
   const { t } = useTranslation();
   const subscriptionReadOnly = useSubscriptionReadOnly();
   const createDisabled = disableCreate || subscriptionReadOnly || createProcessing;
+  const addVariantsDisabled = disableAddVariants || subscriptionReadOnly;
   const effectiveDisableReason =
     disableCreateReason ||
+    (subscriptionReadOnly
+      ? t("SUBSCRIPTION.READ_ONLY_ACTION_BLOCKED", "Action blocked — your subscription is in read-only mode.")
+      : "");
+  const effectiveAddVariantsDisableReason =
+    disableAddVariantsReason ||
     (subscriptionReadOnly
       ? t("SUBSCRIPTION.READ_ONLY_ACTION_BLOCKED", "Action blocked — your subscription is in read-only mode.")
       : "");
@@ -293,10 +301,15 @@ const OrderToolbar = ({
               actionType={actionType}
               onClick={onCreate}
               loading={createProcessing}
-              disabled={disableCreate || subscriptionReadOnly}
-              className="inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 text-white bg-custom-bg hover:bg-bg-hover"
+              disabled={createDisabled}
+              className={`inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
+                createDisabled
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70 hover:bg-gray-300"
+                  : "text-white bg-custom-bg hover:bg-bg-hover"
+              }`}
               style={{ minWidth: '100px' }}
               showTooltip={true}
+              title={createDisabled ? effectiveDisableReason : undefined}
             >
               <Plus className="h-3.5 w-3.5" />
               {createLabel || t("PRODUCTS.ADD_BTN")}
@@ -334,13 +347,13 @@ const OrderToolbar = ({
         {onAddVariants && (
           <button
             type="button"
-            aria-disabled={createDisabled}
+            aria-disabled={addVariantsDisabled}
             onClick={(e) => {
-              if (createDisabled) {
+              if (addVariantsDisabled) {
                 e.preventDefault();
-                if (effectiveDisableReason) {
+                if (effectiveAddVariantsDisableReason) {
                   import("../utils/ShowEmsg").then(({ showEmsg }) => {
-                    showEmsg(effectiveDisableReason, "warning", 4000);
+                    showEmsg(effectiveAddVariantsDisableReason, "warning", 4000);
                   });
                 }
                 return;
@@ -348,12 +361,12 @@ const OrderToolbar = ({
               onAddVariants(e);
             }}
             className={`inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
-              createDisabled
+              addVariantsDisabled
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-70'
                 : 'text-white bg-custom-bg hover:bg-bg-hover'
             }`}
             style={{ minWidth: '100px' }}
-            title={createDisabled ? effectiveDisableReason : undefined}
+            title={addVariantsDisabled ? effectiveAddVariantsDisableReason : undefined}
           >
             <Plus className="h-3.5 w-3.5" />
             {t("PRODUCTS.ADD_VARIANTS_BTN")}

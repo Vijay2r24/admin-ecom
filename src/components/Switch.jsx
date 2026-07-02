@@ -31,7 +31,7 @@ const Switch = ({
         peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-300
         dark:peer-focus:ring-green-800
         ${checked ? "bg-green-600" : "bg-red-500"}
-        ${disabled ? "bg-gray-400 opacity-60" : ""}
+        ${disabled ? "opacity-60" : ""}
       `}
     >
       {/* Toggle Knob */}

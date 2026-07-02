@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { MapPin, Phone, Mail, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -78,7 +78,7 @@ const Stores = () => {
   );
   const hasExportPermission = hasPermissionId(permissionIdForExport);
 
-  // Create access â€” permission + limit check
+  // Create access — permission + limit check
   const addStorePermissionCode = getPermissionCode(MODULES.STORE, PERMISSIONS.ADD_STORE);
   const { canCreate: canAddStore, disabledReason: addStoreDisabledReason } =
     useCreateAccess(addStorePermissionCode, {
@@ -550,7 +550,6 @@ const Stores = () => {
                 : 'calc(100vh - 180px)'
             }}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
           {bFilterLoading || storesLoading ? (
             <SkeletonLoader type={SKELETON_TYPES.STORE_GRID} rows={6} className="p-4" />
           ) : aStores.length === 0 ? (
@@ -558,7 +557,8 @@ const Stores = () => {
               {t("STORES.NO_STORES_FOUND")}
             </div>
           ) : (
-            aStores.map((store) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+            {aStores.map((store) => (
               <div
                 key={store.StoreID}
                 className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-xl transition-shadow duration-200"
@@ -616,8 +616,9 @@ const Stores = () => {
                 </div>
               </div>
             ))
-          )}
+          }
             </div>
+          )}
           </div>
         </div>
       )}

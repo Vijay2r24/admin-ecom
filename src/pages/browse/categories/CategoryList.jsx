@@ -23,7 +23,6 @@ import EmptyState from "../../../components/EmptyState";import {
   STATUS,
   STATUS_VALUES,
   STATUS_OPTIONS,
-  customScrollbarStyles,
   PERMISSIONS,
   MODULES,
 } from "../../../contants/constants";
@@ -83,13 +82,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
       planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
     });
 
-  // Hide body scrollbar when component mounts
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
+
 
   useEffect(() => {
     const params = {
@@ -159,7 +152,10 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
         })
       ).unwrap();
 
-      showEmsg(result.message, STATUS.SUCCESS);
+      showEmsg(
+        result.message || t("COMMON.STATUS_UPDATE_SUCCESS"),
+        STATUS.SUCCESS
+      );
 
       const params = {
         pageNumber: nCurrentPage,
@@ -172,7 +168,10 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
       dispatch(fetchResource({ key: "categories", params }));
     } catch (err) {
       const errorMessage =
-        err?.response?.data?.MESSAGE || t("COMMON.API_ERROR");
+        err?.error ||
+        err?.response?.data?.MESSAGE ||
+        err?.message ||
+        t("COMMON.STATUS_UPDATE_ERROR");
       showEmsg(errorMessage, STATUS.ERROR);
     } finally {
       setStatusPopup({ open: false, categoryId: null, newStatus: null });
@@ -229,14 +228,8 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
   }));
 
   return (
-    <div 
-      className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50"
-    >
-      <style>
-       {customScrollbarStyles}
-      </style>
-
-      <div className="mb-6">
+    <div className="flex w-full flex-col">
+      <div className="mb-4 flex-shrink-0">
         <Toolbar
           searchTerm={sSearchQuery}
           setSearchTerm={setSearchQuery}
@@ -272,9 +265,9 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
       </div>
 
       {/* Loading/Error states or Table */}
-      <div className="table-container-floating bg-white rounded-xl shadow-sm border border-gray-100 relative">
+      <div className="table-container-floating w-full bg-white rounded-xl shadow-sm border border-gray-100 relative">
         <div
-          className="table-scroll-container overflow-x-auto overflow-y-auto"
+          className="table-scroll-container scrollbar-hide overflow-x-auto overflow-y-auto"
           onScroll={handleTableScroll}
         >
           <table className="table-base w-full">
@@ -476,16 +469,22 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
       </div>
 
       {/* Pagination Controls */}
-      {!bLoading && !sError && (
-        <Pagination
-          currentPage={nCurrentPage}
-          totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
-          totalItems={iTotalItems}
-          itemsPerPage={iItemsPerPage}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          handlePageClick={handlePageClick}
-        />
+      {iTotalItems > 0 && (
+        <div className="mt-4 bg-white border-t border-gray-200 flex-shrink-0">
+          {bLoading ? (
+            <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
+          ) : (
+            <Pagination
+              currentPage={nCurrentPage}
+              totalPages={Math.ceil(iTotalItems / iItemsPerPage)}
+              totalItems={iTotalItems}
+              itemsPerPage={iItemsPerPage}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handlePageClick={handlePageClick}
+            />
+          )}
+        </div>
       )}
       {statusPopup.open && (
         <FullscreenErrorPopup

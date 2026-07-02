@@ -19,7 +19,13 @@ import { useTranslation } from "react-i18next";
 import { ToastContainer } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import NotFoundMessage from "../../components/NotFoundMessage";
-import { apiGet, apiPatch, apiPut } from "../../utils/ApiUtils";
+import {
+  apiGet,
+  apiPatch,
+  apiPut,
+  getApiResponseMessage,
+  isApiResponseSuccess,
+} from "../../utils/ApiUtils";
 import {
   GETORDER_BYID_API,
   UPDATE_ORDER_ITEM_HISTORY,
@@ -213,19 +219,19 @@ const OrderView = () => {
             phone: data.CustomerDetails?.PhoneNumber,
           },
           delivery: {
-            address: data.address
-              ? `${data.address.AddressLine1 || ""} ${
-                  data.address.AddressLine2 || ""
-                }`.trim() || "N/A"
-              : "N/A",
+            address: data.DeliveryAddress || (data.address
+              ? `${data.address.AddressLine1 || ""} ${data.address.AddressLine2 || ""}`.trim()
+              : "") || "N/A",
             city: data.address?.CityName,
             state: data.address?.StateName,
             country: data.address?.CountryName,
             zipCode: data.address?.Zipcode || "",
-            recipientName: data.address?.RecipientName,
-            phoneNumber: data.address?.PhoneNumber,
-            addressType: data.address?.AddressType, // Added this
-            isDefault: data.address?.IsDefault, // Added this
+            recipientName: data.RecipientName || data.address?.RecipientName,
+            phoneNumber: data.PhoneNumber
+              ? `${data.CountryCallingCode || ""} ${data.PhoneNumber}`.trim()
+              : data.address?.PhoneNumber,
+            addressType: data.address?.AddressType,
+            isDefault: data.address?.IsDefault,
           },
           orderItems: data.orderItems.map((item, index) => ({
             id: item.OrderItemID || `item-${index}`,
@@ -360,15 +366,24 @@ const OrderView = () => {
         false
       );
 
-      if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
-        showEmsg(oResponse.data.message, STATUS.SUCCESS);
+      if (isApiResponseSuccess(oResponse?.data)) {
+        showEmsg(
+          getApiResponseMessage(oResponse.data, t("COMMON.STATUS_UPDATE_SUCCESS")),
+          STATUS.SUCCESS
+        );
         if (fetchDataRef.current) await fetchDataRef.current();
         closeEditDialog();
       } else {
-        showEmsg(oResponse.data.message, STATUS.ERROR);
+        showEmsg(
+          getApiResponseMessage(oResponse?.data, t("COMMON.STATUS_UPDATE_ERROR")),
+          STATUS.ERROR
+        );
       }
     } catch (error) {
-      showEmsg(error?.response?.data?.message || t("API_ERROR"), STATUS.ERROR);
+      showEmsg(
+        getApiResponseMessage(error?.response?.data, t("COMMON.STATUS_UPDATE_ERROR")),
+        STATUS.ERROR
+      );
     }
 
     hideLoaderWithDelay(setbSubmitting);
@@ -525,7 +540,12 @@ const OrderView = () => {
                 <div className="flex items-start space-x-3">
                   <Building className="h-3.5 w-3.5 text-gray-500 mt-1 print:hidden" />
                   <div>
-                    <p className="text-xs font-medium text-gray-900 print:text-xs">
+                    {nOrder.delivery?.recipientName && (
+                      <p className="text-xs font-medium text-gray-900 print:text-xs">
+                        {nOrder.delivery.recipientName}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-700 print:text-xs">
                       {nOrder.delivery?.address}
                     </p>
                     <p className="text-[10px] text-gray-500 print:text-[10px]">
@@ -536,6 +556,11 @@ const OrderView = () => {
                     <p className="text-[10px] text-gray-500 print:text-[10px]">
                       {nOrder.delivery?.country}
                     </p>
+                    {nOrder.delivery?.phoneNumber && (
+                      <p className="text-[10px] text-gray-500 print:text-[10px]">
+                        {nOrder.delivery.phoneNumber}
+                      </p>
+                    )}
                     {nOrder.delivery?.addressType && (
                       <p className="text-[10px] text-gray-500 print:text-[10px]">
                         {nOrder.delivery.addressType} Address

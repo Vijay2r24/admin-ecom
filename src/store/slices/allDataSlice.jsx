@@ -1,5 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { apiGet, apiPatch } from "../../utils/ApiUtils";
+import {
+  apiGet,
+  apiPatch,
+  getApiResponseMessage,
+  isApiResponseSuccess,
+} from "../../utils/ApiUtils";
 import {
   GET_ALL_ATTRIBUTES,
   GETALL_BRANDS,
@@ -158,10 +163,21 @@ export const updateStatusById = createAsyncThunk(
       const payload = { IsActive: newStatus ? true : false };
       const response = await apiPatch(`${apiRoute}/${id}`, payload, token);
 
-      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
-        return { key, id, idField, payload, message: response.data.message };
+      if (isApiResponseSuccess(response?.data)) {
+        return {
+          key,
+          id,
+          idField,
+          payload,
+          message: getApiResponseMessage(
+            response.data,
+            "Status updated successfully."
+          ),
+        };
       } else {
-        throw new Error(response?.data?.message);
+        throw new Error(
+          getApiResponseMessage(response?.data) || "Failed to update status"
+        );
       }
     } catch (err) {
       return rejectWithValue({ key, error: err.message });
@@ -374,7 +390,9 @@ const allDataSlice = createSlice({
         if (state.resources[key]?.data) {
           // Update status in place
           state.resources[key].data = state.resources[key].data.map((item) =>
-            item[idField] === id ? { ...item, Status: payload.Status } : item
+            item[idField] === id
+              ? { ...item, IsActive: payload.IsActive }
+              : item
           );
         }
       })

@@ -500,7 +500,12 @@ const Users = () => {
                   </tr>
                 ) : (
                   usersData.map((user) => (
-                    <tr key={user.UserID} className="table-row">
+                    <tr
+                      key={user.UserID}
+                      className={`table-row transition-shadow ${
+                        user.IsActive ? "bg-emerald-50/20" : "bg-gray-50"
+                      }`}
+                    >
                       {/* User */}
                       <td className="table-cell text-left">
                         <div className="flex items-center">
@@ -598,7 +603,7 @@ const Users = () => {
                         <ActionButtons
                           id={user.UserID}
                           viewLink={`/editUser/${user.UserID}`}
-                          disableEdit={!hasEditPermission}
+                          disableEdit={!user.IsActive || !hasEditPermission}
                         />
                       </td>
                     </tr>
@@ -710,7 +715,7 @@ const Users = () => {
                       <ActionButtons
                         id={user.UserID}
                         viewLink={`/editUser/${user.UserID}`}
-                        disableEdit={!hasEditPermission}
+                        disableEdit={!user.IsActive || !hasEditPermission}
                       />
                     </div>
                   </div>
