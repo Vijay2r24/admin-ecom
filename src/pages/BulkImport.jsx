@@ -202,8 +202,7 @@ const BulkImport = () => {
       
     } catch (error) {
       setDownloading(false);
-      showEmsg(t('BULK_IMPORT.DOWNLOAD_ERROR'), STATUS.ERROR);
-     
+      showEmsg(error?.message || t('BULK_IMPORT.DOWNLOAD_ERROR'), STATUS.ERROR);
     }
   };
 
@@ -230,7 +229,7 @@ const BulkImport = () => {
         fetchProductImportList();
       }
     } catch {
-      // ApiUtils interceptor already shows the error toast
+      showEmsg(t('BULK_IMPORT.UPLOAD_ERROR'), STATUS.ERROR);
     } finally {
       setUploading(false);
     }
@@ -280,7 +279,7 @@ const BulkImport = () => {
         showEmsg(t('BULK_IMPORT.DOWNLOAD_SUCCESS'), STATUS.SUCCESS);
       }
     } catch {
-      // ApiUtils interceptor already shows the error toast
+      showEmsg(t('BULK_IMPORT.VIEW_LOGS_ERROR'), STATUS.ERROR);
     }
   };
 

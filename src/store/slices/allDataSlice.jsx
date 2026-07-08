@@ -380,7 +380,7 @@ const allDataSlice = createSlice({
         state.resources[key] = {
           ...(state.resources[key] || {}),
           loading: false,
-          error: error || "Failed to fetch",
+          error: error || null,
         };
       })
 

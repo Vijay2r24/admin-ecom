@@ -275,6 +275,12 @@ const BrandList = ({ onCreate, onBack, setSubmitting }) => {
             <tbody className="table-body">
               {bLoading ? (
                 <SkeletonLoader type={SKELETON_TYPES.BRAND_TABLE} rows={6} />
+              ) : sError ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-red-500">
+                    {sError}
+                  </td>
+                </tr>
               ) : aBrands.length === 0 ? (
                 <tr>
                   <td colSpan={4}>

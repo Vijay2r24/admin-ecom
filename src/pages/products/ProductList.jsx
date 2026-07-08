@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import Toolbar from "../../components/Toolbar";
@@ -299,6 +299,7 @@ const ProductList = () => {
         categoryId: category ? [category.CategoryID] : undefined,
       })).unwrap();
     } catch (error) {
+      showEmsg(error?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
       setExportLoading(false);
     }

@@ -1343,7 +1343,7 @@ const Dashboard = () => {
         ]);
       }
     } catch (err) {
-      setError(t("DASHBOARD.FAILED_TO_LOAD"));
+      setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
+﻿import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPut, apiPatch } from "../../utils/ApiUtils.jsx";
 import {
@@ -140,7 +140,7 @@ const ProductVariantsPopup = ({ productId, groupByAttributeValue, onClose }) => 
 
         setError(null);
       } else {
-        setError(response.data.message, STATUS.ERROR?.toLowerCase());
+        setError(response.data.message || t("COMMON.API_ERROR"));
         if (!showLoader) {
           showEmsg(
             t("INVENTORY.FAILED_TO_REFRESH_PRODUCT_DETAILS"),
@@ -415,7 +415,7 @@ const ProductVariantsPopup = ({ productId, groupByAttributeValue, onClose }) => 
   };
 
   // Validates that the entered discount keeps the final price > 0.
-  // Caps the discount at 99.99 so the price is always at least 0.01 × MRP.
+  // Caps the discount at 99.99 so the price is always at least 0.01 Ã— MRP.
   const handleDiscountChange = (rawValue, mrp) => {
     let discount = parseFloat(rawValue);
     if (isNaN(discount) || discount < 0) discount = 0;

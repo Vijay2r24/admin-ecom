@@ -492,6 +492,12 @@ const Users = () => {
               <tbody className="table-body">
                 {loading || initialLoading ? (
                   <SkeletonLoader type={SKELETON_TYPES.USER_TABLE} rows={8} />
+                ) : error ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-red-500">
+                      {error}
+                    </td>
+                  </tr>
                 ) : usersData.length === 0 ? (
                   <tr>
                     <td colSpan={5}>
@@ -627,6 +633,10 @@ const Users = () => {
               <div className="p-4">
                 <SkeletonLoader type={SKELETON_TYPES.USER_GRID} rows={6} />
               </div>
+            ) : error ? (
+              <div className="text-center py-4 text-red-500">
+                {error}
+              </div>
             ) : usersData.length === 0 ? (
               <EmptyState type="users" title={t("USERS.NO_USERS_FOUND")} description="Try adjusting your search or filters." compact />
             ) : (
@@ -744,8 +754,9 @@ const Users = () => {
 
       {statusPopup.open && (
         <FullscreenErrorPopup
-          message={`Are you sure you want to set this user as ${statusPopup.newStatus ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE")
-            }?`}
+          message={t("USERS.CONFIRM_STATUS_MESSAGE", {
+            status: statusPopup.newStatus ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE"),
+          })}
           onClose={handleStatusPopupClose}
           onConfirm={handleStatusConfirm}
         />

@@ -96,10 +96,9 @@ const ProductDetails = () => {
         setAccessDeniedRedirect(true);
         return;
       }
-      const errorMessage =
-        err?.response?.data?.message || err?.message || t("COMMON.API_ERROR");
+      const errorMessage = err?.response?.data?.message || null;
       setError(errorMessage);
-      showEmsg(errorMessage, STATUS.ERROR);
+      if (errorMessage) showEmsg(errorMessage, STATUS.ERROR);
     } finally {
       setLoading(false);
     }

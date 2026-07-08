@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+﻿import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPut, apiPatch } from "../../utils/ApiUtils.jsx";
 import { GET_PRODUCT_VARIANT, UPDATE_STORE_INVENTORY, UPDATE_STORE_INVENTORY_STATUS } from "../../contants/apiRoutes";
@@ -96,10 +96,10 @@ const ProductStoreInventoryPopup = ({ productVariantId, onClose }) => {
           setVariantInfo(data);
           setMrp(data.MRP || 0);
         } else {
-          setError(response?.data?.message || t("COMMON.API_ERROR"), STATUS.ERROR.toLowerCase());
+          setError(response?.data?.message || t("COMMON.API_ERROR"));
         }
       } catch (err) {
-        setError(err?.response?.data?.message || t("COMMON.API_ERROR"), STATUS.ERROR.toLowerCase());
+        setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
       } finally {
         setLoading(false);
         setIsSearching(false);

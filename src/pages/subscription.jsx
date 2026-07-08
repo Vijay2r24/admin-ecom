@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useTitle } from "../context/TitleContext";
 import { useTranslation } from "react-i18next";
 import SuccessPopup from "../components/SuccessPopup";
@@ -53,7 +53,7 @@ const SubscriptionPlan = () => {
           setError(data?.message || t("COMMON.API_ERROR"));
         }
       } catch (err) {
-        setError(err?.message || t("COMMON.API_ERROR"));
+        setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
       } finally {
         setLoading(false);
       }

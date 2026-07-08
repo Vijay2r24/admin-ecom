@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Plus, MoreVertical, Image as ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -47,7 +47,7 @@ const Banners = () => {
     currentStatus: null,
   });
 
-  // Create access — permission + limit check
+  // Create access â€” permission + limit check
   const createBannerPermissionCode = getPermissionCode(MODULES.BANNER, PERMISSIONS.CREATE_BANNER);
   const { canCreate: canCreateBanner, disabledReason: createBannerDisabledReason, showBlockedToast: showBannerBlockedToast } =
     useCreateAccess(createBannerPermissionCode, {
@@ -117,14 +117,13 @@ const Banners = () => {
         setBanners([]);
         setTotalPages(1);
         setTotalRecords(0);
-        setError(oResponse.data?.message || t("COMMON.ERROR_MESSAGE"));
+        setError(oResponse.data?.message || t("COMMON.API_ERROR"));
       }
     } catch (err) {
       setBanners([]);
       setTotalPages(1);
       setTotalRecords(0);
-      const backendMessage = err?.response?.data?.message;
-      setError(backendMessage || t("COMMON.ERROR_MESSAGE"));
+      setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
     } finally {
       setLoading(false);
     }
@@ -305,7 +304,7 @@ const Banners = () => {
                   )}
                   {project.Price && (
                     <p className="text-sm text-gray-600 truncate">
-                      {t("COMMON.PRICE")}: ₹{project.Price.toLocaleString()}
+                      {t("COMMON.PRICE")}: â‚¹{project.Price.toLocaleString()}
                     </p>
                   )}
                   <div className="flex items-center justify-between mt-2">

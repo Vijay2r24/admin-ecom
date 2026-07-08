@@ -314,9 +314,14 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       let msg = DEFAULT_ERROR_MESSAGE;
       let customCode = null;
       try {
-        msg = error?.response?.data?.message || 
-               error?.message || 
-               DEFAULT_ERROR_MESSAGE;
+        // If no response at all (API down / network error), use a clear message
+        if (!error?.response) {
+          msg = i18n.t("COMMON.ERROR_MESSAGE");
+        } else {
+          msg = error?.response?.data?.message || 
+                 error?.message || 
+                 DEFAULT_ERROR_MESSAGE;
+        }
         customCode = error?.response?.data?.customCode;
       } catch {
         msg = DEFAULT_ERROR_MESSAGE;

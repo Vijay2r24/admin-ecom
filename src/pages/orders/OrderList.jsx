@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+﻿import React, { useEffect, useState, useCallback } from "react";
 import { Download } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,6 +23,7 @@ import { fetchResource } from "../../store/slices/allDataSlice";
 import { exportOrderReport } from "../../store/slices/exportSlice";
 import { ToastContainer } from "react-toastify";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
+import { showEmsg } from "../../utils/ShowEmsg";
 
 const OrderList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -370,7 +371,7 @@ const OrderList = () => {
         setOrders([]);
         setTotalPages(0);
         setTotalRecords(0);
-        setError(oResponse.data.message || t("ORDERS.NO_ORDERS_FOUND"));
+        setError(oResponse.data.message || t("COMMON.API_ERROR"));
       } else {
         const orders = oResponse.data.data || [];
 
@@ -400,9 +401,7 @@ const OrderList = () => {
         setError(null);
       }
     } catch (error) {
-      setError(
-        error?.response?.data?.message || t("COMMON.ERROR_FETCHING_DATA")
-      );
+      setError(error?.response?.data?.message || t("COMMON.API_ERROR"));
       setTotalPages(0);
       setTotalRecords(0);
     } finally {
@@ -531,6 +530,7 @@ const OrderList = () => {
 
       await dispatch(exportOrderReport(exportParams)).unwrap();
     } catch (error) {
+      showEmsg(error?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
       setExportLoading(false);
     }

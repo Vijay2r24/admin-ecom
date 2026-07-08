@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import { Calendar, CreditCard, FileText, User, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -241,6 +241,7 @@ const Payments = () => {
       // Optional: Show success message
       // toast.success(t("PAYMENTS.EXPORT_SUCCESS"));
     } catch (error) {
+      showEmsg(error?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
     } finally {
       setExportLoading(false);
     }
@@ -324,11 +325,13 @@ const Payments = () => {
     }
   };
 
+  const [sError, setError] = useState(null);
+
   const fetchPaymentsData = async () => {
     try {
+      setError(null);
       const token = localStorage.getItem("token");
 
-      // Format dates for API
       const startDate = formatDateForAPI(oFilters.startDate);
       const endDate = formatDateForAPI(oFilters.endDate);
 
@@ -343,7 +346,6 @@ const Payments = () => {
         ...(endDate && { endDate: endDate }),
       };
 
-      // remove empty keys
       Object.keys(params).forEach((key) => {
         if (params[key] === undefined || params[key] === "") {
           delete params[key];
@@ -357,8 +359,13 @@ const Payments = () => {
         setPayments(list);
         setTotalItems(response.data.pagination?.totalRecords || list.length);
         setTotalPages(response.data.pagination?.totalPages || 1);
+      } else {
+        setError(response.data?.message || t("COMMON.API_ERROR"));
+        setPayments([]);
       }
     } catch (err) {
+      setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
+      setPayments([]);
     }
   };
 
@@ -483,6 +490,12 @@ const Payments = () => {
               <tbody className="table-body">
                 {bFilterLoading ? (
                   <SkeletonLoader type={SKELETON_TYPES.PAYMENT_TABLE} rows={6} />
+                ) : sError ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-red-500">
+                      {sError}
+                    </td>
+                  </tr>
                 ) : payments.length === 0 ? (
                   <tr>
                     <td colSpan={5}>
@@ -588,8 +601,14 @@ const Payments = () => {
           >
           {bFilterLoading ? (
             <SkeletonLoader type={SKELETON_TYPES.PAYMENT_GRID} rows={8} />
+          ) : sError ? (
+            <div className="col-span-full text-center py-8 text-red-500">
+              {sError}
+            </div>
           ) : payments.length === 0 ? (
-            <EmptyState type="payments" title={t("PAYMENTS.NO_PAYMENTS_FOUND")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
+            <div className="col-span-full text-center py-8 text-gray-500">
+              {t("PAYMENTS.NO_PAYMENTS_FOUND")}
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 auto-rows-min">
             {payments.map((payment) => (

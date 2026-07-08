@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   CreditCard,
   Clock,
@@ -52,10 +52,10 @@ const PaymentDetails = () => {
         if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           setPayment(response.data.data);
         } else {
-          setError(t("PAYMENTS.API_ERROR"));
+          setError(response?.data?.message || t("COMMON.API_ERROR"));
         }
       } catch (err) {
-        setError(t("PAYMENTS.FETCH_ERROR"));
+        setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
       } finally {
         setLoading(false);
       }

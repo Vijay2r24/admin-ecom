@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+﻿import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPatch } from "../../utils/ApiUtils.jsx";
 import { GET_PRODUCT_BY_ID, UPDATE_PRODUCT_VARIANT_STATUS, UPDATE_PRODUCT_STATUS } from "../../contants/apiRoutes";

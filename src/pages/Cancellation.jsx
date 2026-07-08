@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTitle } from '../context/TitleContext';
 import { useTranslation } from 'react-i18next';
@@ -77,6 +77,7 @@ const Cancellations = () => {
   const [bSubmitting, setBSubmitting]                   = useState(false);
   const [nCurrentPage, setCurrentPage]                  = useState(1);
   const [nTotalRecords, setTotalRecords]                = useState(0);
+  const [sError, setError]                              = useState(null);
   const [statusPopup, setStatusPopup]                   = useState({ open: false, reasonID: null, newStatus: null });
 
   /* ── derived pagination ── */
@@ -101,6 +102,7 @@ const Cancellations = () => {
   const fetchReasons = async (params = {}, silent = false) => {
     try {
       if (!silent) setBSubmitting(true);
+      setError(null);
     
       const response = await apiGet(GET_REASONS_LIST, {
         pageNumber: nCurrentPage,
@@ -108,8 +110,6 @@ const Cancellations = () => {
         ...(params.ReasonType && { ReasonType: params.ReasonType }),
         ...(params.searchText && { searchText: params.searchText }),
       });
-
-  
 
       if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase() && response?.data?.data) {
         const mapped = response.data.data.map(r => ({
@@ -124,17 +124,16 @@ const Cancellations = () => {
         }));
       
         setAllReasons(mapped);
-        // Use total from API response if available, otherwise use array length
         setTotalRecords(response.data.pagination?.totalRecords || response.data.total || mapped.length);
       } else {
-      
         setAllReasons([]);
         setTotalRecords(0);
+        setError(response?.data?.message || t("COMMON.API_ERROR"));
       }
     } catch (error) {
-    
       setAllReasons([]);
       setTotalRecords(0);
+      setError(error?.response?.data?.message || t("COMMON.API_ERROR"));
     } finally {
       if (!silent) setBSubmitting(false);
     }
@@ -254,7 +253,19 @@ const Cancellations = () => {
               </tr>
             </thead>
             <tbody className="table-body">
-              {allReasons.length === 0 ? (
+              {bSubmitting ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500 text-sm">
+                    {t('COMMON.LOADING')}
+                  </td>
+                </tr>
+              ) : sError ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-red-500 text-sm">
+                    {sError}
+                  </td>
+                </tr>
+              ) : allReasons.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="px-6 py-12 text-center text-gray-500 text-sm">
                     {t('REASON_MANAGEMENT.NO_REASONS_FOUND')}
