@@ -160,7 +160,10 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       config.headers.set("Authorization", `Bearer ${lsToken}`);
     }
 
-    config.headers.set("tenant-domain", "ecommerce-qa.admin.b2yinfy.com");
+    const tenantDomain = window.location.hostname === "localhost"
+      ? "ecommerce-qa.admin.b2yinfy.com"
+      : window.location.hostname;
+    config.headers.set("tenant-domain", tenantDomain);
 
     return config;
   });

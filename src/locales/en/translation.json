@@ -379,6 +379,7 @@
     "VSLASTXDAYS": "vs last {{count}} days",
     "VSYESTERDAY": "vs yesterday",
     "VSDAYBEFOREYESTERDAY": "vs day before yesterday",
+    "UPDATING": "Updating...",
     "FAILED_TO_LOAD": "Failed to load dashboard data. Please try again.",
     "PRODUCT_MODAL": {
       "CATEGORY_DEFAULT": "General",

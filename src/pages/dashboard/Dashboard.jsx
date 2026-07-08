@@ -255,6 +255,19 @@ function extractIntervalGraphRows(res, metric) {
       });
     }
   }
+
+  // Add a synthetic zero-value endpoint using the last bucket's endTime
+  // so the chart line extends to the full range end
+  const lastBucket = graph[graph.length - 1];
+  const endTimeRaw = lastBucket?.endTime ?? lastBucket?.EndTime ?? lastBucket?.end ?? "";
+  if (endTimeRaw) {
+    const lastStores = lastBucket?.stores ?? lastBucket?.Stores ?? [];
+    for (const s of lastStores) {
+      const storeId = String(s?.storeId ?? s?.StoreID ?? s?.StoreId ?? "").trim();
+      out.push({ label: String(endTimeRaw).trim(), storeId: storeId || null, value: 0 });
+    }
+  }
+
   return out;
 }
 
@@ -576,6 +589,8 @@ const Dashboard = () => {
   const [topProducts, setTopProducts] = useState([]);
   const [lowStockItems, setLowStockItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const isInitialLoad = useRef(true);
   const [error, setError] = useState(null);
 
   // Date range state with DateTimeRangePickerComponent format
@@ -986,7 +1001,11 @@ const Dashboard = () => {
   // Fetch all dashboard data using promises
   const fetchDashboardData = async () => {
     try {
-      setIsLoading(true);
+      if (isInitialLoad.current) {
+        setIsLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       setError(null);
 
       const { start, end } = dateRange;
@@ -1346,6 +1365,8 @@ const Dashboard = () => {
       setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
+      isInitialLoad.current = false;
     }
   };
 
@@ -1526,6 +1547,13 @@ const generateComparisonText = (startDate, endDate) => {
 
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 pb-8">
+      {/* Refresh indicator - shows on filter changes without full reload */}
+      {isRefreshing && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-white border border-gray-200 rounded-lg shadow-md px-3 py-2 text-sm text-gray-600">
+          <div className="h-4 w-4 border-2 border-custom-bg border-t-transparent rounded-full animate-spin" />
+          {t("DASHBOARD.UPDATING")}
+        </div>
+      )}
       {/* Error Message */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
@@ -1823,7 +1851,7 @@ const generateComparisonText = (startDate, endDate) => {
                       <ResponsiveContainer width="100%" height={250}>
                         <LineChart data={chartDataForRender} margin={CHART_MARGIN}>
                           <CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false}/>
-                          <XAxis dataKey="label" tick={{fontSize:9,fill:"#94a3b8"}} axisLine={false} tickLine={false} tickFormatter={formatChartTickLabel}/>
+                          <XAxis dataKey="label" tick={{fontSize:9,fill:"#94a3b8"}} axisLine={false} tickLine={false} tickFormatter={formatChartTickLabel} interval={0}/>
                           <YAxis hide/>
                           <Tooltip content={<CustomTooltip />} cursor={{stroke:"#e2e8f0",strokeWidth:1}} wrapperStyle={{zIndex:9999,pointerEvents:"auto"}} contentStyle={{pointerEvents:"auto"}} allowEscapeViewBox={{x:false,y:true}} position={{y:0}}/>
                           {comparisonMode ? (
