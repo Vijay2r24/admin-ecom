@@ -1,5 +1,22 @@
 import { useState, useEffect, useRef } from "react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import {
+  DndContext,
+  rectIntersection,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Save,
   Image,
@@ -29,6 +46,180 @@ import { ToastContainer } from "react-toastify";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
 import Tooltip from "../components/Tooltip";
 
+const BannerCardPreview = ({ banner, index, t }) => (
+  <div className="relative bg-white rounded-2xl shadow-2xl border border-custom-bg/50 rotate-1 scale-[1.02] cursor-grabbing w-[min(100vw-2rem,360px)]">
+    <div className="absolute top-2 left-2 z-20 pointer-events-none">
+      <div className="p-2 bg-white/80 rounded-lg shadow-md">
+        <GripVertical className="h-5 w-5 text-custom-bg" />
+      </div>
+    </div>
+    <div className="relative z-20 flex flex-col">
+      <div className="relative h-48">
+        {banner.BannerImages?.length > 0 ? (
+          <img
+            src={banner.BannerImages[0].BannerImage}
+            alt={banner.BannerName}
+            className="w-full h-full object-contain rounded-t-2xl"
+          />
+        ) : (
+          <div className="h-full bg-gray-100 flex items-center justify-center rounded-t-2xl">
+            <Image className="h-12 w-12 opacity-50 text-gray-500" />
+          </div>
+        )}
+        <div className="absolute top-4 right-4 bg-white/95 rounded-lg px-3 py-1 shadow-sm">
+          <span className="text-sm font-semibold text-gray-700">#{index + 1}</span>
+        </div>
+      </div>
+      <div className="p-6">
+        <h3 className="text-lg font-semibold text-gray-900 truncate">{banner.BannerName}</h3>
+      </div>
+    </div>
+  </div>
+);
+
+const SortableBannerCard = ({
+  banner,
+  index,
+  totalBanners,
+  inputValues,
+  inputErrors,
+  setInputValues,
+  setInputErrors,
+  onSequenceChange,
+  t,
+}) => {
+  const sortableId = String(banner.BannerID);
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: sortableId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: isDragging ? undefined : transition,
+    touchAction: "none",
+    opacity: isDragging ? 0.35 : 1,
+  };
+
+  const bannerId = sortableId;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={`relative bg-white rounded-2xl shadow-sm border ${
+        isDragging
+          ? "border-custom-bg/50 z-30"
+          : "border-gray-200 hover:shadow-md transition-shadow duration-200"
+      } ${inputErrors[bannerId] ? "border-red-300" : ""}`}
+    >
+      <div
+        {...listeners}
+        className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing rounded-2xl"
+        aria-label={t("BANNERS.DRAG_TO_REORDER")}
+      />
+
+      <div className="absolute top-2 left-2 z-20 pointer-events-none">
+        <div className="p-2 bg-white/80 rounded-lg shadow-md">
+          <GripVertical className="h-5 w-5 text-custom-bg" />
+        </div>
+      </div>
+
+      <div className="relative z-20 flex flex-col pointer-events-none">
+        <div className="relative h-48">
+          {banner.BannerImages?.length > 0 ? (
+            <img
+              src={banner.BannerImages[0].BannerImage}
+              alt={banner.BannerName}
+              className="w-full h-full object-contain rounded-t-2xl"
+            />
+          ) : (
+            <div className="h-full bg-gray-100 flex items-center justify-center rounded-t-2xl">
+              <div className="text-center text-gray-500">
+                <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">{t("BANNERS.NO_IMAGE")}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="absolute top-4 left-14">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              {banner.Status}
+            </span>
+          </div>
+
+          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-1 shadow-sm">
+            <span className="text-sm font-semibold text-gray-700">#{index + 1}</span>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1 min-w-0 pr-3">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate">
+                  {banner.BannerName}
+                </h3>
+              </div>
+
+              <div
+                className={`rounded-xl p-3 border transition-all flex-shrink-0 pointer-events-auto ${
+                  inputErrors[bannerId]
+                    ? "bg-red-50 border-red-200"
+                    : "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200"
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="1"
+                      max={totalBanners}
+                      value={inputValues[bannerId] ?? index + 1}
+                      onChange={(e) => {
+                        setInputValues((prev) => ({
+                          ...prev,
+                          [bannerId]: e.target.value,
+                        }));
+                        setInputErrors((prev) => ({ ...prev, [bannerId]: false }));
+                      }}
+                      onBlur={() => {
+                        onSequenceChange(bannerId, inputValues[bannerId]);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.target.blur();
+                        }
+                      }}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className={`w-16 px-3 py-2 border rounded-lg text-center font-medium focus:ring-2 focus:outline-none transition-all duration-200 bg-white ${
+                        inputErrors[bannerId]
+                          ? "border-red-400 focus:ring-red-200 focus:border-red-500"
+                          : "border-gray-300 focus:ring-custom-bg/20 focus:border-custom-bg/50"
+                      }`}
+                    />
+                    {inputErrors[bannerId] && (
+                      <div className="absolute -bottom-5 left-0 right-0 text-center text-xs text-red-500">
+                        {t("BANNERS.INVALID_POSITION")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ActiveBannersWithSequence = () => {
   const { t } = useTranslation();
   const [activeBanners, setActiveBanners] = useState([]);
@@ -50,6 +241,12 @@ const ActiveBannersWithSequence = () => {
     PERMISSIONS.UPDATE_BANNER_SEQUENCE
   );
   const hasUpdateBannerPermission = hasPermissionId(permissionIdForUpdateBanner);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   useEffect(() => {
     setTitle(t("BANNERS.TITLE"));
@@ -145,16 +342,20 @@ const ActiveBannersWithSequence = () => {
     }));
   };
 
-  const onDragEnd = (result) => {
+  const onDragEnd = (event) => {
+    const { active, over } = event;
     setIsDragging(false);
     setDraggedItemId(null);
 
     if (!result.destination) return;
     if (result.destination.index === result.source.index) return;
 
-    const items = Array.from(activeBanners);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    const oldIndex = activeBanners.findIndex(
+      (b) => String(b.BannerID) === String(active.id)
+    );
+    const newIndex = activeBanners.findIndex(
+      (b) => String(b.BannerID) === String(over.id)
+    );
 
     const reorderedItems = reorderSequences(items);
 
@@ -162,7 +363,6 @@ const ActiveBannersWithSequence = () => {
     const newInputVals = {};
     reorderedItems.forEach((b) => { newInputVals[String(b.BannerID)] = String(b.SequenceNumber); });
     setInputValues(newInputVals);
-
     setActiveBanners(reorderedItems);
     setInputErrors({});
   };
@@ -174,7 +374,20 @@ const ActiveBannersWithSequence = () => {
   const onDragStart = (start) => {
     setIsDragging(true);
     setDraggedItemId(start.draggableId);
+    setSwapPreview(null);
   };
+
+  const onDragCancel = () => {
+    setIsDragging(false);
+    setDraggedItemId(null);
+  };
+
+  const activeDragBanner = draggedItemId
+    ? activeBanners.find((b) => String(b.BannerID) === String(draggedItemId))
+    : null;
+  const activeDragIndex = activeDragBanner
+    ? activeBanners.findIndex((b) => String(b.BannerID) === String(draggedItemId))
+    : -1;
 
   const validateSequence = (value) => {
     const num = parseInt(value, 10);
@@ -311,12 +524,6 @@ const ActiveBannersWithSequence = () => {
     }
   };
 
-  // Group into rows of 4
-  const groupedBanners = [];
-  for (let i = 0; i < activeBanners.length; i += 3) {
-    groupedBanners.push(activeBanners.slice(i, i + 3));
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
@@ -429,10 +636,12 @@ const ActiveBannersWithSequence = () => {
             </p>
           </div>
         ) : (
-          <DragDropContext
-            onDragEnd={onDragEnd}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={rectIntersection}
             onDragStart={onDragStart}
-            onDragUpdate={onDragUpdate}
+            onDragEnd={onDragEnd}
+            onDragCancel={onDragCancel}
           >
             <Droppable droppableId="banners">
               {(provided, snapshot) => (
