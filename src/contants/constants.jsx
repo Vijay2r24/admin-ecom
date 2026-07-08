@@ -1195,6 +1195,7 @@ export const SKELETON_TYPES = {
   USER_ROLES_TABLE: 'user-roles-table',
   PAGINATION: 'pagination',
   PROFILE: 'profile',
+  PRODUCT_FORM: 'product-form',
   DEFAULT: 'default',
   NEW_SKELETON_TYPE: 'new-skeleton-type',
 };

@@ -441,13 +441,13 @@ const ProductList = () => {
                           </div>
                         </Tooltip>
                       </td>
-                      <td className="table-cell text-center align-middle w-[9%] overflow-hidden">
+                      <td className="table-cell text-center align-middle w-[9%]">
                         <Switch
                           checked={product.IsActive}
                           onChange={() => handleStatusChange(product.ProductID, product.IsActive)}
                         />
                       </td>
-                      <td className="table-cell text-center align-middle w-[9%] overflow-hidden">
+                      <td className="table-cell text-center align-middle w-[9%]">
                         <ActionButtons
                           id={product.ProductID}
                           onEdit={handleEdit}

@@ -857,6 +857,7 @@
     "QTY": "Qty",
     "PRICE": "Price",
     "DISCOUNT": "Discount",
+    "MRP": "MRP",
     "ACTIVE": "Active",
     "EDIT": "Edit",
     "EDIT_INVENTORY_TITLE": "Edit Inventory",

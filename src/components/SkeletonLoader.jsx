@@ -778,6 +778,128 @@ const SkeletonLoader = ({ type = SKELETON_TYPES.DEFAULT, rows = 3, className = '
           </div>
         );
 
+      case SKELETON_TYPES.PRODUCT_FORM:
+        return (
+          <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+            <div className="max-w-8xl mx-auto space-y-6">
+              {/* Product Information Section */}
+              <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+                <div className="h-6 bg-gray-200 rounded animate-pulse w-48 mb-6" />
+                <div className="space-y-6">
+                  {/* Product Name */}
+                  <div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mb-2" />
+                    <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                  </div>
+                  {/* Brand and Category */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2" />
+                      <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-28 mb-2" />
+                      <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Specifications Section */}
+              <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+                <div className="h-6 bg-gray-200 rounded animate-pulse w-40 mb-6" />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mb-2" />
+                      <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-36 mb-2" />
+                      <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description Section */}
+              <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-40 mb-4" />
+                <div className="h-32 bg-gray-200 rounded-lg animate-pulse w-full" />
+              </div>
+
+              {/* Attributes Section */}
+              <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+                <div className="h-6 bg-gray-200 rounded animate-pulse w-36 mb-6" />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mb-2" />
+                      <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-36 mb-2" />
+                      <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mb-2" />
+                      <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-36 mb-2" />
+                      <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Variants Section */}
+              <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+                <div className="h-6 bg-gray-200 rounded animate-pulse w-48 mb-6" />
+                <div className="space-y-6">
+                  {/* Variant cards */}
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="border border-gray-200 rounded-xl p-6">
+                      <div className="h-5 bg-gray-200 rounded animate-pulse w-32 mb-4" />
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                        {/* Image upload area */}
+                        <div className="md:col-span-2">
+                          <div className="h-40 bg-gray-200 rounded-lg animate-pulse w-full" />
+                        </div>
+                        {/* Variant fields */}
+                        <div className="md:col-span-3 space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <div className="h-4 bg-gray-200 rounded animate-pulse w-20 mb-2" />
+                              <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                            </div>
+                            <div>
+                              <div className="h-4 bg-gray-200 rounded animate-pulse w-16 mb-2" />
+                              <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2" />
+                              <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                            </div>
+                            <div>
+                              <div className="h-4 bg-gray-200 rounded animate-pulse w-28 mb-2" />
+                              <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       case SKELETON_TYPES.ORDER_VIEW:
         return (
           <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2">

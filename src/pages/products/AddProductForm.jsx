@@ -23,6 +23,8 @@ import { ToastContainer } from "react-toastify";
 import { useTitle } from "../../context/TitleContext";
 import BackButton from "../../components/BackButton.jsx";
 import Loader from "../../components/Loader";
+import SkeletonLoader from "../../components/SkeletonLoader";
+import { SKELETON_TYPES } from "../../contants/constants.jsx";
 import { hideLoaderWithDelay } from "../../utils/loaderUtils";
 import ImageCropperModal from "../../components/ImageCropperModal";
 import {
@@ -1506,13 +1508,9 @@ const AddProductForm = () => {
   // -------------------------
   // Render
   // -------------------------
-  // Show loader while fetching product data in edit mode
+  // Show skeleton loader while fetching product data in edit mode
   if (isLoading) {
-    return (
-      <div className="global-loader-overlay">
-        <Loader />
-      </div>
-    );
+    return <SkeletonLoader type={SKELETON_TYPES.PRODUCT_FORM} />;
   }
 
   return (
@@ -1700,37 +1698,38 @@ const AddProductForm = () => {
                       )}
                     />
                   </div>
-                  <>
-                  <div className="flex-1">
-                    <TextInputWithIcon
-                      label={t("PRODUCT_CREATION.SPECIFICATION_VALUE")}
-                      id={`SpecificationValue-${index}`}
-                      name={`SpecificationValue-${index}`}
-                      value={spec.Value}
-                      onChange={(e) =>
-                        handleSpecificationChange(
-                          index,
-                          "Value",
-                          e.target.value
-                        )
-                      }
-                      placeholder={t(
-                        "PRODUCT_CREATION.SPECIFICATION_VALUE_PLACEHOLDER"
-                      )}
-                      Icon={Tag}
-                      error={oValidationErrors[`spec_${index}_Value`]}
-                    />
+                  <div className="flex items-end gap-4">
+                    <div className="flex-1">
+                      <TextInputWithIcon
+                        label={t("PRODUCT_CREATION.SPECIFICATION_VALUE")}
+                        id={`SpecificationValue-${index}`}
+                        name={`SpecificationValue-${index}`}
+                        value={spec.Value}
+                        onChange={(e) =>
+                          handleSpecificationChange(
+                            index,
+                            "Value",
+                            e.target.value
+                          )
+                        }
+                        placeholder={t(
+                          "PRODUCT_CREATION.SPECIFICATION_VALUE_PLACEHOLDER"
+                        )}
+                        Icon={Tag}
+                        error={oValidationErrors[`spec_${index}_Value`]}
+                      />
+                    </div>
+                    {aSpecifications.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeSpecificationRow(index)}
+                        className="btn-cancel px-3 py-3 flex items-center justify-center"
+                        title="Remove specification"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
-                  {aSpecifications.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeSpecificationRow(index)}
-                      className="btn-cancel p-3 mb-1"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </>
                 </div>
               ))}
             </div>
