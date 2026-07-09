@@ -5,6 +5,7 @@ import { useTitle } from "../context/TitleContext";
 import Toolbar from "../components/Toolbar";
 import { showEmsg } from "../utils/ShowEmsg";
 import Loader from "../components/Loader";
+import EmptyState from "../components/EmptyState";
 import SkeletonLoader from "../components/SkeletonLoader";
 import { ITEMS_PER_PAGE, STATUS, FILE_CONSTANTS, SKELETON_TYPES } from "../contants/constants";
 import { useDispatch } from "react-redux";
@@ -348,9 +349,8 @@ const BulkImport = () => {
                 </tr>
               ) : productImportList.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
-                    <FileSpreadsheet className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                    <p className="text-sm">{t('BULK_IMPORT.NO_IMPORT_DATA')}</p>
+                  <td colSpan={5}>
+                    <EmptyState type="empty-box" title={t('BULK_IMPORT.NO_IMPORT_DATA')} compact />
                   </td>
                 </tr>
               ) : (

@@ -474,9 +474,7 @@ const ProductList = () => {
                     {sError}
                   </div>
                 ) : aProducts.length === 0 ? (
-                  <div className="col-span-full text-center py-8 text-gray-500">
-                    {t("PRODUCTS.NO_PRODUCTS")}
-                  </div>
+                  <EmptyState type="products" title={t("PRODUCTS.NO_PRODUCTS")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
                 ) : (
                   aProducts.map((product) => (
                   <div

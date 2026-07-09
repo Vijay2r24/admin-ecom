@@ -14,6 +14,7 @@ import {
 } from '../contants/apiRoutes';
 import { showEmsg } from '../utils/ShowEmsg';
 import Loader from '../components/Loader';
+import EmptyState from '../components/EmptyState';
 import { ITEMS_PER_PAGE, VISIBLE_LIMIT, REASON_TYPES, STATUS, FILTERS } from '../contants/constants';
 import { ToastContainer } from 'react-toastify';
 
@@ -267,8 +268,8 @@ const Cancellations = () => {
                 </tr>
               ) : allReasons.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500 text-sm">
-                    {t('REASON_MANAGEMENT.NO_REASONS_FOUND')}
+                  <td colSpan="6">
+                    <EmptyState type="empty-box" title={t('REASON_MANAGEMENT.NO_REASONS_FOUND')} compact />
                   </td>
                 </tr>
               ) : (

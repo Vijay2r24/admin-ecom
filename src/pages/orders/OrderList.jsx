@@ -754,9 +754,7 @@ const OrderList = () => {
               {sError}
             </div>
           ) : aOrders.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-gray-600">
-              {t("ORDERS.NO_ORDERS_FOUND")}
-            </div>
+            <EmptyState type="empty-box" title={t("ORDERS.NO_ORDERS_FOUND")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
           ) : (
             aOrders.map((order) => (
               <div

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "../components/Pagination";
 import ActionButtons from "../components/ActionButtons";
 import NotFoundMessage from "../components/NotFoundMessage";
+import EmptyState from "../components/EmptyState";
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../context/TitleContext";
 import { SKELETON_TYPES } from "../contants/constants";
@@ -345,8 +346,12 @@ const UserRolesList = () => {
                   </tr>
                 ) : paginatedRoles.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="text-center py-4 text-muted">
-                      {t("USER_ROLES_LIST.NO_ROLES_FOUND")}
+                    <td colSpan={3}>
+                      <EmptyState
+                        type="empty-box"
+                        title={t("USER_ROLES_LIST.NO_ROLES_FOUND")}
+                        compact
+                      />
                     </td>
                   </tr>
                 ) : (

@@ -1,22 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  DndContext,
-  rectIntersection,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  DragOverlay,
-} from "@dnd-kit/core";
+  DragDropContext,
+  Droppable,
+  Draggable,
+} from "@hello-pangea/dnd";
 import {
   arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  rectSortingStrategy,
-  useSortable,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import {
   Save,
   Image,
@@ -242,11 +232,7 @@ const ActiveBannersWithSequence = () => {
   );
   const hasUpdateBannerPermission = hasPermissionId(permissionIdForUpdateBanner);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
+
 
   useEffect(() => {
     setTitle(t("BANNERS.TITLE"));
@@ -342,21 +328,17 @@ const ActiveBannersWithSequence = () => {
     }));
   };
 
-  const onDragEnd = (event) => {
-    const { active, over } = event;
+  const onDragEnd = (result) => {
     setIsDragging(false);
     setDraggedItemId(null);
 
     if (!result.destination) return;
     if (result.destination.index === result.source.index) return;
 
-    const oldIndex = activeBanners.findIndex(
-      (b) => String(b.BannerID) === String(active.id)
-    );
-    const newIndex = activeBanners.findIndex(
-      (b) => String(b.BannerID) === String(over.id)
-    );
+    const oldIndex = result.source.index;
+    const newIndex = result.destination.index;
 
+    const items = arrayMove([...activeBanners], oldIndex, newIndex);
     const reorderedItems = reorderSequences(items);
 
     // Sync inputValues immediately so inputs show correct numbers right after drop
@@ -636,12 +618,9 @@ const ActiveBannersWithSequence = () => {
             </p>
           </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={rectIntersection}
+          <DragDropContext
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
-            onDragCancel={onDragCancel}
           >
             <Droppable droppableId="banners">
               {(provided, snapshot) => (

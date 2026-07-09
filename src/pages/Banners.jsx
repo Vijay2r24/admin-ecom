@@ -25,6 +25,7 @@ import noImage from "../../assets/images/missing-pictur.jpg";
 import Switch from "../components/Switch";
 import Pagination from "../components/Pagination"; // Import the Pagination component
 import Loader from "../components/Loader";
+import EmptyState from "../components/EmptyState";
 import SkeletonLoader from "../components/SkeletonLoader";
 
 
@@ -233,22 +234,7 @@ const Banners = () => {
         {loading ? (
           <SkeletonLoader type={SKELETON_TYPES.BANNER_GRID} rows={6} className="mt-4" />
         ) : paginatedBanners.length === 0 && !sError ? (
-          <div className="flex flex-col items-center justify-center py-20 px-4">
-            <div className="mb-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center">
-                <ImageIcon className="w-10 h-10 text-indigo-400" />
-              </div>
-            </div>
-            
-            <div className="text-center max-w-lg">
-              <h3 className="text-lg font-bold text-gray-900 mb-3">
-                {backendMessage || t("BANNER_FORM.NO_BANNERS_FOUND")}
-              </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                {t("BANNER_FORM.NO_BANNERS_DESCRIPTION")}
-              </p>
-            </div>
-          </div>
+          <EmptyState type="empty-box" title={backendMessage || t("BANNER_FORM.NO_BANNERS_FOUND")} description={t("BANNER_FORM.NO_BANNERS_DESCRIPTION")} />
         ) : (
          <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-hide">
             {paginatedBanners.map((project) => (

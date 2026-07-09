@@ -606,9 +606,7 @@ const Payments = () => {
               {sError}
             </div>
           ) : payments.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-gray-500">
-              {t("PAYMENTS.NO_PAYMENTS_FOUND")}
-            </div>
+            <EmptyState type="payments" title={t("PAYMENTS.NO_PAYMENTS_FOUND")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 auto-rows-min">
             {payments.map((payment) => (

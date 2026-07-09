@@ -41,6 +41,7 @@ import { exportProductReport } from "../../store/slices/exportSlice";
 import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import SkeletonLoader from "../../components/SkeletonLoader";
+import EmptyState from "../../components/EmptyState";
 import Loader from "../../components/Loader.jsx";
 import { SKELETON_TYPES } from "../../contants/constants.jsx";
 import { hideLoaderWithDelay } from "../../utils/loaderUtils";
@@ -617,9 +618,8 @@ const ProductInventory = () => {
                   <tr>
                     <td
                       colSpan={4}
-                      className="py-8 text-center text-gray-500"
                     >
-                      {t("PRODUCT_INVENTORY.NO_PRODUCTS")}
+                      <EmptyState type="products" title={t("PRODUCT_INVENTORY.NO_PRODUCTS")} compact />
                     </td>
                   </tr>
                 ) : (
@@ -704,9 +704,7 @@ const ProductInventory = () => {
             {bLoading || bFilterLoading ? (
               <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={itemsPerPage} />
             ) : aProducts.length === 0 ? (
-              <div className="col-span-full text-center py-8 text-gray-500">
-                {t("PRODUCT_INVENTORY.NO_PRODUCTS")}
-              </div>
+              <EmptyState type="products" title={t("PRODUCT_INVENTORY.NO_PRODUCTS")} compact />
             ) : (
               aProducts.map((product) => (
                 <div
