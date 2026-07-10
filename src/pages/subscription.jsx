@@ -108,18 +108,18 @@ const SubscriptionPlan = () => {
   const handleClosePopup  = () => { setShowSuccessPopup(false); setUpgradedPlan(""); };
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8 px-4">
+    <div className="bg-gray-50 dark:bg-black min-h-screen py-8 px-4">
       <div className="max-w-4xl mx-auto">
 
         {/* Info Banner */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-8">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-800 border border-blue-200 dark:border-gray-700 rounded-lg p-4 mb-8">
           <div className="flex items-start gap-3">
-            <FiInfo className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+            <FiInfo className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-sm font-semibold text-gray-800 mb-1">
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1">
                 {t("SUBSCRIPTIONPLANS.CHOOSE_PLAN_TITLE")}
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {t("SUBSCRIPTIONPLANS.CHOOSE_PLAN_DESC")}
               </p>
             </div>
@@ -128,7 +128,7 @@ const SubscriptionPlan = () => {
 
         {/* Billing Toggle */}
         <div className="flex justify-center mb-8">
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
+          <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-1">
             {[MONTHLY, YEARLY].map((cycle) => (
               <button
                 key={cycle}
@@ -136,7 +136,7 @@ const SubscriptionPlan = () => {
                 className={`px-6 py-2 rounded-md text-sm font-medium transition-colors capitalize ${
                   billingCycle === cycle
                     ? "bg-red-500 text-white"
-                    : "text-gray-600 hover:text-gray-900"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
                 {t(`SUBSCRIPTIONPLANS.BILLING_${cycle.toUpperCase()}`)}
@@ -147,17 +147,17 @@ const SubscriptionPlan = () => {
 
         {/* Loading */}
         {loading && (
-          <div className="text-center py-16 text-gray-500 text-sm">{t("COMMON.LOADING")}</div>
+          <div className="text-center py-16 text-gray-500 dark:text-gray-400 text-sm">{t("COMMON.LOADING")}</div>
         )}
 
         {/* Error */}
         {!loading && error && (
-          <div className="text-center py-16 text-red-500 text-sm">{error}</div>
+          <div className="text-center py-16 text-red-500 dark:text-red-400 text-sm">{error}</div>
         )}
 
         {/* Empty */}
         {!loading && !error && total === 0 && (
-          <div className="text-center py-16 text-gray-400 text-sm">
+          <div className="text-center py-16 text-gray-400 dark:text-gray-500 text-sm">
             {t("SUBSCRIPTIONPLANS.NO_PLANS")}
           </div>
         )}
@@ -170,10 +170,10 @@ const SubscriptionPlan = () => {
             {total > 2 && (
               <button
                 onClick={prev}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10 bg-white border border-gray-200 rounded-full p-2 shadow hover:bg-gray-50 transition"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-2 shadow hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                 aria-label="Previous plan"
               >
-                <FiChevronLeft className="w-5 h-5 text-gray-600" />
+                <FiChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
             )}
 
@@ -188,7 +188,7 @@ const SubscriptionPlan = () => {
                 return (
                   <div
                     key={plan.id}
-                    className={`rounded-xl border-2 ${style.card} p-6 shadow-sm relative transition-all duration-300 ${
+                    className={`rounded-xl border-2 ${style.card} dark:bg-gray-900 dark:border-gray-700 p-6 shadow-sm relative transition-all duration-300 ${
                       isCurrent ? "ring-4 ring-green-400" : ""
                     }`}
                   >
@@ -202,23 +202,23 @@ const SubscriptionPlan = () => {
 
                     {/* Plan Name */}
                     <div className="flex justify-center mb-4">
-                      <span className={`px-6 py-2 rounded-md text-base font-semibold ${style.badge}`}>
+                      <span className={`px-6 py-2 rounded-md text-base font-semibold ${style.badge} dark:bg-gray-800 dark:text-blue-400`}>
                         {plan.name}
                       </span>
                     </div>
 
                     {/* Price */}
                     <div className="text-center mb-1">
-                      <span className="text-3xl font-bold text-gray-900">
+                      <span className="text-3xl font-bold text-gray-900 dark:text-white">
                         {plan.currency} {plan.price}
                       </span>
                     </div>
-                    <p className="text-center text-sm text-gray-500 mb-4 capitalize">{plan.billing}</p>
+                    <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-4 capitalize">{plan.billing}</p>
 
                     {/* Trial Badge */}
                     {plan.trialDays > 0 && (
                       <div className="flex justify-center mb-6">
-                        <span className={`text-xs font-medium px-3 py-1 rounded-full ${style.badge}`}>
+                        <span className={`text-xs font-medium px-3 py-1 rounded-full ${style.badge} dark:bg-gray-800 dark:text-blue-400`}>
                           {plan.trialDays} {t("SUBSCRIPTIONPLANS.FREE_TRIAL")}
                         </span>
                       </div>
@@ -234,7 +234,7 @@ const SubscriptionPlan = () => {
                             ) : (
                               <FiX className="w-4 h-4 mr-2 flex-shrink-0 text-gray-400 mt-0.5" />
                             )}
-                            <span className={feature.enabled ? "text-gray-700" : "text-gray-400 line-through"}>
+                            <span className={feature.enabled ? "text-gray-700 dark:text-gray-300" : "text-gray-400 dark:text-gray-500 line-through"}>
                               {feature.text}
                             </span>
                           </li>
@@ -246,7 +246,7 @@ const SubscriptionPlan = () => {
                     <button
                       className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
                         isCurrent
-                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                          ? "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                           : "bg-custom-bg text-white hover:opacity-90 cursor-pointer"
                       }`}
                       disabled={isCurrent}
@@ -263,10 +263,10 @@ const SubscriptionPlan = () => {
             {total > 2 && (
               <button
                 onClick={next}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10 bg-white border border-gray-200 rounded-full p-2 shadow hover:bg-gray-50 transition"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-2 shadow hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                 aria-label="Next plan"
               >
-                <FiChevronRight className="w-5 h-5 text-gray-600" />
+                <FiChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
             )}
 
@@ -281,7 +281,7 @@ const SubscriptionPlan = () => {
                     className={`transition-all duration-300 rounded-full ${
                       Math.floor(currentSlide / 2) === i
                         ? "w-8 h-3 bg-custom-bg"
-                        : "w-3 h-3 bg-gray-300 hover:bg-gray-400"
+                        : "w-3 h-3 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
                     }`}
                   />
                 ))}

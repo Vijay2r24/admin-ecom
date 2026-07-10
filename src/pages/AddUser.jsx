@@ -76,8 +76,8 @@ const getArray = (data) =>
 
 // Section header component with only edit button
 const SectionHeader = ({ title, isEditable, onEditToggle, sectionKey, id, t }) => (
-  <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex justify-between items-center">
-    <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+  <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
     {id && !isEditable && (
       <button
         type="button"
@@ -95,7 +95,7 @@ const SectionHeader = ({ title, isEditable, onEditToggle, sectionKey, id, t }) =
 const SectionFooter = ({ isEditable, onEditToggle, onUpdate, sectionKey, id, t }) =>
   id &&
   isEditable && (
-    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+    <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
       <button
         type="button"
         onClick={() => onEditToggle(sectionKey)}
@@ -1430,7 +1430,7 @@ const AddUser = () => {
 
         <div className="space-y-8">
           {/* Personal Information Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
             <SectionHeader
               title={t("ADD_USER.PERSONAL_INFO")}
               isEditable={isPersonalInfoEditable}
@@ -1574,7 +1574,7 @@ const AddUser = () => {
           </div>
 
           {shouldShowAccountSecuritySection && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
               <SectionHeader
                 title={t("ADD_USER.ACCOUNT_SECURITY")}
                 isEditable={isAccountSecurityEditable}
@@ -1876,7 +1876,7 @@ const AddUser = () => {
           )}
 
           {/* Address Information Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
             <SectionHeader
               title={t("ADD_USER.ADDRESS_INFO")}
               isEditable={isAddressInfoEditable}

@@ -149,11 +149,11 @@ const OrderToolbar = ({
           <div className="flex-1">
             <div className="relative h-full">
               <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
+                <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
               </div>
               <input
                 type="text"
-                className="block w-full pl-8 pr-8 py-1.5 border border-gray-300 rounded-md focus:ring-custom-bg focus:border-custom-bg text-xs h-full"
+                className="block w-full pl-8 pr-8 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-custom-bg focus:border-custom-bg dark:bg-gray-900 dark:text-white dark:placeholder-gray-500 text-xs h-full"
                 placeholder={
                   searchPlaceholder || t("TOOLBAR.SEARCH_PLACEHOLDER")
                 }
@@ -164,7 +164,7 @@ const OrderToolbar = ({
                 <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center">
                   <button
                     onClick={() => setSearchTerm("")}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     title="Clear search"
                   >
                     <X className="h-3 w-3" />

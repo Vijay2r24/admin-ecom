@@ -182,6 +182,15 @@ export const PLAN_GATE_SECTION_I18N_BY_ROUTE = {
 
 export const DEFAULT_COLOR = "#000000";
 
+export const THEMES = {
+  LIGHT: 'light',
+  DARK: 'dark'
+};
+
+export const ERROR_MESSAGES = {
+  THEME_PROVIDER_REQUIRED: 'useTheme must be used within a ThemeProvider'
+};
+
 export const COLORS = {
   GRAY_PRIMARY: "#e5efff",
   PRIMARY: "#3498db",

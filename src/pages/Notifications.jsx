@@ -489,16 +489,16 @@ const Notifications = () => {
       <ToastContainer />
       <form onSubmit={handlePushSubmit} className="space-y-8">
         {/* Notification Type Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <div className="border-b border-gray-200 dark:border-gray-800">
             <nav className="flex -mb-px">
               <button
                 type="button"
                 onClick={() => handleTabChange("notification")}
                 className={`flex-1 py-3 px-4 text-center font-medium text-xs border-b-2 transition-colors duration-200 flex items-center justify-center gap-2 ${
                   activeTab === "notification"
-                    ? "border-[#5B45E0] text-[#5B45E0] bg-purple-50"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-[#5B45E0] text-[#5B45E0] bg-purple-50 dark:bg-purple-900/30"
+                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 <Bell className="h-4 w-4" />
@@ -509,8 +509,8 @@ const Notifications = () => {
                 onClick={() => handleTabChange("silent")}
                 className={`flex-1 py-3 px-4 text-center font-medium text-xs border-b-2 transition-colors duration-200 flex items-center justify-center gap-2 ${
                   activeTab === "silent"
-                    ? "border-[#5B45E0] text-[#5B45E0] bg-purple-50"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-[#5B45E0] text-[#5B45E0] bg-purple-50 dark:bg-purple-900/30"
+                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 <BellOff className="h-4 w-4" />
@@ -519,8 +519,8 @@ const Notifications = () => {
             </nav>
           </div>
 
-          <div className="px-5 py-3 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+          <div className="px-5 py-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Send className="h-4 w-4 text-custom-bg" />
               {activeTab === "notification" 
                 ? t("PUSH_NOTIFICATION.DETAILS_TITLE")
@@ -569,7 +569,7 @@ const Notifications = () => {
 
                     {/* Image Upload Section */}
                     <div className="space-y-4">
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         {t("PUSH_NOTIFICATION.IMAGE_LABEL")}
                       </label>
                       <div className={`flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-lg transition-colors duration-200 min-h-[200px] ${

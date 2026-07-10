@@ -19,11 +19,11 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
       {/* Overlay - behind sidebar */}
       {bIsMobileSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-40 dark:bg-opacity-70 z-40 lg:hidden"
           onClick={() => setIsMobileSidebarOpen(false)}
         />
       )}

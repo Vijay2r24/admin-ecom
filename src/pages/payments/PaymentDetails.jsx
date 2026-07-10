@@ -196,13 +196,13 @@ const PaymentDetails = () => {
   return (
     <div className="max-w-8xl mx-auto p-4 space-y-4">
       {/* Header */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
               {t("PAYMENTS.DETAILS_TITLE")}
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {t("PAYMENTS.DETAILS_SUBTITLE")}
             </p>
           </div>
@@ -217,16 +217,16 @@ const PaymentDetails = () => {
         </div>
 
         {/* Amount */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-md p-3 mb-3">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800 rounded-md p-3 mb-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-white rounded border border-gray-200">
+            <div className="p-1.5 bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
               <DollarSign className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {t("PAYMENTS.TRANSACTION_AMOUNT")}
               </p>
-              <p className="text-xl font-semibold text-gray-900">
+              <p className="text-xl font-semibold text-gray-900 dark:text-white">
                 {formatAmount(payment.Amount)}
               </p>
             </div>
@@ -235,20 +235,20 @@ const PaymentDetails = () => {
       </div>
 
       {/* Order Info */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4">
-        <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <User className="w-5 h-5 text-green-600" />
           {t("PAYMENTS.ORDER_INFORMATION")}
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="flex items-start gap-2 p-3 bg-green-50 rounded-md border border-green-100">
+          <div className="flex items-start gap-2 p-3 bg-green-50 dark:bg-gray-800 rounded-md border border-green-100 dark:border-gray-700">
             <Hash className="w-5 h-5 text-green-600 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {t("PAYMENTS.ORDER_ID")}
               </p>
-              <p className="text-sm text-gray-600 font-mono">
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
                 {payment.OrderID}
               </p>
             </div>
@@ -259,59 +259,59 @@ const PaymentDetails = () => {
       {/* Payment Info & Method */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Payment Info */}
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-blue-600" />
             {t("PAYMENTS.PAYMENT_INFORMATION")}
           </h2>
           <div className="space-y-3">
             {/* Payment ID */}
-            <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-md">
+            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
               <Hash className="w-5 h-5 text-gray-500 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t("PAYMENTS.PAYMENT_ID")}
                 </p>
-                <p className="text-sm text-gray-600 font-mono">
+                <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
                   {payment.PaymentID}
                 </p>
               </div>
             </div>
 
             {/* Payment Ref */}
-            <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-md">
+            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
               <Hash className="w-5 h-5 text-gray-500 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t("PAYMENTS.PAYMENT_REF")}
                 </p>
-                <p className="text-sm text-gray-600 font-mono">
+                <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
                   {payment.PaymentRefID}
                 </p>
               </div>
             </div>
 
             {/* Payment Date */}
-            <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-md">
+            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
               <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t("PAYMENTS.PAYMENT_DATE")}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {formatDate(payment.PaymentDate)}
                 </p>
               </div>
             </div>
 
             {/* Payment Attempts */}
-            <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-md">
+            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
               <AlertCircle className="w-5 h-5 text-gray-500 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t("PAYMENTS.PAYMENT_ATTEMPTS")}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {payment.PaymentAttempts} {t("PAYMENTS.ATTEMPTS")}
                 </p>
               </div>
@@ -320,8 +320,8 @@ const PaymentDetails = () => {
         </div>
 
         {/* Payment Method */}
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             {getPaymentMethodIcon(payment.PaymentMethod)}
             {t("PAYMENTS.PAYMENT_METHOD")}
           </h2>
@@ -331,34 +331,34 @@ const PaymentDetails = () => {
             <div
               className={`p-3 rounded-md border ${
                 payment.PaymentMethod
-                  ? "bg-gradient-to-r from-purple-50 to-pink-50 border-purple-100"
-                  : "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200"
+                  ? "bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-800 border-purple-100 dark:border-gray-700"
+                  : "bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800 dark:to-gray-800 border-gray-200 dark:border-gray-700"
               }`}
             >
               <div className="flex items-center gap-2 mb-2">
                 {getPaymentMethodIcon(payment.PaymentMethod)}
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t("PAYMENTS.PAYMENT_METHOD")}
                 </p>
               </div>
-              <p className="text-base font-medium text-gray-900 mb-1">
+              <p className="text-base font-medium text-gray-900 dark:text-white mb-1">
                 {getPaymentMethodDisplayName(payment.PaymentMethod)}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {getPaymentMethodDescription(payment.PaymentMethod)}
               </p>
             </div>
 
             {/* Provider - Only show if PaymentType exists */}
             {payment.PaymentType?.PaymentTypeName && (
-              <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-md border border-blue-100">
+              <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-gray-800 dark:to-gray-800 rounded-md border border-blue-100 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-1">
                   <Building2 className="w-5 h-5 text-blue-600" />
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {t("PAYMENTS.PAYMENT_PROVIDER")}
                   </p>
                 </div>
-                <p className="text-base font-medium text-gray-900">
+                <p className="text-base font-medium text-gray-900 dark:text-white">
                   {payment.PaymentType.PaymentTypeName}
                 </p>
               </div>
@@ -368,14 +368,14 @@ const PaymentDetails = () => {
             {payment.PaymentMethod?.PaymentMethodName?.toLowerCase().includes(
               "cash on delivery"
             ) && (
-              <div className="p-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-md border border-orange-100">
+              <div className="p-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-800 dark:to-gray-800 rounded-md border border-orange-100 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-1">
                   <Truck className="w-5 h-5 text-orange-600" />
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {t("PAYMENTS.DELIVERY_INFO") || "Delivery Information"}
                   </p>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {t("PAYMENTS.COD_INSTRUCTIONS") ||
                     "Payment will be collected when your order is delivered"}
                 </p>
@@ -384,14 +384,14 @@ const PaymentDetails = () => {
 
             {/* Masked Card Number - Only show if available */}
             {payment.MaskedCardNumber && (
-              <div className="p-3 bg-gradient-to-r from-gray-50 to-slate-50 rounded-md border border-gray-100">
+              <div className="p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800 dark:to-gray-800 rounded-md border border-gray-100 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-1">
                   <CreditCard className="w-5 h-5 text-gray-600" />
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {t("PAYMENTS.CARD_NUMBER")}
                   </p>
                 </div>
-                <p className="text-base font-medium text-gray-900 font-mono">
+                <p className="text-base font-medium text-gray-900 dark:text-white font-mono">
                   {payment.MaskedCardNumber}
                 </p>
               </div>

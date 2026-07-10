@@ -1,4 +1,5 @@
 
+import React, { useState, useEffect, useCallback } from "react";
 ﻿import React, { useState, useEffect, useCallback } from "react";
 import { MapPin, Phone, Mail, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -80,6 +81,7 @@ const Stores = () => {
   );
   const hasExportPermission = hasPermissionId(permissionIdForExport);
 
+  // Create access Ã¢â‚¬â€ permission + limit check
   // Create access â€” permission + limit check
   const addStorePermissionCode = getPermissionCode(MODULES.STORE, PERMISSIONS.ADD_STORE);
   const { canCreate: canAddStore, disabledReason: addStoreDisabledReason } =

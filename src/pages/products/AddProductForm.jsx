@@ -1548,9 +1548,9 @@ const AddProductForm = () => {
       <div className="max-w-8xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-10">
           {/* Basic Info */}
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-visible relative">
-            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-visible relative">
+            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                 <ShoppingBag className="h-6 w-6 mr-3 text-custom-bg" />
                 {t("COMMON.BASIC_INFORMATION")}
               </h2>
@@ -1650,9 +1650,9 @@ const AddProductForm = () => {
           </div>
 
           {/* Specifications */}
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-visible relative">
-            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-visible relative">
+            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                 <Tag className="h-6 w-6 mr-3 text-custom-bg" />
                 {t("PRODUCT_CREATION.SPECIFICATIONS")}
               </h2>
@@ -1739,7 +1739,7 @@ const AddProductForm = () => {
           <div style={{ marginBottom: '5rem' }}>
             <label
               htmlFor="ProductDescription"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               {t("PRODUCT_CREATION.PRODUCT_DESCRIPTION")}
             </label>
@@ -1768,9 +1768,9 @@ const AddProductForm = () => {
           </div>
 
           {/* Attributes section */}
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-visible relative" style={{ marginTop: '3rem' }}>
-            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-visible relative" style={{ marginTop: '3rem' }}>
+            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                 <Layers className="h-6 w-6 mr-3 text-custom-bg" />
                 {t("PRODUCT_SETUP.ATTRIBUTES.TITLE")}
               </h2>
@@ -1955,9 +1955,9 @@ const AddProductForm = () => {
           </div>
 
           {/* Variants display */}
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                 <Layers className="h-6 w-6 mr-3 text-custom-bg" />
                 {t("PRODUCT_CREATION.VARIANT_INFORMATION")}
               </h2>
@@ -1998,8 +1998,8 @@ const AddProductForm = () => {
               {!aAttributes.some(
                 (a) => a.AttributeTypeID && a.AttributeValueIDs?.length
               ) ? (
-                <div className="border rounded-xl bg-white shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">
+                <div className="border rounded-xl bg-white dark:bg-gray-900 dark:border-gray-800 shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
                     {aVariants.length === 1
                       ? "Default Variant"
                       : "Generated Variants"}
@@ -2008,7 +2008,7 @@ const AddProductForm = () => {
                   {aVariants.map((variant, index) => (
                     <div
                       key={variant.id}
-                      className="border-b border-gray-100 pb-6 last:border-none mb-6"
+                      className="border-b border-gray-100 dark:border-gray-800 pb-6 last:border-none mb-6"
                     >
                       <div className="flex justify-between items-center mb-4">
                         {aVariants.length > 1 && (
@@ -2026,7 +2026,7 @@ const AddProductForm = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                         <div className="md:col-span-2">
-                          <h4 className="text-md font-semibold text-gray-800 mb-3">
+                          <h4 className="text-md font-semibold text-gray-800 dark:text-gray-300 mb-3">
                             Upload Images for{" "}
                             {variant.attributes?.length
                               ? variant.attributes

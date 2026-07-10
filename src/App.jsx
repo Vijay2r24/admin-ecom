@@ -2,6 +2,7 @@
 import { Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { TitleProvider } from "./context/TitleContext";
 import { AllDataProvider } from "./context/AllDataContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import LocationDataProvider from "./context/LocationDataProvider";
 import ProtectedRoute from './components/ProtectedRoute';
 import NotAuthorized from './pages/NotAuthorized';
@@ -260,6 +261,19 @@ const App = () => {
 
   return (
     <Provider store={store}>
+      <ThemeProvider>
+        <IdleLogout
+          isLoggedIn={!!localStorage.getItem("token")}
+          onLogout={() => {
+            store.dispatch(logout());
+            localStorage.removeItem("token");
+            localStorage.removeItem("userDetails");
+          }}
+        />
+        <InactivityManager>
+          <AllDataProvider>
+            <TitleProvider>
+              <LocationDataProvider>
       <ToastContainer
         position="top-right"
         autoClose={1400}
@@ -672,6 +686,7 @@ const App = () => {
           </TitleProvider>
         </AllDataProvider>
       </InactivityManager>
+      </ThemeProvider>
     </Provider>
   );
 };

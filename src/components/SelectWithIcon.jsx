@@ -209,7 +209,7 @@ const SelectWithIcon = forwardRef(
         {label && (
           <label
             htmlFor={id}
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
             {label}
           </label>
@@ -218,11 +218,11 @@ const SelectWithIcon = forwardRef(
         <div className="relative group" ref={selectRef}>
           <div
             ref={ref}
-            className={`relative w-full pl-10 pr-3 py-2.5 text-xs border ${error ? "border-red-300" : "border-gray-200"
+            className={`relative w-full pl-10 pr-3 py-2.5 text-xs border ${error ? "border-red-300" : "border-gray-200 dark:border-gray-700"
               } rounded-md transition-all duration-200 flex items-center justify-between
             ${disabled
-                ? "bg-gray-100 cursor-not-allowed opacity-75"
-                : "bg-white hover:border-custom-bg cursor-pointer shadow-sm"
+                ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-75"
+                : "bg-white dark:bg-gray-800 hover:border-custom-bg cursor-pointer shadow-sm"
             } ${className}`}
             onClick={(e) => {
               e.stopPropagation();
@@ -248,8 +248,8 @@ const SelectWithIcon = forwardRef(
               {Icon && (
                 <Icon
                   className={`h-4 w-4 transition-colors duration-200 ${disabled
-                    ? "text-gray-400"
-                    : "text-gray-400 group-hover:text-custom-bg"
+                    ? "text-gray-400 dark:text-gray-500"
+                    : "text-gray-400 dark:text-gray-500 group-hover:text-custom-bg"
                     }`}
                 />
               )}
@@ -270,7 +270,7 @@ const SelectWithIcon = forwardRef(
                       <span
                         key={itemValue}
                         className={`flex items-center text-xs font-medium px-2 py-0.25 rounded-full flex-shrink-0 ${disabled
-                          ? "bg-gray-300 text-gray-600"
+                          ? "bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                           : "bg-custom-bg text-white"
                           }`}
                         onClick={(e) => handleRemoveSelectedItem(itemValue, e)}
@@ -283,7 +283,7 @@ const SelectWithIcon = forwardRef(
                     ) : null;
                   })}
                   {remainingCount > 0 && (
-                    <span className="flex items-center bg-gray-300 text-gray-700 text-xs font-medium px-2 py-0.25 rounded-full flex-shrink-0">
+                    <span className="flex items-center bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium px-2 py-0.25 rounded-full flex-shrink-0">
                       +{remainingCount} more
                     </span>
                   )}
@@ -291,8 +291,8 @@ const SelectWithIcon = forwardRef(
               ) : (
                 <span
                   className={`block truncate w-full text-left ${displayLabel === placeholder
-                    ? "text-gray-500"
-                    : "text-gray-900"
+                    ? "text-gray-500 dark:text-gray-400"
+                    : "text-gray-900 dark:text-white"
                     }`}
                 >
                   {displayLabel || "\u00A0"}
@@ -302,7 +302,7 @@ const SelectWithIcon = forwardRef(
 
             {!disabled && (
               <ChevronDown
-                className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 transform transition-transform duration-200 ${isOpen ? "rotate-180" : "rotate-0"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 transform transition-transform duration-200 ${isOpen ? "rotate-180" : "rotate-0"
                   }`}
               />
             )}
@@ -319,7 +319,7 @@ const SelectWithIcon = forwardRef(
             !disabled &&
             createPortal(
               <div
-                className="dropdown-portal-container absolute z-[99999] bg-white border border-gray-200 rounded-lg shadow-lg"
+                className="dropdown-portal-container absolute z-[99999] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
                 style={{
                   position: "absolute",
                   top: `${dropdownPos.top}px`,
@@ -327,13 +327,13 @@ const SelectWithIcon = forwardRef(
                   width: `${dropdownPos.width}px`,
                 }}
               >
-                <div className="px-3 py-2 border-b border-gray-100 bg-white sticky top-0 z-10">
+                <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-10">
                   <div className="relative">
                     <input
                       ref={inputRef}
                       type="text"
                       placeholder={t("SELECT.SEARCH_PLACEHOLDER")}
-                      className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-custom-bg focus:border-custom-bg text-xs"
+                      className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-custom-bg focus:border-custom-bg text-xs bg-white dark:bg-gray-800 dark:text-white"
                       value={sSearchTerm}
                       onChange={(e) => {
                         setSearchTerm(e.target.value);
@@ -348,7 +348,7 @@ const SelectWithIcon = forwardRef(
                           setSearchTerm("");
                           inputRef.current.focus({ preventScroll: true });
                         }}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -359,15 +359,15 @@ const SelectWithIcon = forwardRef(
                 <ul
                   tabIndex="-1"
                   role="listbox"
-                  className="py-1 bg-white max-h-[250px] overflow-y-auto"
+                  className="py-1 bg-white dark:bg-gray-900 max-h-[250px] overflow-y-auto"
                   ref={optionsRef}
                 >
                   {loading ? (
-                    <div className="text-center py-4 text-gray-500">
+                    <div className="text-center py-4 text-gray-500 dark:text-gray-400">
                       {t("COMMON.LOADING_SIMPLE")}
                     </div>
                   ) : filteredOptions.length === 0 ? (
-                    <li className="text-center py-2 text-gray-500 text-sm">
+                    <li className="text-center py-2 text-gray-500 dark:text-gray-400 text-sm">
                       {t("COMMON.NO_OPTIONS_FOUND")}
                     </li>
                   ) : (
@@ -375,9 +375,9 @@ const SelectWithIcon = forwardRef(
                       {/* --- Select All Option --- */}
                       {shouldShowSelectAll && (
                         <li
-                          className={`cursor-pointer select-none relative py-2 pl-4 pr-4 border-b border-gray-100 ${nHighlightedIndex === -1
+                          className={`cursor-pointer select-none relative py-2 pl-4 pr-4 border-b border-gray-100 dark:border-gray-800 ${nHighlightedIndex === -1
                             ? "bg-custom-bg text-white"
-                            : "text-gray-900 hover:bg-gray-100"
+                            : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                             }`}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -418,10 +418,10 @@ const SelectWithIcon = forwardRef(
                                   ? "bg-red-500 text-white"
                                   : "bg-custom-bg text-white"
                                 : isAddNewOption
-                                  ? "text-gray-900 hover:bg-red-50"
-                                  : "text-gray-900 hover:bg-gray-100"
+                                  ? "text-gray-900 dark:text-white hover:bg-red-50 dark:hover:bg-red-900"
+                                  : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                               }
-                            ${isSelected && !isHighlighted ? "bg-blue-50" : ""}`}
+                            ${isSelected && !isHighlighted ? "bg-blue-50 dark:bg-blue-900" : ""}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               if (blocked) {

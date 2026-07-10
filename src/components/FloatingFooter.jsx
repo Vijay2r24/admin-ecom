@@ -38,7 +38,7 @@ const FloatingFooter = ({
   };
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg py-2 z-30 ${className}`}>
+    <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg py-2 z-30 ${className}`}>
       <div className="max-w-8xl mx-auto px-4 lg:px-8">
         <div className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 ${alignmentClasses[align]}`}>
           {/* Custom buttons if provided */}
@@ -47,7 +47,7 @@ const FloatingFooter = ({
           {/* Cancel button */}
           {showCancel && (
             <button
-              className="bg-gray-200 hover:bg-gray-300 px-3 py-1.5 rounded shadow w-full sm:w-auto truncate transition-colors duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-3 py-1.5 rounded shadow w-full sm:w-auto truncate transition-colors duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={onCancel}
               type="button"
               disabled={isSubmitting || cancelDisabled}

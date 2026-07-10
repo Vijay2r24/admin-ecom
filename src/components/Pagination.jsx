@@ -10,11 +10,11 @@ const Pagination = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <div className="sticky bottom-0 bg-white z-10">
-<div className="px-4 py-2.5 bg-gray-100">
+    <div className="sticky bottom-0 bg-white dark:bg-black z-10">
+<div className="px-4 py-2.5 bg-gray-100 dark:bg-gray-900">
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-        <div className="text-secondary print:text-xs">
+        <div className="text-secondary dark:text-gray-400 print:text-xs">
           <span className="mr-1">{t("COMMON.SHOWING")}</span>
           <span className="font-semibold">
             {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
@@ -65,7 +65,7 @@ const Pagination = ({
                   );
                   if (startPage > 2) {
                     pageButtons.push(
-                      <span key="start-ellipsis" className="px-1.5 text-xs text-gray-500">
+                      <span key="start-ellipsis" className="px-1.5 text-xs text-gray-500 dark:text-gray-400">
                         ...
                       </span>
                     );
@@ -87,7 +87,7 @@ const Pagination = ({
                 if (endPage < totalPages) {
                   if (endPage < totalPages - 1) {
                     pageButtons.push(
-                      <span key="end-ellipsis" className="px-1.5 text-xs text-gray-500">
+                      <span key="end-ellipsis" className="px-1.5 text-xs text-gray-500 dark:text-gray-400">
                         ...
                       </span>
                     );

@@ -1,13 +1,14 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Bell, Menu, Dot, X } from "lucide-react";
+import { Bell, Menu, Dot, X, Sun, Moon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
 import { useTitle } from "../context/TitleContext";
+import { useTheme } from "../context/ThemeContext";
 import { useNotifications } from "../hooks/useNotifications";
 import { fetchUserDetails, clearUserDetails } from "../store/slices/allDataSlice";
 import { logout } from "../store/slices/authSlice";
-import { NOTIFICATION_TYPES } from "../contants/constants";
+import { NOTIFICATION_TYPES, THEMES } from "../contants/constants";
 import user from "../../assets/images/user.jpg";
 
 
@@ -15,6 +16,7 @@ import user from "../../assets/images/user.jpg";
 const Header = ({ onMenuClick }) => {
   const { t } = useTranslation();
   const { title, backButton } = useTitle();
+  const { theme, toggleTheme } = useTheme();
   const { notifications, unreadCount, removeNotification, clearNotifications, hasUnreadNotifications, markAsRead } = useNotifications();
   const dispatch = useDispatch();
   const { userDetails } = useSelector((state) => state.allData);
@@ -112,12 +114,12 @@ const Header = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
+    <header className="sticky top-0 z-50 bg-white dark:bg-black shadow-sm border-b border-gray-200 dark:border-gray-800">
       <div className="flex items-center justify-between h-12 px-3 lg:px-4">
         <div className="flex items-center gap-2 lg:gap-4 flex-1">
           <div className="lg:hidden flex items-center">
             <button
-              className="p-1.5 text-gray-600 hover:text-gray-900 focus:outline-none transition-colors rounded-md hover:bg-gray-100"
+              className="p-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
               onClick={onMenuClick}
             >
               <Menu className="h-4 w-4" />
@@ -129,7 +131,7 @@ const Header = ({ onMenuClick }) => {
 
 
             {title && (
-              <h1 className="text-sm font-semibold text-gray-900 truncate max-w-xs">
+              <h1 className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-xs">
                 {title}
               </h1>
             )}
@@ -137,10 +139,22 @@ const Header = ({ onMenuClick }) => {
         </div>
 
         <div className="relative flex items-center gap-2">
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === THEMES.LIGHT ? (
+              <Moon className="h-4 w-4" />
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
+          </button>
 
           <button
             ref={bellRef}
-            className="relative p-1.5 text-gray-500 hover:text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+            className="relative p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             onClick={() => {
               setShowNotifications((v) => !v);
               if (!bShowNotifications) {
@@ -151,7 +165,7 @@ const Header = ({ onMenuClick }) => {
           >
             <Bell className="h-4 w-4" />
             {hasUnreadNotifications && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold leading-none shadow-sm ring-1 ring-white z-20">
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold leading-none shadow-sm ring-1 ring-white dark:ring-black z-20">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -161,23 +175,23 @@ const Header = ({ onMenuClick }) => {
           {bShowNotifications && (
             <div
               ref={dropdownRef}
-              className="fixed right-3 sm:right-4 top-12 w-full max-w-xs sm:w-72 rounded-md shadow-lg border border-gray-200 z-50 bg-white animate-fade-in"
+              className="fixed right-3 sm:right-4 top-12 w-full max-w-xs sm:w-72 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50 bg-white dark:bg-gray-900 animate-fade-in"
             >
-              <div className="h-0.5 w-full bg-gradient-to-r from-blue-400 via-blue-300 to-blue-200 rounded-t-md" />
-              <div className="p-2.5 border-b border-gray-200 font-semibold text-xs text-gray-800 flex items-center gap-2">
-                <Bell className="h-4 w-4 text-blue-500" />
+              <div className="h-0.5 w-full bg-gradient-to-r from-blue-400 via-blue-300 to-blue-200 dark:from-blue-600 dark:via-blue-500 dark:to-blue-400 rounded-t-md" />
+              <div className="p-2.5 border-b border-gray-200 dark:border-gray-700 font-semibold text-xs text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                <Bell className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                 {t("HEADER.NOTIFICATIONS")}
               </div>
-              <ul className="max-h-64 overflow-y-auto divide-y divide-gray-100">
+              <ul className="max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
                 {notifications.length === 0 ? (
-                  <li className="p-3 text-gray-500 text-xs">
+                  <li className="p-3 text-gray-500 dark:text-gray-400 text-xs">
                     {t("HEADER.NO_NOTIFICATIONS")}
                   </li>
                 ) : (
                   notifications.map((notification) => (
                     <li
                       key={notification.id}
-                      className="flex items-start gap-2.5 p-2.5 hover:bg-blue-50/60 transition-colors cursor-pointer relative group"
+                      className="flex items-start gap-2.5 p-2.5 hover:bg-blue-50/60 dark:hover:bg-gray-800 transition-colors cursor-pointer relative group"
                     >
                       <Dot className={`h-4 w-4 mt-0.5 ${
                         notification.type === NOTIFICATION_TYPES.SUCCESS ? 'text-green-400' :
@@ -186,10 +200,10 @@ const Header = ({ onMenuClick }) => {
                         'text-blue-400'
                       }`} />
                       <div className="flex-1">
-                        <div className="text-xs font-semibold text-gray-900">
+                        <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
                           {notification.title}
                         </div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                           {notification.time}
                         </div>
                       </div>
@@ -198,18 +212,18 @@ const Header = ({ onMenuClick }) => {
                           e.stopPropagation();
                           removeNotification(notification.id);
                         }}
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-gray-200 rounded"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
                       >
-                        <X className="h-3 w-3 text-gray-400" />
+                        <X className="h-3 w-3 text-gray-400 dark:text-gray-500" />
                       </button>
                     </li>
                   ))
                 )}
               </ul>
-              <div className="p-2 text-center border-t border-gray-200 bg-gray-50 rounded-b-md flex justify-between items-center">
+              <div className="p-2 text-center border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-md flex justify-between items-center">
                 <Link
                   to="/notifications"
-                  className="text-blue-600 text-xs font-semibold hover:underline"
+                  className="text-blue-600 dark:text-blue-400 text-xs font-semibold hover:underline"
                   onClick={() => setShowNotifications(false)}
                 >
                   {t("COMMON.VIEW_ALL")}
@@ -217,7 +231,7 @@ const Header = ({ onMenuClick }) => {
                 {notifications.length > 0 && (
                   <button
                     onClick={clearNotifications}
-                    className="text-red-600 text-xs font-semibold hover:underline"
+                    className="text-red-600 dark:text-red-400 text-xs font-semibold hover:underline"
                   >
                     {t("COMMON.CLEAR_HISTORY")}
                   </button>
@@ -227,7 +241,7 @@ const Header = ({ onMenuClick }) => {
           )}
 
           {/* Profile Section */}
-          <div className="relative flex items-center gap-1.5 pl-2 border-l border-gray-200 ml-2">
+          <div className="relative flex items-center gap-1.5 pl-2 border-l border-gray-200 dark:border-gray-700 ml-2">
             <button
               ref={profileRef}
               className="flex items-center focus:outline-none group"
@@ -236,20 +250,20 @@ const Header = ({ onMenuClick }) => {
             >
               <div className="relative">
                 <img
-                  className="h-7 w-7 rounded-full object-cover border-2 border-gray-200 group-hover:border-blue-200 transition-colors"
+                  className="h-7 w-7 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700 group-hover:border-blue-200 dark:group-hover:border-blue-500 transition-colors"
                   src={getProfileImageUrl()}
                   alt="Profile"
                   onError={(e) => {
                     e.target.src = user
                   }}
                 />
-                <div className="absolute bottom-0 right-0 h-2 w-2 bg-green-500 rounded-full border border-white"></div>
+                <div className="absolute bottom-0 right-0 h-2 w-2 bg-green-500 rounded-full border border-white dark:border-black"></div>
               </div>
               <div className="hidden sm:block text-left ml-2 z-50">
-                <div className="text-xs font-semibold text-gray-900 truncate max-w-[120px] whitespace-nowrap overflow-hidden text-ellipsis">
+                <div className="text-xs font-semibold text-gray-900 dark:text-white truncate max-w-[120px] whitespace-nowrap overflow-hidden text-ellipsis">
                   {oUserDetails?.FirstName} {oUserDetails?.LastName}
                 </div>
-                <div className="text-xs text-gray-500 truncate max-w-[120px] whitespace-nowrap overflow-hidden text-ellipsis">
+                <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px] whitespace-nowrap overflow-hidden text-ellipsis">
                   {oUserDetails?.RoleName}
                 </div>
               </div>
@@ -259,33 +273,33 @@ const Header = ({ onMenuClick }) => {
             {bShowProfileMenu && (
               <div
                 ref={profileDropdownRef}
-                className="absolute right-0 top-11 w-52 rounded-md shadow-xl border border-gray-200 z-50 bg-white animate-fade-in overflow-hidden"
+                className="absolute right-0 top-11 w-52 rounded-md shadow-xl border border-gray-200 dark:border-gray-700 z-50 bg-white dark:bg-gray-900 animate-fade-in overflow-hidden"
               >
-                <div className="absolute -top-1.5 right-4 w-3 h-3 bg-white border-t border-l border-gray-200 rotate-45 z-10"></div>
-                <div className="flex flex-col items-center pt-4 pb-2.5 px-3 border-b border-gray-200">
+                <div className="absolute -top-1.5 right-4 w-3 h-3 bg-white dark:bg-gray-900 border-t border-l border-gray-200 dark:border-gray-700 rotate-45 z-10"></div>
+                <div className="flex flex-col items-center pt-4 pb-2.5 px-3 border-b border-gray-200 dark:border-gray-700">
                   <img
-                    className="h-12 w-12 rounded-full object-cover border border-gray-200 shadow-sm mb-1.5"
+                    className="h-12 w-12 rounded-full object-cover border border-gray-200 dark:border-gray-700 shadow-sm mb-1.5"
                     src={getProfileImageUrl()}
                     alt="Profile"
                     onError={(e) => {
                       e.target.src = user;
                     }}
                   />
-                  <div className="text-xs font-semibold text-gray-900 text-center">
+                  <div className="text-xs font-semibold text-gray-900 dark:text-white text-center">
                     {oUserDetails?.FirstName} {oUserDetails?.LastName}
                   </div>
-                  <div className="text-xs text-gray-500 mb-0.5">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
                     {oUserDetails?.RoleName}
                   </div>
                 </div>
                 <div className="py-1">
                   <button
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors font-semibold"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-semibold"
                     onClick={() => handleProfileMenuAction("profile")}
                   >
 
                     <svg
-                      className="w-3.5 h-3.5 text-blue-500"
+                      className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
@@ -300,11 +314,11 @@ const Header = ({ onMenuClick }) => {
                     {t("HEADER.YOUR_PROFILE")}
                   </button>
                   <button
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors font-semibold"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-semibold"
                     onClick={() => handleProfileMenuAction("logout")}
                   >
                     <svg
-                      className="w-3.5 h-3.5 text-red-500"
+                      className="w-3.5 h-3.5 text-red-500 dark:text-red-400"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
