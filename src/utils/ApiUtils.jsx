@@ -144,11 +144,16 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
     abortControllers.set(key, controller);
   }
 
+  const tenantDomain = window.location.hostname === "localhost"
+    ? (import.meta.env.VITE_TENANT_DOMAIN || "ecommerce-qa.admin.b2yinfy.com")
+    : window.location.hostname;
+
   const instance = axios.create({
     baseURL: BASE_URL,
     signal: controller.signal,
     headers: {
       "Content-Type": isFormData ? "multipart/form-data" : "application/json",
+      "tenant-domain": tenantDomain,
       ...(token && { Authorization: `Bearer ${token}` }),
     },
   });
@@ -157,13 +162,10 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
   instance.interceptors.request.use((config) => {
     const lsToken = localStorage.getItem("token");
     if (lsToken) {
-      config.headers.set("Authorization", `Bearer ${lsToken}`);
+      config.headers["Authorization"] = `Bearer ${lsToken}`;
     }
 
-    const tenantDomain = window.location.hostname === "localhost"
-      ? "ecommerce-qa.admin.b2yinfy.com"
-      : window.location.hostname;
-    config.headers.set("tenant-domain", tenantDomain);
+    config.headers["tenant-domain"] = tenantDomain;
 
     return config;
   });

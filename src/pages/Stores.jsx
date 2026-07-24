@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useCallback } from "react";
-﻿import React, { useState, useEffect, useCallback } from "react";
 import { MapPin, Phone, Mail, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";

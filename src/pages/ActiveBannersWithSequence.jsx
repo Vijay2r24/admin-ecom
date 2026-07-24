@@ -766,7 +766,7 @@ const ActiveBannersWithSequence = () => {
                 </div>
               )}
             </Droppable>
-          </DndContext>
+          </DragDropContext>
         )}
 
         {/* Instructions */}

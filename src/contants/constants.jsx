@@ -67,6 +67,12 @@ export const PRODUCT_DETAILS_TAB = {
   SPECS: "specs",
 };
 
+/** Notification page tab keys. */
+export const NOTIFICATION_TAB = {
+  NOTIFICATION: "notification",
+  SILENT: "silent",
+};
+
 /** Application route paths (keep in sync with React Router `Route` paths). */
 export const APP_ROUTES = {
   HOME: "/",

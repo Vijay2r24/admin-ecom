@@ -90,8 +90,11 @@ const ProductVariantsPopup = ({ productId, groupByAttributeValue, onClose }) => 
       const token = localStorage.getItem("token");
 
       const params = {};
+      const url = groupByAttributeValue 
+        ? `${GET_INVENTORY_VARIANTS}/${productId}/${groupByAttributeValue}`
+        : `${GET_INVENTORY_VARIANTS}/${productId}`;
       const response = await apiGet(
-        `${GET_INVENTORY_VARIANTS}/${productId}/${groupByAttributeValue}`,
+        url,
         params,
         token,
       );

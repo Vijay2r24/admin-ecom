@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+﻿import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Upload,
   X,
@@ -16,18 +16,19 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { apiPost } from "../utils/ApiUtils";
 import { SEND_NOTIFICATIONS, SEND_SILENT_NOTIFICATIONS } from "../contants/apiRoutes";
-import { REGEX_CONSTANTS, SCROLL_CONSTANTS, STATUS } from "../contants/constants";
+import { REGEX_CONSTANTS, SCROLL_CONSTANTS, STATUS, NOTIFICATION_TAB } from "../contants/constants";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
 import { useTitle } from "../context/TitleContext";
 import BackButton from "../components/BackButton";
+import Loader from "../components/Loader";
 
 const Notifications = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { setTitle, setBackButton } = useTitle();
 
-  const [activeTab, setActiveTab] = useState("notification");
+  const [activeTab, setActiveTab] = useState(NOTIFICATION_TAB.NOTIFICATION);
   const [bSending, setSending] = useState(false);
   const [oPushFormData, setPushFormData] = useState({
     title: "",
@@ -45,10 +46,10 @@ const Notifications = () => {
 
   // Required fields configuration
   const requiredFields = useMemo(() => ({
-    title: activeTab === "notification",
-    message: activeTab === "notification",
-    componentName: activeTab === "silent",
-    jsonData: activeTab === "silent",
+    title: activeTab === NOTIFICATION_TAB.NOTIFICATION,
+    message: activeTab === NOTIFICATION_TAB.NOTIFICATION,
+    componentName: activeTab === NOTIFICATION_TAB.SILENT,
+    jsonData: activeTab === NOTIFICATION_TAB.SILENT,
   }), [activeTab]);
 
   useEffect(() => {
@@ -64,7 +65,7 @@ const Notifications = () => {
    * Live validation functions
    */
   const validateTitle = useCallback((title) => {
-    if (!title?.trim() && activeTab === "notification") {
+    if (!title?.trim() && activeTab === NOTIFICATION_TAB.NOTIFICATION) {
       return t("PUSH_NOTIFICATION.VALIDATION.TITLE_REQUIRED");
     }
     if (title?.trim() && title.trim().length < 2) {
@@ -77,7 +78,7 @@ const Notifications = () => {
   }, [t, activeTab]);
 
   const validateMessage = useCallback((message) => {
-    if (!message?.trim() && activeTab === "notification") {
+    if (!message?.trim() && activeTab === NOTIFICATION_TAB.NOTIFICATION) {
       return t("PUSH_NOTIFICATION.VALIDATION.MESSAGE_REQUIRED");
     }
     if (message?.trim() && message.trim().length < 5) {
@@ -90,7 +91,7 @@ const Notifications = () => {
   }, [t, activeTab]);
 
   const validateComponentName = useCallback((componentName) => {
-    if (!componentName?.trim() && activeTab === "silent") {
+    if (!componentName?.trim() && activeTab === NOTIFICATION_TAB.SILENT) {
       return t("PUSH_NOTIFICATION.VALIDATION.COMPONENT_NAME_REQUIRED");
     }
     if (componentName?.trim() && componentName.trim().length < 2) {
@@ -107,7 +108,7 @@ const Notifications = () => {
   }, [t, activeTab]);
 
   const validateJsonData = useCallback((jsonData) => {
-    if (!jsonData?.trim() && activeTab === "silent") {
+    if (!jsonData?.trim() && activeTab === NOTIFICATION_TAB.SILENT) {
       return t("PUSH_NOTIFICATION.VALIDATION.JSON_DATA_REQUIRED");
     }
     
@@ -131,7 +132,7 @@ const Notifications = () => {
   }, [t]);
 
   const validateVersion = useCallback((version) => {
-    if (activeTab === "silent" && !version?.trim()) {
+    if (activeTab === NOTIFICATION_TAB.SILENT && !version?.trim()) {
       return t("PUSH_NOTIFICATION.VALIDATION.VERSION_REQUIRED");
     }
     if (version?.trim() && version.trim().length > 10) {
@@ -262,7 +263,7 @@ const Notifications = () => {
     const errors = {};
     
     // Validate based on active tab
-    if (activeTab === "notification") {
+    if (activeTab === NOTIFICATION_TAB.NOTIFICATION) {
       errors.title = validateTitle(oPushFormData.title);
       errors.message = validateMessage(oPushFormData.message);
       errors.image = validateImage(oPushFormData.image, nPreviewUrl);
@@ -375,7 +376,7 @@ const Notifications = () => {
     const token = localStorage.getItem("token");
     setSending(true);
     try {
-      if (activeTab === "notification") {
+      if (activeTab === NOTIFICATION_TAB.NOTIFICATION) {
         // Regular notification (FormData)
         const data = new FormData();
         data.append("title", oPushFormData.title);
@@ -383,7 +384,7 @@ const Notifications = () => {
         if (oPushFormData.image) {
           data.append("NotificationImage", oPushFormData.image);
         }
-        data.append("type", "notification");
+        data.append("type", NOTIFICATION_TAB.NOTIFICATION);
         
         const oResponse = await apiPost(SEND_NOTIFICATIONS, data, token, true);
         if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
@@ -431,6 +432,8 @@ const Notifications = () => {
       }
     } catch (error) {
       showEmsg(error?.response?.data?.message || t("COMMON.SOMETHING_WENT_WRONG"), STATUS.ERROR);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -486,6 +489,11 @@ const Notifications = () => {
 
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
+      {bSending && (
+        <div className="global-loader-overlay">
+          <Loader />
+        </div>
+      )}
       <ToastContainer />
       <form onSubmit={handlePushSubmit} className="space-y-8">
         {/* Notification Type Tabs */}
@@ -494,9 +502,9 @@ const Notifications = () => {
             <nav className="flex -mb-px">
               <button
                 type="button"
-                onClick={() => handleTabChange("notification")}
+                onClick={() => handleTabChange(NOTIFICATION_TAB.NOTIFICATION)}
                 className={`flex-1 py-3 px-4 text-center font-medium text-xs border-b-2 transition-colors duration-200 flex items-center justify-center gap-2 ${
-                  activeTab === "notification"
+                  activeTab === NOTIFICATION_TAB.NOTIFICATION
                     ? "border-[#5B45E0] text-[#5B45E0] bg-purple-50 dark:bg-purple-900/30"
                     : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
@@ -506,9 +514,9 @@ const Notifications = () => {
               </button>
               <button
                 type="button"
-                onClick={() => handleTabChange("silent")}
+                onClick={() => handleTabChange(NOTIFICATION_TAB.SILENT)}
                 className={`flex-1 py-3 px-4 text-center font-medium text-xs border-b-2 transition-colors duration-200 flex items-center justify-center gap-2 ${
-                  activeTab === "silent"
+                  activeTab === NOTIFICATION_TAB.SILENT
                     ? "border-[#5B45E0] text-[#5B45E0] bg-purple-50 dark:bg-purple-900/30"
                     : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
@@ -522,7 +530,7 @@ const Notifications = () => {
           <div className="px-5 py-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 border-b border-gray-100 dark:border-gray-800">
             <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Send className="h-4 w-4 text-custom-bg" />
-              {activeTab === "notification" 
+              {activeTab === NOTIFICATION_TAB.NOTIFICATION 
                 ? t("PUSH_NOTIFICATION.DETAILS_TITLE")
                 : t("PUSH_NOTIFICATION.SILENT_DETAILS_TITLE") || "Silent Notification Details"}
             </h2>
@@ -533,7 +541,7 @@ const Notifications = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Form Inputs (2/3 width on large screens) */}
               <div className="lg:col-span-2 space-y-4">
-                {activeTab === "notification" ? (
+                {activeTab === NOTIFICATION_TAB.NOTIFICATION ? (
                   /* Regular Notification Form */
                   <>
                     {/* Title and Message in separate rows */}
@@ -653,7 +661,7 @@ const Notifications = () => {
                         Icon={Code}
                         error={pushValidationErrors.version}
                         isValid={fieldValid.version}
-                        required={activeTab === "silent"}
+                        required={activeTab === NOTIFICATION_TAB.SILENT}
                       />
                       
                       <div className="flex items-center space-x-4 pt-6">
@@ -784,7 +792,7 @@ const Notifications = () => {
                   {t("PUSH_NOTIFICATION.PREVIEW_TITLE")}
                 </label>
                 <div className="flex justify-center items-center h-300">
-                  {activeTab === "notification" ? (
+                  {activeTab === NOTIFICATION_TAB.NOTIFICATION ? (
                     (!oPushFormData.title && !oPushFormData.message && !nPreviewUrl) ? (
                       <div className="w-full h-full flex flex-col justify-center items-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                         <Bell className="h-12 w-12 text-gray-400 mb-4" />
@@ -845,7 +853,7 @@ const Notifications = () => {
                             {oPushFormData.componentName && (
                               <p className={`text-xs ${fieldValid.componentName ? 'text-green-600' : 'text-gray-600'}`}>
                                 <span className="font-medium">Component Name:</span> {oPushFormData.componentName}
-                                {fieldValid.componentName && " ✓"}
+                                {fieldValid.componentName && " âœ“"}
                               </p>
                             )}
                             <p className="text-xs text-gray-600">
@@ -853,12 +861,12 @@ const Notifications = () => {
                             </p>
                             <p className={`text-xs ${fieldValid.version ? 'text-green-600' : 'text-gray-600'}`}>
                               <span className="font-medium">Version:</span> {oPushFormData.version}
-                              {fieldValid.version && " ✓"}
+                              {fieldValid.version && " âœ“"}
                             </p>
                             {oPushFormData.jsonData && oPushFormData.jsonData.trim() !== "{\n  \"key\": \"value\"\n}" && (
                               <div className="mt-2">
                                 <p className={`text-xs font-medium mb-1 ${fieldValid.jsonData ? 'text-green-600' : 'text-gray-700'}`}>
-                                  Component Data: {fieldValid.jsonData && "✓"}
+                                  Component Data: {fieldValid.jsonData && "âœ“"}
                                 </p>
                                 <pre className="text-xs text-gray-600 bg-gray-50 p-2 rounded border overflow-x-auto max-h-32">
                                   {oPushFormData.jsonData}
@@ -887,12 +895,15 @@ const Notifications = () => {
           </button>
           <button
             type="submit"
-            className="btn-primary order-1 sm:order-2 flex items-center justify-center"
+            disabled={bSending}
+            className="btn-primary order-1 sm:order-2 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="h-4 w-4 mr-2" />
-            {activeTab === "notification" 
-              ? t("BUTTONS.SEND_NOTIFICATION")
-              : t("BUTTONS.SEND_SILENT_NOTIFICATION") || "Send Silent Notification"}
+            {bSending
+              ? t("COMMON.SENDING") || "Sending..."
+              : activeTab === NOTIFICATION_TAB.NOTIFICATION 
+                ? t("BUTTONS.SEND_NOTIFICATION")
+                : t("BUTTONS.SEND_SILENT_NOTIFICATION") || "Send Silent Notification"}
           </button>
         </div>
       </form>

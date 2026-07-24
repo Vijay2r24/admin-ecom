@@ -596,7 +596,7 @@ const CreateCategory = () => {
   ];
 
   return (
-    <div className="w-full min-h-screen">
+    <div className="w-full">
       {bSubmitting && (
         <div className="global-loader-overlay">
           <Loader />
@@ -647,8 +647,6 @@ const CreateCategory = () => {
       </div>
 
       {/* Form */}
-     {/* Form */}
-     {/* Form */}
       <form className="space-y-6" onSubmit={handleSubmit}>
         
         {/* Row 1: Category Name and Status (Unchanged) */}
@@ -839,7 +837,7 @@ const CreateCategory = () => {
         )}
 
         {/* Footer Buttons */}
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+        <div className="flex justify-end space-x-3 pt-4 pb-2 border-t border-gray-100 bg-white">
           <button
             type="button"
             className="btn-cancel"

@@ -165,17 +165,17 @@ const Browse = () => {
   }
 
   return (
-    <div className="w-full px-2 sm:px-4 lg:px-2 flex flex-col bg-gray-50">
-      <div className="w-full overflow-visible flex flex-col">
+    <div className="w-full px-2 sm:px-4 lg:px-2 flex flex-col bg-gray-50 h-[calc(100vh-80px)] overflow-hidden">
+      <div className="w-full flex flex-col h-full overflow-hidden">
         <Tab.Group
           selectedIndex={nSelectedTab}
           onChange={(index) => {
             setSelectedTab(index);
             setViewMode(VIEW_TYPES.LIST);
           }}
-          className="flex w-full flex-col"
+          className="flex w-full flex-col h-full"
         >
-          <div className="overflow-x-auto flex-shrink-0">
+          <div className="overflow-x-auto flex-shrink-0 scrollbar-hide">
             <Tab.List className="flex space-x-4 min-w-max border-b border-gray-200 px-4 sm:px-6">
               {visibleTabs.map((tab) => {
                 const Icon = tab.icon;
@@ -199,11 +199,11 @@ const Browse = () => {
             </Tab.List>
           </div>
 
-          <Tab.Panels className="flex w-full flex-col">
+          <Tab.Panels className="flex w-full flex-col flex-1 overflow-hidden">
             {visibleTabs.map((tab, idx) => (
               <Tab.Panel
                 key={tab.planTabKey}
-                className="flex w-full flex-col pt-2"
+                className="flex w-full flex-col pt-2 h-full overflow-y-auto overflow-x-hidden"
               >
                 {isProductSetupTabAllowedByPlan(
                   tab.planTabKey,

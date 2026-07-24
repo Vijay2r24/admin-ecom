@@ -270,10 +270,6 @@ const App = () => {
             localStorage.removeItem("userDetails");
           }}
         />
-        <InactivityManager>
-          <AllDataProvider>
-            <TitleProvider>
-              <LocationDataProvider>
       <ToastContainer
         position="top-right"
         autoClose={1400}
@@ -282,14 +278,6 @@ const App = () => {
         closeOnClick
         pauseOnHover
         draggable
-      />
-      <IdleLogout
-        isLoggedIn={!!localStorage.getItem("token")}
-        onLogout={() => {
-          store.dispatch(logout());
-          localStorage.removeItem("token");
-          localStorage.removeItem("userDetails");
-        }}
       />
       <InactivityManager>
         <AllDataProvider>
