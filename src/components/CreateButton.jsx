@@ -120,15 +120,24 @@ const CreateButton = ({
 
   // Button styles based on variant
   const getButtonClasses = () => {
-    const baseClasses = 'inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
-    
+    // When a caller supplies sizing classes (e.g. Toolbar), don't force larger defaults.
+    const hasCustomSize = /\b(h-|px-|py-|p-|text-|gap-|rounded-)/.test(className);
+    const baseClasses = hasCustomSize
+      ? "inline-flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+      : "inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2";
+
     const variantClasses = {
-      primary: 'bg-custom-bg text-white hover:bg-custom-bg-dark focus:ring-custom-bg disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed',
-      secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed',
-      success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed',
-      danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed',
-      warning: 'bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed',
-      info: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed'
+      primary:
+        "bg-custom-bg text-white hover:bg-custom-bg-dark focus:ring-custom-bg disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed",
+      secondary:
+        "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed",
+      success:
+        "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed",
+      danger:
+        "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed",
+      warning:
+        "bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed",
+      info: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed",
     };
 
     return `${baseClasses} ${variantClasses[variant] || variantClasses.primary} ${className}`;

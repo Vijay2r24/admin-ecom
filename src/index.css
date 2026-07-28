@@ -150,7 +150,6 @@ body {
 
 .dark .bg-white {
   background-color: #000000;
-  border-color: #1f2937;
 }
 
 .dark .text-gray-900 {
@@ -167,6 +166,10 @@ body {
 
 .dark .border-gray-200 {
   border-color: #1f2937;
+}
+
+.dark .border-gray-300 {
+  border-color: #4b5563;
 }
 
 .dark .border-gray-100 {
@@ -224,8 +227,8 @@ code {
   }
 
   .btn-toggle-view {
-    @apply inline-flex items-center px-2.5 py-1.5 border rounded-md text-xs font-semibold transition-all duration-200;
-    line-height:1.4;
+    @apply inline-flex items-center h-9 px-2.5 border rounded-md text-xs font-semibold transition-all duration-200;
+    line-height: 1.4;
     pointer-events: auto !important;
     cursor: pointer !important;
     user-select: none;

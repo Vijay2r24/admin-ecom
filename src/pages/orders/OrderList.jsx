@@ -744,19 +744,17 @@ const OrderList = () => {
       ) : (
         <div className="grid-container-floating">
           <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
-          {bLoading ? (
-            <SkeletonLoader type={SKELETON_TYPES.ORDER_GRID} rows={6} className="p-4" />
-          ) : bFilterLoading ? (
-            <SkeletonLoader type={SKELETON_TYPES.ORDER_GRID} rows={6} className="p-4" />
-          ) : sError ? (
-            <div className="col-span-full text-center py-8 text-gray-600">
-              {sError}
+          {bLoading || bFilterLoading ? (
+            <div className="p-4">
+              <SkeletonLoader type={SKELETON_TYPES.ORDER_GRID} rows={6} />
             </div>
+          ) : sError ? (
+            <EmptyState type="error" title={sError} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
           ) : aOrders.length === 0 ? (
             <EmptyState type="empty-box" title={t("ORDERS.NO_ORDERS_FOUND")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
           ) : (
-            aOrders.map((order) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+            {aOrders.map((order) => (
               <div
                 key={order.orderId}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full"
@@ -837,9 +835,9 @@ const OrderList = () => {
                   {t("ORDERS.VIEW_DETAILS")}
                 </button>
               </div>
-            ))
+            ))}
+            </div>
           )}
-        </div>
           </div>
         </div>
       )}

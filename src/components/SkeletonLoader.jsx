@@ -575,28 +575,46 @@ const SkeletonLoader = ({ type = SKELETON_TYPES.DEFAULT, rows = 3, className = '
 
       case SKELETON_TYPES.ORDER_GRID:
         return (
-          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${className}`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 ${className}`}>
             {[...Array(rows)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 space-y-3">
-                {/* Order ID */}
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
-                {/* Date */}
-                <div className="flex flex-col space-y-1">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" />
-                  <div className="h-3 bg-gray-200 rounded animate-pulse w-1/3" />
+              <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col h-full">
+                {/* Header: order ID + status badge */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-[120px]" />
+                  <div className="h-5 bg-gray-200 rounded-full animate-pulse w-16" />
                 </div>
-                {/* Customer */}
-                <div className="space-y-1">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
-                  <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+
+                {/* Details */}
+                <div className="space-y-2 flex-1">
+                  {/* Order Date — label + 2 value lines */}
+                  <div className="flex flex-col gap-0.5">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-20" />
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-32" />
+                  </div>
+
+                  {/* Customer Name — label + name + email */}
+                  <div className="flex flex-col gap-0.5">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-24" />
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-36" />
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-28" />
+                  </div>
+
+                  {/* Phone Number — label + value */}
+                  <div className="flex flex-col gap-0.5">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-20" />
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-28" />
+                  </div>
+
+                  {/* Order Items — border-top row */}
+                  <div className="flex justify-between items-center pt-1 border-t border-gray-100">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-24" />
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-6" />
+                  </div>
                 </div>
-                {/* Status and items */}
-                <div className="flex justify-between items-center">
-                  <div className="h-6 bg-gray-200 rounded-full animate-pulse w-16" />
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-8" />
-                </div>
+
                 {/* View button */}
-                <div className="h-8 bg-gray-200 rounded animate-pulse w-full mt-2" />
+                <div className="h-8 bg-gray-200 rounded-lg animate-pulse w-full mt-3" />
               </div>
             ))}
           </div>

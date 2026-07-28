@@ -146,14 +146,14 @@ const OrderToolbar = ({
     <div className="mb-4">
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
         {showSearch && (
-          <div className="flex-1">
-            <div className="relative h-full">
+          <div className="flex-1 min-w-0">
+            <div className="relative h-9">
               <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
               </div>
               <input
                 type="text"
-                className="block w-full pl-8 pr-8 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-custom-bg focus:border-custom-bg dark:bg-gray-900 dark:text-white dark:placeholder-gray-500 text-xs h-full"
+                className="block w-full h-9 pl-8 pr-8 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-custom-bg focus:border-custom-bg dark:bg-gray-900 dark:text-white dark:placeholder-gray-500 text-xs"
                 placeholder={
                   searchPlaceholder || t("TOOLBAR.SEARCH_PLACEHOLDER")
                 }
@@ -222,7 +222,7 @@ const OrderToolbar = ({
           </div>
         )}
         {dateFilters.map((filter, index) => (
-          <div key={`date-${index}`} className="w-[320px] relative h-full">
+          <div key={`date-${index}`} className="w-[320px] relative" style={{ height: '36px' }}>
             <DateTimeRangePickerComponent
               dateRange={filter.value || { start: null, end: null }}
               setDateRange={(range) =>
@@ -256,7 +256,7 @@ const OrderToolbar = ({
             <button
               onClick={onExport}
               disabled={exportDisabled || exportLabel === t("COMMON.EXPORTING")}
-              className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+              className="inline-flex items-center h-9 px-2.5 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
             >
               <Download className="w-3.5 h-3.5" />
               {exportLabel}
@@ -266,7 +266,7 @@ const OrderToolbar = ({
 
         {showFileInput && (
           <div className="inline-flex items-center">
-            <label className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 gap-1.5 cursor-pointer transition-colors duration-150">
+            <label className="inline-flex items-center h-9 px-2.5 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 gap-1.5 cursor-pointer transition-colors duration-150">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -302,7 +302,7 @@ const OrderToolbar = ({
               onClick={onCreate}
               loading={createProcessing}
               disabled={createDisabled}
-              className={`inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
+              className={`inline-flex items-center justify-center h-9 px-3 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
                 createDisabled
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70 hover:bg-gray-300"
                   : "text-white bg-custom-bg hover:bg-bg-hover"
@@ -331,7 +331,7 @@ const OrderToolbar = ({
                 }
                 onCreate(e);
               }}
-              className={`inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
+              className={`inline-flex items-center justify-center h-9 px-3 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
                 createDisabled
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-70'
                   : 'text-white bg-custom-bg hover:bg-bg-hover'
@@ -360,7 +360,7 @@ const OrderToolbar = ({
               }
               onAddVariants(e);
             }}
-            className={`inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
+            className={`inline-flex items-center justify-center h-9 px-3 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
               addVariantsDisabled
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-70'
                 : 'text-white bg-custom-bg hover:bg-bg-hover'

@@ -500,7 +500,7 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
   return (
     <div className="relative w-full h-full" ref={calendarRef}>
       <div
-        className={`flex items-center justify-between gap-1.5 w-full px-2.5 py-2.5 border border-gray-200 rounded-md bg-white ${STYLES.backgroundColor.hover} transition-colors focus:outline-none ${STYLES.border.focus} h-full cursor-pointer shadow-sm text-xs`}
+        className={`flex items-center justify-between gap-1.5 w-full h-9 px-2.5 border border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-1 focus:ring-custom-bg focus:border-custom-bg cursor-pointer text-xs`}
         style={{ minWidth: 0 }}
         onClick={() => setShowDropdown((prev) => !prev)}
         role="button"
@@ -508,8 +508,8 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
         onKeyDown={(e) => { if (e.key === 'Enter') setShowDropdown((prev) => !prev); }}
       >
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <Calendar size={12} className={STYLES.textColor.secondary} />
-          <span className="text-gray-700 truncate font-medium flex-1 text-left text-xs">
+          <Calendar size={12} className="text-gray-600 dark:text-gray-400" />
+          <span className="text-gray-700 dark:text-gray-300 truncate font-medium flex-1 text-left text-xs">
             {displayText || t("SELECT_DATE_TIME")}
           </span>
         </div>
@@ -522,13 +522,13 @@ const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
                 e.stopPropagation();
                 handleClearAll();
               }}
-              className="p-0.5 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              className="p-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
               title={t("CLEAR_DATE_RANGE")}
             >
-              <X size={12} className="text-gray-500 hover:text-gray-700" />
+              <X size={12} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
             </button>
           ) : (
-            <ChevronDown size={12} className={STYLES.textColor.secondary} />
+            <ChevronDown size={12} className="text-gray-600 dark:text-gray-400" />
           )}
         </div>
       </div>
