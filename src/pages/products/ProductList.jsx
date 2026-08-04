@@ -30,6 +30,7 @@ import noImage from "../../../assets/images/missing-pictur.jpg";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
 import Tooltip from "../../components/Tooltip";
 import SkeletonLoader from "../../components/SkeletonLoader";
+import EmptyState from "../../components/EmptyState";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 import { MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE } from "../../contants/constants.jsx";
 import { useCreateAccess } from "../../hooks/useCreateAccess";

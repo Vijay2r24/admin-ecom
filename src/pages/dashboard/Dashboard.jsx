@@ -25,7 +25,6 @@ import {
   GET_RECENT_ORDERS,
   GET_TOP_PRODUCTS,
   GETALLORDERS_API,
-  GET_STORE_REVENUE,
   GET_STORE_REVENUE_GRAPH,
   GET_STORE_ORDERS_GRAPH,
 } from "../../contants/apiRoutes";
@@ -647,7 +646,6 @@ const Dashboard = () => {
   };
 
   const [chartLoading, setChartLoading] = useState(false);
-  const [storeRevenueData, setStoreRevenueData] = useState([]);
 
   const { data: storesData, fetchAll: fetchStores } = useStores();
   const didFetchStoresRef = useRef(false);
@@ -1330,37 +1328,6 @@ const Dashboard = () => {
       // Build chart data for the selected range using real API data
       await buildChartData(start, end, token);
 
-      // Fetch store revenue breakdown
-      try {
-        const storeRes = await apiGet(GET_STORE_REVENUE, dateParams, token);
-        const storeList = storeRes?.data?.data || [];
-        if (Array.isArray(storeList) && storeList.length > 0) {
-          setStoreRevenueData(
-            storeList.map(s => ({
-              name: s.StoreName || s.storeName || `Store ${s.StoreID}`,
-              revenue: Number(s.TotalRevenue || s.totalRevenue || 0),
-              orders: Number(s.TotalOrders || s.totalOrders || 0),
-            })).sort((a, b) => b.revenue - a.revenue)
-          );
-        } else {
-          // fallback dummy per-store data
-          setStoreRevenueData([
-            { name: "Main Store",   revenue: 84000, orders: 72 },
-            { name: "Branch A",     revenue: 61000, orders: 54 },
-            { name: "Online Store", revenue: 112000, orders: 98 },
-            { name: "Branch B",     revenue: 43000, orders: 38 },
-            { name: "Outlet C",     revenue: 29000, orders: 25 },
-          ]);
-        }
-      } catch {
-        setStoreRevenueData([
-          { name: "Main Store",   revenue: 84000, orders: 72 },
-          { name: "Branch A",     revenue: 61000, orders: 54 },
-          { name: "Online Store", revenue: 112000, orders: 98 },
-          { name: "Branch B",     revenue: 43000, orders: 38 },
-          { name: "Outlet C",     revenue: 29000, orders: 25 },
-        ]);
-      }
     } catch (err) {
       setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
     } finally {

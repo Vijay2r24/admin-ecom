@@ -79,7 +79,42 @@ const AddProductForm = () => {
 
   const [aAttributes, setAAttributes] = useState([]);
   const [attributesByType, setAttributesByType] = useState({}); // Store attributes per type
+  // Stable id→label map per attribute type (used by VariantTabs; never fall back to raw UUIDs)
+  const [localAttributeOptions, setLocalAttributeOptions] = useState({});
   const [currentFetchingType, setCurrentFetchingType] = useState(null); // Track which type is being fetched
+
+  const getAttrValueId = (val) =>
+    String(
+      val?.AttributeValueID ||
+        val?.attributeValueID ||
+        val?.attributeValueId ||
+        val?.id ||
+        ""
+    );
+
+  const formatAttrValueLabel = (val) => {
+    const value = val?.Value || val?.value || val?.Name || val?.name || "";
+    const unit = val?.Unit || val?.unit;
+    if (!value) return "";
+    return unit ? `${value} (${unit})` : String(value);
+  };
+
+  const cacheAttributeOptionsForType = (typeId, list) => {
+    const key = String(typeId);
+    const rows = Array.isArray(list) ? list : [];
+    setAttributesByType((prev) => ({ ...prev, [key]: rows }));
+    setLocalAttributeOptions((prev) => ({
+      ...prev,
+      [key]: rows
+        .map((val) => {
+          const id = getAttrValueId(val);
+          const label = formatAttrValueLabel(val);
+          if (!id || !label) return null;
+          return { id, label };
+        })
+        .filter(Boolean),
+    }));
+  };
 
   const [oFormData, setFormData] = useState({
     ProductName: "",
@@ -238,27 +273,49 @@ const AddProductForm = () => {
     if (mrpValue <= 0 || discountValue < 0) return "";
     return (mrpValue - (mrpValue * discountValue) / 100).toFixed(2);
   };
+  // Resolve a human-readable label for an attribute value ID (never fall back to raw UUID)
+  const resolveAttributeValueLabel = (typeId, valueId) => {
+    if (!valueId) return "";
+    const id = String(valueId);
+    const typeKey = String(typeId);
+
+    const fromOptions = (
+      localAttributeOptions[typeKey] ||
+      localAttributeOptions[typeId] ||
+      []
+    ).find((o) => String(o.id) === id);
+    if (fromOptions?.label) return fromOptions.label;
+
+    const typeAttrs =
+      attributesByType[typeKey] || attributesByType[typeId] || [];
+    const valObj =
+      typeAttrs.find((a) => getAttrValueId(a) === id) ||
+      attributes.find((a) => getAttrValueId(a) === id);
+
+    if (valObj) {
+      const label = formatAttrValueLabel(valObj);
+      if (label) return label;
+    }
+
+    const fromMap =
+      attributeLabelMapRef.current?.[typeKey]?.[id] ||
+      attributeLabelMapRef.current?.[typeId]?.[id];
+    if (fromMap && String(fromMap) !== id) return String(fromMap);
+    return "";
+  };
+
   // Resolve a human-readable label for an attribute value (prefer store data, fall back to payload)
   const getAttributeValueLabel = (attr) => {
     if (!attr) return "";
     const valueId = attr.AttributeValueIDs?.[0];
     if (!valueId) return "";
 
-    const valObj = attributes.find(
-      (a) =>
-        String(a.AttributeValueID || a.attributeValueID) === String(valueId)
-    );
-    const fallbackFromPayload =
-      attributeLabelMapRef.current?.[attr.AttributeTypeID]?.[valueId];
+    const resolved = resolveAttributeValueLabel(attr.AttributeTypeID, valueId);
+    if (resolved) return resolved;
 
-    const valueLabel = valObj
-      ? valObj.Value || valObj.value
-      : attr.Value || attr.value || fallbackFromPayload || valueId;
-    const unitLabel = valObj
-      ? valObj.Unit || valObj.unit
-      : attr.Unit || attr.unit;
-
-    return `${valueLabel}${unitLabel ? ` (${unitLabel})` : ""}`;
+    const valueLabel = attr.Value || attr.value || "";
+    const unitLabel = attr.Unit || attr.unit;
+    return valueLabel ? `${valueLabel}${unitLabel ? ` (${unitLabel})` : ""}` : "";
   };
   const selectedBrandName = brands.find(
     (b) => b.BrandID === oFormData.BrandID
@@ -394,11 +451,8 @@ const AddProductForm = () => {
                 })
               ).then((action) => {
                 // Store the fetched attributes in attributesByType when API call succeeds
-                if (action.payload) {
-                  setAttributesByType(prev => ({
-                    ...prev,
-                    [typeId]: action.payload.data
-                  }));
+                if (action.meta?.requestStatus === "fulfilled" && action.payload?.data) {
+                  cacheAttributeOptionsForType(typeId, action.payload.data);
                 }
               })
             );
@@ -601,37 +655,63 @@ const AddProductForm = () => {
         })
       ).then((action) => {
         // Store the fetched attributes directly when API call succeeds
-        if (action.payload) {
-          setAttributesByType(prev => ({
-            ...prev,
-            [typeId]: action.payload.data
-          }));
+        if (action.meta?.requestStatus === "fulfilled" && action.payload?.data) {
+          cacheAttributeOptionsForType(typeId, action.payload.data);
           setCurrentFetchingType(null);
         }
       });
     }
   };
-  const handleAttributeValuesChange = (index, selectedValueIDs) => {
+  const handleAttributeValuesChange = (index, selectedValueIDs, optionsForType = null) => {
+    const currentAttr = aAttributes[index];
+    const typeKey = String(currentAttr?.AttributeTypeID || "");
+    const options =
+      optionsForType ||
+      localAttributeOptions[typeKey] ||
+      localAttributeOptions[currentAttr?.AttributeTypeID] ||
+      [];
+
+    const valueLabels = (selectedValueIDs || []).map((vid) => {
+      const fromOpt = options.find((o) => String(o.id ?? o.value) === String(vid));
+      if (fromOpt?.label && String(fromOpt.label) !== String(vid)) {
+        return fromOpt.label;
+      }
+      return resolveAttributeValueLabel(currentAttr?.AttributeTypeID, vid);
+    });
+
+    // Keep a label map so VariantTabs can resolve even if Redux attributes are empty
+    if (typeKey) {
+      const nextMap = { ...(attributeLabelMapRef.current || {}) };
+      const typeMap = { ...(nextMap[typeKey] || {}) };
+      (selectedValueIDs || []).forEach((vid, idx) => {
+        if (valueLabels[idx]) typeMap[String(vid)] = valueLabels[idx];
+      });
+      nextMap[typeKey] = typeMap;
+      attributeLabelMapRef.current = nextMap;
+
+      // Persist labels into localAttributeOptions so Variant tabs never show raw IDs
+      setLocalAttributeOptions((prevOpts) => {
+        const existing = prevOpts[typeKey] || [];
+        const byId = new Map(existing.map((o) => [String(o.id), o]));
+        (selectedValueIDs || []).forEach((vid, idx) => {
+          if (valueLabels[idx]) {
+            byId.set(String(vid), { id: String(vid), label: valueLabels[idx] });
+          }
+        });
+        return { ...prevOpts, [typeKey]: Array.from(byId.values()) };
+      });
+    }
+
     setAAttributes((prev) =>
-      prev.map((attr, i) => {
-        if (i !== index) return attr;
-        const valueLabels = (selectedValueIDs || [])
-          .map((vid) => {
-            const valObj =
-              attributes.find(
-                (a) =>
-                  String(a.AttributeValueID || a.attributeValueID) ===
-                  String(vid)
-              ) || {};
-            return valObj.Value || valObj.value || String(vid);
-          })
-          .filter(Boolean);
-        return {
-          ...attr,
-          AttributeValueIDs: selectedValueIDs,
-          valueLabels,
-        };
-      })
+      prev.map((attr, i) =>
+        i === index
+          ? {
+              ...attr,
+              AttributeValueIDs: selectedValueIDs,
+              valueLabels,
+            }
+          : attr
+      )
     );
 
     setTimeout(() => {
@@ -639,18 +719,10 @@ const AddProductForm = () => {
         aAttributes.map((attr, i) =>
           i === index
             ? {
-              ...attr,
-              AttributeValueIDs: selectedValueIDs,
-              valueLabels: selectedValueIDs.map((vid) => {
-                const valObj =
-                  attributes.find(
-                    (a) =>
-                      String(a.AttributeValueID || a.attributeValueID) ===
-                      String(vid)
-                  ) || {};
-                return valObj.Value || valObj.value || String(vid);
-              }),
-            }
+                ...attr,
+                AttributeValueIDs: selectedValueIDs,
+                valueLabels,
+              }
             : attr
         )
       );
@@ -1871,46 +1943,80 @@ const AddProductForm = () => {
                           const selectedValues = Array.isArray(e.target.value)
                             ? e.target.value
                             : [e.target.value].filter(Boolean);
-                          handleAttributeValuesChange(index, selectedValues);
+                          // Pass the same options the dropdown used so labels never fall back to UUIDs
+                          const typeKey = String(attr.AttributeTypeID);
+                          const currentTypeAttributes =
+                            attributesByType[typeKey] ||
+                            attributesByType[attr.AttributeTypeID] ||
+                            [];
+                          const optionsFromCache =
+                            localAttributeOptions[typeKey] ||
+                            localAttributeOptions[attr.AttributeTypeID] ||
+                            [];
+                          const options =
+                            optionsFromCache.length > 0
+                              ? optionsFromCache
+                              : currentTypeAttributes.map((attribute) => ({
+                                  id: getAttrValueId(attribute),
+                                  value: getAttrValueId(attribute),
+                                  label: formatAttrValueLabel(attribute),
+                                }));
+                          handleAttributeValuesChange(
+                            index,
+                            selectedValues,
+                            options
+                          );
                         }}
                         options={(() => {
-                                                    // Use cached attributes for the current type, or fall back to global attributes
-                          const currentTypeAttributes = attributesByType[attr.AttributeTypeID] || [];
-                                                    const baseOptions = currentTypeAttributes
-                            .filter((attribute) => {
-                              // Check if this attribute value is already selected in ANY attribute type
-                              const attributeValueId = attribute.AttributeValueID || attribute.attributeValueID || attribute.attributeValueId;
-                              const isAlreadySelected = aAttributes.some((selectedAttr, selectedIndex) => 
-                                selectedIndex !== index && // Don't check the current attribute being edited
-                                selectedAttr.AttributeValueIDs?.includes(String(attributeValueId))
-                              );
-                              return attribute.IsActive && !isAlreadySelected;
-                            })
-                            .map((attribute) => ({
-                              value:
-                                attribute.AttributeValueID ||
-                                attribute.attributeValueID ||
-                                attribute.attributeValueId,
-                              label: `${attribute.Value || attribute.value}${attribute.Unit || attribute.unit
-                                ? ` (${attribute.Unit || attribute.unit})`
-                                : ""
-                                }`,
-                            }));
-                          
+                          const typeKey = String(attr.AttributeTypeID || "");
+                          const currentTypeAttributes =
+                            attributesByType[typeKey] ||
+                            attributesByType[attr.AttributeTypeID] ||
+                            [];
+                          const cached =
+                            localAttributeOptions[typeKey] ||
+                            localAttributeOptions[attr.AttributeTypeID] ||
+                            [];
+
+                          const baseOptions = (
+                            cached.length > 0
+                              ? cached.map((o) => ({
+                                  value: o.id,
+                                  label: o.label,
+                                }))
+                              : currentTypeAttributes
+                                  .filter((attribute) => attribute.IsActive !== false)
+                                  .map((attribute) => ({
+                                    value: getAttrValueId(attribute),
+                                    label: formatAttrValueLabel(attribute),
+                                  }))
+                          ).filter((option) => {
+                            const attributeValueId = option.value;
+                            const isAlreadySelected = aAttributes.some(
+                              (selectedAttr, selectedIndex) =>
+                                selectedIndex !== index &&
+                                selectedAttr.AttributeValueIDs?.some(
+                                  (id) => String(id) === String(attributeValueId)
+                                )
+                            );
+                            return !isAlreadySelected;
+                          });
+
                           // add fallback options from payload if not present in attributes list
                           const fallback =
-                            attributeLabelMapRef.current?.[
-                            attr.AttributeTypeID
-                            ];
-                                                    if (!fallback) return baseOptions;
+                            attributeLabelMapRef.current?.[typeKey] ||
+                            attributeLabelMapRef.current?.[attr.AttributeTypeID];
+                          if (!fallback) return baseOptions;
                           const merged = [...baseOptions];
                           Object.entries(fallback).forEach(([vid, label]) => {
-                            // Check if this fallback option is already selected in ANY attribute type
-                            const isAlreadySelected = aAttributes.some((selectedAttr, selectedIndex) => 
-                              selectedIndex !== index && // Don't check the current attribute being edited
-                              selectedAttr.AttributeValueIDs?.includes(String(vid))
+                            const isAlreadySelected = aAttributes.some(
+                              (selectedAttr, selectedIndex) =>
+                                selectedIndex !== index &&
+                                selectedAttr.AttributeValueIDs?.some(
+                                  (id) => String(id) === String(vid)
+                                )
                             );
-                            
+
                             const exists = merged.some(
                               (opt) => String(opt.value) === String(vid)
                             );
@@ -1921,7 +2027,7 @@ const AddProductForm = () => {
                               });
                             }
                           });
-                                                    return merged;
+                          return merged;
                         })()}
                         Icon={Layers}
                         error={
@@ -2337,15 +2443,37 @@ const AddProductForm = () => {
                   packagingBoxes={packagingBoxes}
                   weightUnits={weightUnits}
                   countries={countries}
-                  localAttributeOptions={Object.fromEntries(
-                    aAttributes.map((a) => [
-                      a.AttributeTypeID,
-                      (a.AttributeValueIDs || []).map((vid, idx) => ({
-                        id: vid,
-                        label: a.valueLabels?.[idx] || vid,
-                      })),
-                    ])
-                  )}
+                  localAttributeOptions={(() => {
+                    // Merge cached options for all types + selected value labels as fallback
+                    const merged = { ...localAttributeOptions };
+                    aAttributes.forEach((a) => {
+                      const typeKey = String(a.AttributeTypeID || "");
+                      if (!typeKey) return;
+                      const existing = merged[typeKey] || [];
+                      const byId = new Map(
+                        existing.map((o) => [String(o.id), o])
+                      );
+                      (a.AttributeValueIDs || []).forEach((vid, idx) => {
+                        const id = String(vid);
+                        const stored = a.valueLabels?.[idx];
+                        const resolved =
+                          byId.get(id)?.label ||
+                          (stored &&
+                          stored !== id &&
+                          !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                            String(stored)
+                          )
+                            ? stored
+                            : "") ||
+                          resolveAttributeValueLabel(a.AttributeTypeID, vid);
+                        if (resolved) {
+                          byId.set(id, { id, label: resolved });
+                        }
+                      });
+                      merged[typeKey] = Array.from(byId.values());
+                    });
+                    return merged;
+                  })()}
                 />
               )}
             </div>

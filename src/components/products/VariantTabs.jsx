@@ -85,6 +85,59 @@ export default function VariantTabs({
 
   const groupingValues = groupingAttribute?.NewAttributeValueIDs || [];
 
+  const getOptionsForType = (typeId) => {
+    if (typeId == null || typeId === "") return [];
+    return (
+      localAttributeOptions?.[typeId] ||
+      localAttributeOptions?.[String(typeId)] ||
+      []
+    );
+  };
+
+  const isUuidLike = (value) =>
+    !value ||
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      String(value)
+    );
+
+  const resolveGroupTabLabel = (valueId) => {
+    const id = String(valueId);
+    const options = getOptionsForType(groupingAttributeTypeID);
+    const foundOption = options.find((o) => String(o.id) === id);
+    if (foundOption?.label && !isUuidLike(foundOption.label) && foundOption.label !== id) {
+      return foundOption.label;
+    }
+
+    const valObj = (attributes || []).find(
+      (a) =>
+        String(
+          a.AttributeValueID || a.attributeValueID || a.attributeValueId
+        ) === id
+    );
+    if (valObj) {
+      const value = valObj.Value || valObj.value || "";
+      const unit = valObj.Unit || valObj.unit;
+      if (value && !isUuidLike(value)) {
+        return unit ? `${value} (${unit})` : value;
+      }
+    }
+
+    const idx = (groupingAttribute?.NewAttributeValueIDs || []).findIndex(
+      (v) => String(v) === id
+    );
+    const fallbackLabel =
+      idx >= 0 ? groupingAttribute?.valueLabels?.[idx] : undefined;
+    if (
+      fallbackLabel &&
+      !isUuidLike(fallbackLabel) &&
+      String(fallbackLabel) !== id
+    ) {
+      return fallbackLabel;
+    }
+
+    return "—";
+  };
+
   return (
     <>
       {/* ----------------- TAB HEADERS ----------------- */}
@@ -96,27 +149,7 @@ export default function VariantTabs({
             </div>
           ) : (
             groupingValues.map((valueId) => {
-              const valObj = attributes.find(
-                (a) => String(a.AttributeValueID) === String(valueId)
-              );
-              // fallback: use valueLabels provided in aAttributes for this grouping attribute
-              const groupingAttr = aAttributes.find(
-                (a) => String(a.AttributeTypeID) === String(groupingAttributeTypeID)
-              );
-              const fallbackLabel =
-                groupingAttr?.valueLabels?.[
-                (groupingAttr?.NewAttributeValueIDs || []).findIndex(
-                  (id) => String(id) === String(valueId)
-                )
-                ];
-              const options = localAttributeOptions?.[groupingAttributeTypeID] || [];
-              const foundOption = options.find((o) => String(o.id) === String(valueId));
-
-              const label = foundOption
-                ? foundOption.label
-                : valObj
-                  ? `${valObj.Value}${valObj.Unit ? ` (${valObj.Unit})` : ""}`
-                  : fallbackLabel || valueId;
+              const label = resolveGroupTabLabel(valueId);
 
               return (
                 <Tab
@@ -138,30 +171,14 @@ export default function VariantTabs({
         {/* ----------------- TAB PANELS ----------------- */}
         <Tab.Panels className="pt-0 space-y-4">
           {groupingValues.map((valueId) => {
-            const valObj = attributes.find(
-              (a) => String(a.AttributeValueID) === String(valueId)
-            );
-
-            // fallback: use valueLabels provided in aAttributes for this grouping attribute
-            const groupingAttr = aAttributes.find(
-              (a) => String(a.AttributeTypeID) === String(groupingAttributeTypeID)
-            );
-            const fallbackLabel =
-              groupingAttr?.valueLabels?.[
-              (groupingAttr?.NewAttributeValueIDs || []).findIndex(
-                (id) => String(id) === String(valueId)
-              )
-              ];
-            const groupLabel = valObj
-              ? `${valObj.Value}${valObj.Unit ? ` (${valObj.Unit})` : ""}`
-              : fallbackLabel || valueId;
-
             const groupVariants = aVariants.filter((variant) =>
               variant.attributes.some(
                 (a) =>
                   String(a.AttributeTypeID) ===
                   String(groupingAttributeTypeID) &&
-                  a.AttributeValueIDs?.includes(String(valueId))
+                  a.AttributeValueIDs?.some(
+                    (id) => String(id) === String(valueId)
+                  )
               )
             );
 
@@ -194,25 +211,32 @@ export default function VariantTabs({
                             .map((attr) => {
                               const valueId = attr.AttributeValueIDs?.[0];
                               const options =
-                                localAttributeOptions?.[
-                                  attr.AttributeTypeID
-                                ] || [];
+                                getOptionsForType(attr.AttributeTypeID);
                               const found = options.find(
                                 (o) => String(o.id) === String(valueId)
                               );
-                              if (found) return found.label;
+                              if (
+                                found?.label &&
+                                !isUuidLike(found.label) &&
+                                found.label !== String(valueId)
+                              ) {
+                                return found.label;
+                              }
                               const valObj = attributes.find(
                                 (a) =>
                                   String(
-                                    a.AttributeValueID || a.attributeValueID
+                                    a.AttributeValueID ||
+                                      a.attributeValueID ||
+                                      a.attributeValueId
                                   ) === String(valueId)
                               );
-                              return (
+                              const value =
                                 valObj?.Value ||
+                                valObj?.value ||
                                 attr.Value ||
                                 attr.value ||
-                                valueId
-                              );
+                                "";
+                              return value && !isUuidLike(value) ? value : "";
                             })
                             .filter(Boolean)
                             .join(" - ")
