@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 const Switch = lazy(() => import("../../components/Switch.jsx"));
 const FullscreenErrorPopup = lazy(() => import("../../components/FullscreenErrorPopup"));
-import { STATUS, MODULES, PERMISSIONS } from "../../contants/constants.jsx";
+import { STATUS, MODULES, PERMISSIONS, FILTER_VALUES } from "../../contants/constants.jsx";
 import { showEmsg } from "../../utils/ShowEmsg";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 const ProductVariantsPopup = ({ productId, groupByAttributeValue, onClose }) => {
@@ -90,9 +90,8 @@ const ProductVariantsPopup = ({ productId, groupByAttributeValue, onClose }) => 
       const token = localStorage.getItem("token");
 
       const params = {};
-      const url = groupByAttributeValue 
-        ? `${GET_INVENTORY_VARIANTS}/${productId}/${groupByAttributeValue}`
-        : `${GET_INVENTORY_VARIANTS}/${productId}`;
+      const groupBySegment = groupByAttributeValue || FILTER_VALUES.ALL;
+      const url = `${GET_INVENTORY_VARIANTS}/${productId}/${groupBySegment}`;
       const response = await apiGet(
         url,
         params,
