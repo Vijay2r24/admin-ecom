@@ -1174,6 +1174,8 @@
     "DISCOUNT_PERCENTAGE": "Discount (%)",
     "ENTER_DISCOUNT_PERCENTAGE": "Enter discount percentage",
     "ENTER_PRICE": "Enter price",
+    "START_DATE": "Start Date",
+    "END_DATE": "End Date",
     "CHOOSE_IMAGE": "Choose Image",
     "CREATE_BANNER_DESCRIPTION": "Create and upload banners for your store. Add images, set categories, brands, and more.",
     "NO_BANNERS_FOUND": "No banners found",

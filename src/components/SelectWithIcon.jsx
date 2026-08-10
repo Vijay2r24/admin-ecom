@@ -310,7 +310,6 @@ const SelectWithIcon = forwardRef(
 
           {error && (
             <p className="mt-1.5 text-sm text-red flex items-center">
-              <span className="mr-1">âš ï¸</span>
               {error}
             </p>
           )}

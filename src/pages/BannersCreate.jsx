@@ -9,10 +9,12 @@ import TextInputWithIcon from "../components/TextInputWithIcon";
 import SelectWithIcon from "../components/SelectWithIcon";
 import BackButton from "../components/BackButton";
 import ImageCropperModal from "../components/ImageCropperModal";
+import DateTimeRangePickerComponent from "../components/CustomDatePicker";
 import { useTitle } from "../context/TitleContext";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchResource } from "../store/slices/allDataSlice";
 import { apiPost, apiGet, apiPut } from "../utils/ApiUtils";
+import dayjs from "dayjs";
 import {
   CREATE_BANNER,
   GET_BANNERS_BY_ID,
@@ -64,7 +66,24 @@ const BannerForm = () => {
     discount: "",
     price: "",
     isActive: true,
+    startDate: "",
+    endDate: "",
   });
+
+  const [bannerDateRange, setBannerDateRange] = useState({ start: null, end: null });
+  const [bannerDateDisplayText, setBannerDateDisplayText] = useState("");
+
+  // Update display text when date range changes
+  useEffect(() => {
+    if (bannerDateRange.start && bannerDateRange.end) {
+      const fmt = "DD MMM YYYY HH:mm";
+      setBannerDateDisplayText(
+        `${bannerDateRange.start.format(fmt)} - ${bannerDateRange.end.format(fmt)}`
+      );
+    } else {
+      setBannerDateDisplayText("");
+    }
+  }, [bannerDateRange]);
   const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [fieldValid, setFieldValid] = useState({});
@@ -297,9 +316,17 @@ const BannerForm = () => {
           file: null,
           isActive:
             bannerData.IsActive !== undefined ? bannerData.IsActive : true,
+          startDate: bannerData.StartDate ? bannerData.StartDate.substring(0, 10) : "",
+          endDate: bannerData.EndDate ? bannerData.EndDate.substring(0, 10) : "",
         };
 
         setFormData(newFormData);
+        if (bannerData.StartDate || bannerData.EndDate) {
+          setBannerDateRange({
+            start: bannerData.StartDate ? dayjs(bannerData.StartDate) : null,
+            end: bannerData.EndDate ? dayjs(bannerData.EndDate) : null,
+          });
+        }
         setExistingImageData(firstImage);
         setError(null);
 
@@ -491,6 +518,8 @@ const BannerForm = () => {
       DiscountPercentage: Number(formData.discount) || 0,
       SortOrder: formData.sequence || DEFAULT_PAGE,
       SellingPrice: Number(formData.price) || 0,
+      ...(bannerDateRange.start ? { StartDate: bannerDateRange.start.toISOString() } : {}),
+      ...(bannerDateRange.end ? { EndDate: bannerDateRange.end.toISOString() } : {}),
       ...(bannerId
         ? {
           BannerID: bannerId,
@@ -784,19 +813,40 @@ const BannerForm = () => {
                   min="0"
                 />
 
-                <SelectWithIcon
-                  label={t("COMMON.STATUS")}
-                  id="isActive"
-                  name="isActive"
-                  value={formData.isActive.toString()}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  options={[
-                    { value: "true", label: t("COMMON.ACTIVE") },
-                    { value: "false", label: t("COMMON.INACTIVE") },
-                  ]}
-                  Icon={Tag}
-                />
+                {/* Start Date & End Date + Status on one line */}
+                <div className="col-span-2 grid grid-cols-2 gap-4 items-end">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t("BANNER_FORM.START_DATE")} &amp; {t("BANNER_FORM.END_DATE")}
+                    </label>
+                    <DateTimeRangePickerComponent
+                      dateRange={bannerDateRange}
+                      setDateRange={setBannerDateRange}
+                      displayText={bannerDateDisplayText}
+                      handleClearDates={() => {
+                        setBannerDateRange({ start: null, end: null });
+                        setBannerDateDisplayText("");
+                      }}
+                      t={t}
+                      allowFutureDates={true}
+                    />
+                  </div>
+                  <div>
+                    <SelectWithIcon
+                      label={t("COMMON.STATUS")}
+                      id="isActive"
+                      name="isActive"
+                      value={formData.isActive.toString()}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      options={[
+                        { value: "true", label: t("COMMON.ACTIVE") },
+                        { value: "false", label: t("COMMON.INACTIVE") },
+                      ]}
+                      Icon={Tag}
+                    />
+                  </div>
+                </div>
               </div>
             )}
           </div>

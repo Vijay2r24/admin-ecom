@@ -290,7 +290,7 @@ const Banners = () => {
                   )}
                   {project.Price && (
                     <p className="text-sm text-gray-600 truncate">
-                      {t("COMMON.PRICE")}: â‚¹{project.Price.toLocaleString()}
+                      {t("COMMON.PRICE")}: {"\u20B9"}{project.Price.toLocaleString()}
                     </p>
                   )}
                   <div className="flex items-center justify-between mt-2">

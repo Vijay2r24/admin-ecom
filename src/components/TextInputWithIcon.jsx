@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+﻿import { forwardRef } from "react";
 
 const TextInputWithIcon = forwardRef(
   (
@@ -55,7 +55,6 @@ const TextInputWithIcon = forwardRef(
         </div>
         {error && (
           <p className="mt-1.5 text-sm text-red flex items-center">
-            <span className="mr-1">⚠️</span>
             {error}
           </p>
         )}
