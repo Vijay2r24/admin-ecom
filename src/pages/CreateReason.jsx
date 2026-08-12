@@ -123,7 +123,7 @@ const CreateReason = () => {
         : await apiPost(CREATE_REASON, payload);
 
       const status = (response?.data?.status ?? '').toUpperCase();
-      if (status === STATUS.SUCCESS) {
+      if (status === STATUS.SUCCESS.toUpperCase()) {
         showEmsg(
           response?.data?.message ||
             (isEditing

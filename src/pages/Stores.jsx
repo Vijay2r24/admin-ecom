@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect, useCallback } from "react";
 import { MapPin, Phone, Mail, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +15,10 @@ import { showEmsg } from "../utils/ShowEmsg";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import EmptyState from "../components/EmptyState";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS, FILTER_VALUES } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS, FILTER_VALUES, PLAN_LIMIT_RESOURCE,ACTION_TYPES } from "../contants/constants";
+import PlanLimitToast from "../components/PlanLimitToast";
+import PlanUsageDonut from "../components/PlanUsageDonut";
+import { updatePlanResourceUsage } from "../utils/planAccessUtils";
 import { apiDelete } from "../utils/ApiUtils";
 import Loader from "../components/Loader";
 import SkeletonLoader from "../components/SkeletonLoader";
@@ -86,7 +89,10 @@ const Stores = () => {
   const { canCreate: canAddStore, disabledReason: addStoreDisabledReason } =
     useCreateAccess(addStorePermissionCode, {
       noPermissionMsg: t("STORES.NO_CREATE_PERMISSION"),
-      limitReachedMsg: t("STORES.LIMIT_REACHED", "You have reached your store creation limit. Please upgrade your plan."),
+      limitReachedMsg: t("STORES.LIMIT_REACHED"),
+      actionType: ACTION_TYPES.STORE,
+      resourceKey: PLAN_LIMIT_RESOURCE.STORES,
+      resourceLabel: "Stores",
     });
 
   const statusOptions = STATUS_OPTIONS.map((opt) => ({
@@ -385,12 +391,25 @@ const Stores = () => {
     return isActive ? t("COMMON.ACTIVE") : t("COMMON.INACTIVE");
   };
 
+  useEffect(() => {
+    updatePlanResourceUsage(PLAN_LIMIT_RESOURCE.STORES, totalItems);
+  }, [totalItems]);
+
+  const donutGraph = (
+    <PlanUsageDonut
+      resourceKey={PLAN_LIMIT_RESOURCE.STORES}
+      currentUsage={totalItems}
+      label={t("STORES.PLAN_RESOURCE_LABEL")}
+    />
+  );
+
   return (
     <div
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col"
     >
 
       <ToastContainer />
+      <PlanLimitToast resourceKey={PLAN_LIMIT_RESOURCE.STORES} label={t("STORES.PLAN_RESOURCE_LABEL")} />
       {bSubmitting && (
         <div className="global-loader-overlay">
           <Loader />
@@ -416,6 +435,7 @@ const Stores = () => {
         actionType="STORE"
         disableCreate={!canAddStore}
         disableCreateReason={addStoreDisabledReason}
+        extraContent={donutGraph}
       />
 
       {viewMode === "table" ? (

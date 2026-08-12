@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, MoreVertical, Image as ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -9,8 +9,12 @@ import {
   UPDATE_BANNER_STATUS,
   DELETE_BANNER,
 } from "../contants/apiRoutes";
-import { SKELETON_TYPES, MODULES, PERMISSIONS } from "../contants/constants";
+import { SKELETON_TYPES, MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE } from "../contants/constants";
+
 import { showEmsg } from "../utils/ShowEmsg";
+import PlanUsageDonut from "../components/PlanUsageDonut";
+import PlanLimitToast from "../components/PlanLimitToast";
+import { updatePlanResourceUsage } from "../utils/planAccessUtils";
 import { useTitle } from "../context/TitleContext";
 import {
   ITEMS_PER_PAGE,
@@ -52,8 +56,9 @@ const Banners = () => {
   const createBannerPermissionCode = getPermissionCode(MODULES.BANNER, PERMISSIONS.CREATE_BANNER);
   const { canCreate: canCreateBanner, disabledReason: createBannerDisabledReason, showBlockedToast: showBannerBlockedToast } =
     useCreateAccess(createBannerPermissionCode, {
-      noPermissionMsg: t("BANNERS.NO_CREATE_PERMISSION", "You do not have permission to create banners."),
-      limitReachedMsg: t("BANNERS.LIMIT_REACHED", "You have reached your banner creation limit. Please upgrade your plan."),
+      noPermissionMsg: t("BANNERS.NO_CREATE_PERMISSION"),
+      limitReachedMsg: t("BANNERS.LIMIT_REACHED"),
+      actionType: "BANNER",
     });
 
   useEffect(() => {
@@ -104,6 +109,7 @@ const Banners = () => {
           setBanners(bannerData);
           setTotalPages(oResponse.data.pagination?.totalPages || 1);
           setTotalRecords(oResponse.data.pagination?.totalRecords || 0);
+          updatePlanResourceUsage(PLAN_LIMIT_RESOURCE.BANNERS, oResponse.data.pagination?.totalRecords || 0);
           setBackendMessage(null); // Clear backend message when banners are found
           setError(null);
         } else {
@@ -207,8 +213,14 @@ const Banners = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen">
       <ToastContainer />
-      <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-0 py-3 shadow">
+      <PlanLimitToast resourceKey={PLAN_LIMIT_RESOURCE.BANNERS} label={t("BANNERS.PLAN_RESOURCE_LABEL")} />
+      <div className="flex items-center gap-4 mb-8 sticky top-14 bg-white z-20 py-3 shadow">
         <div className="flex-1" />
+        <PlanUsageDonut
+          resourceKey={PLAN_LIMIT_RESOURCE.BANNERS}
+          currentUsage={totalRecords}
+          label={t("BANNERS.PLAN_RESOURCE_LABEL")}
+        />
         <button
           type="button"
           className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-500 transition-all duration-200 gap-2 shadow-sm"

@@ -7,7 +7,11 @@ import ActionButtons from "../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { USER_ACTIVE_STATUS } from "../contants/apiRoutes";
 import { useTitle } from "../context/TitleContext";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS, SKELETON_TYPES } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS, SKELETON_TYPES, PLAN_LIMIT_RESOURCE } from "../contants/constants";
+
+import PlanLimitToast from "../components/PlanLimitToast";
+import PlanUsageDonut from "../components/PlanUsageDonut";
+import { updatePlanResourceUsage } from "../utils/planAccessUtils";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import { showEmsg } from "../utils/ShowEmsg";
 import { ToastContainer } from "react-toastify";
@@ -89,10 +93,11 @@ const Users = () => {
 
   // Create access — permission + limit check
   const addUserPermissionCode = getPermissionCode(MODULES.USER, PERMISSIONS.ADD_USER);
-  const { canCreate: canAddUser, disabledReason: addUserDisabledReason } =
+  const { canCreate: canAddUser, disabledReason: addUserDisabledReason, showBlockedToast } =
     useCreateAccess(addUserPermissionCode, {
-      noPermissionMsg: t("USERS.NO_CREATE_PERMISSION", "You do not have permission to add users."),
-      limitReachedMsg: t("USERS.LIMIT_REACHED", "You have reached your user creation limit. Please upgrade your plan."),
+      noPermissionMsg: t("USERS.NO_CREATE_PERMISSION"),
+      limitReachedMsg: t("USERS.LIMIT_REACHED"),
+      actionType: "USER",
     });
 
   // Hide body scrollbar when component mounts
@@ -429,6 +434,10 @@ const Users = () => {
     }
   }, [sShowFilterDropdown, dispatch]);
 
+  useEffect(() => {
+    updatePlanResourceUsage(PLAN_LIMIT_RESOURCE.USERS, actualTotal);
+  }, [actualTotal]);
+
   return (
     <div
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col"
@@ -439,6 +448,7 @@ const Users = () => {
         </div>
       )}
       <ToastContainer />
+      <PlanLimitToast resourceKey={PLAN_LIMIT_RESOURCE.USERS} label={t("USERS.PLAN_RESOURCE_LABEL")} />
       <Toolbar
         searchTerm={sSearchTerm}
         setSearchTerm={setSearchTerm}
@@ -451,9 +461,22 @@ const Users = () => {
         searchPlaceholder={t("USERS.SEARCH_PLACEHOLDER")}
         onClearFilters={handleClearFilters}
         isBrowsePage={false}
-        onCreate={() => navigate("/add-user")}
+        onCreate={() => {
+          if (canAddUser) {
+            navigate("/add-user");
+          } else {
+            showBlockedToast();
+          }
+        }}
         createLabel={t("USERS.ADD_USER")}
         actionType="USER"
+        extraContent={
+          <PlanUsageDonut
+            resourceKey={PLAN_LIMIT_RESOURCE.USERS}
+            currentUsage={actualTotal}
+            label={t("USERS.PLAN_RESOURCE_LABEL")}
+          />
+        }
       />
 
       {/* table view */}

@@ -195,6 +195,7 @@
     "TOAST_READ_ONLY_HEADING": "This action is blocked: your subscription is in read-only mode.",
     "TOAST_READ_ONLY_GRACE_HEADING": "Grace period: account is read-only. Renew or upgrade to keep working without interruption.",
     "TOAST_READ_ONLY_RENEW_HEADING": "Read-only mode: renew your subscription to create or change data again.",
+    "READ_ONLY_ACTION_BLOCKED": "Action blocked — your subscription is in read-only mode.",
     "TOAST_PLAN_EXPIRED_SIGN_OUT": "Your plan or subscription is expired or inactive. You will be signed out; please sign in again after renewal.",
     "TOAST_PLAN_FORBIDDEN_UPGRADE": "Your current plan does not allow this. Opening the upgrade page.",
     "TOAST_PLAN_LIMIT_HEADING": "Plan or usage limit reached for your subscription.",
@@ -785,6 +786,7 @@
     }
   },
   "PRODUCTS": {
+    "PLAN_RESOURCE_LABEL": "Products",
     "TITLE": "Products",
     "SUBTITLE": "Manage your products and inventory",
     "ADD_BTN": "Add Product",
@@ -957,6 +959,7 @@
     "PRODUCT_SUBMIT_ERROR": "An error occurred while submitting the product."
   },
   "STORES": {
+    "PLAN_RESOURCE_LABEL": "Stores",
     "HEADING": "Stores",
     "DESCRIPTION": "Manage your store locations and their details",
     "ADD_STORE": "Add Store",
@@ -1038,7 +1041,10 @@
       "STATUS": "Status"
     },
     "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete this user? this action cannot be undone.",
-    "CONFIRM_STATUS_MESSAGE": "Are you sure you want to set this user as {{status}}?"
+    "CONFIRM_STATUS_MESSAGE": "Are you sure you want to set this user as {{status}}?",
+    "NO_CREATE_PERMISSION": "You do not have permission to add users.",
+    "LIMIT_REACHED": "You have reached your user creation limit. Please upgrade your plan.",
+    "PLAN_RESOURCE_LABEL": "Users"
   },
   "ADD_USER": {
     "GENDER_MALE": "Male",
@@ -1322,6 +1328,7 @@
     "CHANGE_PHOTO_ARIA": "Change profile photo"
   },
   "BANNERS": {
+    "PLAN_RESOURCE_LABEL": "Banners",
     "TITLE": "Banner Management",
     "ACTIVE_BANNERS": "Active Banners",
     "ADD_BANNER":"Add Banner",
@@ -1357,7 +1364,9 @@
     "PLAY": "Start auto-play",
     "DELETE_SUCCESS": "Banner deleted successfully.",
     "STATUS_UPDATED": "Banner status updated successfully.",
-    "STATUS_CONFIRM_MESSAGE": "Are you sure you want to change the status of this banner to {{status}}?"
+    "STATUS_CONFIRM_MESSAGE": "Are you sure you want to change the status of this banner to {{status}}?",
+    "NO_CREATE_PERMISSION": "You do not have permission to create banners.",
+    "LIMIT_REACHED": "You have reached your banner creation limit. Please upgrade your plan."
   },
   "ORDER_HISTORY": {
     "TITLE": "Order History",
@@ -1535,6 +1544,7 @@
     "NO_DISCOUNT": "No discount",
     "SEARCH_STORES":"Search Store Name",
     "FILTERED_STORES":"Filtered Store",
+    "ACTION_NOT_ALLOWED":"Action not allowed",
     "INVENTORY_LOCATIONS":"inventory locations"
   },
   "CREATE_ACTION": {
@@ -1585,6 +1595,11 @@
     "NO_ROLES_ON_PAGE": "No user roles found on this page.",
     "STATUS_CONFIRM_MESSAGE": "Are you sure you want to set this role as {{status}}?",
     "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete this role? this action cannot be undone."
+  },
+  "ROLES": {
+    "PLAN_RESOURCE_LABEL": "Roles",
+    "NO_CREATE_PERMISSION": "You do not have permission to add roles.",
+    "LIMIT_REACHED": "You have reached your role creation limit. Please upgrade your plan."
   },
   "TOOLBAR": {
     "TABLE_VIEW": "Table View",
@@ -1788,6 +1803,25 @@
     "UPDATE_SPECIFICATION_TYPE_STATUS_TOOLTIP": "Update specification type status",
     "EDIT_PRODUCT_GROUP_TOOLTIP": "Edit product group details",
     "UPDATE_PRODUCT_GROUP_STATUS_TOOLTIP": "Update product group status"
+  },
+  "PLAN_LIMIT": {
+    "TITLE": "Plan Limit Reached",
+    "BODY_REACHED": "You have reached the maximum limit of <b>{{limit}} {{label}}</b> allowed by your current plan.",
+    "USAGE_LABEL": "Usage",
+    "USED_LABEL": "used",
+    "REMAINING_LABEL": "remaining",
+    "UPGRADE_CTA": "To create more {{label}}, please upgrade your subscription plan.",
+    "CONFIRM_BUTTON": "Upgrade Plan",
+    "CANCEL_BUTTON": "Dismiss"
+  },
+  "PLAN_USAGE": {
+    "USAGE_TITLE": "{{label}} Usage",
+    "USED": "Used",
+    "REMAINING": "Remaining",
+    "BADGE_LIMIT_REACHED": "Limit reached",
+    "BADGE_APPROACHING": "Approaching limit",
+    "BADGE_WITHIN_LIMITS": "Within limits",
+    "BADGE_UNLIMITED": "Unlimited"
   },
   "INACTIVITY": {
     "SESSION_TIMEOUT_WARNING": "Session Timeout Warning",

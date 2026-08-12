@@ -8,6 +8,7 @@ import {
   debounceCreateAction,
   refreshAfterCreate
 } from '../utils/createActionUtils';
+import { NOTIFICATION_TYPES, TOAST_DURATION } from '../contants/constants';
 
 /**
  * A reusable CreateButton component with built-in permission and limit validation
@@ -56,7 +57,9 @@ const CreateButton = ({
   const tooltipMessage = getCreateButtonTooltip(actionType, t);
 
   // Determine if button should be disabled
-  const isDisabled = disabled || loading || isCreating || isDisabledByValidation;
+  // We don't natively disable the button for validation issues so the onClick can fire and show the limit error toast/popup
+  const isNativelyDisabled = loading || isCreating;
+  const isEffectivelyDisabled = disabled || isNativelyDisabled || isDisabledByValidation;
 
   // Create enhanced click handler
   const handleClick = useCallback(async (event) => {
@@ -112,11 +115,34 @@ const CreateButton = ({
   const finalClickHandler = debounce ? debouncedClickHandler : handleClick;
 
   // Create validated click handler
-  const validatedClickHandler = createValidatedClickHandler(
-    actionType,
-    finalClickHandler,
-    t
-  );
+  const validatedClickHandler = function(event) {
+    if (event) {
+      event.preventDefault();
+    }
+    
+    // Validate the create action
+    const validationResult = validateCreateAction(actionType);
+
+    // If not allowed by internal validation, show its toast and return
+    if (!validationResult.canCreate) {
+      import('../utils/createActionUtils').then(({ showCreateActionToast }) => {
+        showCreateActionToast(validationResult, t, actionType);
+      });
+      return;
+    }
+    
+    // If externally disabled, show a toast for that reason instead of clicking
+    if (disabled) {
+      const reason = restProps.title || t("COMMON.ACTION_NOT_ALLOWED");
+      import('../utils/ShowEmsg').then(({ showEmsg }) => {
+        showEmsg(reason, NOTIFICATION_TYPES.WARNING, TOAST_DURATION.LONG);
+      });
+      return;
+    }
+
+    // If allowed, execute the actual handler
+    finalClickHandler(event);
+  };
 
   // Button styles based on variant
   const getButtonClasses = () => {
@@ -128,19 +154,19 @@ const CreateButton = ({
 
     const variantClasses = {
       primary:
-        "bg-custom-bg text-white hover:bg-custom-bg-dark focus:ring-custom-bg disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed",
+        "bg-custom-bg text-white hover:bg-custom-bg-dark focus:ring-custom-bg disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed aria-disabled:bg-gray-300 aria-disabled:text-gray-500 aria-disabled:cursor-not-allowed",
       secondary:
-        "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed",
+        "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed aria-disabled:bg-gray-50 aria-disabled:text-gray-400 aria-disabled:cursor-not-allowed",
       success:
-        "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed",
+        "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed aria-disabled:bg-gray-300 aria-disabled:text-gray-500 aria-disabled:cursor-not-allowed",
       danger:
-        "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed",
+        "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed aria-disabled:bg-gray-300 aria-disabled:text-gray-500 aria-disabled:cursor-not-allowed",
       warning:
-        "bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed",
-      info: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed",
+        "bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed aria-disabled:bg-gray-300 aria-disabled:text-gray-500 aria-disabled:cursor-not-allowed",
+      info: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed aria-disabled:bg-gray-300 aria-disabled:text-gray-500 aria-disabled:cursor-not-allowed",
     };
 
-    return `${baseClasses} ${variantClasses[variant] || variantClasses.primary} ${className}`;
+    return `${baseClasses} ${variantClasses[variant] || variantClasses.primary} ${className} ${isEffectivelyDisabled ? 'opacity-70 cursor-not-allowed' : ''}`;
   };
 
   // Cleanup timeout on unmount
@@ -156,7 +182,8 @@ const CreateButton = ({
   const buttonElement = (
     <button
       className={getButtonClasses()}
-      disabled={isDisabled}
+      disabled={isNativelyDisabled}
+      aria-disabled={isEffectivelyDisabled}
       onClick={validatedClickHandler}
       title={showTooltip && isDisabledByValidation ? tooltipMessage : undefined}
       {...restProps}

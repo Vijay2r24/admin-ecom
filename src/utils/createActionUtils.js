@@ -1,17 +1,21 @@
 import { toast } from 'react-toastify';
 import { getPermissionCode, permissionIdsInclude, hasPermissionId } from './permissionUtils';
-import { MODULES, PERMISSIONS, PLAN_FEATURE_TOKEN } from '../contants/constants';
+import { MODULES, PERMISSIONS, PLAN_FEATURE_TOKEN, PLAN_LIMIT_RESOURCE } from '../contants/constants';
 import {
   isFeatureTokenAllowedByPlan,
   isProductCreateLimitBlocked,
   isUserCreateLimitBlocked,
   isBannerCreateLimitBlocked,
+  isStoreCreateLimitBlocked,
+  isRoleCreateLimitBlocked,
 } from './planAccessUtils';
 
 const CREATE_LIMIT_CHECKS = {
   isUserCreateLimitBlocked,
   isProductCreateLimitBlocked,
   isBannerCreateLimitBlocked,
+  isStoreCreateLimitBlocked,
+  isRoleCreateLimitBlocked,
 };
 
 /**
@@ -257,10 +261,44 @@ export function validateCreateAction(actionType) {
  * @param {Object} validationResult - Result from validateCreateAction
  * @param {Function} t - Translation function from useTranslation
  */
-export function showCreateActionToast(validationResult, t) {
+export function showCreateActionToast(validationResult, t, actionType) {
   if (!validationResult.message) return;
 
   const { title, message, type } = validationResult.message;
+  
+  // If the limit is exceeded, show the rich SweetAlert popup
+  if (validationResult.status === CREATE_ACTION_VALIDATION_RESULTS.LIMIT_EXCEEDED && actionType) {
+    const actionConfig = CREATE_ACTION_TYPES[actionType];
+    const resourceKeyMap = {
+      [MODULES.USER]: PLAN_LIMIT_RESOURCE.USERS,
+      [MODULES.STORE]: PLAN_LIMIT_RESOURCE.STORES,
+      [MODULES.PRODUCT]: PLAN_LIMIT_RESOURCE.PRODUCTS,
+      [MODULES.BANNER]: PLAN_LIMIT_RESOURCE.BANNERS,
+      [MODULES.ROLE]: PLAN_LIMIT_RESOURCE.ROLES,
+    };
+    const mappedKey = actionConfig ? resourceKeyMap[actionConfig.module] : null;
+    
+    if (mappedKey) {
+      import('../utils/planAccessUtils').then(({ getPlanResourceLimit, getPlanResourceUsage }) => {
+        import('../components/PlanLimitToast').then(({ showPlanLimitToast }) => {
+          const limit = getPlanResourceLimit(mappedKey);
+          const used = getPlanResourceUsage(mappedKey);
+          const remaining = Math.max(0, limit - used);
+          const percent = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 100;
+          showPlanLimitToast({
+            resourceKey: mappedKey,
+            label: actionConfig.module,
+            limit,
+            used,
+            remaining,
+            percent,
+            isExhausted: true,
+          });
+        });
+      });
+      return;
+    }
+  }
   
   if (t && typeof t === 'function') {
     // Use translation keys if available
@@ -306,7 +344,7 @@ export function createValidatedClickHandler(actionType, actualClickHandler, t) {
 
     // If not allowed, show toast and return
     if (!validationResult.canCreate) {
-      showCreateActionToast(validationResult, t);
+      showCreateActionToast(validationResult, t, actionType);
       return;
     }
 

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import Toolbar from "../../components/Toolbar";
@@ -32,9 +32,11 @@ import Tooltip from "../../components/Tooltip";
 import SkeletonLoader from "../../components/SkeletonLoader";
 import EmptyState from "../../components/EmptyState";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
-import { MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE } from "../../contants/constants.jsx";
+import { MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE,ACTION_TYPES } from "../../contants/constants.jsx";
 import { useCreateAccess } from "../../hooks/useCreateAccess";
 import { updatePlanResourceUsage } from "../../utils/planAccessUtils";
+import PlanUsageDonut from "../../components/PlanUsageDonut";
+import PlanLimitToast from "../../components/PlanLimitToast";
 
 const getStatusBadgeClass = (status) => {
   if (status === "active") return "status-active";
@@ -106,10 +108,9 @@ const ProductList = () => {
 
   const { canCreate: canAddProduct, disabledReason: addProductDisabledReason } =
     useCreateAccess(addProductPermissionCode, {
-      actionType: "PRODUCT",
       noPermissionMsg: t("PRODUCTS.NO_CREATE_PERMISSION"),
       limitReachedMsg: t("PRODUCTS.LIMIT_REACHED"),
-      planNotAvailableMsg: t("CREATE_ACTION.PLAN_NOT_AVAILABLE"),
+      actionType: ACTION_TYPES.PRODUCT,
     });
 
   useEffect(() => {
@@ -345,6 +346,7 @@ const ProductList = () => {
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col">
       <ToastContainer />
+      <PlanLimitToast resourceKey={PLAN_LIMIT_RESOURCE.PRODUCTS} label={t("PRODUCTS.PLAN_RESOURCE_LABEL")} />
       <Toolbar
         searchTerm={sSearchTerm}
         setSearchTerm={setSearchTerm}
@@ -368,6 +370,13 @@ const ProductList = () => {
         )}
         onExport={handleExportProducts}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
+        extraContent={
+          <PlanUsageDonut
+            resourceKey={PLAN_LIMIT_RESOURCE.PRODUCTS}
+            currentUsage={nTotalItems}
+            label={t("PRODUCTS.PLAN_RESOURCE_LABEL")}
+          />
+        }
       />
 
       {sViewMode === "table" ? (

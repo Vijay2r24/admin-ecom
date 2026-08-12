@@ -4,6 +4,8 @@ import {
   isUserCreateLimitBlocked,
   isSubscriptionReadOnlyMode,
   clearUserCreateLimitBlocked,
+  getPlanResourceLimit,
+  getPlanResourceUsage,
 } from "../utils/planAccessUtils";
 import { showEmsg } from "../utils/ShowEmsg";
 import { WINDOW_CUSTOM_EVENTS } from "../contants/constants";
@@ -43,6 +45,9 @@ export function useCreateAccess(permissionCode, options = {}) {
     readOnlyMsg = "Your subscription is in read-only mode. Please renew or upgrade your plan.",
     actionType = null,
     planNotAvailableMsg = "This feature is not included in your current plan.",
+    resourceKey,
+    resourceLabel,
+    currentUsage,
   } = options;
 
   // ── Read state from localStorage ──────────────────────────────────
@@ -159,9 +164,29 @@ export function useCreateAccess(permissionCode, options = {}) {
   // ── Toast helper ───────────────────────────────────────────────────
   const showBlockedToast = useCallback(() => {
     if (state.reason) {
-      showEmsg(state.reason, "warning", 4000);
+      if (resourceKey) {
+        const limit = getPlanResourceLimit(resourceKey);
+        const used = currentUsage != null ? currentUsage : getPlanResourceUsage(resourceKey);
+        const remaining = Math.max(0, limit - used);
+        const percent = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 100;
+        const isExhausted = used >= limit;
+
+        import("../components/PlanLimitToast").then(({ showPlanLimitToast }) => {
+          showPlanLimitToast({
+            resourceKey,
+            label: resourceLabel || resourceKey,
+            limit,
+            used,
+            remaining,
+            percent,
+            isExhausted,
+          });
+        });
+      } else {
+        showEmsg(state.reason, "warning", 4000);
+      }
     }
-  }, [state.reason]);
+  }, [state.reason, resourceKey, resourceLabel, currentUsage]);
 
   return {
     /** true when the user is allowed to create (permission + limit both clear) */

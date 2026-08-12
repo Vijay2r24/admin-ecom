@@ -669,6 +669,22 @@ export function isBannerCreateLimitBlocked() {
   );
 }
 
+/** True when store creation is blocked by plan module access or numeric cap. */
+export function isStoreCreateLimitBlocked() {
+  return isPlanResourceCreateLimitBlocked(
+    PLAN_LIMIT_RESOURCE.STORES,
+    PLAN_FEATURE_TOKEN.STORES
+  );
+}
+
+/** True when role creation is blocked by plan module access or numeric cap. */
+export function isRoleCreateLimitBlocked() {
+  return isPlanResourceCreateLimitBlocked(
+    PLAN_LIMIT_RESOURCE.ROLES,
+    PLAN_FEATURE_TOKEN.ROLES
+  );
+}
+
 function extractPlanLimitsFromLoginPayload(src) {
   const limits = {};
   if (!src || typeof src !== "object") return limits;
@@ -677,8 +693,9 @@ function extractPlanLimitsFromLoginPayload(src) {
     PLAN_LIMIT_LOGIN_FIELDS_BY_RESOURCE
   )) {
     for (const field of fields) {
-      if (src[field] == null || src[field] === "") continue;
-      const num = Number(src[field]);
+      const val = src?.PlanLimits?.[field] ?? src?.[field];
+      if (val == null || val === "") continue;
+      const num = Number(val);
       if (!Number.isNaN(num)) {
         limits[resourceKey] = num;
         break;
@@ -1034,8 +1051,9 @@ export function getMenuPermissionCodeForHref(href) {
     case APP_ROUTES.DASHBOARD:
       return getPermissionCode(MODULES.DASHBOARD, PERMISSIONS.VIEW_DASHBOARD);
     case APP_ROUTES.ORDERS:
-    case APP_ROUTES.PAYMENTS:
       return getPermissionCode(MODULES.ORDER, PERMISSIONS.VIEW_ORDERS);
+    case APP_ROUTES.PAYMENTS:
+      return getPermissionCode(MODULES.PAYMENT, PERMISSIONS.VIEW_PAYMENTS);
     case APP_ROUTES.PRODUCT_LIST:
       return getPermissionCode(MODULES.PRODUCT, PERMISSIONS.VIEW_PRODUCTS);
     case APP_ROUTES.INVENTORY_LIST:
@@ -1065,6 +1083,8 @@ export function getMenuPermissionCodeForHref(href) {
         MODULES.TENANT_SETTINGS,
         PERMISSIONS.VIEW_TENANT_SETTINGS
       );
+    case APP_ROUTES.CANCELLATIONS:
+      return getPermissionCode(MODULES.CANCELLATION, PERMISSIONS.VIEW_REASONS);
     default:
       return null;
   }

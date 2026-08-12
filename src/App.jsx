@@ -354,15 +354,7 @@ const App = () => {
                 <Route
                   path="/payments"
                   element={
-                    <ProtectedRoute permissionCode={getPermissionCode(MODULES.PAYMENT, PERMISSIONS.VIEW_PAYMENT_DETAILS)}>
-                      <Payments />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/payments"
-                  element={
-                    <ProtectedRoute permissionCode={getPermissionCode(MODULES.ORDER, PERMISSIONS.VIEW_ORDERS)}>
+                    <ProtectedRoute permissionCode={getPermissionCode(MODULES.PAYMENT, PERMISSIONS.VIEW_PAYMENTS)}>
                       <Payments />
                     </ProtectedRoute>
                   }

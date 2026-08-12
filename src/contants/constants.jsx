@@ -27,6 +27,25 @@ export const NOTIFICATION_MESSAGES = {
   OPERATION_SUCCESS: "Operation completed successfully"
 };
 
+/** Standard Tailwind palette colors used in JS contexts (e.g. SweetAlert2 inline styles). */
+export const UI_COLORS = {
+  // gray scale
+  GRAY_50:  '#f9fafb',
+  GRAY_200: '#e5e7eb',
+  GRAY_400: '#9ca3af',
+  GRAY_500: '#6b7280',
+  GRAY_700: '#374151',
+  GRAY_600: '#4b5563',
+  // red
+  RED_500:  '#ef4444',
+};
+// constants/actionTypes.js
+export const ACTION_TYPES = {
+  PRODUCT: "PRODUCT",
+  USER: "USER",
+  ORDER: "ORDER",
+  STORE: "STORE",
+};
 /** ApiUtils dispatches; App listens and runs client-side navigate (same idea as `triggerIdleLogout` + IdleLogout). */
 export const WINDOW_CUSTOM_EVENTS = {
   NAVIGATE_UPGRADE_PLAN: "navigateToUpgradePlan",
@@ -94,6 +113,7 @@ export const APP_ROUTES = {
   NOT_AUTHORIZED: "/not-authorized",
   UPGRADE_PLAN: "/upgrade-plan",
   LOW_STOCK: "/low-stock",
+  CANCELLATIONS: "/cancellations",
 };
 
 /** Product Setup (`/browse`) tab keys — keep in sync with plan + permission maps. */
@@ -261,15 +281,17 @@ export const PLAN_LIMIT_RESOURCE = {
 /** Login / profile numeric cap field names per resource (first match wins). */
 export const PLAN_LIMIT_LOGIN_FIELDS_BY_RESOURCE = {
   [PLAN_LIMIT_RESOURCE.PRODUCTS]: [
+    "MAX_PRODUCTS",
     "MaxProducts",
     "ProductLimit",
     "maxProducts",
     "ProductsLimit",
     "MaxProductCount",
   ],
-  [PLAN_LIMIT_RESOURCE.USERS]: ["MaxUsers", "UserLimit", "maxUsers"],
-  [PLAN_LIMIT_RESOURCE.STORES]: ["MaxStores", "StoreLimit", "maxStores"],
-  [PLAN_LIMIT_RESOURCE.BANNERS]: ["MaxBanners", "BannerLimit", "maxBanners"],
+  [PLAN_LIMIT_RESOURCE.USERS]: ["MAX_USERS", "MaxUsers", "UserLimit", "maxUsers"],
+  [PLAN_LIMIT_RESOURCE.STORES]: ["MAX_STORES", "MaxStores", "StoreLimit", "maxStores"],
+  [PLAN_LIMIT_RESOURCE.BANNERS]: ["MAX_BANNERS", "MaxBanners", "BannerLimit", "maxBanners"],
+  [PLAN_LIMIT_RESOURCE.ROLES]: ["MAX_ROLES", "MaxRoles", "RoleLimit", "maxRoles"],
 };
 export const ORDER_STATUS = {
   DELIVERED: "Delivered",
@@ -755,6 +777,7 @@ export const MODULES = {
   BULK_IMPORT: "Bulk Import Management",
   TENANT_SETTINGS: "Tenant Settings Management",
   PAGE: "Settings",
+  CANCELLATION: "Cancellation Management",
 };
 
 // Permission mappings for role management
@@ -835,6 +858,8 @@ export const PERMISSIONS = {
   EDIT_USER: "Edit User",
   EDIT_PAYMENT: "Edit Payment",
   VIEW_PAYMENT_DETAILS: "View Payment Details",
+  VIEW_PAYMENTS: "View Payments",
+  VIEW_REASONS: "View Reasons",
   VIEW_ORDER_DETAILS: "View Order Details",
   UPDATE_ORDER_STATUS: "Update Order Status",
   VIEW_ORDER_HISTORY: "View Order Item Status",
@@ -991,6 +1016,10 @@ export const FILTER_VALUES = {
 
 export const FIELD_NAMES = {
   PACKAGE: "package",
+};
+
+export const WEIGHT_UNIT = {
+  DEFAULT: "kg",
 };
 
 export const SELECT_VALUES = {

@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 import Tooltip from "./Tooltip";
 import { createPortal } from "react-dom";
 import DateTimeRangePickerComponent from "./CustomDatePicker";
-import { VIEW_MODES, TOOLTIPSTATUS } from "../contants/constants";
+import { VIEW_MODES, TOOLTIPSTATUS, NOTIFICATION_TYPES, TOAST_DURATION } from "../contants/constants";
 import { useSubscriptionReadOnly } from "../hooks/useSubscriptionReadOnly";
 import CreateButton from "./CreateButton";
 
@@ -54,6 +54,8 @@ const OrderToolbar = ({
   createProcessing = false, // true while a create API request is in-flight
   isBrowsePage = false, // New prop to identify browse pages
   actionType = null, // Add actionType for CreateButton validation
+  onDisabledClick = null,
+  extraContent = null,
 }) => {
   const { t } = useTranslation();
   const subscriptionReadOnly = useSubscriptionReadOnly();
@@ -62,12 +64,12 @@ const OrderToolbar = ({
   const effectiveDisableReason =
     disableCreateReason ||
     (subscriptionReadOnly
-      ? t("SUBSCRIPTION.READ_ONLY_ACTION_BLOCKED", "Action blocked — your subscription is in read-only mode.")
+      ? t("SUBSCRIPTION.READ_ONLY_ACTION_BLOCKED")
       : "");
   const effectiveAddVariantsDisableReason =
     disableAddVariantsReason ||
     (subscriptionReadOnly
-      ? t("SUBSCRIPTION.READ_ONLY_ACTION_BLOCKED", "Action blocked — your subscription is in read-only mode.")
+      ? t("SUBSCRIPTION.READ_ONLY_ACTION_BLOCKED")
       : "");
 
   // Track filter dropdown state for dynamic table height
@@ -315,33 +317,39 @@ const OrderToolbar = ({
               {createLabel || t("PRODUCTS.ADD_BTN")}
             </CreateButton>
           ) : (
-            <button
-              type="button"
-              aria-disabled={createDisabled}
-              onClick={(e) => {
-                if (createDisabled) {
-                  e.preventDefault();
-                  if (effectiveDisableReason) {
-                    // Import showEmsg lazily via dynamic import to avoid circular deps
-                    import("../utils/ShowEmsg").then(({ showEmsg }) => {
-                      showEmsg(effectiveDisableReason, "warning", 4000);
-                    });
-                  }
-                  return;
-                }
-                onCreate(e);
-              }}
-              className={`inline-flex items-center justify-center h-9 px-3 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
-                createDisabled
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-70'
-                  : 'text-white bg-custom-bg hover:bg-bg-hover'
-              }`}
-              style={{ minWidth: '100px' }}
-              title={createDisabled ? effectiveDisableReason : undefined}
+            <Tooltip
+              text={createDisabled && effectiveDisableReason ? effectiveDisableReason : ""}
+              position="bottom-left"
+              disabled={!createDisabled || !effectiveDisableReason}
             >
-              <Plus className="h-3.5 w-3.5" />
-              {createLabel || t("PRODUCTS.ADD_BTN")}
-            </button>
+              <button
+                type="button"
+                aria-disabled={createDisabled}
+                onClick={(e) => {
+                  if (createDisabled) {
+                    e.preventDefault();
+                    if (onDisabledClick) {
+                      onDisabledClick(e);
+                    } else if (effectiveDisableReason) {
+                      import("../utils/ShowEmsg").then(({ showEmsg }) => {
+                        showEmsg(effectiveDisableReason, NOTIFICATION_TYPES.WARNING, TOAST_DURATION.LONG);
+                      });
+                    }
+                    return;
+                  }
+                  onCreate(e);
+                }}
+                className={`inline-flex items-center justify-center h-9 px-3 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
+                  createDisabled
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-70'
+                    : 'text-white bg-custom-bg hover:bg-bg-hover'
+                }`}
+                style={{ minWidth: '100px' }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {createLabel || t("PRODUCTS.ADD_BTN")}
+              </button>
+            </Tooltip>
           )
         )}
         {onAddVariants && (
@@ -351,9 +359,11 @@ const OrderToolbar = ({
             onClick={(e) => {
               if (addVariantsDisabled) {
                 e.preventDefault();
-                if (effectiveAddVariantsDisableReason) {
+                if (onDisabledClick) {
+                  onDisabledClick(e);
+                } else if (effectiveAddVariantsDisableReason) {
                   import("../utils/ShowEmsg").then(({ showEmsg }) => {
-                    showEmsg(effectiveAddVariantsDisableReason, "warning", 4000);
+                    showEmsg(effectiveAddVariantsDisableReason, NOTIFICATION_TYPES.WARNING, TOAST_DURATION.LONG);
                   });
                 }
                 return;
@@ -372,6 +382,7 @@ const OrderToolbar = ({
             {t("PRODUCTS.ADD_VARIANTS_BTN")}
           </button>
         )}
+        {extraContent && extraContent}
       </div>
 
       {showFilterDropdown && otherFilters.length > 0 && (

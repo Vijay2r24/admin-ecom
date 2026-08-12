@@ -38,7 +38,7 @@ import {
   ADD_PRODUCT_VARIANTS,
   VALIDATE_PRODUCT_VARIANTS,
 } from "../../contants/apiRoutes";
-import { FILETYPE, STATUS } from "../../contants/constants";
+import { FILETYPE, STATUS, WEIGHT_UNIT } from "../../contants/constants";
 
 const TYPE_GLOBAL = "global";
 import { showEmsg } from "../../utils/ShowEmsg.jsx";
@@ -2239,6 +2239,13 @@ export default function CreateVariant() {
                                         "",
                                       images: mappedImages,
                                       attributes: normalizedAttributes,
+                                      shippingData: {
+                                        package: original.PackagingBoxID || "",
+                                        weight: original.Weight || "",
+                                        weightUnit: original.Unit || WEIGHT_UNIT.DEFAULT,
+                                        countryOfOrigin: original.CountryCode || "",
+                                        hsCode: original.HSCode || "",
+                                      },
                                     };
                                   })
                                   .filter(Boolean);

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { UserPlus, Shield } from "lucide-react";
 import Toolbar from "../components/Toolbar";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +21,12 @@ import {
   FILTERS,
   PERMISSIONS,
   FILTER_VALUES,
+  PLAN_LIMIT_RESOURCE,
 } from "../contants/constants.jsx";
+
+import PlanLimitToast from "../components/PlanLimitToast";
+import PlanUsageDonut from "../components/PlanUsageDonut";
+import { updatePlanResourceUsage } from "../utils/planAccessUtils";
 import Loader from "../components/Loader";
 import SkeletonLoader from "../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
@@ -83,8 +88,9 @@ const UserRolesList = () => {
   const addRolePermissionCode = getPermissionCode(PERMISSIONS.ROLE_MANAGEMENT, PERMISSIONS.ADD_ROLE);
   const { canCreate: canAddRole, disabledReason: addRoleDisabledReason } =
     useCreateAccess(addRolePermissionCode, {
-      noPermissionMsg: t("ROLES.NO_CREATE_PERMISSION", "You do not have permission to add roles."),
-      limitReachedMsg: t("ROLES.LIMIT_REACHED", "You have reached your role creation limit."),
+      noPermissionMsg: t("ROLES.NO_CREATE_PERMISSION"),
+      limitReachedMsg: t("ROLES.LIMIT_REACHED"),
+      actionType: "ROLE",
     });
 
   useEffect(() => {
@@ -285,6 +291,10 @@ const UserRolesList = () => {
     setStatusPopup({ open: false, roleId: null, newStatus: null });
   };
 
+  useEffect(() => {
+    updatePlanResourceUsage(PLAN_LIMIT_RESOURCE.ROLES, total);
+  }, [total]);
+
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50">
       
@@ -294,6 +304,7 @@ const UserRolesList = () => {
         </div>
       )}
       <ToastContainer />
+      <PlanLimitToast resourceKey={PLAN_LIMIT_RESOURCE.ROLES} label={t("ROLES.PLAN_RESOURCE_LABEL")} />
       <Toolbar
         searchTerm={sSearchTerm}
         setSearchTerm={setSearchTerm}
@@ -310,6 +321,13 @@ const UserRolesList = () => {
         disableCreate={!canAddRole}
         disableCreateReason={addRoleDisabledReason}
         actionType="ROLE"
+        extraContent={
+          <PlanUsageDonut
+            resourceKey={PLAN_LIMIT_RESOURCE.ROLES}
+            currentUsage={total}
+            label={t("ROLES.PLAN_RESOURCE_LABEL")}
+          />
+        }
       />
       {sViewMode === "table" ? (
         <div className="table-container-floating">

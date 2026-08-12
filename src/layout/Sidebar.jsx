@@ -109,10 +109,10 @@ const Sidebar = ({ onClose, isCollapsed, onToggle, isMobileOpen, onMobileClose }
       icon: CreditCard,
       relatedPaths: ['/payment-details']
     },
-      {
+    {
       name: t('SIDEBAR.CANCELLATIONS'),
-      href: '/cancellations',
-      icon: FileX ,
+      href: APP_ROUTES.CANCELLATIONS,
+      icon: FileX,
       relatedPaths: ['/cancellation-details']
     },
       

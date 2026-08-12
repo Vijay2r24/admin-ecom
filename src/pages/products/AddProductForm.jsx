@@ -557,13 +557,22 @@ const AddProductForm = () => {
                     ).map((img) => ({
                       id: img.documentId,
                       documentId: img.documentId,
-                      preview: img.documentUrl, // ✅ IMPORTANT
+                      preview: img.documentUrl,
                       documentUrl: img.documentUrl,
                       sortOrder: img.sortOrder,
-                      isExisting: true, // REQUIRED FOR EDIT MODE
+                      isExisting: true,
                     })) || [],
 
                   removedImages: [],
+
+                  // ✅ SHIPPING / PACKAGING DATA
+                  shippingData: {
+                    package: v.PackagingBoxID || "",
+                    weight: v.Weight || "",
+                    weightUnit: v.Unit || "kg",
+                    countryOfOrigin: v.CountryCode || "",
+                    hsCode: v.HSCode || "",
+                  },
                 };
               }) || [];
 
