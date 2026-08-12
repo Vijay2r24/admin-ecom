@@ -35,7 +35,7 @@ import TextAreaWithIcon from "../../components/TextAreaWithIcon";
 import StatusBadge from "./StatusBadge";
 import { showEmsg } from "../../utils/ShowEmsg";
 import { useTitle } from "../../context/TitleContext";
-import { STATUS, MODULES, PERMISSIONS, TOOLTIP_MESSAGES, DATA_TYPES, SKELETON_TYPES } from "../../contants/constants";
+import { STATUS, MODULES, PERMISSIONS, TOOLTIP_MESSAGES, DATA_TYPES, SKELETON_TYPES, PAYMENT_STATUS, PAYMENT_TYPES, ORDER_STATUS } from "../../contants/constants";
 import Loader from "../../components/Loader";
 import SkeletonLoader from "../../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../../utils/loaderUtils";
@@ -46,6 +46,7 @@ import { FaHistory } from "react-icons/fa";
 import { GET_ORDER_ITEM_HISTORY_BY_ID } from "../../contants/apiRoutes";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 import Tooltip from "../../components/Tooltip";
+import PaymentStatusBadge from "../../components/PaymentStatusBadge";
 
 const OrderView = () => {
   const { orderId } = useParams();
@@ -95,6 +96,8 @@ const OrderView = () => {
   useEffect(() => {
     // Fetch order statuses if not already loaded
     dispatch(fetchResource({ key: "orderStatuses" }));
+    // Fetch payment statuses for PaymentStatusBadge component
+    dispatch(fetchResource({ key: "paymentStatus" }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -221,7 +224,7 @@ const OrderView = () => {
           delivery: {
             address: data.DeliveryAddress || (data.address
               ? `${data.address.AddressLine1 || ""} ${data.address.AddressLine2 || ""}`.trim()
-              : "") || "N/A",
+              : "") || t('COMMON.N_A'),
             city: data.address?.CityName,
             state: data.address?.StateName,
             country: data.address?.CountryName,
@@ -233,24 +236,29 @@ const OrderView = () => {
             addressType: data.address?.AddressType,
             isDefault: data.address?.IsDefault,
           },
-          orderItems: data.orderItems.map((item, index) => ({
-            id: item.OrderItemID || `item-${index}`,
-            OrderItemID: item.OrderItemID,
-            name: item.ProductName,
-            sku: item.SKU,
-            image: item.orderItemImage?.[0]?.documentUrl || null,
-            price: parseFloat(item.SellingPrice || item.MRP || 0),
-            quantity: item.Quantity,
-            status: item.OrderStatus || "Pending",
-            orderStatusID: item.OrderStatusID,
-            paymentMethod: data.PaymentTypeName || "N/A",
-            paymentStatus: data.PaymentStatusName,
-            PaymentTypeName: data.PaymentTypeName,
-            paymentDate: data.PaymentDate || data.OrderDate,
-            mrp: parseFloat(item.MRP || 0),
-            discountPercentage: parseFloat(item.DiscountPercentage || 0),
-            isActive: item.IsActive,
-          })),
+          orderItems: data.orderItems.map((item, index) => {
+            return {
+              id: item.OrderItemID || `item-${index}`,
+              OrderItemID: item.OrderItemID,
+              name: item.ProductName,
+              sku: item.SKU,
+              image: item.orderItemImage?.[0]?.documentUrl || null,
+              price: parseFloat(item.SellingPrice || item.MRP || 0),
+              quantity: item.Quantity,
+              status: item.OrderStatus || ORDER_STATUS.PENDING,
+              orderStatusID: item.OrderStatusID,
+              paymentMethod: data.PaymentTypeName || t('COMMON.N_A'),
+              // Fix: Use individual item payment status instead of order-level payment status
+              paymentStatus: item.PaymentStatusName || data.PaymentStatusName,
+              PaymentStatusName: item.PaymentStatusName || data.PaymentStatusName,
+              PaymentStatusID: item.PaymentStatusID || data.PaymentStatusID,
+              PaymentTypeName: data.PaymentTypeName,
+              paymentDate: data.PaymentDate || data.OrderDate,
+              mrp: parseFloat(item.MRP || 0),
+              discountPercentage: parseFloat(item.DiscountPercentage || 0),
+              isActive: item.IsActive,
+            };
+          }),
           total: data.orderItems.reduce((sum, item) => {
             return (
               sum +
@@ -504,7 +512,7 @@ const OrderView = () => {
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-900 print:text-xs">
-                        {nOrder.customer?.name || "N/A"}
+                        {nOrder.customer?.name || t('COMMON.N_A')}
                       </p>
                       <p className="text-[10px] text-gray-500 print:text-[10px]">
                         {t("VIEW_ORDER.CUSTOMER")}
@@ -514,13 +522,13 @@ const OrderView = () => {
                   <div className="flex items-center space-x-3">
                     <Mail className="h-3.5 w-3.5 text-gray-500 print:hidden" />
                     <p className="text-xs print:text-xs">
-                      {nOrder.customer?.email || "N/A"}
+                      {nOrder.customer?.email || t('COMMON.N_A')}
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Phone className="h-3.5 w-3.5 text-gray-500 print:hidden" />
                     <p className="text-xs print:text-xs">
-                      {nOrder.customer?.phone || "N/A"}
+                      {nOrder.customer?.phone || t('COMMON.N_A')}
                     </p>
                   </div>
                 </div>
@@ -595,7 +603,7 @@ const OrderView = () => {
                     {t("VIEW_ORDER.PAYMENT_TYPE")}
                   </span>
                   <span className="text-xs font-medium print:text-xs">
-                    {nOrder?.orderItems?.[0]?.PaymentTypeName || "N/A"}
+                    {nOrder?.orderItems?.[0]?.PaymentTypeName || t('COMMON.N_A')}
                   </span>
                 </div>
               </div>
@@ -676,6 +684,12 @@ const OrderView = () => {
                         scope="col"
                         className="px-6 py-3 text-center text-xs font-medium text-caption uppercase tracking-wider print:px-3 print:py-2 print:text-xs"
                       >
+                        {t("ORDERS.TABLE.PAYMENT_STATUS")}
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-center text-xs font-medium text-caption uppercase tracking-wider print:px-3 print:py-2 print:text-xs"
+                      >
                         {t("COMMON.ACTIONS")}
                       </th>
                     </tr>
@@ -718,7 +732,7 @@ const OrderView = () => {
                             <div className="ml-3 print:ml-0">
                               <div className="text-xs font-medium text-gray-900 print:text-xs">
                                 {(item.name?.split(" ").slice(0, 2).join(" ") ||
-                                  "N/A") +
+                                  t('COMMON.N_A')) +
                                   (item.name?.split(" ").length > 2
                                     ? "..."
                                     : "")}
@@ -741,8 +755,11 @@ const OrderView = () => {
                         <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-800 print:px-3 print:py-2 print:text-xs">
                           ₹{item.price?.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap mt-4 text-xs text-gray-800 print:px-3 print:py-2 print:text-xs text-center flex items-center justify-center">
+                        <td className="px-4 py-3 whitespace-nowrap text-center print:px-3 print:py-2">
                           <StatusBadge status={item.status} />
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-center print:px-3 print:py-2">
+                          <PaymentStatusBadge item={item} />
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-center text-xs font-medium print:px-3 print:py-2 print:text-xs">
                           <div className="flex items-center justify-center gap-3 print:gap-1">
@@ -791,7 +808,7 @@ const OrderView = () => {
                   <tfoot className="bg-gray-100 print:bg-white">
                     <tr>
                       <td
-                        colSpan="3"
+                        colSpan="4"
                         className="px-4 py-2 text-left text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
                       >
                         {t("VIEW_ORDER.SUBTOTAL")}

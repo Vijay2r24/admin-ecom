@@ -10,7 +10,7 @@ import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
 import { SKELETON_TYPES } from "../../contants/constants";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS, MODULES, PERMISSIONS } from "../../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, MODULES, PERMISSIONS, PAYMENT_STATUS, PAYMENT_TYPES } from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
 import SkeletonLoader from "../../components/SkeletonLoader";
@@ -411,7 +411,7 @@ const Payments = () => {
   }, [sSearchTerm, oFilters]);
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return t('COMMON.N_A');
     const date = new Date(dateString);
     return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   };
@@ -537,7 +537,7 @@ const Payments = () => {
                         <div className="table-cell-subtext flex items-center">
                           <User className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
                           <span className="truncate">
-                            {payment.PaymentType?.PaymentTypeName || "N/A"}
+                            {payment.PaymentType?.PaymentTypeName || t('COMMON.N_A')}
                           </span>
                         </div>
 
@@ -623,11 +623,11 @@ const Payments = () => {
                     </span>
                   </div>
                   <span
-                    className={`status-badge text-xs px-2 py-1 rounded-full ${payment.PaymentStatus?.PaymentStatusID === 1
-                      ? "bg-yellow-100 text-yellow-800"
+                    className={`status-badge ${payment.PaymentStatus?.PaymentStatusID === 1
+                      ? "status-pending"
                       : payment.PaymentStatus?.PaymentStatusID === 2
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        ? "status-delivered"
+                        : "status-cancelled"
                       }`}
                   >
                     {payment.PaymentStatus?.PaymentStatusName}
@@ -646,14 +646,14 @@ const Payments = () => {
                   <div className="flex items-center">
                     <FileText className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
                     <span className="text-gray-600 truncate">
-                      Order: {payment.OrderID || "N/A"}
+                      Order: {payment.OrderID || t('COMMON.N_A')}
                     </span>
                   </div>
                   
                   <div className="flex items-center">
                     <CreditCard className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
                     <span className="text-gray-600 truncate">
-                      {payment.PaymentType?.PaymentTypeName || "N/A"}
+                      {payment.PaymentType?.PaymentTypeName || t('COMMON.N_A')}
                     </span>
                   </div>
                   

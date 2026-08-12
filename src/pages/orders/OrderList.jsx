@@ -15,6 +15,9 @@ import {
   STATUS,
   MODULES,
   PERMISSIONS,
+  PAYMENT_STATUS,
+  PAYMENT_TYPES,
+  ORDER_STATUS,
 } from "../../contants/constants";
 import Loader from "../../components/Loader";
 import SkeletonLoader from "../../components/SkeletonLoader";
@@ -23,6 +26,7 @@ import { fetchResource } from "../../store/slices/allDataSlice";
 import { exportOrderReport } from "../../store/slices/exportSlice";
 import { ToastContainer } from "react-toastify";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
+import PaymentStatusBadge from "../../components/PaymentStatusBadge";
 import { showEmsg } from "../../utils/ShowEmsg";
 
 const OrderList = () => {
@@ -375,25 +379,55 @@ const OrderList = () => {
       } else {
         const orders = oResponse.data.data || [];
 
-        const formattedOrders = orders.map((order) => ({
-          orderId: order.OrderID,
-          orderRefId: order.OrderRefID,
-          formattedOrderDate: formatOrderDateTime(order.OrderDate),
-          totalAmount: order.TotalAmount,
-          formattedTotalAmount: formatCurrency(order.TotalAmount),
-          totalQuantity: order.totalQuantity,
-          totalOrderItems: order.totalOrderItems,
-          paymentStatus: order.PaymentStatusName || "N/A",
-          paymentDate: order.PaymentDate,
-          formattedPaymentDate: order.PaymentDate
-            ? formatOrderDateTime(order.PaymentDate)
-            : "N/A",
-          customerName: `${order.FirstName} ${order.LastName}`.trim(),
-          email: order.Email,
-          phoneNumber: order.PhoneNumber,
-          orderItems: order.orderItems || [],
-          order: order,
-        }));
+        const formattedOrders = orders.map((order) => {
+          // Helper function to determine order-level payment status
+          const getOrderPaymentStatus = (order) => {
+            const isCOD = order.PaymentTypeName?.toLowerCase().includes(PAYMENT_TYPES.COD_KEYWORDS.CASH_ON_DELIVERY) ||
+                         order.PaymentTypeName?.toLowerCase().includes(PAYMENT_TYPES.COD_KEYWORDS.COD) ||
+                         order.PaymentTypeName?.toLowerCase() === PAYMENT_TYPES.COD_KEYWORDS.CASH_ON_DELIVERY;
+            
+            if (isCOD && order.orderItems && order.orderItems.length > 0) {
+              // For COD orders, check delivery status of items
+              const deliveredItems = order.orderItems.filter(item => 
+                item.OrderStatus?.toLowerCase() === ORDER_STATUS.DELIVERED.toLowerCase()
+              );
+              
+              if (deliveredItems.length === order.orderItems.length) {
+                // All items delivered → Paid
+                return PAYMENT_STATUS.PAID;
+              } else if (deliveredItems.length > 0) {
+                // Some items delivered → Partially Paid  
+                return PAYMENT_STATUS.PARTIALLY_PAID;
+              } else {
+                // No items delivered → Pending
+                return PAYMENT_STATUS.PENDING;
+              }
+            }
+            
+            // For non-COD orders, use original payment status
+            return order.PaymentStatusName || t('COMMON.N_A');
+          };
+
+          return {
+            orderId: order.OrderID,
+            orderRefId: order.OrderRefID,
+            formattedOrderDate: formatOrderDateTime(order.OrderDate),
+            totalAmount: order.TotalAmount,
+            formattedTotalAmount: formatCurrency(order.TotalAmount),
+            totalQuantity: order.totalQuantity,
+            totalOrderItems: order.totalOrderItems,
+            paymentStatus: getOrderPaymentStatus(order),
+            paymentDate: order.PaymentDate,
+            formattedPaymentDate: order.PaymentDate
+              ? formatOrderDateTime(order.PaymentDate)
+              : "N/A",
+            customerName: `${order.FirstName} ${order.LastName}`.trim(),
+            email: order.Email,
+            phoneNumber: order.PhoneNumber,
+            orderItems: order.orderItems || [],
+            order: order,
+          };
+        });
 
         setOrders(formattedOrders);
         setTotalPages(oResponse.data.pagination?.totalPages || 0);
@@ -443,9 +477,12 @@ const OrderList = () => {
   const getPaymentStatusColor = useCallback((status) => {
     const statusClasses = {
       Pending: "status-pending",
+      Paid: "status-delivered",
       Completed: "status-delivered",
+      Success: "status-delivered",
+      "Partially Paid": "status-processing",
       Failed: "status-cancelled",
-      Refunded: "status-cancelled",
+      Refunded: "status-refunded",
       Processing: "status-processing",
     };
     return statusClasses[status] || "status-default";
@@ -719,13 +756,16 @@ const OrderList = () => {
                                           {t("COMMON.QUANTITY")}:{" "}
                                           {item.Quantity}
                                         </div>
-                                        <span
-                                          className={`status-badge ${getOrderItemStatusColor(
-                                            item.OrderStatus
-                                          )}`}
-                                        >
-                                          {item.OrderStatus}
-                                        </span>
+                                        <div className="flex flex-col space-y-1">
+                                          <span
+                                            className={`status-badge ${getOrderItemStatusColor(
+                                              item.OrderStatus
+                                            )}`}
+                                          >
+                                            {item.OrderStatus}
+                                          </span>
+                                          <PaymentStatusBadge item={item} />
+                                        </div>
                                       </div>
                                     </div>
                                   ))}
@@ -765,7 +805,7 @@ const OrderList = () => {
                     {order.orderId}
                   </div>
                   <span
-                    className={`px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${getPaymentStatusColor(
+                    className={`status-badge text-xs ${getPaymentStatusColor(
                       order.paymentStatus
                     )}`}
                   >

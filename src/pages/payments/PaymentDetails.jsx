@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import BackButton from "../../components/BackButton";
 import { apiGet } from "../../utils/ApiUtils";
 import { GET_PAYMENT_BYID } from "../../contants/apiRoutes";
-import { DATE_FORMAT_OPTIONS, LOCALE, STATUS } from "../../contants/constants";
+import { DATE_FORMAT_OPTIONS, LOCALE, STATUS, PAYMENT_STATUS } from "../../contants/constants";
 
 const PaymentDetails = () => {
   const { id } = useParams();
@@ -81,13 +81,13 @@ const PaymentDetails = () => {
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case "pending":
+      case PAYMENT_STATUS.PENDING.toLowerCase():
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "success":
-      case "completed":
+      case PAYMENT_STATUS.SUCCESS.toLowerCase():
+      case PAYMENT_STATUS.COMPLETED.toLowerCase():
         return "bg-green-100 text-green-800 border-green-200";
-      case "failed":
-      case "cancelled":
+      case PAYMENT_STATUS.FAILED.toLowerCase():
+      case PAYMENT_STATUS.CANCELLED.toLowerCase():
         return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";

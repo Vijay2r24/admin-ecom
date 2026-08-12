@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
+import { ORDER_STATUS } from "../../contants/constants";
 
 const StatusBadge = ({ status }) => {
+  const { t } = useTranslation();
   const { data: orderStatusData } = useSelector((state) => state.allData.resources.orderStatuses || {});
 
   const orderStatusArray = useMemo(() => {
@@ -20,6 +23,14 @@ const StatusBadge = ({ status }) => {
     (statusItem) => statusItem.OrderStatus === status
   )?.Colour?.HexCode || "#6b7280";
 
+  // Get translated status name
+  const getTranslatedStatus = (status) => {
+    const statusKey = Object.keys(ORDER_STATUS).find(
+      key => ORDER_STATUS[key].toLowerCase() === status?.toLowerCase()
+    );
+    return statusKey ? t(`ORDER_STATUS.${statusKey}`) : status;
+  };
+
   return (
     <span
       className="px-3 py-1.5 rounded-full text-white text-xs font-medium flex items-center justify-center min-w-[80px]"
@@ -28,7 +39,7 @@ const StatusBadge = ({ status }) => {
         boxShadow: `0 2px 4px ${statusColor}40`,
       }}
     >
-      {status}
+      {getTranslatedStatus(status)}
     </span>
   );
 };

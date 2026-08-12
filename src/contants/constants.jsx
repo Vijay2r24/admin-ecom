@@ -293,6 +293,50 @@ export const PLAN_LIMIT_LOGIN_FIELDS_BY_RESOURCE = {
   [PLAN_LIMIT_RESOURCE.BANNERS]: ["MAX_BANNERS", "MaxBanners", "BannerLimit", "maxBanners"],
   [PLAN_LIMIT_RESOURCE.ROLES]: ["MAX_ROLES", "MaxRoles", "RoleLimit", "maxRoles"],
 };
+export const PAYMENT_STATUS = {
+  PENDING: "Pending",
+  PAID: "Paid", 
+  COMPLETED: "Completed",
+  SUCCESS: "Success",
+  FAILED: "Failed",
+  REJECTED: "Rejected",
+  CANCELLED: "Cancelled",
+  PROCESSING: "Processing",
+  IN_PROGRESS: "In Progress",
+  REFUNDED: "Refunded",
+  PARTIALLY_PAID: "Partially Paid"
+};
+
+export const PAYMENT_STATUS_IDS = {
+  PENDING: 1,
+  PAID: 2,
+  COMPLETED: 3,
+  SUCCESS: 4,
+  FAILED: 5,
+  REJECTED: 6,
+  CANCELLED: 7,
+  PROCESSING: 8,
+  IN_PROGRESS: 9,
+  REFUNDED: 10,
+  PARTIALLY_PAID: 11
+};
+
+export const PAYMENT_TYPES = {
+  CASH_ON_DELIVERY: "Cash On Delivery",
+  COD: "COD",
+  CREDIT_CARD: "Credit Card",
+  DEBIT_CARD: "Debit Card", 
+  NET_BANKING: "Net Banking",
+  UPI: "UPI",
+  WALLET: "Wallet",
+  RAZORPAY: "Razorpay",
+  STRIPE: "Stripe",
+  COD_KEYWORDS: {
+    CASH_ON_DELIVERY: "cash on delivery",
+    COD: "cod"
+  }
+};
+
 export const ORDER_STATUS = {
   DELIVERED: "Delivered",
   PENDING: "Pending",

@@ -1388,6 +1388,26 @@
     "NO_DATA": "No data received from server.",
     "FAILED": "Export failed."
   },
+
+  "PAYMENT_TYPES": {
+    "CASH_ON_DELIVERY": "Cash On Delivery",
+    "COD": "COD",
+    "CREDIT_CARD": "Credit Card",
+    "DEBIT_CARD": "Debit Card",
+    "NET_BANKING": "Net Banking", 
+    "UPI": "UPI",
+    "WALLET": "Wallet",
+    "RAZORPAY": "Razorpay",
+    "STRIPE": "Stripe"
+  },
+  "ORDER_STATUS": {
+    "DELIVERED": "Delivered",
+    "PENDING": "Pending", 
+    "CANCELLED": "Cancelled",
+    "SHIPPED": "Shipped",
+    "RETURNED": "Returned",
+    "PROCESSING": "Processing"
+  },
   "COMMON": {
     "TOTAL_ORDER_ITEMS": "Order Items",
     "UPDATE_STATUS": "Active",
