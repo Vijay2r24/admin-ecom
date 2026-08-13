@@ -96,56 +96,79 @@ const AddStore = () => {
 
   // Live validation functions - UPDATED to handle loading states
   const validateName = (name) => {
+   
     if (!name.trim()) {
+    
       return t("STORES.VALIDATION.STORE_NAME");
     }
     if (name.trim().length < 2) {
+      
       return t("STORES.VALIDATION.STORE_NAME_MIN");
     }
     if (name.trim().length > 100) {
+     
       return t("STORES.VALIDATION.STORE_NAME_MAX");
     }
+   
     return "";
   };
 
   const validateAddress = (address) => {
+   
     if (!address.trim()) {
+     
       return t("STORES.VALIDATION.ADDRESS");
     }
-    if (address.trim().length < 10) {
+    if (address.trim().length < 5) {  // Changed from 10 to 5 characters
+      
       return t("STORES.VALIDATION.ADDRESS_MIN");
     }
+    
     return "";
   };
 
   const validateZipCode = (zipCode) => {
+    
     if (!zipCode.trim()) {
+     
       return t("STORES.VALIDATION.ZIP_CODE");
     }
     const zipRegex = /^[A-Z0-9\s-]{3,10}$/i;
     if (!zipRegex.test(zipCode.trim())) {
+      
       return t("STORES.VALIDATION.ZIP_CODE_INVALID");
     }
+    
     return "";
   };
 
   const validateEmail = (email) => {
+   
     if (!email.trim()) {
+      
       return t("STORES.VALIDATION.EMAIL");
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
+ 
       return t("STORES.VALIDATION.EMAIL_INVALID");
     }
+    
     return "";
   };
 
   const validatePhone = (phone) => {
+
+    
     if (!phone || typeof phone !== "string" || !phone.trim()) {
       return t("STORES.VALIDATION.PHONE");
     }
-
-    if (!isValidPhoneNumber(phone)) {
+ 
+    try {
+      if (!isValidPhoneNumber(phone)) {
+        return t("STORES.VALIDATION.PHONE_INVALID");
+      }
+    } catch (error) {
       return t("STORES.VALIDATION.PHONE_INVALID");
     }
 
@@ -643,6 +666,7 @@ const AddStore = () => {
 
   // UPDATED: validateForm function with loading state consideration
   const validateForm = useCallback(() => {
+    
     const newErrors = {};
 
     newErrors.name = validateName(oFormData.name);
@@ -661,6 +685,7 @@ const AddStore = () => {
     const filteredErrors = Object.fromEntries(
       Object.entries(newErrors).filter(([_, v]) => v !== "" && v !== undefined)
     );
+
 
     setErrors(filteredErrors);
 
@@ -682,7 +707,8 @@ const AddStore = () => {
       state: true, city: true,
     });
 
-    return Object.keys(filteredErrors).length === 0;
+    const isValid = Object.keys(filteredErrors).length === 0;
+    return isValid;
   }, [oFormData, isFormDataLoading]);
 
   const handleClose = useCallback(() => {
@@ -693,7 +719,10 @@ const AddStore = () => {
     async (e) => {
       e?.preventDefault();
 
-      if (!validateForm()) return;
+
+      if (!validateForm()) {
+        return;
+      }
 
       setbSubmitting(true);
       const token = localStorage.getItem("token");
@@ -746,6 +775,7 @@ const AddStore = () => {
         TenantID: localStorage.getItem("tenantID"),
       };
 
+
       try {
         let oResponse;
 
@@ -755,12 +785,15 @@ const AddStore = () => {
           oResponse = await apiPost(CREATE_STORE, payload, token);
         }
 
+
         if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
-          showEmsg(oResponse.data?.message, STATUS.SUCCESS, 3000, async () => {
+          showEmsg(oResponse.data?.message || t("STORES.STORE_CREATED_SUCCESSFULLY"), STATUS.SUCCESS, 3000, async () => {
             navigate("/stores");
           });
         } else if (oResponse) {
-          showEmsg(oResponse.data?.message, STATUS.WARNING);
+          showEmsg(oResponse.data?.message || t("COMMON.OPERATION_FAILED"), STATUS.WARNING);
+        } else {
+          showEmsg(t("COMMON.NO_RESPONSE"), STATUS.ERROR);
         }
       } catch (err) {
         showEmsg(
@@ -781,6 +814,7 @@ const AddStore = () => {
       countriesData.data,
       statesData.data,
       citiesData.data,
+      oErrors,
     ]
   );
 
@@ -971,9 +1005,12 @@ const AddStore = () => {
       {/* Floating Footer */}
       <FloatingFooter
         onCancel={handleClose}
-        onSubmit={handleSubmit}
+        onSubmit={(e) => {
+          handleSubmit(e);
+        }}
         isSubmitting={bSubmitting}
         isEditMode={!!id}
+        submitDisabled={bSubmitting || isFormDataLoading}
       />
     </div>
   );

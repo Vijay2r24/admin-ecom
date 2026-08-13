@@ -1,4 +1,6 @@
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+
 export const LOGIN = `/adminlogin`;
 export const FORGOT_USER_PASSWORD = `/forgotUserPassword`;
 export const VALIDATE_OTP = `/validateUserOtp`;

@@ -12,7 +12,7 @@ import mobile from "../../assets/images/mobile.jpg";
 import { useTitle } from "../context/TitleContext";
 import { useTranslation } from "react-i18next";
 import { CUSTOM_COLORS,STATUS } from "../contants/constants";
-import { apiPatch, apiGet } from "../utils/ApiUtils";
+import { apiPatch, apiGet, apiPost } from "../utils/ApiUtils";
 import { UPDATE_TENANT_THEME, UPDATE_TENANT_LOGO, GET_TENANT_SETTINGS } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
 import Loader from "../components/Loader";
@@ -52,28 +52,96 @@ const ThemeSettings = () => {
     }
   };
 
+  // Create initial tenant settings if they don't exist
+  const createTenantSettings = async () => {
+    try {
+      const tenantId = getTenantId();
+      if (!tenantId) {
+        return null;
+      }
+      
+      
+      const payload = {
+        TenantID: tenantId,
+        ThemeColour: CUSTOM_COLORS.primary, // Default theme color
+      };
+      
+      
+      // Try to create tenant settings using POST without tenantId in URL
+      const response = await apiPost(UPDATE_TENANT_THEME, payload);
+      
+      if (response?.data) {
+        return response.data;
+      }
+      return null;
+    } catch (error) {
+      
+      // Try alternative approach - POST to the URL with tenantId
+      try {
+        const tenantId = getTenantId();
+        const altPayload = {
+          TenantID: tenantId,
+          ThemeColour: primaryColor || CUSTOM_COLORS.primary,
+        };
+        
+        const altResponse = await apiPost(`${UPDATE_TENANT_THEME}/${tenantId}`, altPayload);
+        return altResponse?.data;
+      } catch (altError) {
+      }
+      
+      return null;
+    }
+  };
+
   const updateThemeColor = async () => {
     try {
       setLoading(true);
       const tenantId = getTenantId();
       
-      const response = await apiPatch(
-        `${UPDATE_TENANT_THEME}/${tenantId}`,
-        { ThemeColour: primaryColor, TenantSettingID: tenantSettingId }
-      );
+      if (!tenantId) {
+        showEmsg(t("THEMESETTINGS.NO_TENANT_ID"), STATUS.ERROR);
+        return;
+      }
       
-      // Check if response exists and has data
+      
+      const payload = { 
+        ThemeColour: primaryColor, 
+        TenantID: tenantId
+      };
+      
+      if (tenantSettingId) {
+        payload.TenantSettingID = tenantSettingId;
+      }
+      
+      // Try PATCH request
+      const response = await apiPatch(`${UPDATE_TENANT_THEME}/${tenantId}`, payload);
+      
       if (response && response.data) {
-        const message = response.data.message;
-        
-        // Try with different duration and position
-        showEmsg(message, STATUS.SUCCESS); // 5 seconds duration
-      } else {
-        showEmsg(response.data.message, STATUS.SUCCESS); // 5 seconds duration
+        const message = response.data.message || t("THEMESETTINGS.THEME_UPDATE_SUCCESS");
+        showEmsg(message, STATUS.SUCCESS);
+        await getTenantSettings();
       }
     } catch (error) {
-      const errorMessage = error?.message;
-      showEmsg(errorMessage, STATUS.ERROR); // 5 seconds duration
+      
+      // Show clear error message about backend issue
+      if (error?.response?.status === 404) {
+        if (error?.response?.data?.message?.includes("not found")) {
+          showEmsg(
+           
+            STATUS.ERROR
+          );
+        } else {
+          showEmsg(
+          
+            STATUS.ERROR
+          );
+        }
+      } else {
+        const errorMessage = error?.response?.data?.message || 
+                             error?.message || 
+                             t("THEMESETTINGS.THEME_UPDATE_ERROR");
+        showEmsg(errorMessage, STATUS.ERROR);
+      }
     } finally {
       setLoading(false);
     }
@@ -93,6 +161,13 @@ const ThemeSettings = () => {
     try {
       setLoading(true);
       const tenantId = getTenantId();
+      
+      if (!tenantId) {
+        showEmsg(t("THEMESETTINGS.NO_TENANT_ID"), STATUS.ERROR);
+        return;
+      }
+      
+      
       const formData = new FormData();
       formData.append('data', JSON.stringify({
         TenantID: tenantId,
@@ -104,6 +179,7 @@ const ThemeSettings = () => {
       }));
       formData.append('application_logo', logoFile);
 
+
       const response = await apiPatch(
         `${UPDATE_TENANT_LOGO}/${tenantId}`,
         formData,
@@ -111,15 +187,19 @@ const ThemeSettings = () => {
         true
       );
       
+      
       // Check if response exists and has data
       if (response && response.data) {
-        const message = response.data.message;
+        const message = response.data.message || t("THEMESETTINGS.LOGO_UPDATE_SUCCESS");
         showEmsg(message, STATUS.SUCCESS);
       } else {
-        showEmsg(response.data.message, STATUS.SUCCESS);
+        showEmsg(t("THEMESETTINGS.LOGO_UPDATE_SUCCESS"), STATUS.SUCCESS);
       }
     } catch (error) {
-      const errorMessage = error?.message;
+      
+      const errorMessage = error?.response?.data?.message || 
+                           error?.message || 
+                           t("THEMESETTINGS.LOGO_UPDATE_ERROR");
       showEmsg(errorMessage, STATUS.ERROR);
     } finally {
       setLoading(false);
@@ -160,6 +240,7 @@ const ThemeSettings = () => {
         }
       }
       
+      
       if (settings) {
         // Store TenantSettingID for theme updates
         if (settings.TenantSettingID) {
@@ -178,8 +259,20 @@ const ThemeSettings = () => {
             setCurrentLogoDocumentId(settings.Logo.documentId);
           }
         }
+      } else {
+        // Try to create initial tenant settings
+        await createTenantSettings();
+        
+        // Try to fetch again after creation
+        setTimeout(() => getTenantSettings(), 1000);
       }
     } catch (error) {
+      
+      // If settings not found, try to create them
+      if (error?.response?.status === 404 || 
+          error?.response?.data?.message?.includes("not found")) {
+        await createTenantSettings();
+      }
     }
   };
 
@@ -279,6 +372,7 @@ const ThemeSettings = () => {
                {t("COMMON.UPDATE_LOGO")}
             </button>
           </div>
+          
           <button
             onClick={handleReset}
             className="w-full mt-3 bg-gray-200 hover:bg-gray-300 rounded-lg py-2 text-sm text-gray-700 font-semibold transition-colors shadow-sm"

@@ -33,6 +33,8 @@ const CreateReason = () => {
       cat.ParentCategoryID !== ''
   );
 
+ 
+
   const [bSubmitting, setBSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     categoryIDs: [],
@@ -65,16 +67,26 @@ const CreateReason = () => {
   /* ── load existing reason for edit ── */
   useEffect(() => {
     if (!isEditing) return;
+    
     const load = async () => {
       try {
         setBSubmitting(true);
+        
         const response = await apiGet(`${GET_REASONSBYID}/${reasonId}`);
-        if (response?.data?.status === STATUS.SUCCESS && response?.data?.data) {
+        
+        // More robust success check for edit API
+        const isSuccess = response?.data?.status === STATUS.SUCCESS ||
+                         response?.data?.status?.toLowerCase() === STATUS.SUCCESS.toLowerCase() ||
+                         response?.status === 200;
+        
+        if (isSuccess && response?.data?.data) {
           const r = response.data.data;
+          
           const categoryIDs = (r.Categories || [])
             .sort((a, b) => a.SortOrder - b.SortOrder)
             .map(c => c.CategoryID);
-          setFormData({
+          
+          const newFormData = {
             categoryIDs,
             reasonType:         r.ReasonType,
             reasonCode:         r.ReasonCode,
@@ -82,9 +94,13 @@ const CreateReason = () => {
             reasonDescription:  r.ReasonDescription || '',
             requiresComment:    r.RequiresComment    ? YES_NO_VALUES.YES : YES_NO_VALUES.NO,
             requiresAttachment: r.RequiresAttachment ? YES_NO_VALUES.YES : YES_NO_VALUES.NO,
-          });
+          };
+          
+          setFormData(newFormData);
+        } else {
+          showEmsg(t('REASON_MANAGEMENT.ERROR_FETCH_DETAILS'), STATUS.ERROR);
         }
-      } catch {
+      } catch (error) {
         showEmsg(t('REASON_MANAGEMENT.ERROR_FETCH_DETAILS'), STATUS.ERROR);
       } finally {
         setBSubmitting(false);
@@ -122,23 +138,36 @@ const CreateReason = () => {
         ? await apiPut(`${UPDATE_REASON}/${reasonId}`, payload)
         : await apiPost(CREATE_REASON, payload);
 
-      const status = (response?.data?.status ?? '').toUpperCase();
-      if (status === STATUS.SUCCESS.toUpperCase()) {
-        showEmsg(
-          response?.data?.message ||
-            (isEditing
-              ? t('REASON_MANAGEMENT.SUCCESS_UPDATE')
-              : t('REASON_MANAGEMENT.SUCCESS_CREATE')),
-          'success',
-          3000,
-          () => navigate('/cancellations')
-        );
-      } else if (response !== undefined) {
-        showEmsg(
-          response?.data?.message || t('REASON_MANAGEMENT.ERROR_CREATE'),
-          STATUS.ERROR,
-          3000
-        );
+      // Check multiple possible success indicators
+      const apiStatus = response?.data?.status;
+      const httpStatus = response?.status;
+      const isApiSuccess = apiStatus && (
+        apiStatus.toLowerCase() === STATUS.SUCCESS.toLowerCase() ||
+        apiStatus.toLowerCase() === 'ok' ||
+        apiStatus === '200' ||
+        apiStatus === 200
+      );
+      const isHttpSuccess = httpStatus >= 200 && httpStatus < 300;
+      const hasData = response?.data !== undefined;
+      
+      const isSuccess = isApiSuccess || (isHttpSuccess && hasData);
+      
+      if (isSuccess) {
+        const successMessage = response?.data?.message ||
+          (isEditing
+            ? t('REASON_MANAGEMENT.SUCCESS_UPDATE')
+            : t('REASON_MANAGEMENT.SUCCESS_CREATE')) ||
+          t('COMMON.OPERATION_COMPLETED_SUCCESSFULLY');
+            
+        showEmsg(successMessage, STATUS.SUCCESS, 3000, () => {
+          navigate('/cancellations');
+        });
+        
+      } else {
+        const errorMessage = response?.data?.message || 
+                            t('REASON_MANAGEMENT.ERROR_CREATE') || 
+                            t('COMMON.OPERATION_FAILED');
+        showEmsg(errorMessage, STATUS.ERROR, 3000);
       }
     } catch (err) {
       showEmsg(
@@ -174,6 +203,23 @@ const CreateReason = () => {
       )}
 
       <ToastContainer />
+
+      {/* Loading state for edit mode */}
+      {isEditing && bSubmitting && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-blue-700">{t('COMMON.LOADING_REASON_DETAILS')}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Page Header */}
       <div className="flex items-center mb-6">

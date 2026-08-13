@@ -143,8 +143,21 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
 
     abortControllers.set(key, controller);
   }
-
-  const tenantDomain = window.location.hostname === "localhost"
+const createApiInstance = (token, isFormData) => {
+  return axios.create({
+    baseURL: BASE_URL,
+    headers: {
+      'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+      Accept: 'application/json',
+      'tenant-domain': TENANT_DOMAIN,
+      ...(token && {Authorization: `Bearer ${token}`}),
+    },
+  });
+};
+ 
+  // For local development, use the tenant domain from env, for production use the actual hostname
+  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const tenantDomain = isLocalhost
     ? (import.meta.env.VITE_TENANT_DOMAIN || "ecommerce-qa.admin.b2yinfy.com")
     : window.location.hostname;
 
@@ -165,7 +178,18 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       config.headers["Authorization"] = `Bearer ${lsToken}`;
     }
 
-    config.headers["tenant-domain"] = tenantDomain;
+    // Ensure tenant-domain is consistently set for both localhost and production
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const currentTenantDomain = isLocalhost
+      ? (import.meta.env.VITE_TENANT_DOMAIN || "ecommerce-qa.admin.b2yinfy.com")
+      : window.location.hostname;
+    
+    config.headers["tenant-domain"] = currentTenantDomain;
+
+    // Debug logging for login issues
+    if (config.url?.includes('/adminlogin')) {
+    
+    }
 
     return config;
   });
@@ -176,6 +200,11 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       // Clean up abort controller on successful response
       if (key) {
         abortControllers.delete(key);
+      }
+
+      // Debug logging for login responses
+      if (response.config?.url?.includes('/adminlogin')) {
+        
       }
 
       const status = (response?.data?.status ?? "").toString().toLowerCase();
@@ -210,7 +239,7 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
           normalized.includes("account has been deactivated")
         ) {
           if (!isLoginPage()) {
-            console.error("User inactive/deactivated - triggering IdleLogout");
+           
             const logoutEvent = new CustomEvent('triggerIdleLogout', { 
               detail: { message: msg, fallbackText: "Account inactive - session timeout" } 
             });
@@ -256,6 +285,11 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
       // Clean up abort controller on error response
       if (key) {
         abortControllers.delete(key);
+      }
+
+      // Debug logging for login errors
+      if (error.config?.url?.includes('/adminlogin')) {
+        
       }
 
       const httpStatus = error?.response?.status;

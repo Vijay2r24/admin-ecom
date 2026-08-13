@@ -24,7 +24,8 @@ import {
   GET_COUNTRIES,
   GET_STATES_BY_COUNTRY,
   GET_CITIES_BY_STATE,
-  GET_ALL_SPECIFICATIONS
+  GET_ALL_SPECIFICATIONS,
+  BASE_URL
 } from "../../contants/apiRoutes";
 import { GET_ALL_PACKAGING_BOXES, GET_WEIGHT_UNITS } from "../../contants/apiRoutes";
 import { STATUS } from "../../contants/constants";
@@ -171,12 +172,12 @@ export const updateStatusById = createAsyncThunk(
           payload,
           message: getApiResponseMessage(
             response.data,
-            "Status updated successfully."
+            "COMMON.STATUS_UPDATED_SUCCESSFULLY"
           ),
         };
       } else {
         throw new Error(
-          getApiResponseMessage(response?.data) || "Failed to update status"
+          getApiResponseMessage(response?.data) || "COMMON.FAILED_TO_UPDATE_STATUS"
         );
       }
     } catch (err) {
@@ -203,11 +204,11 @@ export const fetchUserDetails = createAsyncThunk(
         }
         return userData;
       } else {
-        throw new Error(response?.data?.message || "Failed to fetch user details");
+        throw new Error(response?.data?.message || "COMMON.FAILED_TO_FETCH_USER_DETAILS");
       }
     } catch (err) {
       localStorage.removeItem("userDetails");
-      return rejectWithValue(err.message);
+      return rejectWithValue(err?.response?.data?.message || err?.message || "COMMON.API_CALL_FAILED");
     }
   }
 );
@@ -410,7 +411,7 @@ const allDataSlice = createSlice({
       .addCase(fetchUserDetails.rejected, (state, action) => {
         state.userDetailsLoading = false;
         state.userDetails = null;
-        state.userDetailsError = action.payload || "Failed to fetch user details";
+        state.userDetailsError = action.payload || "COMMON.FAILED_TO_FETCH_USER_DETAILS";
       })
 
       // FETCH STATES BY COUNTRY ID lifecycle
@@ -434,7 +435,7 @@ const allDataSlice = createSlice({
         state.resources.states = {
           ...state.resources.states,
           loading: false,
-          error: action.payload?.error || "Failed to fetch states",
+          error: action.payload?.error || "COMMON.FAILED_TO_FETCH_STATES",
         };
       })
 
@@ -460,7 +461,7 @@ const allDataSlice = createSlice({
         state.resources.cities = {
           ...state.resources.cities,
           loading: false,
-          error: action.payload?.error || "Failed to fetch cities",
+          error: action.payload?.error || "COMMON.FAILED_TO_FETCH_CITIES",
         };
       });
   },

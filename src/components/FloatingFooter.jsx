@@ -61,7 +61,10 @@ const FloatingFooter = ({
             actionType ? (
               <CreateButton
                 actionType={actionType}
-                onClick={onSubmit}
+                onClick={(e) => {
+           
+                  if (onSubmit) onSubmit(e);
+                }}
                 loading={isSubmitting}
                 disabled={submitDisabled}
                 className="truncate w-full sm:w-auto px-3 py-1.5 text-sm"
@@ -75,7 +78,10 @@ const FloatingFooter = ({
                 className="btn-primary truncate w-full sm:w-auto px-3 py-1.5 text-sm hover:bg-hover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
                 disabled={isSubmitting || submitDisabled}
-                onClick={onSubmit}
+                onClick={(e) => {
+                 
+                  if (onSubmit) onSubmit(e);
+                }}
               >
                 {defaultSubmitLabel}
               </button>
