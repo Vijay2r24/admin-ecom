@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import Toolbar from "../../components/Toolbar";
@@ -34,7 +34,7 @@ import EmptyState from "../../components/EmptyState";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
 import { MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE,ACTION_TYPES } from "../../contants/constants.jsx";
 import { useCreateAccess } from "../../hooks/useCreateAccess";
-import { updatePlanResourceUsage } from "../../utils/planAccessUtils";
+import { updatePlanResourceUsage, getPlanResourceUsage } from "../../utils/planAccessUtils";
 import PlanUsageDonut from "../../components/PlanUsageDonut";
 import PlanLimitToast from "../../components/PlanLimitToast";
 
@@ -66,8 +66,44 @@ const getFirstImage = (productVariantImages) => {
 
 const getBrandName = (product) => product.BrandName || "N/A";
 
+const getProductId = (product) =>
+  product?.ProductID || product?.ProductId || product?.productId || product?.productID || null;
+
+const getPaginationValue = (pagination, keys, fallback = 0) => {
+  if (!pagination || typeof pagination !== "object") return fallback;
+  for (const key of keys) {
+    if (pagination[key] != null && pagination[key] !== "") {
+      const value = Number(pagination[key]);
+      if (!Number.isNaN(value)) return value;
+    }
+  }
+  return fallback;
+};
+
+const productMatchesSearch = (product, term) => {
+  const query = String(term || "").trim().toLowerCase();
+  if (!query) return true;
+  const fields = [
+    product.ProductName,
+    product.CategoryName,
+    product.subCategory,
+    product.brandName,
+    product.BrandName,
+    product.SKU,
+    product.Sku,
+    product.ProductSKU,
+  ];
+  if (Array.isArray(product.Variants)) {
+    product.Variants.forEach((variant) => {
+      fields.push(variant?.SKU, variant?.Sku, variant?.VariantName, variant?.ProductVariantName);
+    });
+  }
+  return fields.some((value) => String(value || "").toLowerCase().includes(query));
+};
+
 const ProductList = () => {
   const [sSearchTerm, setSearchTerm] = useState("");
+  const [sDebouncedSearch, setDebouncedSearch] = useState("");
   const [sViewMode, setViewMode] = useState("table");
   const [nCurrentPage, setCurrentPage] = useState(1);
   const { t } = useTranslation();
@@ -88,6 +124,8 @@ const ProductList = () => {
   const [exportLoading, setExportLoading] = useState(false);
   const [tableScrollTop, setTableScrollTop] = useState(0);
   const dispatch = useDispatch();
+  const fetchIdRef = useRef(0);
+  const initialLoadCompleteRef = useRef(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -131,18 +169,29 @@ const ProductList = () => {
 
   const handleEdit = (productId) => navigate(`/edit-product/${productId}`);
 
+  const hasActiveFilters =
+    (oFilters.status && oFilters.status !== "all") ||
+    (Array.isArray(oFilters.brand) && oFilters.brand.length > 0) ||
+    (Array.isArray(oFilters.category) && oFilters.category.length > 0);
+
   const fetchProducts = useCallback(async () => {
+    const fetchId = ++fetchIdRef.current;
     try {
-      setLoading(true);
+      const searchText = sDebouncedSearch.trim();
+      if (!initialLoadCompleteRef.current || !searchText) {
+        setLoading(true);
+      }
       setError(null);
       const token = localStorage.getItem("token");
 
       const params = {
         pageNumber: nCurrentPage,
         pageSize: itemsPerPage,
-        searchText: sSearchTerm,
         isUserProductList: true,
       };
+      if (searchText) {
+        params.searchText = searchText;
+      }
 
       if (oFilters.status && oFilters.status !== "all") {
         params.IsActive = oFilters.status === "true" ? true : false;
@@ -161,7 +210,10 @@ const ProductList = () => {
       }
 
       const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
-      const resData = oResponse?.data;
+      if (fetchId !== fetchIdRef.current) return;
+      if (!oResponse?.data) return;
+
+      const resData = oResponse.data;
 
       if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const rawProducts = Array.isArray(resData.data) ? resData.data : [];
@@ -169,8 +221,7 @@ const ProductList = () => {
           const variants = Array.isArray(product.Variants) ? product.Variants : [];
           const firstVariant = variants.find((v) => v.IsActive) || variants[0] || {};
           const stock = getTotalStock(firstVariant);
-          const productId = product.ProductID || product.ProductId;
-          // IsActive: use product root if present, else derive from variants
+          const productId = getProductId(product);
           const isActive = product.IsActive !== undefined && product.IsActive !== null
             ? Boolean(product.IsActive)
             : variants.length > 0
@@ -188,11 +239,24 @@ const ProductList = () => {
             status: isActive && stock > 0 ? "active" : "out-of-stock",
           };
         });
+        const pagination = resData.pagination || resData.Pagination || {};
+        let totalRecords = getPaginationValue(pagination, ["totalRecords", "TotalRecords"], 0);
+        let totalPages = getPaginationValue(pagination, ["totalPages", "TotalPages"], 0);
+        const isUnfilteredList = !searchText && !hasActiveFilters;
+
+        if (totalRecords === 0 && transformedProducts.length > 0 && isUnfilteredList) {
+          totalRecords = transformedProducts.length;
+        }
+        if (totalPages === 0 && totalRecords > 0) {
+          totalPages = Math.max(1, Math.ceil(totalRecords / itemsPerPage));
+        }
+
         setProducts(transformedProducts);
-        const totalRecords = resData.pagination?.totalRecords || 0;
         setTotalItems(totalRecords);
-        setTotalPages(resData.pagination?.totalPages || 0);
-        updatePlanResourceUsage(PLAN_LIMIT_RESOURCE.PRODUCTS, totalRecords);
+        setTotalPages(totalPages);
+        if (isUnfilteredList) {
+          updatePlanResourceUsage(PLAN_LIMIT_RESOURCE.PRODUCTS, totalRecords);
+        }
       } else {
         setError(resData?.message || t("COMMON.API_ERROR"));
         setProducts([]);
@@ -200,6 +264,7 @@ const ProductList = () => {
         setTotalPages(0);
       }
     } catch (err) {
+      if (fetchId !== fetchIdRef.current) return;
       if (err?.response?.status === 403) {
         setProducts([]);
         setTotalItems(0);
@@ -211,10 +276,21 @@ const ProductList = () => {
       setTotalItems(0);
       setTotalPages(0);
     } finally {
-      setLoading(false);
-      setFilterLoading(false);
+      if (fetchId === fetchIdRef.current) {
+        setLoading(false);
+        setFilterLoading(false);
+        initialLoadCompleteRef.current = true;
+        setInitialLoadComplete(true);
+      }
     }
-  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]);
+  }, [
+    nCurrentPage,
+    itemsPerPage,
+    sDebouncedSearch,
+    oFilters,
+    t,
+    hasActiveFilters,
+  ]);
 
   useEffect(() => {
     setInitialLoading(true);
@@ -229,6 +305,14 @@ const ProductList = () => {
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
   useEffect(() => { setTitle(t("PRODUCTS.TITLE")); }, [setTitle, t]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(sSearchTerm);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [sSearchTerm]);
 
   const categoryOptions = [
     ...categories.map((cat) => ({ value: cat.CategoryName, label: cat.CategoryName })),
@@ -311,7 +395,18 @@ const ProductList = () => {
   const handleNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, nTotalPages));
   const handlePageClick = (page) => setCurrentPage(page);
 
-  useEffect(() => { setCurrentPage(1); }, [sSearchTerm, oFilters]);
+  const displayedProducts = useMemo(
+    () => aProducts.filter((product) => productMatchesSearch(product, sSearchTerm)),
+    [aProducts, sSearchTerm]
+  );
+
+  const planUsageCount = useMemo(() => {
+    const storedUsage = getPlanResourceUsage(PLAN_LIMIT_RESOURCE.PRODUCTS);
+    if (sSearchTerm.trim() || hasActiveFilters) {
+      return storedUsage ?? nTotalItems;
+    }
+    return nTotalItems || storedUsage || 0;
+  }, [sSearchTerm, hasActiveFilters, nTotalItems]);
 
   const handleStatusChange = (productId, currentIsActive) => {
     setStatusPopup({ open: true, productId, newStatus: !currentIsActive });
@@ -373,7 +468,7 @@ const ProductList = () => {
         extraContent={
           <PlanUsageDonut
             resourceKey={PLAN_LIMIT_RESOURCE.PRODUCTS}
-            currentUsage={nTotalItems}
+            currentUsage={planUsageCount}
             label={t("PRODUCTS.PLAN_RESOURCE_LABEL")}
           />
         }
@@ -404,16 +499,16 @@ const ProductList = () => {
                       {sError}
                     </td>
                   </tr>
-                ) : aProducts.length === 0 ? (
+                ) : displayedProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={5}>
+                    <td colSpan={5} className="overflow-hidden">
                       <EmptyState type="products" title={t("PRODUCTS.NO_PRODUCTS")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
                     </td>
                   </tr>
                 ) : (
-                  aProducts.map((product) => (
+                  displayedProducts.map((product, index) => (
                     <tr
-                      key={product.ProductID}
+                      key={product.ProductID ?? `product-${index}`}
                       className={`table-row transition-shadow ${
                         product.IsActive ? "bg-emerald-50/20" : "bg-gray-50"
                       }`}
@@ -473,22 +568,26 @@ const ProductList = () => {
           </div>
         </div>
       ) : (
-        <div className="grid-container-floating">
+        <div className="grid-container-floating flex-1 min-h-0">
           <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
-          {isLoading ? (
-              <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={6} />
+            {isLoading ? (
+              <div className="p-4">
+                <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={6} />
+              </div>
+            ) : sError ? (
+              <div className="text-center py-8 text-gray-500">{sError}</div>
+            ) : displayedProducts.length === 0 ? (
+              <EmptyState
+                type="products"
+                title={t("PRODUCTS.NO_PRODUCTS")}
+                description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                compact
+              />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                {sError ? (
-                  <div className="col-span-full text-center py-8 text-gray-500">
-                    {sError}
-                  </div>
-                ) : aProducts.length === 0 ? (
-                  <EmptyState type="products" title={t("PRODUCTS.NO_PRODUCTS")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
-                ) : (
-                  aProducts.map((product) => (
+                {displayedProducts.map((product, index) => (
                   <div
-                    key={product.ProductID}
+                    key={product.ProductID ?? `product-${index}`}
                     className={`rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200 ${
                       product.IsActive ? "bg-white" : "bg-gray-50"
                     }`}
@@ -516,7 +615,7 @@ const ProductList = () => {
                           }}
                         />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <Tooltip text={product.ProductName} position="top" align="left">
                           <div className="text-xs font-medium text-gray-900 ellipsis-text">
                             {product.ProductName}
@@ -537,15 +636,14 @@ const ProductList = () => {
                       disableEdit={!product.IsActive}
                     />
                   </div>
-                ))
-              )}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {!sError && nTotalItems > 0 && (
+      {!sError && nTotalItems > 0 && displayedProducts.length > 0 && (
         <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10 flex-shrink-0">
           {(bLoading || bFilterLoading) ? (
             <SkeletonLoader type="pagination" />

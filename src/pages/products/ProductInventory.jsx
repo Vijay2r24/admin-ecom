@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, lazy, Suspense, startTransition } from "react";
+﻿import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense, startTransition } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import Toolbar from "../../components/Toolbar";
@@ -55,8 +55,53 @@ const getStatusBadgeClass = (status) => {
   return STATUS_BADGE_CLASSES.INACTIVE;
 };
 
+const getProductId = (product) =>
+  product?.ProductID || product?.ProductId || product?.productId || product?.productID || null;
+
+const getPaginationValue = (pagination, keys, fallback = 0) => {
+  if (!pagination || typeof pagination !== "object") return fallback;
+  for (const key of keys) {
+    if (pagination[key] != null && pagination[key] !== "") {
+      const value = Number(pagination[key]);
+      if (!Number.isNaN(value)) return value;
+    }
+  }
+  return fallback;
+};
+
+const productMatchesSearch = (product, term) => {
+  const query = String(term || "").trim().toLowerCase();
+  if (!query) return true;
+  const fields = [
+    product.ProductName,
+    product.GroupByAttributeValue,
+    product.CategoryName,
+    product.BrandName,
+    product.SKU,
+    product.Sku,
+    product.ProductID,
+    product.ProductId,
+  ];
+  if (Array.isArray(product.Variants)) {
+    product.Variants.forEach((variant) => {
+      fields.push(
+        variant?.SKU,
+        variant?.Sku,
+        variant?.VariantName,
+        variant?.ProductVariantName,
+        variant?.GroupByAttributeValue,
+      );
+    });
+  }
+  return fields.some((value) => String(value || "").toLowerCase().includes(query));
+};
+
+const filterProductsBySearch = (products, term) =>
+  products.filter((product) => productMatchesSearch(product, term));
+
 const ProductInventory = () => {
   const [sSearchTerm, setSearchTerm] = useState("");
+  const [sDebouncedSearch, setDebouncedSearch] = useState("");
   const [sViewMode, setViewMode] = useState(VIEW_MODES.TABLE);
   const [nCurrentPage, setCurrentPage] = useState(DEFAULT_PAGE);
   const { t } = useTranslation();
@@ -167,6 +212,8 @@ const ProductInventory = () => {
   const [exportLoading, setExportLoading] = useState(false);
   const [tableScrollTop, setTableScrollTop] = useState(0); // For floating header
   const dispatch = useDispatch();
+  const fetchIdRef = useRef(0);
+  const initialLoadCompleteRef = useRef(false);
 
   // Permission checks
   const permissionIdForViewInventory = getPermissionCode(
@@ -241,8 +288,17 @@ const ProductInventory = () => {
     navigate(`/edit-product/${productId}`);
   };
 
+  const hasActiveFilters =
+    (oFilters.status && oFilters.status !== FILTER_VALUES.ALL) ||
+    (oFilters.brand && oFilters.brand !== FILTER_VALUES.ALL) ||
+    (oFilters.category && oFilters.category !== FILTER_VALUES.ALL) ||
+    (oFilters.store && oFilters.store !== FILTER_VALUES.ALL) ||
+    (oFilters.stockSort && oFilters.stockSort !== FILTER_VALUES.NONE);
+
   const fetchProducts = useCallback(async () => {
+    const fetchId = ++fetchIdRef.current;
     try {
+      const searchText = sDebouncedSearch.trim();
       setLoading(true);
       setError(null);
       const token = localStorage.getItem("token");
@@ -250,8 +306,10 @@ const ProductInventory = () => {
       const params = {
         pageNumber: nCurrentPage,
         pageSize: itemsPerPage,
-        searchText: sSearchTerm,
       };
+      if (searchText) {
+        params.searchText = searchText;
+      }
 
       // Stock sorting
       if (oFilters.stockSort === "stock_asc") {
@@ -293,25 +351,21 @@ const ProductInventory = () => {
       }
 
       const oResponse = await apiGet(GETPRODUCTDETAILS, params, token);
-      const resData = oResponse?.data;
+      if (fetchId !== fetchIdRef.current) return;
+      if (!oResponse?.data) return;
+
+      const resData = oResponse.data;
 
       if (resData?.status.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
         const rawProducts = Array.isArray(resData.data) ? resData.data : [];
 
-        // Display each record as a separate row (variant-level) since backend paginates by variant
         const transformedProducts = rawProducts.map((product) => {
-          const productId = product.ProductId || product.ProductID;
+          const productId = getProductId(product);
           const variants = Array.isArray(product.Variants) ? product.Variants : [];
-          
-          // Aggregate quantity across variants in this record
           const totalQuantity = variants.reduce((sum, v) => sum + (v.Quantity || 0), 0);
-
-          // Determine active status
           const isActive = variants.length > 0
             ? variants.some((v) => v.IsActive)
             : false;
-
-          // First image from first variant
           const firstVariant = variants.length > 0 ? variants[0] : null;
           const firstImage = firstVariant?.ProductVariantImages?.[0]?.documentUrl || null;
 
@@ -321,6 +375,10 @@ const ProductInventory = () => {
             Quantity: totalQuantity,
             IsActive: isActive,
             GroupByAttributeValue: firstVariant?.GroupByAttributeValue ?? null,
+            CategoryName: product.CategoryName,
+            BrandName: product.BrandName,
+            SKU: firstVariant?.SKU ?? firstVariant?.Sku ?? product.SKU ?? product.Sku,
+            Variants: variants,
             firstImage,
             status:
               isActive && totalQuantity > 0
@@ -331,9 +389,24 @@ const ProductInventory = () => {
           };
         });
 
-        setProducts(transformedProducts);
-        setTotalItems(resData.pagination?.totalRecords || 0);
-        setTotalPages(resData.pagination?.totalPages || 0);
+        const visibleProducts = searchText
+          ? filterProductsBySearch(transformedProducts, searchText)
+          : transformedProducts;
+
+        const pagination = resData.pagination || resData.Pagination || {};
+        let totalRecords = getPaginationValue(pagination, ["totalRecords", "TotalRecords"], 0);
+        let totalPages = getPaginationValue(pagination, ["totalPages", "TotalPages"], 0);
+
+        if (totalRecords === 0 && visibleProducts.length > 0 && !searchText && !hasActiveFilters) {
+          totalRecords = visibleProducts.length;
+        }
+        if (totalPages === 0 && totalRecords > 0) {
+          totalPages = Math.max(1, Math.ceil(totalRecords / itemsPerPage));
+        }
+
+        setProducts(visibleProducts);
+        setTotalItems(searchText ? visibleProducts.length : totalRecords);
+        setTotalPages(searchText ? Math.max(1, Math.ceil(visibleProducts.length / itemsPerPage)) : totalPages);
       } else {
         setError(resData?.message || t("COMMON.API_ERROR"));
         setProducts([]);
@@ -341,6 +414,7 @@ const ProductInventory = () => {
         setTotalPages(0);
       }
     } catch (err) {
+      if (fetchId !== fetchIdRef.current) return;
       if (err?.response?.status === 403) {
         setProducts([]);
         setTotalItems(0);
@@ -352,13 +426,21 @@ const ProductInventory = () => {
       setTotalItems(0);
       setTotalPages(0);
     } finally {
-      setLoading(false);
-      setFilterLoading(false);
-      if (!initialLoadComplete) {
+      if (fetchId === fetchIdRef.current) {
+        setLoading(false);
+        setFilterLoading(false);
+        initialLoadCompleteRef.current = true;
         setInitialLoadComplete(true);
       }
     }
-  }, [nCurrentPage, itemsPerPage, sSearchTerm, oFilters, t]);
+  }, [
+    nCurrentPage,
+    itemsPerPage,
+    sDebouncedSearch,
+    oFilters,
+    t,
+    hasActiveFilters,
+  ]);
 
   useEffect(() => {
     fetchProducts();
@@ -367,6 +449,22 @@ const ProductInventory = () => {
   useEffect(() => {
     setTitle(t("PRODUCT_INVENTORY.TITLE"));
   }, [setTitle, t]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(sSearchTerm);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [sSearchTerm]);
+
+  useEffect(() => {
+    setFilterLoading(true);
+    if (sSearchTerm.trim()) {
+      setProducts([]);
+      setTotalItems(0);
+    }
+  }, [sSearchTerm]);
 
   const storeOptions = [
     { value: FILTER_VALUES.ALL, label: t("COMMON.ALL") },
@@ -484,9 +582,13 @@ const ProductInventory = () => {
     setCurrentPage(page);
   };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [sSearchTerm, oFilters]);
+  const displayedProducts = useMemo(
+    () => filterProductsBySearch(aProducts, sSearchTerm),
+    [aProducts, sSearchTerm]
+  );
+
+  const isSearchPending = sSearchTerm.trim() !== sDebouncedSearch.trim();
+  const isLoading = bLoading || bFilterLoading || isSearchPending;
 
   // --- Status Update Handlers ---
   const handleStatusChange = (productId, currentIsActive) => {
@@ -552,10 +654,31 @@ const ProductInventory = () => {
           sectionTitle={t("PLAN_GATE.SECTIONS.PRODUCT_INVENTORY")}
         />
       ) : sViewMode === VIEW_MODES.TABLE ? (
-        <div className="table-container-floating">
+        <div className="table-container-floating flex-1 min-h-0">
           <div className="table-wrapper-floating" onScroll={handleTableScroll}>
-            <table className="table-base">
-              {/* Floating Header */}
+            {isLoading ? (
+              <table className="table-base w-full">
+                <thead className="table-head-floating">
+                  <tr>
+                    <th className="table-head-cell-floating text-left">{t("COMMON.PRODUCTS")}</th>
+                    <th className="table-head-cell-floating text-center">{t("COMMON.QUANTITY")}</th>
+                    <th className="table-head-cell-floating text-center">{t("COMMON.STATUS")}</th>
+                    <th className="table-head-cell-floating text-center">{t("COMMON.ACTIONS")}</th>
+                  </tr>
+                </thead>
+                <tbody className="table-body">
+                  <SkeletonLoader type={SKELETON_TYPES.PRODUCT_INVENTORY_TABLE} rows={itemsPerPage} />
+                </tbody>
+              </table>
+            ) : displayedProducts.length === 0 ? (
+              <EmptyState
+                type="products"
+                title={t("PRODUCT_INVENTORY.NO_PRODUCTS")}
+                description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                compact
+              />
+            ) : (
+            <table className="table-base w-full">
               <thead
                 className={`table-head-floating ${
                   tableScrollTop > SCROLL_SHADOW_THRESHOLD ? "table-head-floating-shadow" : ""
@@ -578,20 +701,9 @@ const ProductInventory = () => {
               </thead>
 
               <tbody className="table-body">
-                {bLoading || bFilterLoading ? (
-                  <SkeletonLoader type={SKELETON_TYPES.PRODUCT_INVENTORY_TABLE} rows={itemsPerPage} />
-                ) : aProducts.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                    >
-                      <EmptyState type="products" title={t("PRODUCT_INVENTORY.NO_PRODUCTS")} compact />
-                    </td>
-                  </tr>
-                ) : (
-                  aProducts.map((product) => (
+                  {displayedProducts.map((product, index) => (
                     <tr
-                      key={product.ProductID}
+                      key={`${product.ProductID ?? "product"}-${product.ProductName ?? index}-${index}`}
                       className="table-row"
                     >
                       {/* Product Name */}
@@ -658,110 +770,113 @@ const ProductInventory = () => {
                         />
                       </td>
                     </tr>
-                  ))
-                )}
+                  ))}
               </tbody>
             </table>
+            )}
           </div>
         </div>
       ) : (
-        <div className="table-wrapper-floating">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {bLoading || bFilterLoading ? (
-              <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={itemsPerPage} />
-            ) : aProducts.length === 0 ? (
-              <EmptyState type="products" title={t("PRODUCT_INVENTORY.NO_PRODUCTS")} compact />
+        <div className="grid-container-floating flex-1 min-h-0">
+          <div className="grid-wrapper-floating" onScroll={handleTableScroll}>
+            {isLoading ? (
+              <div className="p-4">
+                <SkeletonLoader type={SKELETON_TYPES.PRODUCT_GRID} rows={itemsPerPage} />
+              </div>
+            ) : displayedProducts.length === 0 ? (
+              <EmptyState
+                type="products"
+                title={t("PRODUCT_INVENTORY.NO_PRODUCTS")}
+                description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                compact
+              />
             ) : (
-              aProducts.map((product) => (
-                <div
-                  key={product.ProductID}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-200"
-                >
-                  <div className="relative h-[60%] min-h-[220px] bg-gray-100">
-                    <img
-                      src={product.firstImage}
-                      alt={product.ProductName}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = noImage;
-                        e.target.classList.remove("object-cover");
-                        e.target.classList.add("object-contain", "bg-white");
-                      }}
-                    />
-
-                    {/* Status badge */}
-                    <span
-                      className={`absolute top-3 left-3 px-3 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(
-                        product.status,
-                      )}`}
-                    >
-                      {product.status === PRODUCT_STATUS_VALUES.ACTIVE ? t("PRODUCT_INVENTORY.STATUS_ACTIVE") : t("PRODUCT_INVENTORY.STATUS_OUT_OF_STOCK")}
-                    </span>
-
-                    {/* Status Switch */}
-                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-lg px-2 py-1 shadow-sm">
-                      <Switch
-                        checked={product.IsActive}
-                        onChange={() =>
-                          handleStatusChange(
-                            product.ProductID,
-                            product.IsActive,
-                          )
-                        }
-                        disabled={!hasUpdateProductVariantStatusPermission}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+                {displayedProducts.map((product, index) => (
+                  <div
+                    key={`${product.ProductID ?? "product"}-${product.ProductName ?? index}-${index}`}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-200"
+                  >
+                    <div className="relative h-[60%] min-h-[220px] bg-gray-100">
+                      <img
+                        src={product.firstImage}
+                        alt={product.ProductName}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = noImage;
+                          e.target.classList.remove("object-cover");
+                          e.target.classList.add("object-contain", "bg-white");
+                        }}
                       />
-                    </div>
-                  </div>
 
-                  <div className="p-4 flex flex-col gap-3">
-                    {/* Product Name */}
-                    <div
-                      className="text-xs font-semibold text-gray-900 line-clamp-2"
-                      title={product.ProductName}
-                    >
-                      {product.ProductName}
-                    </div>
+                      <span
+                        className={`absolute top-3 left-3 px-3 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(
+                          product.status,
+                        )}`}
+                      >
+                        {product.status === PRODUCT_STATUS_VALUES.ACTIVE ? t("PRODUCT_INVENTORY.STATUS_ACTIVE") : t("PRODUCT_INVENTORY.STATUS_OUT_OF_STOCK")}
+                      </span>
 
-                    {/* Product Details */}
-                    <div className="flex flex-col gap-1 min-w-0">
-                      {/* Quantity */}
-                      <div className="text-xs text-gray-700">
-                        <span className="font-medium">
-                          {t("COMMON.QUANTITY")}:
-                        </span>{" "}
-                        <span
-                          className={
-                            product.Quantity <= 0
-                              ? "text-red-600 font-medium"
-                              : ""
+                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-lg px-2 py-1 shadow-sm">
+                        <Switch
+                          checked={product.IsActive}
+                          onChange={() =>
+                            handleStatusChange(
+                              product.ProductID,
+                              product.IsActive,
+                            )
                           }
-                        >
-                          {product.Quantity}
-                        </span>
+                          disabled={!hasUpdateProductVariantStatusPermission}
+                        />
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex justify-end">
-                      <ActionButtons
-                        id={product.ProductID}
-                        onEdit={handleEdit}
-                        viewLink={`/productdetails/${product.ProductID}`}
-                        onViewVariants={() =>
-                          handleViewVariants(product.ProductID, product.GroupByAttributeValue)
-                        }
-                        variantButtonText={t("PRODUCT_INVENTORY.VIEW_VARIANTS")}
-                      />
+                    <div className="p-4 flex flex-col gap-3">
+                      <div
+                        className="text-xs font-semibold text-gray-900 line-clamp-2"
+                        title={product.ProductName}
+                      >
+                        {product.ProductName}
+                      </div>
+
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <div className="text-xs text-gray-700">
+                          <span className="font-medium">
+                            {t("COMMON.QUANTITY")}:
+                          </span>{" "}
+                          <span
+                            className={
+                              product.Quantity <= 0
+                                ? "text-red-600 font-medium"
+                                : ""
+                            }
+                          >
+                            {product.Quantity}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <ActionButtons
+                          id={product.ProductID}
+                          onEdit={handleEdit}
+                          viewLink={`/productdetails/${product.ProductID}`}
+                          onViewVariants={() =>
+                            handleViewVariants(product.ProductID, product.GroupByAttributeValue)
+                          }
+                          variantButtonText={t("PRODUCT_INVENTORY.VIEW_VARIANTS")}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </div>
       )}
-      {!bLoading && !sError && nTotalItems > 0 && (
+      {!isLoading && !sError && nTotalItems > 0 && displayedProducts.length > 0 && (
         <Pagination
           currentPage={nCurrentPage}
           totalPages={nTotalPages}
