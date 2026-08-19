@@ -761,6 +761,13 @@ const AddProductForm = () => {
           SellingPrice: "",
           StoreID: oFormData.StoreID,
           images: [],
+          shippingData: {
+            package: "",
+            weight: "",
+            weightUnit: "",
+            countryOfOrigin: "",
+            hsCode: "",
+          },
         },
       ]);
       return;
@@ -810,6 +817,13 @@ const AddProductForm = () => {
         StoreID: match?.StoreID || oFormData.StoreID,
         images: match?.images?.length ? match.images : [],
         removedImages: match?.removedImages || [],
+        shippingData: match?.shippingData || {
+          package: "",
+          weight: "",
+          weightUnit: "kg",
+          countryOfOrigin: "",
+          hsCode: "",
+        },
       };
     });
 

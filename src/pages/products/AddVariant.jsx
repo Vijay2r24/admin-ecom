@@ -869,7 +869,7 @@ export default function CreateVariant() {
 
         if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
           const data = resData.data.map((p) => ({
-            ProductID: p.ProductID,
+            ProductID: p.ProductID || p.ProductId || p.id,
             ProductName: p.ProductName,
             BrandName: p.BrandName,
             CategoryName: p.CategoryName,
