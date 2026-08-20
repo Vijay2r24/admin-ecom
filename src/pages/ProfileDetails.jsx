@@ -449,11 +449,11 @@ const ProfileDetails = () => {
     <div className="max-w-8xl mx-auto mt-2">
       <ToastContainer />
       {loaderOverlay}
-      <div className="relative rounded-2xl overflow-hidden mb-8 border border-gray-200 bg-white">
-        <div className="relative px-8 py-12">
-          <div className="flex flex-col md:flex-row items-center md:items-end space-y-4 md:space-y-0 md:space-x-6 w-full">
+      <div className="relative rounded-2xl overflow-hidden mb-6 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+        <div className="relative px-5 py-8 sm:px-8 sm:py-10">
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-5 md:gap-6 w-full">
             <div className="relative group">
-              <div className="h-32 w-32 rounded-full overflow-hidden border-4 border-white ring-2 ring-custom-bg/50 transition-all duration-300 group-hover:scale-105 bg-gray-100 flex items-center justify-center">
+              <div className="h-32 w-32 shrink-0 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 ring-2 ring-custom-bg/50 transition-all duration-300 group-hover:scale-105 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                 {user?.avatar ? (
                   <img
                     src={user.avatar}
@@ -462,32 +462,32 @@ const ProfileDetails = () => {
                   />
                 ) : (
                   <div className="text-center">
-                    <Image className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-xs text-gray-500">{t("COMMON.NO_IMAGE")}</p>
+                    <Image className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t("COMMON.NO_IMAGE")}</p>
                   </div>
                 )}
               </div>
               <button
                 type="button"
                 aria-label={t("PROFILE.CHANGE_PHOTO_ARIA")}
-                className="absolute bottom-0 right-0 p-2.5 bg-white rounded-full text-custom-bg hover:bg-sky-50 transition-all duration-200 border border-custom-bg hover:scale-110"
+                className="absolute bottom-0 right-0 p-2.5 bg-white dark:bg-gray-800 rounded-full text-custom-bg hover:bg-sky-50 dark:hover:bg-gray-700 transition-all duration-200 border border-custom-bg hover:scale-110"
               >
                 <Camera className="h-5 w-5" />
               </button>
             </div>
             <div className="flex flex-col md:flex-row md:items-end md:justify-between w-full">
-              <div className="text-center md:text-left flex-1">
-                <h1 className="text-3xl font-bold text-gray-900">
+              <div className="text-center md:text-left flex-1 min-w-0">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white break-words">
                   {user?.name}
                 </h1>
-                <p className="mt-1 text-gray-900 font-medium">{user?.role}</p>
-                <p className="mt-2 text-sm text-gray-600 flex items-center justify-center md:justify-start">
+                <p className="mt-1 text-gray-900 dark:text-gray-100 font-medium">{user?.role}</p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center md:justify-start">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-custom-bg/60 mr-2"></span>
                   {t("PROFILE.MEMBER_SINCE")}{" "}
                   {new Date(user?.joinDate).toLocaleDateString()}
                 </p>
                 {user?.stores && user.stores.length > 0 && (
-                  <p className="mt-2 text-sm text-gray-600">
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 break-words">
                     {t("PROFILE.ASSIGNED_STORES")}: {user.stores.map(store => store.StoreName).join(", ")}
                   </p>
                 )}
@@ -508,16 +508,16 @@ const ProfileDetails = () => {
 
       {nModalType && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 w-full max-w-md relative animate-fadeIn">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-5 sm:p-8 w-full max-w-md relative animate-fadeIn mx-4">
             <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-caption text-2xl font-bold"
+              className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-custom-bg text-2xl font-bold"
               onClick={handleCloseModal}
               aria-label={t("COMMON.CLOSE")}
             >
               <X size={24} />
             </button>
 
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pr-8">
               {securityPrefModals[nModalType].title}
             </h2>
             {securityPrefModals[nModalType].content}
@@ -525,145 +525,145 @@ const ProfileDetails = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
+        <div className="lg:col-span-2 space-y-6 lg:space-y-8 min-w-0">
           {/* Personal Info */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div className="px-5 py-4 sm:px-6 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {t("PROFILE.PERSONAL_INFORMATION")}
               </h2>
             </div>
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex items-start space-x-4">
+            <div className="p-5 sm:p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6">
+                <div className="flex items-start gap-4 min-w-0">
                   <div className="p-2.5 bg-custom-bg/10 rounded-lg">
                     <User className="h-5 w-5 text-custom-bg" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       {t("PROFILE.FULL_NAME")}
                     </p>
-                    <p className="mt-1 text-base text-gray-900">{user?.name}</p>
+                    <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">{user?.name}</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start gap-4 min-w-0">
                   <div className="p-2.5 bg-custom-bg/10 rounded-lg">
                     <Mail className="h-5 w-5 text-custom-bg" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       {t("PROFILE.EMAIL_ADDRESS")}
                     </p>
-                    <p className="mt-1 text-base text-gray-900">{user?.email}</p>
+                    <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">{user?.email}</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start gap-4 min-w-0">
                   <div className="p-2.5 bg-custom-bg/10 rounded-lg">
                     <Phone className="h-5 w-5 text-custom-bg" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       {t("PROFILE.PHONE_NUMBER")}
                     </p>
-                    <p className="mt-1 text-base text-gray-900">{user?.phone}</p>
+                    <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">{user?.phone}</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start gap-4 min-w-0">
                   <div className="p-2.5 bg-custom-bg/10 rounded-lg">
                     <User className="h-5 w-5 text-custom-bg" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       {t("PROFILE.GENDER")}
                     </p>
-                    <p className="mt-1 text-base text-gray-900">{user?.gender}</p>
+                    <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">{user?.gender}</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start gap-4 min-w-0">
                   <div className="p-2.5 bg-custom-bg/10 rounded-lg">
                     <Calendar className="h-5 w-5 text-custom-bg" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       {t("PROFILE.MEMBER_SINCE")}
                     </p>
-                    <p className="mt-1 text-base text-gray-900">
+                    <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">
                       {new Date(user?.joinDate).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start gap-4 min-w-0">
                   <div className="p-2.5 bg-custom-bg/10 rounded-lg">
                     <User className="h-5 w-5 text-custom-bg" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       {t("PROFILE.EMPLOYEE_ID")}
                     </p>
-                    <p className="mt-1 text-base text-gray-900">{user?.employeeId}</p>
+                    <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">{user?.employeeId}</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div className="px-5 py-4 sm:px-6 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {t("PROFILE.ADDRESS_INFO")}
               </h2>
             </div>
-            <div className="p-6">
-              <div className="flex items-start space-x-4 mb-6">
+            <div className="p-5 sm:p-6">
+              <div className="flex items-start gap-4 min-w-0 mb-6">
                 <div className="p-2.5 bg-custom-bg/10 rounded-lg">
                   <MapPin className="h-5 w-5 text-custom-bg" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {t("PROFILE.STREET_ADDRESS")}
                   </p>
-                  <p className="mt-1 text-base text-gray-900">{user?.address}</p>
+                  <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">{user?.address}</p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 lg:gap-6">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {t("PROFILE.CITY")}
                   </p>
-                  <p className="mt-1 text-base text-gray-900">{user?.city}</p>
+                  <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">{user?.city}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {t("PROFILE.STATE")}
                   </p>
-                  <p className="mt-1 text-base text-gray-900">{user?.state}</p>
+                  <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">{user?.state}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {t("PROFILE.ZIP_CODE")}
                   </p>
-                  <p className="mt-1 text-base text-gray-900">{user?.zipCode}</p>
+                  <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">{user?.zipCode}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {t("PROFILE.COUNTRY")}
                   </p>
-                  <p className="mt-1 text-base text-gray-900">{user?.country}</p>
+                  <p className="mt-1 text-base text-gray-900 dark:text-gray-100 break-words">{user?.country}</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="space-y-8">
+        <div className="space-y-6 lg:space-y-8 min-w-0">
 
           {/* Store Details Section - Replaced Preferences */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div className="px-5 py-4 sm:px-6 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {t("PROFILE.STORE_DETAILS")}
               </h2>
             </div>
-            <div className="p-6">
+            <div className="p-5 sm:p-6">
               {user?.stores && user.stores.length > 0 ? (
                 <div 
                   className={`space-y-4 ${
@@ -691,17 +691,17 @@ const ProfileDetails = () => {
                   `}</style>
                   
                   {user.stores.map((store, index) => (
-                    <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <div className="p-2 bg-custom-bg/10 rounded-lg">
                         <Store className="h-4 w-4 text-custom-bg" />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-sm font-medium text-gray-900">{store.StoreName}</h3>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 break-words">{store.StoreName}</h3>
                         {store.StoreAddress && (
-                          <p className="text-xs text-gray-600 mt-1">{store.StoreAddress}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 break-words">{store.StoreAddress}</p>
                         )}
                         {store.StorePhone && (
-                          <p className="text-xs text-gray-600 mt-1">{store.StorePhone}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 break-words">{store.StorePhone}</p>
                         )}
                       </div>
                     </div>
@@ -709,65 +709,65 @@ const ProfileDetails = () => {
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <Store className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500">
+                  <Store className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {t("PROFILE.NO_STORES_ASSIGNED")}
                   </p>
                 </div>
               )}
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div className="px-5 py-4 sm:px-6 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {t("PROFILE.SECURITY_SETTINGS")}
               </h2>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-5 sm:p-6 space-y-4">
               <button
                 onClick={() => handleOpenModal(PROFILE_MODAL_TYPE.CHANGE_PASSWORD)}
-                className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 group"
+                className="w-full flex items-center justify-between gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 group text-left"
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="p-2 bg-custom-bg/10 rounded-lg group-hover:bg-custom-bg/20">
                     <Key className="h-5 w-5 text-custom-bg" />
                   </div>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100 break-words">
                     {t("PROFILE.CHANGE_PASSWORD")}
                   </span>
                 </div>
-                <Edit className="h-4 w-4 text-gray-400 group-hover:text-caption" />
+                <Edit className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500 group-hover:text-custom-bg" />
               </button>
               <button
                 onClick={() => handleOpenModal(PROFILE_MODAL_TYPE.TWO_FACTOR)}
                 disabled
-                className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl group cursor-not-allowed opacity-50"
+                className="w-full flex items-center justify-between gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl group cursor-not-allowed opacity-50 text-left"
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="p-2 bg-custom-bg/10 rounded-lg">
                     <Shield className="h-5 w-5 text-custom-bg" />
                   </div>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100 break-words">
                     {t("PROFILE.TWO_FACTOR_AUTH")}
                   </span>
                 </div>
-                <Edit className="h-4 w-4 text-gray-400" />
+                <Edit className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
               </button>
 
               <button
                 onClick={() => handleOpenModal(PROFILE_MODAL_TYPE.PRIVACY)}
                 disabled
-                className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl group cursor-not-allowed opacity-50"
+                className="w-full flex items-center justify-between gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl group cursor-not-allowed opacity-50 text-left"
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="p-2 bg-custom-bg/10 rounded-lg">
                     <User className="h-5 w-5 text-custom-bg" />
                   </div>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100 break-words">
                     {t("PROFILE.PRIVACY_SETTINGS")}
                   </span>
                 </div>
-                <Edit className="h-4 w-4 text-gray-400" />
+                <Edit className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
               </button>
             </div>
           </div>
