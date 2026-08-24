@@ -647,7 +647,8 @@
         "NAME_MAX_LENGTH": "Color name must be less than 50 characters",
         "HEX_CODE_INVALID": "Please enter a valid HEX color code (e.g. #FF0000 or #F00)",
         "RGB_CODE_INVALID": "Please enter a valid RGB color code (e.g. rgb(255, 0, 0))",
-        "HEX_CODE_REQUIRED": "Color code is required"
+        "HEX_CODE_REQUIRED": "Color code is required",
+        "WHITE_COLOR_NOT_ALLOWED": "White color is not allowed"
       }
     },
     "SPECIFICATION_TYPES": {
@@ -1792,7 +1793,14 @@
     "UPLOAD_LOGO": "Upload Logo",
     "SELECT_LOGO_FIRST": "Please select a logo first",
     "NO_LOGO_DOCUMENT_ID": "No logo document ID found",
+    "NO_TENANT_ID": "No tenant ID found",
+    "THEME_UPDATE_SUCCESS": "Theme color updated successfully",
+    "THEME_UPDATE_ERROR": "Failed to update theme color",
+    "LOGO_UPDATE_SUCCESS": "Logo updated successfully",
+    "LOGO_UPDATE_ERROR": "Failed to update logo",
+    "WHITE_COLOR_NOT_ALLOWED": "White color is not allowed for theme settings",
     "RESET_AS_DEFAULT": "Reset as Default",
+    "WHITE_COLOR_NOT_ALLOWED": "White, near-white, and very light colors are not allowed for theme settings",
     "WEB_TEXT": "ShopNow",
     "DESCRIPTION": "Discover amazing products",
     "CATEGORIES": "Categories",

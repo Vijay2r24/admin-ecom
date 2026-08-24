@@ -214,7 +214,8 @@ export const THEMES = {
 };
 
 export const ERROR_MESSAGES = {
-  THEME_PROVIDER_REQUIRED: 'useTheme must be used within a ThemeProvider'
+  THEME_PROVIDER_REQUIRED: 'useTheme must be used within a ThemeProvider',
+  WHITE_COLOR_NOT_ALLOWED: 'White color is not allowed for theme settings'
 };
 
 export const COLORS = {

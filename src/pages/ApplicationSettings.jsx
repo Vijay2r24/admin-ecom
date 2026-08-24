@@ -19,6 +19,8 @@ import Loader from "../components/Loader";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import { isWhiteColor } from "../utils/colorValidation";
+
 const ThemeSettings = () => {
   const { t } = useTranslation()
   const defaultColor = t(CUSTOM_COLORS.primary);
@@ -40,6 +42,15 @@ const ThemeSettings = () => {
   // Get DocumentID from current logo - no hardcoded fallback
   const getDocumentId = () => {
     return currentLogoDocumentId;
+  };
+
+  // Handle color change with validation
+  const handleColorChange = (newColor) => {
+    if (isWhiteColor(newColor)) {
+      // Don't show toast here, only prevent the color change
+      return;
+    }
+    setPrimaryColor(newColor);
   };
 
   const handleLogoUpload = (e) => {
@@ -93,13 +104,31 @@ const ThemeSettings = () => {
     }
   };
 
+  const isWhiteColor = (color) => {
+    const normalizedColor = color.toLowerCase().trim();
+    return normalizedColor === '#ffffff' || normalizedColor === '#fff' || normalizedColor === 'white';
+  };
+
   const updateThemeColor = async () => {
+    // Validate white color restriction - show toast only when user tries to update
+    if (isWhiteColor(primaryColor)) {
+      showEmsg(t("THEMESETTINGS.WHITE_COLOR_NOT_ALLOWED"), STATUS.ERROR);
+      return;
+    }
+
     try {
       setLoading(true);
       const tenantId = getTenantId();
       
       if (!tenantId) {
         showEmsg(t("THEMESETTINGS.NO_TENANT_ID"), STATUS.ERROR);
+        return;
+      }
+
+      // Check for white color restriction
+      if (isWhiteColor(primaryColor)) {
+        showEmsg(t("THEMESETTINGS.WHITE_COLOR_NOT_ALLOWED") , STATUS.ERROR);
+        setLoading(false);
         return;
       }
       
@@ -295,16 +324,39 @@ const ThemeSettings = () => {
           <TextInputWithIcon
             label={t("THEMESETTINGS.PRIMARY_COLOR")}
             value={primaryColor}
-            onChange={(e) => setPrimaryColor(e.target.value)}
+            onChange={(e) => {
+              const newColor = e.target.value;
+              if (isWhiteColor(newColor)) {
+                showEmsg(t("THEMESETTINGS.WHITE_COLOR_NOT_ALLOWED"), STATUS.WARNING);
+                return;
+              }
+              handleColorChange(newColor);
+            }}
             Icon={PaintBucket}
             placeholder={defaultColor}
             inputSlot={
-              <input
-                type="color"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="w-7 h-7 border rounded-full cursor-pointer"
-              />
+              <div className="relative">
+                <input
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => {
+                  const newColor = e.target.value;
+                  if (isWhiteColor(newColor)) {
+                    showEmsg(t("THEMESETTINGS.WHITE_COLOR_NOT_ALLOWED") , STATUS.WARNING);
+                    return;
+                  }
+                  handleColorChange(newColor);
+                }}
+                  className="w-7 h-7 border rounded-full cursor-pointer"
+                />
+                {isWhiteColor(primaryColor) && (
+                  <div className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full shadow-lg">
+                    <svg className="h-2 w-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                )}
+              </div>
             }
           />
           <div className="space-y-2">

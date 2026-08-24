@@ -14,6 +14,8 @@ import { apiPost } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 
+import { isWhiteColor, hexToRgbString } from "../../../utils/colorValidation";
+
 const CreateColor = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -66,7 +68,16 @@ const CreateColor = () => {
     if (!hexRegex.test(hexCode.trim())) {
       return t("PRODUCT_SETUP.CREATE_COLOR.ERRORS.HEX_CODE_INVALID");
     }
+    // Check for white color restriction
+    if (isWhiteColor(hexCode.trim())) {
+      return t("PRODUCT_SETUP.CREATE_COLOR.ERRORS.WHITE_COLOR_NOT_ALLOWED");
+    }
     return "";
+  };
+
+  const isWhiteColor = (color) => {
+    const normalizedColor = color.toLowerCase().trim();
+    return normalizedColor === '#ffffff' || normalizedColor === '#fff';
   };
 
   const validateRgbCode = (rgbCode) => {
@@ -111,15 +122,6 @@ const CreateColor = () => {
     }));
   }, [t]);
 
-  const hexToRgb = (hex) => {
-    if (!hex || typeof hex !== "string") return "";
-    const bigint = parseInt(hex.slice(1), 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
-    return `rgb(${r}, ${g}, ${b})`;
-  };
-
   const handleInputChange = useCallback(
     (e) => {
       const { name, value, type, checked } = e.target;
@@ -128,7 +130,7 @@ const CreateColor = () => {
       setFormData((prev) => ({
         ...prev,
         [name]: newValue,
-        ...(name === "HexCode" && { RgbCode: hexToRgb(value) }),
+        ...(name === "HexCode" && { RgbCode: hexToRgbString(value) }),
       }));
 
       validateField(name, newValue);
