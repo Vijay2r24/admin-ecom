@@ -14,8 +14,11 @@ import {
   STYLES,
   DATE_FORMATS,
   DATE_UNITS,
-  QUICK_FILTER_VALUES,
-  QUICK_FILTER_LABELS,
+  QUICK_FILTER_KEYS,
+  PAST_QUICK_FILTER_VALUES,
+  PAST_QUICK_FILTER_LABELS,
+  FUTURE_QUICK_FILTER_VALUES,
+  FUTURE_QUICK_FILTER_LABELS,
 } from "../contants/constants";
 
 function DateTimeRangePickerComponent({
@@ -27,16 +30,20 @@ function DateTimeRangePickerComponent({
   maxDate,
   minDate,
   allowFutureDates = true,
+  useFuturePresets = false,
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [tempRange, setTempRange] = useState({ start: null, end: null });
 
-  // Set endTime to current time by default
   const [timeRange, setTimeRange] = useState({
-    startTime: dayjs().subtract(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
-    endTime: dayjs().format(DATE_FORMATS.time), // Current time as default for end
+    startTime: useFuturePresets
+      ? dayjs().format(DATE_FORMATS.time)
+      : dayjs().subtract(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
+    endTime: useFuturePresets
+      ? dayjs().add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time)
+      : dayjs().format(DATE_FORMATS.time),
   });
 
   const [view, setView] = useState(DATE_UNITS.DAYS);
@@ -58,14 +65,17 @@ function DateTimeRangePickerComponent({
 
   useEffect(() => {
     if (!dateRange.start && !dateRange.end) {
-      // Reset to current time for end when no date range is selected
       setTimeRange({
-        startTime: dayjs().subtract(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
-        endTime: dayjs().format(DATE_FORMATS.time), // Current time for end
+        startTime: useFuturePresets
+          ? dayjs().format(DATE_FORMATS.time)
+          : dayjs().subtract(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time),
+        endTime: useFuturePresets
+          ? dayjs().add(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time)
+          : dayjs().format(DATE_FORMATS.time),
       });
       setTempRange({ start: null, end: null });
     }
-  }, [dateRange]);
+  }, [dateRange, useFuturePresets]);
 
   const validateTime = (time) => {
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
@@ -138,50 +148,105 @@ function DateTimeRangePickerComponent({
     setValidationError(null);
     const now = dayjs();
     let start, end;
-
-    let startTime = dayjs().subtract(1, DATE_UNITS.HOUR).format(DATE_FORMATS.time);
-    let endTime = dayjs().format(DATE_FORMATS.time); // ALWAYS current time for end
+    let startTime, endTime;
 
     switch (filterValue) {
-      case "last3hours":
+      // Future presets
+      case QUICK_FILTER_KEYS.NEXT_3_HOURS:
+        start = now;
+        end = now.add(3, DATE_UNITS.HOUR);
+        startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
+        break;
+
+      case QUICK_FILTER_KEYS.NEXT_6_HOURS:
+        start = now;
+        end = now.add(6, DATE_UNITS.HOUR);
+        startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
+        break;
+
+      case QUICK_FILTER_KEYS.NEXT_12_HOURS:
+        start = now;
+        end = now.add(12, DATE_UNITS.HOUR);
+        startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
+        break;
+
+      case QUICK_FILTER_KEYS.NEXT_24_HOURS:
+        start = now;
+        end = now.add(24, DATE_UNITS.HOUR);
+        startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
+        break;
+
+      case QUICK_FILTER_KEYS.NEXT_2_DAYS:
+        start = now;
+        end = now.add(2, DATE_UNITS.DAY);
+        startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
+        break;
+
+      case QUICK_FILTER_KEYS.NEXT_7_DAYS:
+        start = now;
+        end = now.add(7, DATE_UNITS.DAY);
+        startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
+        break;
+
+      // Past presets
+      case QUICK_FILTER_KEYS.LAST_3_HOURS:
         start = now.subtract(3, DATE_UNITS.HOUR);
         end = now;
         startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
         break;
 
-      case "last6hours":
+      case QUICK_FILTER_KEYS.LAST_6_HOURS:
         start = now.subtract(6, DATE_UNITS.HOUR);
         end = now;
         startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
         break;
 
-      case "last12hours":
+      case QUICK_FILTER_KEYS.LAST_12_HOURS:
         start = now.subtract(12, DATE_UNITS.HOUR);
         end = now;
         startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
         break;
 
-      case "last24hours":
+      case QUICK_FILTER_KEYS.LAST_24_HOURS:
         start = now.subtract(24, DATE_UNITS.HOUR);
         end = now;
         startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
         break;
 
-      case "last2days":
+      case QUICK_FILTER_KEYS.LAST_2_DAYS:
         start = now.subtract(2, DATE_UNITS.DAY).startOf("day");
         end = now;
         startTime = "00:00";
+        endTime = end.format(DATE_FORMATS.time);
         break;
 
-      case "last7days":
+      case QUICK_FILTER_KEYS.LAST_7_DAYS:
         start = now.subtract(7, DATE_UNITS.DAY).startOf("day");
         end = now;
         startTime = "00:00";
+        endTime = end.format(DATE_FORMATS.time);
         break;
 
       default:
-        start = now.subtract(3, DATE_UNITS.HOUR);
-        end = now;
+        if (useFuturePresets) {
+          start = now;
+          end = now.add(3, DATE_UNITS.HOUR);
+        } else {
+          start = now.subtract(3, DATE_UNITS.HOUR);
+          end = now;
+        }
+        startTime = start.format(DATE_FORMATS.time);
+        endTime = end.format(DATE_FORMATS.time);
     }
 
     const error = validateDateRange(start, end);
@@ -200,10 +265,17 @@ function DateTimeRangePickerComponent({
     setShowDropdown(false);
   };
 
-const filteredQuickFilters = QUICK_FILTER_VALUES.map((value, index) => ({
-  value,
-  label: QUICK_FILTER_LABELS[index],
-}));
+  const quickFilterValues = useFuturePresets
+    ? FUTURE_QUICK_FILTER_VALUES
+    : PAST_QUICK_FILTER_VALUES;
+  const quickFilterLabels = useFuturePresets
+    ? FUTURE_QUICK_FILTER_LABELS
+    : PAST_QUICK_FILTER_LABELS;
+
+  const filteredQuickFilters = quickFilterValues.map((value, index) => ({
+    value,
+    label: quickFilterLabels[index],
+  }));
 
   const startOfMonth = selectedMonth.startOf("month");
   const endOfMonth = selectedMonth.endOf("month");

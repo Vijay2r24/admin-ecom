@@ -1008,16 +1008,31 @@ export const PERMISSIONS = {
   VIEW_TENANT_SETTINGS: "View Tenant Settings",
 };
 
-export const QUICK_FILTER_VALUES = [
-  "last3hours",
-  "last6hours",
-  "last12hours",
-  "last24hours",
-  "last2days",
-  "last7days",
+export const QUICK_FILTER_KEYS = {
+  NEXT_3_HOURS: "next3hours",
+  NEXT_6_HOURS: "next6hours",
+  NEXT_12_HOURS: "next12hours",
+  NEXT_24_HOURS: "next24hours",
+  NEXT_2_DAYS: "next2days",
+  NEXT_7_DAYS: "next7days",
+  LAST_3_HOURS: "last3hours",
+  LAST_6_HOURS: "last6hours",
+  LAST_12_HOURS: "last12hours",
+  LAST_24_HOURS: "last24hours",
+  LAST_2_DAYS: "last2days",
+  LAST_7_DAYS: "last7days",
+};
+
+export const PAST_QUICK_FILTER_VALUES = [
+  QUICK_FILTER_KEYS.LAST_3_HOURS,
+  QUICK_FILTER_KEYS.LAST_6_HOURS,
+  QUICK_FILTER_KEYS.LAST_12_HOURS,
+  QUICK_FILTER_KEYS.LAST_24_HOURS,
+  QUICK_FILTER_KEYS.LAST_2_DAYS,
+  QUICK_FILTER_KEYS.LAST_7_DAYS,
 ];
 
-export const QUICK_FILTER_LABELS = [
+export const PAST_QUICK_FILTER_LABELS = [
   "Last 3 Hours",
   "Last 6 Hours",
   "Last 12 Hours",
@@ -1025,6 +1040,27 @@ export const QUICK_FILTER_LABELS = [
   "Last 2 Days",
   "Last 7 Days",
 ];
+
+export const FUTURE_QUICK_FILTER_VALUES = [
+  QUICK_FILTER_KEYS.NEXT_3_HOURS,
+  QUICK_FILTER_KEYS.NEXT_6_HOURS,
+  QUICK_FILTER_KEYS.NEXT_12_HOURS,
+  QUICK_FILTER_KEYS.NEXT_24_HOURS,
+  QUICK_FILTER_KEYS.NEXT_2_DAYS,
+  QUICK_FILTER_KEYS.NEXT_7_DAYS,
+];
+
+export const FUTURE_QUICK_FILTER_LABELS = [
+  "Next 3 Hours",
+  "Next 6 Hours",
+  "Next 12 Hours",
+  "Next 24 Hours",
+  "Next 2 Days",
+  "Next 7 Days",
+];
+
+export const QUICK_FILTER_VALUES = PAST_QUICK_FILTER_VALUES;
+export const QUICK_FILTER_LABELS = PAST_QUICK_FILTER_LABELS;
 
 // Product Inventory Level Options
 export const VIEW_LEVELS = {
