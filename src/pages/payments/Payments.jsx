@@ -8,9 +8,8 @@ import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
-import { SKELETON_TYPES } from "../../contants/constants";
+import { SKELETON_TYPES, ITEMS_PER_PAGE, STATUS, MODULES, PERMISSIONS, PAYMENT_STATUS, PAYMENT_TYPES } from "../../contants/constants";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS, MODULES, PERMISSIONS, PAYMENT_STATUS, PAYMENT_TYPES } from "../../contants/constants";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
 import SkeletonLoader from "../../components/SkeletonLoader";
@@ -326,6 +325,7 @@ const Payments = () => {
   };
 
   const [sError, setError] = useState(null);
+  const [backendMessage, setBackendMessage] = useState(null);
 
   const fetchPaymentsData = async () => {
     try {
@@ -353,19 +353,36 @@ const Payments = () => {
       });
 
       const response = await apiGet(GET_All_PAYMENTS, params, token);
+      const apiMessage = response.data?.message || response.data?.MESSAGE || null;
 
       if (response.data.status === STATUS.SUCCESS.toLocaleUpperCase()) {
         const list = response.data.data || [];
         setPayments(list);
         setTotalItems(response.data.pagination?.totalRecords || list.length);
         setTotalPages(response.data.pagination?.totalPages || 1);
+        setBackendMessage(list.length === 0 ? apiMessage : null);
+        setError(null);
       } else {
-        setError(response.data?.message || t("COMMON.API_ERROR"));
+        // Treat "no data" API messages as empty state, not a red error row
         setPayments([]);
+        setTotalItems(0);
+        setTotalPages(1);
+        setBackendMessage(apiMessage);
+        setError(null);
       }
     } catch (err) {
-      setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
+      const apiMessage = err?.response?.data?.message || err?.response?.data?.MESSAGE || null;
       setPayments([]);
+      setTotalItems(0);
+      setTotalPages(1);
+      // Prefer empty-state message for "not found" responses; keep real errors as sError
+      if (apiMessage && /no payments found/i.test(apiMessage)) {
+        setBackendMessage(apiMessage);
+        setError(null);
+      } else {
+        setBackendMessage(apiMessage);
+        setError(apiMessage ? null : t("COMMON.API_ERROR"));
+      }
     }
   };
 
@@ -499,7 +516,7 @@ const Payments = () => {
                 ) : payments.length === 0 ? (
                   <tr>
                     <td colSpan={5}>
-                      <EmptyState type="payments" title={t("PAYMENTS.NO_PAYMENTS_FOUND")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
+                      <EmptyState type="payments" title={backendMessage || ""} compact />
                     </td>
                   </tr>
                 ) : (
@@ -606,7 +623,7 @@ const Payments = () => {
               {sError}
             </div>
           ) : payments.length === 0 ? (
-            <EmptyState type="payments" title={t("PAYMENTS.NO_PAYMENTS_FOUND")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
+            <EmptyState type="payments" title={backendMessage || ""} compact />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 auto-rows-min">
             {payments.map((payment) => (

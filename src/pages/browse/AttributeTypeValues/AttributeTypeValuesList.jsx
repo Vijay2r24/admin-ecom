@@ -44,6 +44,7 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
     data: aAttributes = [],
     loading: bLoading = false,
     error: sError = null,
+    message: backendMessage = "",
     total: iTotalItems = 0,
   } = useSelector((state) => state.allData.resources.attributes || {});
 
@@ -284,8 +285,7 @@ const AttributeTypeValuesList = ({ onCreate, onBack, setSubmitting }) => {
                   <tr>
                     <td colSpan={4}>
                       <EmptyState
-                        title={t("PRODUCT_SETUP.ATTRIBUTES.EMPTY_MESSAGE")}
-                        description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                        title={backendMessage || ""}
                         compact
                       />
                     </td>

@@ -92,6 +92,7 @@ const OrderList = () => {
   const navigate = useNavigate();
   const { setTitle } = useTitle();
   const [sError, setError] = useState(null);
+  const [backendMessage, setBackendMessage] = useState(null);
   const [bLoading, setLoading] = useState(true);
 
   // Permission check for View Order Details
@@ -375,7 +376,8 @@ const OrderList = () => {
         setOrders([]);
         setTotalPages(0);
         setTotalRecords(0);
-        setError(oResponse.data.message || t("COMMON.API_ERROR"));
+        setBackendMessage(oResponse.data.message || oResponse.data.Message || null);
+        setError(oResponse.data.message || oResponse.data.Message || null);
       } else {
         const orders = oResponse.data.data || [];
 
@@ -432,10 +434,18 @@ const OrderList = () => {
         setOrders(formattedOrders);
         setTotalPages(oResponse.data.pagination?.totalPages || 0);
         setTotalRecords(oResponse.data.pagination?.totalRecords || 0);
+        setBackendMessage(
+          formattedOrders.length === 0
+            ? oResponse.data.message || oResponse.data.Message || null
+            : null
+        );
         setError(null);
       }
     } catch (error) {
-      setError(error?.response?.data?.message || t("COMMON.API_ERROR"));
+      const apiMessage =
+        error?.response?.data?.message || error?.response?.data?.Message || null;
+      setBackendMessage(apiMessage);
+      setError(apiMessage);
       setTotalPages(0);
       setTotalRecords(0);
     } finally {
@@ -647,7 +657,7 @@ const OrderList = () => {
                 ) : aOrders.length === 0 ? (
                   <tr>
                     <td colSpan={8}>
-                      <EmptyState type="empty-box" title={t("ORDERS.NO_ORDERS_FOUND")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
+                      <EmptyState type="empty-box" title={backendMessage || ""} compact />
                     </td>
                   </tr>
                 ) : (
@@ -789,9 +799,9 @@ const OrderList = () => {
               <SkeletonLoader type={SKELETON_TYPES.ORDER_GRID} rows={6} />
             </div>
           ) : sError ? (
-            <EmptyState type="error" title={sError} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
+            <EmptyState type="error" title={sError} compact />
           ) : aOrders.length === 0 ? (
-            <EmptyState type="empty-box" title={t("ORDERS.NO_ORDERS_FOUND")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
+            <EmptyState type="empty-box" title={backendMessage || ""} compact />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
             {aOrders.map((order) => (
@@ -882,23 +892,21 @@ const OrderList = () => {
         </div>
       )}
 
-      {aOrders.length > 0 && (
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10 flex-shrink-0">
-          {bLoading || bFilterLoading ? (
-            <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
-          ) : (
-            <Pagination
-              currentPage={nCurrentPage}
-              totalPages={sTotalPages}
-              totalItems={nTotalRecords}
-              itemsPerPage={nProductsPerPage}
-              handlePrevPage={handlePrevPage}
-              handleNextPage={handleNextPage}
-              handlePageClick={handlePageClick}
-            />
-          )}
-        </div>
-      )}
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10 flex-shrink-0">
+        {bLoading || bFilterLoading ? (
+          <SkeletonLoader type={SKELETON_TYPES.PAGINATION} />
+        ) : (
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={sTotalPages}
+            totalItems={nTotalRecords}
+            itemsPerPage={nProductsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        )}
+      </div>
     </div>
   );
 };

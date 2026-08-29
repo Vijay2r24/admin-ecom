@@ -79,16 +79,18 @@ const Banners = () => {
         oResponse.data &&
         oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()
       ) {
-        // Check if the response message indicates no banners found
-        if (oResponse.data.message === "No banners found") {
+        const apiMessage = oResponse.data.message || oResponse.data.MESSAGE || null;
+        const list = oResponse.data.data || [];
+
+        if (!list.length) {
           setBanners([]);
           setTotalPages(1);
           setTotalRecords(0);
-          setBackendMessage(oResponse.data.message); // Store backend message
-          setError(null); // Clear error since this is a valid response
-        } else if (oResponse.data.data && oResponse.data.data.length > 0) {
+          setBackendMessage(apiMessage);
+          setError(null);
+        } else {
           // Map API response to expected structure
-          const bannerData = oResponse.data.data.map((banner) => ({
+          const bannerData = list.map((banner) => ({
             BannerID: banner.BannerId,
             BannerName: banner.BannerName,
             Status: banner.IsActive
@@ -110,27 +112,24 @@ const Banners = () => {
           setTotalPages(oResponse.data.pagination?.totalPages || 1);
           setTotalRecords(oResponse.data.pagination?.totalRecords || 0);
           updatePlanResourceUsage(PLAN_LIMIT_RESOURCE.BANNERS, oResponse.data.pagination?.totalRecords || 0);
-          setBackendMessage(null); // Clear backend message when banners are found
-          setError(null);
-        } else {
-          // Empty data array
-          setBanners([]);
-          setTotalPages(1);
-          setTotalRecords(0);
-          setBackendMessage(null); // Clear backend message for empty data
+          setBackendMessage(null);
           setError(null);
         }
       } else {
+        const apiMessage = oResponse.data?.message || oResponse.data?.MESSAGE || null;
         setBanners([]);
         setTotalPages(1);
         setTotalRecords(0);
-        setError(oResponse.data?.message || t("COMMON.API_ERROR"));
+        setBackendMessage(apiMessage);
+        setError(null);
       }
     } catch (err) {
+      const apiMessage = err?.response?.data?.message || err?.response?.data?.MESSAGE || null;
       setBanners([]);
       setTotalPages(1);
       setTotalRecords(0);
-      setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
+      setBackendMessage(apiMessage);
+      setError(apiMessage ? null : t("COMMON.API_ERROR"));
     } finally {
       setLoading(false);
     }
@@ -246,7 +245,7 @@ const Banners = () => {
         {loading ? (
           <SkeletonLoader type={SKELETON_TYPES.BANNER_GRID} rows={6} className="mt-4" />
         ) : paginatedBanners.length === 0 && !sError ? (
-          <EmptyState type="empty-box" title={backendMessage || t("BANNER_FORM.NO_BANNERS_FOUND")} description={t("BANNER_FORM.NO_BANNERS_DESCRIPTION")} />
+          <EmptyState type="empty-box" title={backendMessage || ""} />
         ) : (
          <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-hide">
             {paginatedBanners.map((project) => (

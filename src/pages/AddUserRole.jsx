@@ -535,7 +535,12 @@ const AddUserRole = () => {
         } else {
           showEmsg(resData?.message || t("COMMON.API_ERROR"), STATUS.ERROR);
         }
-    
+      } catch (err) {
+        const backendMessage =
+          err?.response?.data?.message ||
+          err?.message ||
+          t("COMMON.API_ERROR");
+        showEmsg(backendMessage, STATUS.ERROR);
       } finally {
         setSubmitting(false);
       }

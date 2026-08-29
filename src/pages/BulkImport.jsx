@@ -24,6 +24,7 @@ const BulkImport = () => {
   const [productImportList, setProductImportList] = useState([]);
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState(null);
+  const [backendMessage, setBackendMessage] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -109,18 +110,22 @@ const BulkImport = () => {
       const response = await apiGet(GET_PRODUCT_IMPORT, { pageNumber: page, pageSize }, token);
       
       if (response.data) {
-        setProductImportList(response.data.data || []);
+        const items = response.data.data || [];
+        setProductImportList(items);
         setCurrentPage(response.data.pagination?.currentPage || page);
         setTotalPages(response.data.pagination?.totalPages || 0);
         setTotalItems(response.data.pagination?.totalRecords || 0);
-        
-        // Show message if no data found
-        if (response.data.data?.length === 0) {
-          showEmsg(t('BULK_IMPORT.NO_IMPORT_DATA'), STATUS.INFO);
-        }
+        setBackendMessage(
+          items.length === 0
+            ? response.data.message || response.data.Message || null
+            : null
+        );
       }
     } catch (error) {
-      setListError(error?.response?.data?.message || error?.message);
+      const apiMessage =
+        error?.response?.data?.message || error?.response?.data?.Message || null;
+      setBackendMessage(apiMessage);
+      setListError(apiMessage);
       // ApiUtils interceptor already shows the error toast
     } finally {
       setListLoading(false);
@@ -350,7 +355,7 @@ const BulkImport = () => {
               ) : productImportList.length === 0 ? (
                 <tr>
                   <td colSpan={5}>
-                    <EmptyState type="empty-box" title={t('BULK_IMPORT.NO_IMPORT_DATA')} compact />
+                    <EmptyState type="empty-box" title={backendMessage || ""} compact />
                   </td>
                 </tr>
               ) : (

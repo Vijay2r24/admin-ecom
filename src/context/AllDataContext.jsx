@@ -158,6 +158,11 @@ export const AllDataProvider = ({ children }) => {
           delete filteredParams.pageNumber;
 
         const oResponse = await apiGet(api, filteredParams, token);
+        const apiMessage =
+          oResponse.data?.message ||
+          oResponse.data?.MESSAGE ||
+          oResponse.data?.Message ||
+          null;
         let data = [];
         let total = 0;
         if (rolesPagination) {
@@ -203,17 +208,24 @@ export const AllDataProvider = ({ children }) => {
             ...(prev[key] || {}),
             data,
             total,
+            message: Array.isArray(data) && data.length === 0 ? apiMessage : null,
             loading: false,
             error: null,
           },
         }));
       } catch (err) {
+        const apiMessage =
+          err?.response?.data?.message ||
+          err?.response?.data?.MESSAGE ||
+          err?.response?.data?.Message ||
+          null;
         setState((prev) => ({
           ...prev,
           [key]: {
             ...(prev[key] || {}),
             loading: false,
             error: t("CONTEXT.ERROR_FETCHING_DATA"),
+            message: apiMessage,
           },
         }));
       }
@@ -268,6 +280,7 @@ export const AllDataProvider = ({ children }) => {
             loading: !!state[cfg.key]?.loading,
             error: state[cfg.key]?.error || null,
             total: state[cfg.key]?.total || 0,
+            message: state[cfg.key]?.message || null,
             fetch: (params = {}) => {
               const mappedParams = { ...params };
               if (params.page !== undefined)
@@ -308,6 +321,7 @@ export const AllDataProvider = ({ children }) => {
             loading: !!state[cfg.key]?.loading,
             error: state[cfg.key]?.error || null,
             total: state[cfg.key]?.total || 0,
+            message: state[cfg.key]?.message || null,
             fetch: (params = {}) =>
               fetchAll(
                 cfg.key,

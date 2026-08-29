@@ -53,6 +53,7 @@ const Users = () => {
     total = 0,
     loading,
     error,
+    message: backendMessage = null,
     pagination = {},
   } = usersState;
 
@@ -232,6 +233,8 @@ const Users = () => {
     });
     setCurrentPage(1);
   };
+
+  const emptyTableMessage = backendMessage || "";
 
   const roleOptions = Array.isArray(aRoles)
     ? aRoles.map((role) => ({
@@ -515,16 +518,16 @@ const Users = () => {
               <tbody className="table-body">
                 {loading || initialLoading ? (
                   <SkeletonLoader type={SKELETON_TYPES.USER_TABLE} rows={8} />
+                ) : usersData.length === 0 ? (
+                  <tr>
+                    <td colSpan={5}>
+                      <EmptyState type="users" title={emptyTableMessage} compact />
+                    </td>
+                  </tr>
                 ) : error ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-red-500">
                       {error}
-                    </td>
-                  </tr>
-                ) : usersData.length === 0 ? (
-                  <tr>
-                    <td colSpan={5}>
-                      <EmptyState type="users" title={t("USERS.NO_USERS_FOUND")} description="Try adjusting your search or filters." compact />
                     </td>
                   </tr>
                 ) : (
@@ -656,12 +659,12 @@ const Users = () => {
               <div className="p-4">
                 <SkeletonLoader type={SKELETON_TYPES.USER_GRID} rows={6} />
               </div>
+            ) : usersData.length === 0 ? (
+              <EmptyState type="users" title={emptyTableMessage} compact />
             ) : error ? (
               <div className="text-center py-4 text-red-500">
                 {error}
               </div>
-            ) : usersData.length === 0 ? (
-              <EmptyState type="users" title={t("USERS.NO_USERS_FOUND")} description="Try adjusting your search or filters." compact />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
                 {usersData.map((user) => (

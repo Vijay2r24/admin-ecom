@@ -79,6 +79,7 @@ const Cancellations = () => {
   const [nCurrentPage, setCurrentPage]                  = useState(1);
   const [nTotalRecords, setTotalRecords]                = useState(0);
   const [sError, setError]                              = useState(null);
+  const [backendMessage, setBackendMessage]             = useState(null);
   const [statusPopup, setStatusPopup]                   = useState({ open: false, reasonID: null, newStatus: null });
 
   /* ── derived pagination ── */
@@ -112,8 +113,9 @@ const Cancellations = () => {
         ...(params.searchText && { searchText: params.searchText }),
       });
 
-      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase() && response?.data?.data) {
-        const mapped = response.data.data.map(r => ({
+      if (response?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
+        const rows = Array.isArray(response.data.data) ? response.data.data : [];
+        const mapped = rows.map(r => ({
           reasonID:           r.ReasonID,
           categories:         r.Categories || [],
           reasonType:         r.ReasonType,
@@ -126,15 +128,21 @@ const Cancellations = () => {
       
         setAllReasons(mapped);
         setTotalRecords(response.data.pagination?.totalRecords || response.data.total || mapped.length);
+        setBackendMessage(mapped.length === 0 ? (response.data.message || response.data.MESSAGE || null) : null);
+        setError(null);
       } else {
+        const apiMessage = response?.data?.message || response?.data?.MESSAGE || null;
         setAllReasons([]);
         setTotalRecords(0);
-        setError(response?.data?.message || t("COMMON.API_ERROR"));
+        setBackendMessage(apiMessage);
+        setError(null);
       }
     } catch (error) {
+      const apiMessage = error?.response?.data?.message || error?.response?.data?.MESSAGE || null;
       setAllReasons([]);
       setTotalRecords(0);
-      setError(error?.response?.data?.message || t("COMMON.API_ERROR"));
+      setBackendMessage(apiMessage);
+      setError(apiMessage ? null : t("COMMON.API_ERROR"));
     } finally {
       if (!silent) setBSubmitting(false);
     }
@@ -269,7 +277,7 @@ const Cancellations = () => {
               ) : allReasons.length === 0 ? (
                 <tr>
                   <td colSpan="6">
-                    <EmptyState type="empty-box" title={t('REASON_MANAGEMENT.NO_REASONS_FOUND')} compact />
+                    <EmptyState type="empty-box" title={backendMessage || ""} compact />
                   </td>
                 </tr>
               ) : (

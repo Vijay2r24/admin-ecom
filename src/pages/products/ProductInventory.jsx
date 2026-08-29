@@ -111,6 +111,7 @@ const ProductInventory = () => {
   const [aProducts, setProducts] = useState([]);
   const [bLoading, setLoading] = useState(true);
   const [sError, setError] = useState(null);
+  const [backendMessage, setBackendMessage] = useState(null);
   const [nTotalItems, setTotalItems] = useState(0);
   const [nTotalPages, setTotalPages] = useState(0);
   const { setTitle } = useTitle();
@@ -407,8 +408,15 @@ const ProductInventory = () => {
         setProducts(visibleProducts);
         setTotalItems(searchText ? visibleProducts.length : totalRecords);
         setTotalPages(searchText ? Math.max(1, Math.ceil(visibleProducts.length / itemsPerPage)) : totalPages);
+        setBackendMessage(
+          visibleProducts.length === 0
+            ? resData.message || resData.Message || null
+            : null
+        );
       } else {
-        setError(resData?.message || t("COMMON.API_ERROR"));
+        const apiMessage = resData?.message || resData?.Message || null;
+        setBackendMessage(apiMessage);
+        setError(apiMessage);
         setProducts([]);
         setTotalItems(0);
         setTotalPages(0);
@@ -421,7 +429,10 @@ const ProductInventory = () => {
         setTotalPages(0);
         return;
       }
-      setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
+      const apiMessage =
+        err?.response?.data?.message || err?.response?.data?.Message || null;
+      setBackendMessage(apiMessage);
+      setError(apiMessage);
       setProducts([]);
       setTotalItems(0);
       setTotalPages(0);
@@ -673,8 +684,7 @@ const ProductInventory = () => {
             ) : displayedProducts.length === 0 ? (
               <EmptyState
                 type="products"
-                title={t("PRODUCT_INVENTORY.NO_PRODUCTS")}
-                description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                title={backendMessage || ""}
                 compact
               />
             ) : (
@@ -786,8 +796,7 @@ const ProductInventory = () => {
             ) : displayedProducts.length === 0 ? (
               <EmptyState
                 type="products"
-                title={t("PRODUCT_INVENTORY.NO_PRODUCTS")}
-                description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                title={backendMessage || ""}
                 compact
               />
             ) : (

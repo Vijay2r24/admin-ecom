@@ -37,6 +37,7 @@ import {
 /**
  * Resource Configurations
  */
+
 const aResourceConfigs = [
   { key: "attributes", api: GET_ALL_ATTRIBUTES, idField: "AttributeID" },
   { key: "colors", api: GET_All_COLORSAPI, idField: "ColourID" },
@@ -113,6 +114,7 @@ export const fetchResource = createAsyncThunk(
 
       const token = localStorage.getItem("token");
       const response = await apiGet(config.api, params, token);
+      const message = getApiResponseMessage(response.data) || null;
 
       let data = [];
       let total = 0;
@@ -146,9 +148,16 @@ export const fetchResource = createAsyncThunk(
         });
       }
 
-      return { key, data, total, pagination };
+      return { key, data, total, pagination, message: data.length === 0 ? message : null };
     } catch (err) {
-      return rejectWithValue({ key, error: err.message });
+      const responseData = err?.response?.data;
+      return rejectWithValue({
+        key,
+        error: err.message,
+        message: getApiResponseMessage(responseData) || null,
+        data: Array.isArray(responseData?.data) ? responseData.data : null,
+        pagination: responseData?.pagination || null,
+      });
     }
   }
 );
@@ -364,7 +373,7 @@ const allDataSlice = createSlice({
         };
       })
       .addCase(fetchResource.fulfilled, (state, action) => {
-        const { key, data, total, pagination } = action.payload;
+        const { key, data, total, pagination, message } = action.payload;
         
         // For attributes, always replace data to ensure we get the correct type-specific attributes
         // The tracking system in AddProductForm will handle caching per type
@@ -372,16 +381,21 @@ const allDataSlice = createSlice({
           data,
           total,
           pagination,
+          message: message || null,
           loading: false,
           error: null,
         };
       })
       .addCase(fetchResource.rejected, (state, action) => {
-        const { key, error } = action.payload || {};
+        const { key, error, message, data, pagination, total } =
+          action.payload || {};
+        const apiMessage = message || null;
         state.resources[key] = {
           ...(state.resources[key] || {}),
+          ...(Array.isArray(data) ? { data, total: total ?? 0, pagination: pagination || {} } : {}),
           loading: false,
-          error: error || null,
+          error: Array.isArray(data) ? null : error || null,
+          message: apiMessage,
         };
       })
 

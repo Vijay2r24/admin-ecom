@@ -80,28 +80,7 @@ const getPaginationValue = (pagination, keys, fallback = 0) => {
   return fallback;
 };
 
-const productMatchesSearch = (product, term) => {
-  const query = String(term || "").trim().toLowerCase();
-  if (!query) return true;
-  const fields = [
-    product.ProductName,
-    product.CategoryName,
-    product.subCategory,
-    product.brandName,
-    product.BrandName,
-    product.SKU,
-    product.Sku,
-    product.ProductSKU,
-  ];
-  if (Array.isArray(product.Variants)) {
-    product.Variants.forEach((variant) => {
-      fields.push(variant?.SKU, variant?.Sku, variant?.VariantName, variant?.ProductVariantName);
-    });
-  }
-  return fields.some((value) => String(value || "").toLowerCase().includes(query));
-};
-
-const ProductList = () => {
+ const ProductList = () => {
   const [sSearchTerm, setSearchTerm] = useState("");
   const [sDebouncedSearch, setDebouncedSearch] = useState("");
   const [sViewMode, setViewMode] = useState("table");
@@ -113,6 +92,7 @@ const ProductList = () => {
   const [aProducts, setProducts] = useState([]);
   const [bLoading, setLoading] = useState(true);
   const [sError, setError] = useState(null);
+  const [backendMessage, setBackendMessage] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [nTotalItems, setTotalItems] = useState(0);
   const [nTotalPages, setTotalPages] = useState(0);
@@ -178,8 +158,9 @@ const ProductList = () => {
     const fetchId = ++fetchIdRef.current;
     try {
       const searchText = sDebouncedSearch.trim();
-      if (!initialLoadCompleteRef.current || !searchText) {
-        setLoading(true);
+      setLoading(true);
+      if (initialLoadCompleteRef.current) {
+        setFilterLoading(true);
       }
       setError(null);
       const token = localStorage.getItem("token");
@@ -254,14 +235,21 @@ const ProductList = () => {
         setProducts(transformedProducts);
         setTotalItems(totalRecords);
         setTotalPages(totalPages);
+        setBackendMessage(
+          transformedProducts.length === 0
+            ? resData.message || resData.Message || null
+            : null
+        );
+        setError(null);
         if (isUnfilteredList) {
           updatePlanResourceUsage(PLAN_LIMIT_RESOURCE.PRODUCTS, totalRecords);
         }
       } else {
-        setError(resData?.message || t("COMMON.API_ERROR"));
         setProducts([]);
         setTotalItems(0);
         setTotalPages(0);
+        setBackendMessage(resData?.message || resData?.Message || null);
+        setError(null);
       }
     } catch (err) {
       if (fetchId !== fetchIdRef.current) return;
@@ -269,12 +257,20 @@ const ProductList = () => {
         setProducts([]);
         setTotalItems(0);
         setTotalPages(0);
+        setBackendMessage(null);
         return;
       }
-      setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
+      const apiMessage = err?.response?.data?.message || err?.response?.data?.Message || null;
       setProducts([]);
       setTotalItems(0);
       setTotalPages(0);
+      if (apiMessage && /no products found/i.test(apiMessage)) {
+        setBackendMessage(apiMessage);
+        setError(null);
+      } else {
+        setBackendMessage(null);
+        setError(apiMessage || t("COMMON.API_ERROR"));
+      }
     } finally {
       if (fetchId === fetchIdRef.current) {
         setLoading(false);
@@ -307,6 +303,9 @@ const ProductList = () => {
   useEffect(() => { setTitle(t("PRODUCTS.TITLE")); }, [setTitle, t]);
 
   useEffect(() => {
+    setProducts([]);
+    setBackendMessage(null);
+    setLoading(true);
     const timer = setTimeout(() => {
       setDebouncedSearch(sSearchTerm);
       setCurrentPage(1);
@@ -394,11 +393,6 @@ const ProductList = () => {
   const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, nTotalPages));
   const handlePageClick = (page) => setCurrentPage(page);
-
-  const displayedProducts = useMemo(
-    () => aProducts.filter((product) => productMatchesSearch(product, sSearchTerm)),
-    [aProducts, sSearchTerm]
-  );
 
   const planUsageCount = useMemo(() => {
     const storedUsage = getPlanResourceUsage(PLAN_LIMIT_RESOURCE.PRODUCTS);
@@ -499,14 +493,14 @@ const ProductList = () => {
                       {sError}
                     </td>
                   </tr>
-                ) : displayedProducts.length === 0 ? (
+                ) : aProducts.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="overflow-hidden">
-                      <EmptyState type="products" title={t("PRODUCTS.NO_PRODUCTS")} description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")} compact />
+                      <EmptyState type="products" title={backendMessage || ""} compact />
                     </td>
                   </tr>
                 ) : (
-                  displayedProducts.map((product, index) => (
+                  aProducts.map((product, index) => (
                     <tr
                       key={product.ProductID ?? `product-${index}`}
                       className={`table-row transition-shadow ${
@@ -576,16 +570,15 @@ const ProductList = () => {
               </div>
             ) : sError ? (
               <div className="text-center py-8 text-gray-500">{sError}</div>
-            ) : displayedProducts.length === 0 ? (
+            ) : aProducts.length === 0 ? (
               <EmptyState
                 type="products"
-                title={t("PRODUCTS.NO_PRODUCTS")}
-                description={t("COMMON.TRY_ADJUSTING_SEARCH_FILTERS")}
+                title={backendMessage || ""}
                 compact
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                {displayedProducts.map((product, index) => (
+                {aProducts.map((product, index) => (
                   <div
                     key={product.ProductID ?? `product-${index}`}
                     className={`rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200 ${
@@ -643,23 +636,21 @@ const ProductList = () => {
         </div>
       )}
 
-      {!sError && nTotalItems > 0 && displayedProducts.length > 0 && (
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10 flex-shrink-0">
-          {(bLoading || bFilterLoading) ? (
-            <SkeletonLoader type="pagination" />
-          ) : (
-            <Pagination
-              currentPage={nCurrentPage}
-              totalPages={nTotalPages}
-              totalItems={nTotalItems}
-              itemsPerPage={itemsPerPage}
-              handlePrevPage={handlePrevPage}
-              handleNextPage={handleNextPage}
-              handlePageClick={handlePageClick}
-            />
-          )}
-        </div>
-      )}
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10 flex-shrink-0">
+        {isLoading ? (
+          <SkeletonLoader type="pagination" />
+        ) : (
+          <Pagination
+            currentPage={nCurrentPage}
+            totalPages={nTotalPages}
+            totalItems={nTotalItems}
+            itemsPerPage={itemsPerPage}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageClick={handlePageClick}
+          />
+        )}
+      </div>
 
       {statusPopup.open && (
         <FullscreenErrorPopup
