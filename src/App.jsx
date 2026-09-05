@@ -632,7 +632,10 @@ const App = () => {
                 <Route
                   path="/bulk-images"
                   element={
-                    <ProtectedRoute permissionCode={getPermissionCode("Bulk Import Management", "Upload Bulk Import Images")}>
+                    <ProtectedRoute permissionCode={
+                      getPermissionCode("Bulk Import Management", "Bulk Image") ||
+                      getPermissionCode("Bulk Import Management", "Upload Bulk Import Images")
+                    }>
                       <BulkImages />
                     </ProtectedRoute>
                   }

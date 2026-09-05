@@ -353,34 +353,39 @@ const OrderToolbar = ({
           )
         )}
         {onAddVariants && (
-          <button
-            type="button"
-            aria-disabled={addVariantsDisabled}
-            onClick={(e) => {
-              if (addVariantsDisabled) {
-                e.preventDefault();
-                if (onDisabledClick) {
-                  onDisabledClick(e);
-                } else if (effectiveAddVariantsDisableReason) {
-                  import("../utils/ShowEmsg").then(({ showEmsg }) => {
-                    showEmsg(effectiveAddVariantsDisableReason, NOTIFICATION_TYPES.WARNING, TOAST_DURATION.LONG);
-                  });
-                }
-                return;
-              }
-              onAddVariants(e);
-            }}
-            className={`inline-flex items-center justify-center h-9 px-3 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
-              addVariantsDisabled
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-70'
-                : 'text-white bg-custom-bg hover:bg-bg-hover'
-            }`}
-            style={{ minWidth: '100px' }}
-            title={addVariantsDisabled ? effectiveAddVariantsDisableReason : undefined}
+          <Tooltip
+            text={addVariantsDisabled && effectiveAddVariantsDisableReason ? effectiveAddVariantsDisableReason : ""}
+            position="bottom-left"
+            disabled={!addVariantsDisabled || !effectiveAddVariantsDisableReason}
           >
-            <Plus className="h-3.5 w-3.5" />
-            {t("PRODUCTS.ADD_VARIANTS_BTN")}
-          </button>
+            <button
+              type="button"
+              aria-disabled={addVariantsDisabled}
+              onClick={(e) => {
+                if (addVariantsDisabled) {
+                  e.preventDefault();
+                  if (onDisabledClick) {
+                    onDisabledClick(e);
+                  } else if (effectiveAddVariantsDisableReason) {
+                    import("../utils/ShowEmsg").then(({ showEmsg }) => {
+                      showEmsg(effectiveAddVariantsDisableReason, NOTIFICATION_TYPES.WARNING, TOAST_DURATION.LONG);
+                    });
+                  }
+                  return;
+                }
+                onAddVariants(e);
+              }}
+              className={`inline-flex items-center justify-center h-9 px-3 border border-transparent rounded-md shadow-sm text-xs font-semibold transition gap-1.5 ${
+                addVariantsDisabled
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-70'
+                  : 'text-white bg-custom-bg hover:bg-bg-hover'
+              }`}
+              style={{ minWidth: '100px' }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t("PRODUCTS.ADD_VARIANTS_BTN")}
+            </button>
+          </Tooltip>
         )}
         {extraContent && extraContent}
       </div>

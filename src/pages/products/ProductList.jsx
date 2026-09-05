@@ -122,11 +122,19 @@ const getPaginationValue = (pagination, keys, fallback = 0) => {
 
   const addProductPermissionCode = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.CREATE_PRODUCT);
   const addVariantPermissionCode = getPermissionCode(MODULES.PRODUCT, PERMISSIONS.ADD_VARIANTS);
-  const hasAddVariantPermission = hasPermissionId(addVariantPermissionCode);
 
   const { canCreate: canAddProduct, disabledReason: addProductDisabledReason } =
     useCreateAccess(addProductPermissionCode, {
       noPermissionMsg: t("PRODUCTS.NO_CREATE_PERMISSION"),
+      limitReachedMsg: t("PRODUCTS.LIMIT_REACHED"),
+      actionType: ACTION_TYPES.PRODUCT,
+    });
+
+  const { canCreate: canAddVariant, disabledReason: addVariantDisabledReason } =
+    useCreateAccess(addVariantPermissionCode, {
+      noPermissionMsg: t(
+        "PRODUCTS.NO_ADD_VARIANT_PERMISSION",
+      ),
       limitReachedMsg: t("PRODUCTS.LIMIT_REACHED"),
       actionType: ACTION_TYPES.PRODUCT,
     });
@@ -452,11 +460,8 @@ const getPaginationValue = (pagination, keys, fallback = 0) => {
         actionType="PRODUCT"
         disableCreate={!canAddProduct}
         disableCreateReason={addProductDisabledReason}
-        disableAddVariants={!hasAddVariantPermission}
-        disableAddVariantsReason={t(
-          "PRODUCTS.NO_ADD_VARIANT_PERMISSION",
-          "You do not have permission to add variants."
-        )}
+        disableAddVariants={!canAddVariant}
+        disableAddVariantsReason={addVariantDisabledReason}
         onExport={handleExportProducts}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
         extraContent={

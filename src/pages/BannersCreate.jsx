@@ -830,6 +830,7 @@ const BannerForm = () => {
                       t={t}
                       allowFutureDates={true}
                       useFuturePresets={true}
+                      minDate={dayjs().startOf("day")}
                     />
                   </div>
                   <div>

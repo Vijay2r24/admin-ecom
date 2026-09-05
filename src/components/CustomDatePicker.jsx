@@ -14,6 +14,10 @@ import {
   STYLES,
   DATE_FORMATS,
   DATE_UNITS,
+  DATE_VIEWS,
+  TIME_CONSTANTS,
+  VALIDATION_TYPES,
+  BUTTON_TYPES,
   QUICK_FILTER_KEYS,
   PAST_QUICK_FILTER_VALUES,
   PAST_QUICK_FILTER_LABELS,
@@ -46,7 +50,7 @@ function DateTimeRangePickerComponent({
       : dayjs().format(DATE_FORMATS.time),
   });
 
-  const [view, setView] = useState(DATE_UNITS.DAYS);
+  const [view, setView] = useState(DATE_VIEWS.DAYS);
   const [validationError, setValidationError] = useState(null);
   const calendarRef = useRef(null);
 
@@ -55,7 +59,7 @@ function DateTimeRangePickerComponent({
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
         setShowCalendar(false);
         setShowDropdown(false); // Also close the main dropdown
-        setView(DATE_UNITS.DAYS);
+        setView(DATE_VIEWS.DAYS);
         setValidationError(null);
       }
     };
@@ -84,24 +88,24 @@ function DateTimeRangePickerComponent({
 
   const validateDateRange = (start, end) => {
     if (!start || !end) {
-      return { type: "range", message: t("VALIDATION.SELECT_BOTH_DATES") };
+      return { type: VALIDATION_TYPES.RANGE, message: t("VALIDATION.SELECT_BOTH_DATES") };
     }
 
     if (!start.isValid() || !end.isValid()) {
-      return { type: "date", message: t("VALIDATION.INVALID_DATE") };
+      return { type: VALIDATION_TYPES.DATE, message: t("VALIDATION.INVALID_DATE") };
     }
 
     if (end.isBefore(start)) {
-      return { type: "range", message: t("VALIDATION.END_BEFORE_START") };
+      return { type: VALIDATION_TYPES.RANGE, message: t("VALIDATION.END_BEFORE_START") };
     }
 
     if (!allowFutureDates && start.isAfter(dayjs(), DATE_UNITS.DAY)) {
-      return { type: "date", message: t("VALIDATION.NO_FUTURE_DATES") };
+      return { type: VALIDATION_TYPES.DATE, message: t("VALIDATION.NO_FUTURE_DATES") };
     }
 
     if (minDate && start.isBefore(minDate, DATE_UNITS.DAY)) {
       return {
-        type: "date",
+        type: VALIDATION_TYPES.DATE,
         message: t("VALIDATION.MIN_DATE", {
           date: minDate.format(DATE_FORMATS.DATE_DISPLAY),
         }),
@@ -110,7 +114,7 @@ function DateTimeRangePickerComponent({
 
     if (maxDate && end.isAfter(maxDate, DATE_UNITS.DAY)) {
       return {
-        type: "date",
+        type: VALIDATION_TYPES.DATE,
         message: t("VALIDATION.MAX_DATE", {
           date: maxDate.format(DATE_FORMATS.DATE_DISPLAY),
         }),
@@ -119,7 +123,7 @@ function DateTimeRangePickerComponent({
 
     const daysDiff = end.diff(start, DATE_UNITS.DAY);
     if (daysDiff > 365) {
-      return { type: "range", message: t("VALIDATION.MAX_RANGE_365") };
+      return { type: VALIDATION_TYPES.RANGE, message: t("VALIDATION.MAX_RANGE_365") };
     }
 
     return null;
@@ -127,7 +131,7 @@ function DateTimeRangePickerComponent({
 
   const validateTimeRange = (startTime, endTime, startDate, endDate) => {
     if (!validateTime(startTime) || !validateTime(endTime)) {
-      return { type: "time", message: t("VALIDATION.INVALID_TIME_FORMAT") };
+      return { type: VALIDATION_TYPES.TIME, message: t("VALIDATION.INVALID_TIME_FORMAT") };
     }
 
     if (startDate.isSame(endDate, DATE_UNITS.DAY)) {
@@ -137,7 +141,7 @@ function DateTimeRangePickerComponent({
       const endMinutes = endHour * 60 + endMin;
 
       if (endMinutes <= startMinutes) {
-        return { type: "time", message: t("VALIDATION.END_TIME_AFTER_START") };
+        return { type: VALIDATION_TYPES.TIME, message: t("VALIDATION.END_TIME_AFTER_START") };
       }
     }
 
@@ -224,16 +228,16 @@ function DateTimeRangePickerComponent({
         break;
 
       case QUICK_FILTER_KEYS.LAST_2_DAYS:
-        start = now.subtract(2, DATE_UNITS.DAY).startOf("day");
+        start = now.subtract(2, DATE_UNITS.DAY).startOf(DATE_UNITS.DAY);
         end = now;
-        startTime = "00:00";
+        startTime = TIME_CONSTANTS.MIDNIGHT;
         endTime = end.format(DATE_FORMATS.time);
         break;
 
       case QUICK_FILTER_KEYS.LAST_7_DAYS:
-        start = now.subtract(7, DATE_UNITS.DAY).startOf("day");
+        start = now.subtract(7, DATE_UNITS.DAY).startOf(DATE_UNITS.DAY);
         end = now;
-        startTime = "00:00";
+        startTime = TIME_CONSTANTS.MIDNIGHT;
         endTime = end.format(DATE_FORMATS.time);
         break;
 
@@ -277,8 +281,8 @@ function DateTimeRangePickerComponent({
     label: quickFilterLabels[index],
   }));
 
-  const startOfMonth = selectedMonth.startOf("month");
-  const endOfMonth = selectedMonth.endOf("month");
+  const startOfMonth = selectedMonth.startOf(DATE_UNITS.MONTH);
+  const endOfMonth = selectedMonth.endOf(DATE_UNITS.MONTH);
   const startDay = startOfMonth.day();
   const daysInMonth = endOfMonth.date();
 
@@ -309,7 +313,7 @@ function DateTimeRangePickerComponent({
 
     if (isDateDisabled(clickedDate)) {
       setValidationError({
-        type: "date",
+        type: VALIDATION_TYPES.DATE,
         message: t("VALIDATION.DATE_NOT_SELECTABLE"),
       });
       return;
@@ -333,23 +337,23 @@ function DateTimeRangePickerComponent({
 
   const handleMonthSelect = (monthIndex) => {
     setSelectedMonth(selectedMonth.month(monthIndex));
-    setView(DATE_UNITS.DAYS);
+    setView(DATE_VIEWS.DAYS);
   };
 
   const handleYearSelect = (year) => {
     setSelectedMonth(selectedMonth.year(year));
-    setView("months");
+    setView(DATE_VIEWS.MONTHS);
   };
 
   const handleTimeChange = (type, value) => {
     const newTimeRange = {
       ...timeRange,
-      [type === "start" ? "startTime" : "endTime"]: value,
+      [type === TIME_CONSTANTS.START ? TIME_CONSTANTS.START_TIME : TIME_CONSTANTS.END_TIME]: value,
     };
 
     if (!validateTime(value)) {
       setValidationError({
-        type: "time",
+        type: VALIDATION_TYPES.TIME,
         message: t("VALIDATION.INVALID_TIME_FORMAT"),
       });
       return;
@@ -362,7 +366,7 @@ function DateTimeRangePickerComponent({
   const applyDateRange = () => {
     if (!tempRange.start || !tempRange.end) {
       setValidationError({
-        type: "range",
+        type: VALIDATION_TYPES.RANGE,
         message: t("VALIDATION.SELECT_BOTH_DATES"),
       });
       return;
@@ -399,7 +403,7 @@ function DateTimeRangePickerComponent({
 
     setDateRange({ start: finalStart, end: finalEnd });
     setShowCalendar(false);
-    setView(DATE_UNITS.DAYS);
+    setView(DATE_VIEWS.DAYS);
     setValidationError(null);
   };
 
@@ -414,158 +418,227 @@ function DateTimeRangePickerComponent({
     setValidationError(null);
   };
 
-  const renderDaysView = () => (
-    <>
-      <div className="flex justify-between items-center mb-1">
-        <button
-          onClick={() => setSelectedMonth(selectedMonth.subtract(1, "month"))}
-          className="p-0.5 hover:bg-gray-100 rounded-full"
-          aria-label={t("PREVIOUS_MONTH")}
-        >
-          <ChevronLeft size={14} />
-        </button>
-        <button
-          onClick={() => setView("months")}
-          className="font-semibold text-gray-700 hover:bg-gray-100 px-2 py-0.5 rounded text-xs"
-        >
-          {MONTHS[selectedMonth.month()]} {selectedMonth.year()}
-        </button>
-        <button
-          onClick={() => setSelectedMonth(selectedMonth.add(1, "month"))}
-          className="p-0.5 hover:bg-gray-100 rounded-full"
-          aria-label={t("NEXT_MONTH")}
-        >
-          <ChevronRight size={14} />
-        </button>
-      </div>
+  const renderDaysView = () => {
+    const isPrevMonthDisabled =
+      minDate && selectedMonth.subtract(1, DATE_UNITS.MONTH).endOf(DATE_UNITS.MONTH).isBefore(minDate, DATE_UNITS.DAY);
+    const isNextMonthDisabled =
+      maxDate && selectedMonth.add(1, DATE_UNITS.MONTH).startOf(DATE_UNITS.MONTH).isAfter(maxDate, DATE_UNITS.DAY);
 
-      <div className="grid grid-cols-7 text-xs font-semibold text-gray-500 mb-1">
-        {WEEK_DAYS.map((day) => (
-          <div key={day} className="text-center">
-            {day}
-          </div>
-        ))}
-      </div>
+    return (
+      <>
+        <div className="flex justify-between items-center mb-1">
+          <button
+            type={BUTTON_TYPES.BUTTON}
+            disabled={isPrevMonthDisabled}
+            onClick={() => !isPrevMonthDisabled && setSelectedMonth(selectedMonth.subtract(1, DATE_UNITS.MONTH))}
+            className={`p-0.5 rounded-full ${
+              isPrevMonthDisabled ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"
+            }`}
+            aria-label={t("PREVIOUS_MONTH")}
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <button
+            type={BUTTON_TYPES.BUTTON}
+            onClick={() => setView(DATE_VIEWS.MONTHS)}
+            className="font-semibold text-gray-700 hover:bg-gray-100 px-2 py-0.5 rounded text-xs"
+          >
+            {MONTHS[selectedMonth.month()]} {selectedMonth.year()}
+          </button>
+          <button
+            type={BUTTON_TYPES.BUTTON}
+            disabled={isNextMonthDisabled}
+            onClick={() => !isNextMonthDisabled && setSelectedMonth(selectedMonth.add(1, DATE_UNITS.MONTH))}
+            className={`p-0.5 rounded-full ${
+              isNextMonthDisabled ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"
+            }`}
+            aria-label={t("NEXT_MONTH")}
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
 
-      <div className="grid grid-cols-7 gap-0.5 text-xs">
-        {days.map((day, idx) => {
-          if (!day) {
-            return <div key={idx} className="invisible h-5" />;
-          }
-
-          const current = dayjs(selectedMonth).date(day);
-          const isDisabled = isDateDisabled(current);
-          const isSelected =
-            tempRange.start &&
-            tempRange.end &&
-            current.isAfter(tempRange.start, DATE_UNITS.DAY) &&
-            current.isBefore(tempRange.end, DATE_UNITS.DAY);
-          const isStart = tempRange.start?.isSame(current, DATE_UNITS.DAY);
-          const isEnd = tempRange.end?.isSame(current, DATE_UNITS.DAY);
-
-          return (
-            <div
-              key={idx}
-              className={`h-5 flex items-center justify-center rounded text-xs font-medium
-                ${
-                  isDisabled
-                    ? "text-gray-300 cursor-not-allowed"
-                    : isStart || isEnd
-                    ? "bg-blue-500 text-white cursor-pointer"
-                    : isSelected
-                    ? "bg-blue-100 text-blue-600 cursor-pointer"
-                    : "hover:bg-gray-100 text-gray-700 cursor-pointer"
-                }`}
-              onClick={() => !isDisabled && handleDateClick(day)}
-            >
+        <div className="grid grid-cols-7 text-xs font-semibold text-gray-500 mb-1">
+          {WEEK_DAYS.map((day) => (
+            <div key={day} className="text-center">
               {day}
             </div>
-          );
-        })}
-      </div>
-    </>
-  );
+          ))}
+        </div>
 
-  const renderMonthsView = () => (
-    <>
-      <div className="flex justify-between items-center mb-2">
-        <button
-          onClick={() => setSelectedMonth(selectedMonth.subtract(1, "year"))}
-          className="p-0.5 hover:bg-gray-100 rounded-full"
-          aria-label={t("PREVIOUS_YEAR")}
-        >
-          <ChevronLeft size={14} />
-        </button>
-        <button
-          onClick={() => setView("years")}
-          className="font-semibold text-gray-700 hover:bg-gray-100 px-2 py-0.5 rounded text-xs"
-        >
-          {selectedMonth.year()}
-        </button>
-        <button
-          onClick={() => setSelectedMonth(selectedMonth.add(1, "year"))}
-          className="p-0.5 hover:bg-gray-100 rounded-full"
-          aria-label={t("NEXT_YEAR")}
-        >
-          <ChevronRight size={14} />
-        </button>
-      </div>
-      <div className="grid grid-cols-3 gap-1">
-        {MONTHS.map((month, index) => (
-          <button
-            key={month}
-            onClick={() => handleMonthSelect(index)}
-            className={`p-1.5 text-xs rounded hover:bg-gray-100 font-medium ${
-              selectedMonth.month() === index
-                ? "bg-blue-500 text-white hover:bg-blue-600"
-                : "text-gray-700"
-            }`}
-          >
-            {month.slice(0, 3)}
-          </button>
-        ))}
-      </div>
-    </>
-  );
+        <div className="grid grid-cols-7 gap-0.5 text-xs">
+          {days.map((day, idx) => {
+            if (!day) {
+              return <div key={idx} className="invisible h-5" />;
+            }
 
-  const renderYearsView = () => (
-    <>
-      <div className="flex justify-between items-center mb-2">
-        <button
-          onClick={() => setSelectedMonth(selectedMonth.subtract(10, "year"))}
-          className="p-0.5 hover:bg-gray-100 rounded-full"
-          aria-label={t("PREVIOUS_DECADE")}
-        >
-          <ChevronLeft size={14} />
-        </button>
-        <span className="font-semibold text-gray-700 text-xs">
-          {years[0]} - {years[years.length - 1]}
-        </span>
-        <button
-          onClick={() => setSelectedMonth(selectedMonth.add(10, "year"))}
-          className="p-0.5 hover:bg-gray-100 rounded-full"
-          aria-label={t("NEXT_DECADE")}
-        >
-          <ChevronRight size={14} />
-        </button>
-      </div>
-      <div className="grid grid-cols-4 gap-1 max-h-40 overflow-y-auto">
-        {years.map((year) => (
+            const current = dayjs(selectedMonth).date(day);
+            const isDisabled = isDateDisabled(current);
+            const isSelected =
+              tempRange.start &&
+              tempRange.end &&
+              current.isAfter(tempRange.start, DATE_UNITS.DAY) &&
+              current.isBefore(tempRange.end, DATE_UNITS.DAY);
+            const isStart = tempRange.start?.isSame(current, DATE_UNITS.DAY);
+            const isEnd = tempRange.end?.isSame(current, DATE_UNITS.DAY);
+
+            return (
+              <div
+                key={idx}
+                className={`h-5 flex items-center justify-center rounded text-xs font-medium
+                  ${
+                    isDisabled
+                      ? "text-gray-300 cursor-not-allowed"
+                      : isStart || isEnd
+                      ? "bg-blue-500 text-white cursor-pointer"
+                      : isSelected
+                      ? "bg-blue-100 text-blue-600 cursor-pointer"
+                      : "hover:bg-gray-100 text-gray-700 cursor-pointer"
+                  }`}
+                onClick={() => !isDisabled && handleDateClick(day)}
+              >
+                {day}
+              </div>
+            );
+          })}
+        </div>
+      </>
+    );
+  };
+
+  const renderMonthsView = () => {
+    const isPrevYearDisabled =
+      minDate && selectedMonth.subtract(1, DATE_UNITS.YEAR).endOf(DATE_UNITS.YEAR).isBefore(minDate, DATE_UNITS.DAY);
+    const isNextYearDisabled =
+      maxDate && selectedMonth.add(1, DATE_UNITS.YEAR).startOf(DATE_UNITS.YEAR).isAfter(maxDate, DATE_UNITS.DAY);
+
+    return (
+      <>
+        <div className="flex justify-between items-center mb-2">
           <button
-            key={year}
-            onClick={() => handleYearSelect(year)}
-            className={`p-1.5 text-xs rounded hover:bg-gray-100 font-medium ${
-              selectedMonth.year() === year
-                ? "bg-blue-500 text-white hover:bg-blue-600"
-                : "text-gray-700"
+            type={BUTTON_TYPES.BUTTON}
+            disabled={isPrevYearDisabled}
+            onClick={() => !isPrevYearDisabled && setSelectedMonth(selectedMonth.subtract(1, DATE_UNITS.YEAR))}
+            className={`p-0.5 rounded-full ${
+              isPrevYearDisabled ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"
             }`}
+            aria-label={t("PREVIOUS_YEAR")}
           >
-            {year}
+            <ChevronLeft size={14} />
           </button>
-        ))}
-      </div>
-    </>
-  );
+          <button
+            type={BUTTON_TYPES.BUTTON}
+            onClick={() => setView(DATE_VIEWS.YEARS)}
+            className="font-semibold text-gray-700 hover:bg-gray-100 px-2 py-0.5 rounded text-xs"
+          >
+            {selectedMonth.year()}
+          </button>
+          <button
+            type={BUTTON_TYPES.BUTTON}
+            disabled={isNextYearDisabled}
+            onClick={() => !isNextYearDisabled && setSelectedMonth(selectedMonth.add(1, DATE_UNITS.YEAR))}
+            className={`p-0.5 rounded-full ${
+              isNextYearDisabled ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"
+            }`}
+            aria-label={t("NEXT_YEAR")}
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-1">
+          {MONTHS.map((month, index) => {
+            const monthDate = selectedMonth.month(index);
+            const isMonthDisabled =
+              (minDate && monthDate.endOf(DATE_UNITS.MONTH).isBefore(minDate, DATE_UNITS.DAY)) ||
+              (maxDate && monthDate.startOf(DATE_UNITS.MONTH).isAfter(maxDate, DATE_UNITS.DAY));
+
+            return (
+              <button
+                type={BUTTON_TYPES.BUTTON}
+                key={month}
+                disabled={isMonthDisabled}
+                onClick={() => !isMonthDisabled && handleMonthSelect(index)}
+                className={`p-1.5 text-xs rounded font-medium ${
+                  isMonthDisabled
+                    ? "text-gray-300 cursor-not-allowed bg-gray-50"
+                    : selectedMonth.month() === index
+                    ? "bg-blue-500 text-white hover:bg-blue-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {month.slice(0, 3)}
+              </button>
+            );
+          })}
+        </div>
+      </>
+    );
+  };
+
+  const renderYearsView = () => {
+    const isPrevDecadeDisabled =
+      minDate && selectedMonth.subtract(10, DATE_UNITS.YEAR).endOf(DATE_UNITS.YEAR).isBefore(minDate, DATE_UNITS.DAY);
+    const isNextDecadeDisabled =
+      maxDate && selectedMonth.add(10, DATE_UNITS.YEAR).startOf(DATE_UNITS.YEAR).isAfter(maxDate, DATE_UNITS.DAY);
+
+    return (
+      <>
+        <div className="flex justify-between items-center mb-2">
+          <button
+            type={BUTTON_TYPES.BUTTON}
+            disabled={isPrevDecadeDisabled}
+            onClick={() => !isPrevDecadeDisabled && setSelectedMonth(selectedMonth.subtract(10, DATE_UNITS.YEAR))}
+            className={`p-0.5 rounded-full ${
+              isPrevDecadeDisabled ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"
+            }`}
+            aria-label={t("PREVIOUS_DECADE")}
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <span className="font-semibold text-gray-700 text-xs">
+            {years[0]} - {years[years.length - 1]}
+          </span>
+          <button
+            type={BUTTON_TYPES.BUTTON}
+            disabled={isNextDecadeDisabled}
+            onClick={() => !isNextDecadeDisabled && setSelectedMonth(selectedMonth.add(10, DATE_UNITS.YEAR))}
+            className={`p-0.5 rounded-full ${
+              isNextDecadeDisabled ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"
+            }`}
+            aria-label={t("NEXT_DECADE")}
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
+        <div className="grid grid-cols-4 gap-1 max-h-40 overflow-y-auto">
+          {years.map((year) => {
+            const yearDate = selectedMonth.year(year);
+            const isYearDisabled =
+              (minDate && yearDate.endOf(DATE_UNITS.YEAR).isBefore(minDate, DATE_UNITS.DAY)) ||
+              (maxDate && yearDate.startOf(DATE_UNITS.YEAR).isAfter(maxDate, DATE_UNITS.DAY));
+
+            return (
+              <button
+                type={BUTTON_TYPES.BUTTON}
+                key={year}
+                disabled={isYearDisabled}
+                onClick={() => !isYearDisabled && handleYearSelect(year)}
+                className={`p-1.5 text-xs rounded font-medium ${
+                  isYearDisabled
+                    ? "text-gray-300 cursor-not-allowed bg-gray-50"
+                    : selectedMonth.year() === year
+                    ? "bg-blue-500 text-white hover:bg-blue-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {year}
+              </button>
+            );
+          })}
+        </div>
+      </>
+    );
+  };
 
   const isDateSelected = dateRange.start && dateRange.end;
 
@@ -589,7 +662,7 @@ function DateTimeRangePickerComponent({
         <div className="flex items-center gap-1">
           {isDateSelected ? (
             <button
-              type="button"
+              type={BUTTON_TYPES.BUTTON}
               onClick={(e) => {
                 e.stopPropagation();
                 handleClearAll();
@@ -609,6 +682,7 @@ function DateTimeRangePickerComponent({
         <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
           {filteredQuickFilters.map((filter) => (
             <button
+              type={BUTTON_TYPES.BUTTON}
               key={filter.value}
               onClick={() => handleQuickFilterSelection(filter.value)}
               className="w-full px-2.5 py-1.5 text-xs text-left hover:bg-gray-100 transition-colors font-medium"
@@ -619,6 +693,7 @@ function DateTimeRangePickerComponent({
           ))}
 
           <button
+            type={BUTTON_TYPES.BUTTON}
             onClick={() => {
               setShowCalendar(true);
               setShowDropdown(false);
@@ -643,9 +718,9 @@ function DateTimeRangePickerComponent({
             </div>
           )}
 
-          {view === DATE_UNITS.DAYS && renderDaysView()}
-          {view === "months" && renderMonthsView()}
-          {view === "years" && renderYearsView()}
+          {view === DATE_VIEWS.DAYS && renderDaysView()}
+          {view === DATE_VIEWS.MONTHS && renderMonthsView()}
+          {view === DATE_VIEWS.YEARS && renderYearsView()}
 
           <div className="flex items-center justify-between mt-2.5">
             <div className="flex flex-col text-gray-600">
@@ -655,7 +730,7 @@ function DateTimeRangePickerComponent({
               <input
                 type="time"
                 value={timeRange.startTime}
-                onChange={(e) => handleTimeChange("start", e.target.value)}
+                onChange={(e) => handleTimeChange(TIME_CONSTANTS.START, e.target.value)}
                 className="border border-gray-300 rounded-md px-2 py-1 w-24"
                 style={{ fontSize: "0.7rem" }}
               />
@@ -667,7 +742,7 @@ function DateTimeRangePickerComponent({
               <input
                 type="time"
                 value={timeRange.endTime}
-                onChange={(e) => handleTimeChange("end", e.target.value)}
+                onChange={(e) => handleTimeChange(TIME_CONSTANTS.END, e.target.value)}
                 className="border border-gray-300 rounded-md px-2 py-1 w-24"
                 style={{ fontSize: "0.7rem" }}
               />
@@ -676,9 +751,10 @@ function DateTimeRangePickerComponent({
 
           <div className="flex justify-end gap-2 mt-2.5">
             <button
+              type={BUTTON_TYPES.BUTTON}
               onClick={() => {
                 setShowCalendar(false);
-                setView(DATE_UNITS.DAYS);
+                setView(DATE_VIEWS.DAYS);
                 setValidationError(null);
               }}
               className="px-2.5 py-1 rounded-md hover:bg-gray-100 text-gray-600 font-semibold"
@@ -687,6 +763,7 @@ function DateTimeRangePickerComponent({
               {t("CANCEL")}
             </button>
             <button
+              type={BUTTON_TYPES.BUTTON}
               onClick={applyDateRange}
               className="px-2.5 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 font-semibold"
               style={{ fontSize: "0.7rem" }}

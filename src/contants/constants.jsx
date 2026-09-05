@@ -1005,6 +1005,7 @@ export const PERMISSIONS = {
   VIEW_VARIANT_STORES: "View Variant Stores",
   VIEW_BULK_IMPORT: "View Bulk Import",
   UPLOAD_BULK_IMPORT_IMAGES: "Upload Bulk Import Images",
+  BULK_IMAGE: "Bulk Image",
   VIEW_TENANT_SETTINGS: "View Tenant Settings",
 };
 
@@ -1152,6 +1153,36 @@ export const DATE_UNITS = {
   DAYS: "days",
   HOUR: "hour",
   HOURS: "hours",
+  MONTH: "month",
+  MONTHS: "months",
+  YEAR: "year",
+  YEARS: "years",
+};
+
+export const DATE_VIEWS = {
+  DAYS: "days",
+  MONTHS: "months",
+  YEARS: "years",
+};
+
+export const VALIDATION_TYPES = {
+  RANGE: "range",
+  DATE: "date",
+  TIME: "time",
+};
+
+export const TIME_CONSTANTS = {
+  MIDNIGHT: "00:00",
+  START: "start",
+  END: "end",
+  START_TIME: "startTime",
+  END_TIME: "endTime",
+};
+
+export const BUTTON_TYPES = {
+  BUTTON: "button",
+  SUBMIT: "submit",
+  RESET: "reset",
 };
 
 export const DEFAULT_COUNTRY = "IN";
