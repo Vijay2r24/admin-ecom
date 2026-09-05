@@ -47,6 +47,7 @@ const OrderToolbar = ({
   selectedFiles = [],
   onClearFiles,
   exportDisabled = false,
+  exportDisabledReason = "",
   disableCreate = false,
   disableCreateReason = "",
   disableAddVariants = false,
@@ -250,7 +251,7 @@ const OrderToolbar = ({
 
         {onExport && (
           <Tooltip 
-            text={exportDisabled ? t("COMMON.NO_PERMISSION") : ""} 
+            text={exportDisabled ? (exportDisabledReason || t("COMMON.NO_PERMISSION")) : ""} 
             position="bottom" 
             align="right"
             disabled={!exportDisabled}

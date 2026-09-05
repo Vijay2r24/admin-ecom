@@ -403,6 +403,16 @@ const Stores = () => {
     />
   );
 
+  const isDataLoading = bFilterLoading || storesLoading;
+  const hasNoExportRecords =
+    initialLoadComplete && !isDataLoading && totalItems === 0;
+  const isExportDisabled = !hasExportPermission || hasNoExportRecords;
+  const exportDisabledReason = !hasExportPermission
+    ? t("COMMON.NO_PERMISSION")
+    : hasNoExportRecords
+      ? t("COMMON.NO_RECORDS_TO_EXPORT")
+      : "";
+
   return (
     <div
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col"
@@ -429,7 +439,8 @@ const Stores = () => {
         isBrowsePage={false}
         onExport={handleExportStores}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
-        exportDisabled={!hasExportPermission}
+        exportDisabled={isExportDisabled}
+        exportDisabledReason={exportDisabledReason}
         onCreate={() => { if (canAddStore) navigate("/add-store"); }}
         createLabel={t("STORES.ADD_STORE")}
         actionType="STORE"

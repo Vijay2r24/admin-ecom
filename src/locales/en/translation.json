@@ -1434,6 +1434,7 @@
     "DELETE": "Delete",
     "CLEAR_SEARCH": "Clear search",
     "NO_PERMISSION": "You don't have permission to perform this action",
+    "NO_RECORDS_TO_EXPORT": "No records to export",
     "NO_PERMISSION_TOOLTIP": "You don't have permission to perform this action. Contact your administrator.",
     "ACCESS_DENIED": "Access Denied",
     "NO_PERMISSION_TO_VIEW_INVENTORY": "You don't have permission to view inventory data",

@@ -587,6 +587,16 @@ const OrderList = () => {
     setTableScrollTop(e.target.scrollTop);
   }, []);
 
+  const isDataLoading = bLoading || bFilterLoading;
+  const hasNoExportRecords =
+    initialLoadComplete && !isDataLoading && nTotalRecords === 0;
+  const isExportDisabled = !hasExportPermission || hasNoExportRecords;
+  const exportDisabledReason = !hasExportPermission
+    ? t("COMMON.NO_PERMISSION")
+    : hasNoExportRecords
+      ? t("COMMON.NO_RECORDS_TO_EXPORT")
+      : "";
+
   return (
     <div
       className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col"
@@ -608,7 +618,8 @@ const OrderList = () => {
         showViewToggle={true}
         onExport={handleExportOrders}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
-        exportDisabled={!hasExportPermission}
+        exportDisabled={isExportDisabled}
+        exportDisabledReason={exportDisabledReason}
       />
 
       {sViewMode === "table" ? (
