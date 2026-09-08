@@ -287,6 +287,12 @@ const Login = () => {
                     "PermissionIDs",
                     JSON.stringify(data.PermissionIDs || [])
                 );
+                localStorage.setItem(
+                    "EnabledFeatureCodes",
+                    JSON.stringify(data.EnabledFeatureCodes || [])
+                );
+                // Clear stale subscription before applying new plan data
+                localStorage.removeItem("subscription");
                 applySubscriptionFromLoginPayload(data, {
                     silentPlanToast: true,
                     fromLogin: true,

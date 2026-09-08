@@ -56,6 +56,7 @@ export const exportOrderReport = createAsyncThunk(
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
+        showEmsg(i18next.t("EXPORT.SUCCESS_ORDERS"), STATUS.SUCCESS);
         return { success: true, message: i18next.t("EXPORT.SUCCESS_ORDERS") };
       }
     } catch (error) {
@@ -63,13 +64,16 @@ export const exportOrderReport = createAsyncThunk(
         try {
           const text = await error.response.data.text();
           const errorData = JSON.parse(text);
+          showEmsg(errorData.message, STATUS.ERROR);
           return rejectWithValue(errorData.message);
         } catch {
+          showEmsg(i18next.t("EXPORT.FAILED"), STATUS.ERROR);
           return rejectWithValue(i18next.t("EXPORT.FAILED"));
         }
       }
 
       const backendMessage = error.response?.data?.message;
+      showEmsg(backendMessage || i18next.t("EXPORT.FAILED"), STATUS.ERROR);
       return rejectWithValue(backendMessage || i18next.t("EXPORT.FAILED"));
     }
   }
@@ -342,15 +346,13 @@ const exportSlice = createSlice({
       section.loading = true;
       section.error = null;
     };
-    const handleFulfilled = (section, action) => {
+    const handleFulfilled = (section) => {
       section.loading = false;
       section.error = null;
-      showEmsg(action.payload.message, STATUS.SUCCESS);
     };
     const handleRejected = (section, action) => {
       section.loading = false;
       section.error = action.payload;
-      showEmsg(action.payload, STATUS.ERROR);
     };
 
     builder

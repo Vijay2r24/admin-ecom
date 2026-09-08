@@ -53,3 +53,30 @@ export function hasPermissionId(permissionCode) {
     return false;
   }
 }
+
+/**
+ * Check if a feature code is enabled for the current user.
+ * Uses EnabledFeatureCodes from login response stored in localStorage.
+ * Returns true if no feature codes are stored (backward compatible).
+ */
+export function isFeatureCodeEnabled(featureCode) {
+  try {
+    const codes = JSON.parse(localStorage.getItem("EnabledFeatureCodes"));
+    if (!codes || !Array.isArray(codes) || codes.length === 0) return true;
+    return codes.includes(featureCode);
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Get all enabled feature codes.
+ */
+export function getEnabledFeatureCodes() {
+  try {
+    const codes = JSON.parse(localStorage.getItem("EnabledFeatureCodes"));
+    return Array.isArray(codes) ? codes : [];
+  } catch {
+    return [];
+  }
+}

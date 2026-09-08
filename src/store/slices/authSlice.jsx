@@ -28,6 +28,7 @@ const authSlice = createSlice({
       localStorage.removeItem("subscription");
       localStorage.removeItem("AllPermissions");
       localStorage.removeItem("sessionRoleName");
+      localStorage.removeItem("EnabledFeatureCodes");
     },
   },
 });

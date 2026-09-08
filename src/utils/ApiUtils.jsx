@@ -4,6 +4,7 @@ import { showEmsg } from "../utils/ShowEmsg";
 import {
   API_CUSTOM_CODES,
   MESSAGES,
+  NOTIFICATION_TYPES,
   STATUS,
   TOAST_DURATION,
   WINDOW_CUSTOM_EVENTS,
@@ -30,6 +31,11 @@ const isLoginPage = () => {
 
 const isUpgradePlanPage = () =>
   window.location.pathname.toLowerCase() === "/upgrade-plan";
+
+/** Pages where a 403 from a data API should NOT trigger upgrade-plan redirect.
+ *  These pages are themselves allowed by plan but call sub-APIs that may be restricted. */
+const isDashboardPage = () =>
+  window.location.pathname.toLowerCase() === "/dashboard";
 
 /** HTTP 200 body failure sometimes carries plan/forbidden text instead of HTTP 403 */
 const shouldSilentRedirectToUpgradePlanFromMessage = (message) => {
@@ -104,7 +110,7 @@ const toastSubscriptionReadOnly = (msg) => {
 };
 
 const redirectToUpgradePlanSilently = () => {
-  if (isLoginPage() || isUpgradePlanPage()) {
+  if (isLoginPage() || isUpgradePlanPage() || isDashboardPage()) {
     return false;
   }
   if (!isTenantAdminRole()) {
@@ -248,14 +254,14 @@ const createApiInstance = (token, isFormData) => {
         } else {
           if (shouldDispatchPlanExpiredLogoutFromMessage(msg)) {
             if (!isLoginPage()) {
-              showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_EXPIRED_SIGN_OUT"), "error", 6500);
+              showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_EXPIRED_SIGN_OUT"), NOTIFICATION_TYPES.ERROR, 6500);
             }
             dispatchPlanExpiredLogout();
             return Promise.reject(new Error(msg));
           }
           if (shouldSilentRedirectToUpgradePlanFromMessage(msg) && redirectToUpgradePlanSilently()) {
             if (!isLoginPage()) {
-              showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_FORBIDDEN_UPGRADE"), "warning", 5000);
+              showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_FORBIDDEN_UPGRADE"), NOTIFICATION_TYPES.WARNING,5000);
             }
             return Promise.reject(new Error(msg));
           }
@@ -268,11 +274,11 @@ const createApiInstance = (token, isFormData) => {
             if (!isLoginPage()) {
               const hint = i18n.t("SUBSCRIPTION.TOAST_PLAN_LIMIT_HEADING");
               const body = (msg || "").trim();
-              showEmsg(body ? `${hint} — ${body}` : hint, "warning", 6500);
+              showEmsg(body ? `${hint} — ${body}` : hint, NOTIFICATION_TYPES.WARNING, 6500);
             }
             return Promise.reject(new Error(msg));
           }
-          showEmsg(msg || DEFAULT_ERROR_MESSAGE, "error");
+          showEmsg(msg || DEFAULT_ERROR_MESSAGE, NOTIFICATION_TYPES.ERROR);
         }
         // Don't show toast here - let components handle their own error display
         return Promise.reject(new Error(msg));
@@ -299,7 +305,7 @@ const createApiInstance = (token, isFormData) => {
         const serverMsg = error?.response?.data?.message;
         showEmsg(
           serverMsg || i18n.t("COMMON.SERVER_ERROR"),
-          "error",
+          NOTIFICATION_TYPES.ERROR,
           4000
         );
         return Promise.reject(error);
@@ -335,8 +341,8 @@ const createApiInstance = (token, isFormData) => {
           return Promise.reject(error);
         }
 
-        if (!isUpgradePlanPage()) {
-          showEmsg(i18n.t("SUBSCRIPTION.TOAST_HTTP_403_PLAN"), "warning", 5000);
+        if (!isUpgradePlanPage() && !isDashboardPage()) {
+          showEmsg(i18n.t("SUBSCRIPTION.TOAST_HTTP_403_PLAN"), NOTIFICATION_TYPES.WARNING, 5000);
           redirectToUpgradePlanSilently();
         }
         return Promise.reject(error);
@@ -370,7 +376,7 @@ const createApiInstance = (token, isFormData) => {
 
       if (shouldDispatchPlanExpiredLogoutFromMessage(msg)) {
         if (!isLoginPage()) {
-          showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_EXPIRED_SIGN_OUT"), "error", 6500);
+          showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_EXPIRED_SIGN_OUT"), NOTIFICATION_TYPES.ERROR, 6500);
         }
         dispatchPlanExpiredLogout();
         return Promise.reject(error);
@@ -415,14 +421,14 @@ const createApiInstance = (token, isFormData) => {
         if (!isLoginPage()) {
           const hint = i18n.t("SUBSCRIPTION.TOAST_PLAN_LIMIT_HEADING");
           const body = (msg || "").trim();
-          showEmsg(body ? `${hint} — ${body}` : hint, "warning", 6500);
+          showEmsg(body ? `${hint} — ${body}` : hint, NOTIFICATION_TYPES.WARNING, 6500);
         }
       } else if (
         shouldSilentRedirectToUpgradePlanFromMessage(msg) &&
         redirectToUpgradePlanSilently()
       ) {
         if (!isLoginPage()) {
-          showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_FORBIDDEN_UPGRADE"), "warning", 5000);
+          showEmsg(i18n.t("SUBSCRIPTION.TOAST_PLAN_FORBIDDEN_UPGRADE"), NOTIFICATION_TYPES.WARNING, 5000);
         }
       } else {
         // Don't show toast here - let components handle their own error display

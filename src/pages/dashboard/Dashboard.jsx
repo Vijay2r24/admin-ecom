@@ -29,6 +29,8 @@ import {
   GET_STORE_ORDERS_GRAPH,
 } from "../../contants/apiRoutes";
 import { apiGet } from "../../utils/ApiUtils";
+import { isFeatureCodeEnabled } from "../../utils/permissionUtils";
+import { ENABLED_FEATURE_CODES } from "../../contants/constants";
 import { showEmsg } from "../../utils/ShowEmsg";
 import Loader from "../../components/Loader";
 import SkeletonLoader from "../../components/SkeletonLoader";
@@ -549,12 +551,13 @@ const Dashboard = () => {
   const [metrics, setMetrics] = useState([
     {
       title: t("DASHBOARD.TOTALREVENUE"),
-      value: "â‚¹0",
+      value: "\u20B90",
       change: "+0%",
       trend: "up",
       icon: IndianRupee,
       color: "bg-green-100 text-green-600",
       comparisonText: t("DASHBOARD.COMPARISONTEXT"),
+      featureCode: ENABLED_FEATURE_CODES.DASHBOARD_TOTAL_REVENUE,
     },
     {
       title: t("DASHBOARD.TOTALORDERS"),
@@ -564,6 +567,7 @@ const Dashboard = () => {
       icon: ShoppingCart,
       color: "bg-blue-100 text-blue-600",
       comparisonText: t("DASHBOARD.COMPARISONTEXT"),
+      featureCode: ENABLED_FEATURE_CODES.DASHBOARD_TOTAL_ORDERS,
     },
     {
       title: t("DASHBOARD.TOTALCUSTOMERS"),
@@ -573,15 +577,17 @@ const Dashboard = () => {
       icon: Users,
       color: "bg-purple-100 text-purple-600",
       comparisonText: t("DASHBOARD.COMPARISONTEXT"),
+      featureCode: ENABLED_FEATURE_CODES.DASHBOARD_TOTAL_CUSTOMERS,
     },
     {
       title: t("DASHBOARD.AVERAGEORDERS"),
-      value: "â‚¹0",
+      value: "\u20B90",
       change: "+0%",
       trend: "up",
       icon: TrendingUp,
       color: "bg-orange-100 text-orange-600",
       comparisonText: t("DASHBOARD.COMPARISONTEXT"),
+      featureCode: ENABLED_FEATURE_CODES.DASHBOARD_TOTAL_REVENUE,
     },
   ]);
   const [recentOrders, setRecentOrders] = useState([]);
@@ -1329,7 +1335,11 @@ const Dashboard = () => {
       await buildChartData(start, end, token);
 
     } catch (err) {
-      setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
+      // Only show error for non-plan-restriction errors
+      const status = err?.response?.status;
+      if (status !== 403) {
+        setError(err?.response?.data?.message || t("COMMON.API_ERROR"));
+      }
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -1691,7 +1701,7 @@ const generateComparisonText = (startDate, endDate) => {
 
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {metrics.map((metric, index) => (
+        {metrics.filter(m => !m.featureCode || isFeatureCodeEnabled(m.featureCode)).map((metric, index) => (
           <div
             key={index}
             className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
@@ -1748,6 +1758,7 @@ const generateComparisonText = (startDate, endDate) => {
       {/* Revenue Chart Row */}
       <div className="grid grid-cols-1 gap-4 mb-6">
         {/* Revenue — line chart (full width) */}
+        {isFeatureCodeEnabled(ENABLED_FEATURE_CODES.DASHBOARD_REVENUE_GRAPH) && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-start justify-between mb-3">
             <div>
@@ -1850,11 +1861,13 @@ const generateComparisonText = (startDate, endDate) => {
             })()
           )}
         </div>
+        )}
       </div>
 
       {/* Orders and Order Status Chart Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         {/* Orders - Line Chart */}
+        {isFeatureCodeEnabled(ENABLED_FEATURE_CODES.DASHBOARD_ORDERS_GRAPH) && (
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-start justify-between mb-3">
             <div>
@@ -1932,12 +1945,14 @@ const generateComparisonText = (startDate, endDate) => {
             })()
           )}
         </div>
+        )}
 
         {/* Order Status Donut Chart */}
+        {isFeatureCodeEnabled(ENABLED_FEATURE_CODES.DASHBOARD_ORDER_STATUS_COUNT) && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
           <div className="mb-3">
-            <h2 className="text-sm font-semibold text-gray-900">Order Status</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Distribution by status</p>
+            <h2 className="text-sm font-semibold text-gray-900">t("ORDERS.FILTERS.ORDER_STATUS")</h2>
+            <p className="text-xs text-gray-400 mt-0.5">t("DASHBOARD.DISTRIBUTION BY STATUS")</p>
           </div>
 
           <div className="flex justify-center mb-1">
@@ -1993,12 +2008,14 @@ const generateComparisonText = (startDate, endDate) => {
             })}
           </div>
         </div>
+        )}
 
       </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Top Products */}
+        {isFeatureCodeEnabled(ENABLED_FEATURE_CODES.DASHBOARD_TOP_PRODUCTS) && (
         <div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[420px] mt-6 md:mt-0">
             <div className="px-4 py-3 border-b border-gray-100">
@@ -2168,8 +2185,10 @@ const generateComparisonText = (startDate, endDate) => {
             </div>
           </div>
         </div>
+        )}
 
         {/* Recent Orders */}
+        {isFeatureCodeEnabled(ENABLED_FEATURE_CODES.DASHBOARD_RECENT_ORDERS) && (
         <div className="mb-6 md:mb-0 -z-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[420px]">
             <div className="px-4 py-3 border-b border-gray-100">
@@ -2348,6 +2367,7 @@ const generateComparisonText = (startDate, endDate) => {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* Orders Graph Dialog */}
