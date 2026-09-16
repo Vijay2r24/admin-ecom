@@ -39,6 +39,7 @@ import {
   MODULES,
   PERMISSIONS,
   STATUS,
+  SKELETON_TYPES,
 } from "../contants/constants";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
 import md5 from "md5";
@@ -46,6 +47,7 @@ import BackButton from "../components/BackButton";
 import { ToastContainer } from "react-toastify";
 import userProfile from "../../assets/images/userProfile.svg";
 import Loader from "../components/Loader";
+import SkeletonLoader from "../components/SkeletonLoader";
 import { hideLoaderWithDelay } from "../utils/loaderUtils";
 import {
   fetchResource,
@@ -222,6 +224,13 @@ const AddUser = () => {
     !id
   );
   const [isAddressInfoEditable, setIsAddressInfoEditable] = useState(!id);
+
+  // Store original form data for each section to restore on cancel
+  const [originalFormData, setOriginalFormData] = useState({
+    personal: {},
+    account: {},
+    address: {}
+  });
 
   // Live validation states
   const [oFieldValid, setFieldValid] = useState({});
@@ -894,6 +903,36 @@ const AddUser = () => {
           roleName: user.RoleName || "",
         }));
 
+        // Initialize original form data for cancel functionality
+        setOriginalFormData({
+          personal: {
+            firstName: user.FirstName || "",
+            lastName: user.LastName || "",
+            email: user.Email || "",
+            phone: formattedPhone,
+            gender: user.Gender || "",
+            CountryCallingCode: callingCode,
+            PhoneNumber: user.PhoneNumber || ""
+          },
+          account: {
+            role: user.RoleID || "",
+            stores: user.Stores ? user.Stores.map((store) => store.StoreId) : [],
+            password: "",
+            confirmPassword: "",
+            roleName: user.RoleName || ""
+          },
+          address: {
+            streetAddress: user.AddressLine || "",
+            country: "", // Will be set after country lookup
+            state: "", // Will be set after state lookup
+            city: "", // Will be set after city lookup
+            pincode: user.Zipcode || "",
+            countryName: user.CountryName || "",
+            stateName: user.StateName || "",
+            cityName: user.CityName || ""
+          }
+        });
+
         // Mark all fields as touched for edit mode to show validation immediately
         setTimeout(() => {
           const fieldsToValidate = [
@@ -952,6 +991,16 @@ const AddUser = () => {
               ...prev,
               country: foundCountry.CountryID,
             }));
+            
+            // Update originalFormData as well
+            setOriginalFormData(prev => ({
+              ...prev,
+              address: {
+                ...prev.address,
+                country: foundCountry.CountryID
+              }
+            }));
+            
             markFieldTouched("country");
             validateField("country", foundCountry.CountryID, true);
           }
@@ -1001,6 +1050,16 @@ const AddUser = () => {
             ...prev,
             state: foundState.StateID,
           }));
+          
+          // Update originalFormData as well
+          setOriginalFormData(prev => ({
+            ...prev,
+            address: {
+              ...prev.address,
+              state: foundState.StateID
+            }
+          }));
+          
           markFieldTouched("state");
           validateField("state", foundState.StateID, true);
         }
@@ -1033,6 +1092,16 @@ const AddUser = () => {
             ...prev,
             city: foundCity.CityID,
           }));
+          
+          // Update originalFormData as well
+          setOriginalFormData(prev => ({
+            ...prev,
+            address: {
+              ...prev.address,
+              city: foundCity.CityID
+            }
+          }));
+          
           markFieldTouched("city");
           validateField("city", foundCity.CityID, true);
         }
@@ -1336,13 +1405,141 @@ const AddUser = () => {
   const toggleSectionEdit = (section) => {
     switch (section) {
       case "personal":
-        setIsPersonalInfoEditable((prev) => !prev);
+        if (!isPersonalInfoEditable) {
+          // Entering edit mode - store original data
+          setOriginalFormData(prev => ({
+            ...prev,
+            personal: {
+              firstName: oFormData.firstName,
+              lastName: oFormData.lastName,
+              email: oFormData.email,
+              phone: oFormData.phone,
+              gender: oFormData.gender,
+              CountryCallingCode: oFormData.CountryCallingCode,
+              PhoneNumber: oFormData.PhoneNumber,
+              profileImagePreview: nProfileImagePreview,
+              existingDocuments: [...existingDocuments]
+            }
+          }));
+          setIsPersonalInfoEditable(true);
+        } else {
+          // Canceling edit mode - restore original data
+          const originalData = originalFormData.personal;
+          setFormData(prev => ({
+            ...prev,
+            firstName: originalData.firstName || "",
+            lastName: originalData.lastName || "",
+            email: originalData.email || "",
+            phone: originalData.phone || "",
+            gender: originalData.gender || "",
+            CountryCallingCode: originalData.CountryCallingCode || "",
+            PhoneNumber: originalData.PhoneNumber || ""
+          }));
+          
+          // Restore profile image to original state
+          setProfileImage(null);
+          setProfileImagePreview(originalData.profileImagePreview || null);
+          setExistingDocuments(originalData.existingDocuments || []);
+          setRemovedDocumentIds([]);
+          
+          // Clear any validation errors for this section
+          setErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.firstName;
+            delete newErrors.lastName;
+            delete newErrors.email;
+            delete newErrors.phone;
+            delete newErrors.gender;
+            return newErrors;
+          });
+          
+          setIsPersonalInfoEditable(false);
+        }
         break;
       case "account":
-        setIsAccountSecurityEditable((prev) => !prev);
+        if (!isAccountSecurityEditable) {
+          // Entering edit mode - store original data
+          setOriginalFormData(prev => ({
+            ...prev,
+            account: {
+              role: oFormData.role,
+              stores: [...oFormData.stores],
+              password: oFormData.password,
+              confirmPassword: oFormData.confirmPassword,
+              roleName: oFormData.roleName
+            }
+          }));
+          setIsAccountSecurityEditable(true);
+        } else {
+          // Canceling edit mode - restore original data
+          const originalData = originalFormData.account;
+          setFormData(prev => ({
+            ...prev,
+            role: originalData.role || "",
+            stores: originalData.stores || [],
+            password: originalData.password || "",
+            confirmPassword: originalData.confirmPassword || "",
+            roleName: originalData.roleName || ""
+          }));
+          
+          // Clear any validation errors for this section
+          setErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.role;
+            delete newErrors.stores;
+            delete newErrors.password;
+            delete newErrors.confirmPassword;
+            return newErrors;
+          });
+          
+          setIsAccountSecurityEditable(false);
+        }
         break;
       case "address":
-        setIsAddressInfoEditable((prev) => !prev);
+        if (!isAddressInfoEditable) {
+          // Entering edit mode - store original data
+          setOriginalFormData(prev => ({
+            ...prev,
+            address: {
+              streetAddress: oFormData.streetAddress,
+              country: oFormData.country,
+              state: oFormData.state,
+              city: oFormData.city,
+              pincode: oFormData.pincode,
+              countryName: oFormData.countryName,
+              stateName: oFormData.stateName,
+              cityName: oFormData.cityName
+            }
+          }));
+          setIsAddressInfoEditable(true);
+        } else {
+          // Canceling edit mode - restore original data
+          const originalData = originalFormData.address;
+          setFormData(prev => ({
+            ...prev,
+            streetAddress: originalData.streetAddress || "",
+            country: originalData.country || "",
+            state: originalData.state || "",
+            city: originalData.city || "",
+            pincode: originalData.pincode || "",
+            countryName: originalData.countryName || "",
+            stateName: originalData.stateName || "",
+            cityName: originalData.cityName || ""
+          }));
+          
+          // Clear any validation errors for this section
+          setErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.streetAddress;
+            delete newErrors.country;
+            delete newErrors.state;
+            delete newErrors.city;
+            delete newErrors.pincode;
+            return newErrors;
+          });
+          
+          setIsAddressInfoEditable(false);
+        }
         break;
       default:
         break;
@@ -1356,13 +1553,19 @@ const AddUser = () => {
   return (
     <div className="max-w-8xl mx-auto pb-20">
       <ToastContainer />
-      <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <p className="text-gray-600 text-sm">
-            {id ? t("USERS.EDIT_USER_DESCRIPTION") : t("USERS.DESCRIPTION")}
-          </p>
-        </div>
-      </div>
+      
+      {/* Show skeleton loading while fetching user data */}
+      {isFormDataLoading && id ? (
+        <SkeletonLoader type={SKELETON_TYPES.USER_FORM} />
+      ) : (
+        <>
+          <div className="mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <p className="text-gray-600 text-sm">
+                {id ? t("USERS.EDIT_USER_DESCRIPTION") : t("USERS.DESCRIPTION")}
+              </p>
+            </div>
+          </div>
 
       <div className="flex items-center gap-6 mb-8 relative">
         <div className="relative" style={{ minWidth: 80, minHeight: 80 }}>
@@ -2067,6 +2270,8 @@ const AddUser = () => {
             console.error('User creation validation error:', error);
           }}
         />
+      )}
+      </>
       )}
     </div>
   );

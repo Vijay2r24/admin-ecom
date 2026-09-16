@@ -1069,6 +1069,83 @@ const SkeletonLoader = ({ type = SKELETON_TYPES.DEFAULT, rows = 3, className = '
           </div>
         );
 
+      case SKELETON_TYPES.USER_FORM:
+        return (
+          <div className="max-w-8xl mx-auto pb-20">
+            {/* Profile Image Section */}
+            <div className="flex items-center gap-6 mb-8">
+              <div className="h-20 w-20 bg-gray-200 rounded-full animate-pulse flex-shrink-0" />
+              <div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2" />
+                <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-32" />
+                <div className="h-3 bg-gray-200 rounded animate-pulse w-40 mt-2" />
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              {/* Personal Information Section */}
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+                {/* Section Header */}
+                <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-40" />
+                  <div className="h-8 bg-gray-200 rounded animate-pulse w-16" />
+                </div>
+                {/* Section Content */}
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i}>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2" />
+                        <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Account Security Section */}
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+                {/* Section Header */}
+                <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-40" />
+                  <div className="h-8 bg-gray-200 rounded animate-pulse w-16" />
+                </div>
+                {/* Section Content */}
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i}>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2" />
+                        <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Address Information Section */}
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+                {/* Section Header */}
+                <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-40" />
+                  <div className="h-8 bg-gray-200 rounded animate-pulse w-16" />
+                </div>
+                {/* Section Content */}
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i}>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2" />
+                        <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-full" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className={`animate-pulse bg-gray-200 rounded ${className}`}>

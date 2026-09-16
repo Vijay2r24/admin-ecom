@@ -1377,6 +1377,7 @@ export const SKELETON_TYPES = {
   PRODUCT_GRID: 'product-grid',
   USER_TABLE: 'user-table',
   USER_GRID: 'user-grid',
+  USER_FORM: 'user-form',
   STORE_TABLE: 'store-table',
   STORE_GRID: 'store-grid',
   ORDER_TABLE: 'order-table',
