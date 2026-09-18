@@ -1951,8 +1951,8 @@ const generateComparisonText = (startDate, endDate) => {
         {isFeatureCodeEnabled(ENABLED_FEATURE_CODES.DASHBOARD_ORDER_STATUS_COUNT) && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
           <div className="mb-3">
-            <h2 className="text-sm font-semibold text-gray-900">t("ORDERS.FILTERS.ORDER_STATUS")</h2>
-            <p className="text-xs text-gray-400 mt-0.5">t("DASHBOARD.DISTRIBUTION BY STATUS")</p>
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">{t("ORDERS.FILTERS.ORDER_STATUS")}</h2>
+            <p className="text-xs text-gray-400 mt-0.5">{t("DASHBOARD.DISTRIBUTION_BY_STATUS")}</p>
           </div>
 
           <div className="flex justify-center mb-1">
@@ -2190,36 +2190,36 @@ const generateComparisonText = (startDate, endDate) => {
         {/* Recent Orders */}
         {isFeatureCodeEnabled(ENABLED_FEATURE_CODES.DASHBOARD_RECENT_ORDERS) && (
         <div className="mb-6 md:mb-0 -z-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[420px]">
-            <div className="px-4 py-3 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-900">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col h-[420px]">
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
                 {t("DASHBOARD.RECENT_ORDERS.RECENT_ORDERS")}
               </h2>
             </div>
             <div className="flex-1 w-full overflow-x-auto">
               {recentOrders.length > 0 ? (
-                <table className="w-full min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50  top-0 z-10">
+                <table className="w-full min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-800 top-0 z-10">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider align-middle">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider align-middle">
                         {t("DASHBOARD.RECENT_ORDERS.CUSTOMER")}
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider align-middle">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider align-middle">
                         {t("DASHBOARD.RECENT_ORDERS.ORDER_ID")}
                       </th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider align-middle">
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider align-middle">
                         {t("DASHBOARD.RECENT_ORDERS.AMOUNT")}
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider align-middle">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider align-middle">
                         {t("COMMON.STATUS")}
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-100">
+                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-700">
                     {recentOrders.map((order) => (
                       <tr
                         key={order.id}
-                        className="hover:bg-gray-50 transition h-10"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700 transition h-10"
                       >
                         <td className="px-4 py-3 align-middle whitespace-nowrap">
                           <span
@@ -2231,14 +2231,14 @@ const generateComparisonText = (startDate, endDate) => {
                               .map((n) => n[0])
                               .join("")}
                           </span>
-                          <span className="inline-block align-middle text-xs text-gray-900 max-w-[8rem] truncate">
+                          <span className="inline-block align-middle text-xs text-gray-900 dark:text-gray-100 max-w-[8rem] truncate">
                             {order.customer}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-700 align-middle whitespace-nowrap max-w-[8rem] truncate">
+                        <td className="px-4 py-3 text-xs text-gray-700 dark:text-gray-300 align-middle whitespace-nowrap max-w-[8rem] truncate">
                           {order.id}
                         </td>
-                        <td className="px-4 py-3 text-xs font-medium text-gray-900 text-right align-middle whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs font-medium text-gray-900 dark:text-gray-100 text-right align-middle whitespace-nowrap">
                           {order.amount}
                         </td>
                         <td className="px-4 py-3 align-middle whitespace-nowrap">

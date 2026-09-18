@@ -358,6 +358,7 @@
   "DASHBOARD": {
     "TITLE": "Dashboard",
     "DISTRIBUTION BY STATUS":"Distribution by status",
+    "DISTRIBUTION_BY_STATUS": "Distribution by status",
     "DESCRIPTION": "Overview of your store's performance and recent activity",
     "NO_TOP_PRODUCTS": "No Products found",
     "TOTALREVENUE": "Total Revenue",
