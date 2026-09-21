@@ -15,7 +15,7 @@ import { showEmsg } from "../utils/ShowEmsg";
 import FullscreenErrorPopup from "../components/FullscreenErrorPopup";
 import EmptyState from "../components/EmptyState";
 import { ToastContainer } from "react-toastify";
-import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS, FILTER_VALUES, PLAN_LIMIT_RESOURCE,ACTION_TYPES } from "../contants/constants";
+import { ITEMS_PER_PAGE, STATUS, STATUS_OPTIONS, MODULES, PERMISSIONS, FILTER_VALUES, PLAN_LIMIT_RESOURCE, ACTION_TYPES, VIEW_MODE } from "../contants/constants";
 import PlanLimitToast from "../components/PlanLimitToast";
 import PlanUsageDonut from "../components/PlanUsageDonut";
 import { updatePlanResourceUsage } from "../utils/planAccessUtils";
@@ -124,7 +124,7 @@ const Stores = () => {
 
   // FIX: Use pagination data from API or calculate fallback
   const totalPages = totalPagesFromAPI;
-  const [viewMode, setViewMode] = useState("table");
+  const [viewMode, setViewMode] = useState(VIEW_MODE.TABLE);
 
   // FIX: Sync currentPage with API response or use local state
   const [currentPage, setCurrentPage] = useState(currentPageFromAPI);
@@ -449,7 +449,7 @@ const Stores = () => {
         extraContent={donutGraph}
       />
 
-      {viewMode === "table" ? (
+      {viewMode === VIEW_MODE.TABLE ? (
         <div className="table-container-floating">
           <div
             className="table-wrapper-floating"

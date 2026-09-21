@@ -8,7 +8,7 @@ import ActionButtons from "../../components/ActionButtons";
 import { useTranslation } from "react-i18next";
 import { useTitle } from "../../context/TitleContext";
 import FullscreenErrorPopup from "../../components/FullscreenErrorPopup";
-import { SKELETON_TYPES, ITEMS_PER_PAGE, STATUS, MODULES, PERMISSIONS, PAYMENT_STATUS, PAYMENT_TYPES } from "../../contants/constants";
+import { SKELETON_TYPES, ITEMS_PER_PAGE, STATUS, MODULES, PERMISSIONS, PAYMENT_STATUS, PAYMENT_TYPES, VIEW_MODE } from "../../contants/constants";
 import { ToastContainer } from "react-toastify";
 import { apiDelete, apiGet } from "../../utils/ApiUtils";
 import Loader from "../../components/Loader";
@@ -163,7 +163,7 @@ const Payments = () => {
   });
 
   const itemsPerPage = ITEMS_PER_PAGE;
-  const [viewMode, setViewMode] = useState("table");
+  const [viewMode, setViewMode] = useState(VIEW_MODE.TABLE);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Handle table scroll for floating header
@@ -479,7 +479,7 @@ const Payments = () => {
         showCreateButton={false}
       />
 
-      {viewMode === "table" ? (
+      {viewMode === VIEW_MODE.TABLE ? (
         <div className="table-container-floating">
           <div className="table-wrapper-floating" onScroll={handleTableScroll}>
             <table className="table-base">

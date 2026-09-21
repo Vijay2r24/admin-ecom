@@ -600,6 +600,11 @@ const ProductInventory = () => {
 
   const isSearchPending = sSearchTerm.trim() !== sDebouncedSearch.trim();
   const isLoading = bLoading || bFilterLoading || isSearchPending;
+  const hasNoExportRecords =
+    initialLoadComplete && !isLoading && displayedProducts.length === 0;
+  const exportDisabledReason = hasNoExportRecords
+    ? t("COMMON.NO_RECORDS_TO_EXPORT")
+    : "";
 
   // --- Status Update Handlers ---
   const handleStatusChange = (productId, currentIsActive) => {
@@ -657,6 +662,8 @@ const ProductInventory = () => {
         onClearFilters={handleClearFilters}
         onExport={handleExportProducts}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
+        exportDisabled={hasNoExportRecords}
+        exportDisabledReason={exportDisabledReason}
       />
 
       {sError ? (

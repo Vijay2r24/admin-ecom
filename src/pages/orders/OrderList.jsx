@@ -18,6 +18,7 @@ import {
   PAYMENT_STATUS,
   PAYMENT_TYPES,
   ORDER_STATUS,
+  VIEW_MODE,
 } from "../../contants/constants";
 import Loader from "../../components/Loader";
 import SkeletonLoader from "../../components/SkeletonLoader";
@@ -41,7 +42,7 @@ const OrderList = () => {
     searchParams.get("status") || t("STATUS_VALUES.ALL")
   );
   const [bShowFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [sViewMode, setViewMode] = useState("table");
+  const [sViewMode, setViewMode] = useState(VIEW_MODE.TABLE);
   const [nCurrentPage, setCurrentPage] = useState(
     Number(searchParams.get("page")) || 1
   );
@@ -622,10 +623,10 @@ const OrderList = () => {
         exportDisabledReason={exportDisabledReason}
       />
 
-      {sViewMode === "table" ? (
+      {sViewMode === VIEW_MODE.TABLE ? (
         <div className="table-container-floating flex-1 min-h-0">
           <div
-            className="table-wrapper-floating scrollbar-hide overflow-y-auto !overflow-x-hidden"
+            className="table-wrapper-floating overflow-y-auto !overflow-x-hidden"
             onScroll={handleTableScroll}
           >
             <table className="table-base w-full table-fixed">

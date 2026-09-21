@@ -39,6 +39,11 @@ export const UI_COLORS = {
   // red
   RED_500:  '#ef4444',
 };
+export const VIEW_MODE = {
+  TABLE: "table",
+  GRID: "grid",
+};
+
 // constants/actionTypes.js
 export const ACTION_TYPES = {
   PRODUCT: "PRODUCT",
@@ -1377,7 +1382,6 @@ export const SKELETON_TYPES = {
   PRODUCT_GRID: 'product-grid',
   USER_TABLE: 'user-table',
   USER_GRID: 'user-grid',
-  USER_FORM: 'user-form',
   STORE_TABLE: 'store-table',
   STORE_GRID: 'store-grid',
   ORDER_TABLE: 'order-table',

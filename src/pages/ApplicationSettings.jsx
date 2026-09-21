@@ -182,11 +182,6 @@ const ThemeSettings = () => {
       return;
     }
 
-    if (!currentLogoDocumentId) {
-      showEmsg(t("THEMESETTINGS.NO_LOGO_DOCUMENT_ID"), STATUS.ERROR);
-      return;
-    }
-
     try {
       setLoading(true);
       const tenantId = getTenantId();

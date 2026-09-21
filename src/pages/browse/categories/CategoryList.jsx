@@ -267,7 +267,7 @@ const CategoryList = ({ onCreate, onBack, setSubmitting }) => {
       {/* Loading/Error states or Table */}
       <div className="table-container-floating w-full bg-white rounded-xl shadow-sm border border-gray-100 relative">
         <div
-          className="table-scroll-container scrollbar-hide overflow-x-auto overflow-y-auto"
+          className="table-scroll-container overflow-x-auto overflow-y-auto"
           onScroll={handleTableScroll}
         >
           <table className="table-base w-full">

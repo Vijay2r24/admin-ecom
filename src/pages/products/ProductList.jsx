@@ -32,7 +32,7 @@ import Tooltip from "../../components/Tooltip";
 import SkeletonLoader from "../../components/SkeletonLoader";
 import EmptyState from "../../components/EmptyState";
 import { getPermissionCode, hasPermissionId } from "../../utils/permissionUtils";
-import { MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE,ACTION_TYPES } from "../../contants/constants.jsx";
+import { MODULES, PERMISSIONS, PLAN_LIMIT_RESOURCE, ACTION_TYPES, VIEW_MODE } from "../../contants/constants.jsx";
 import { useCreateAccess } from "../../hooks/useCreateAccess";
 import { updatePlanResourceUsage, getPlanResourceUsage } from "../../utils/planAccessUtils";
 import PlanUsageDonut from "../../components/PlanUsageDonut";
@@ -83,7 +83,7 @@ const getPaginationValue = (pagination, keys, fallback = 0) => {
  const ProductList = () => {
   const [sSearchTerm, setSearchTerm] = useState("");
   const [sDebouncedSearch, setDebouncedSearch] = useState("");
-  const [sViewMode, setViewMode] = useState("table");
+  const [sViewMode, setViewMode] = useState(VIEW_MODE.TABLE);
   const [nCurrentPage, setCurrentPage] = useState(1);
   const { t } = useTranslation();
   const itemsPerPage = ITEMS_PER_PAGE;
@@ -439,6 +439,11 @@ const getPaginationValue = (pagination, keys, fallback = 0) => {
   };
 
   const isLoading = bLoading || initialLoading || bFilterLoading;
+  const hasNoExportRecords =
+    initialLoadComplete && !isLoading && nTotalItems === 0;
+  const exportDisabledReason = hasNoExportRecords
+    ? t("COMMON.NO_RECORDS_TO_EXPORT")
+    : "";
 
   return (
     <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 h-screen bg-gray-50 flex flex-col">
@@ -464,6 +469,8 @@ const getPaginationValue = (pagination, keys, fallback = 0) => {
         disableAddVariantsReason={addVariantDisabledReason}
         onExport={handleExportProducts}
         exportLabel={exportLoading ? t("COMMON.EXPORTING") : t("COMMON.EXPORT")}
+        exportDisabled={hasNoExportRecords}
+        exportDisabledReason={exportDisabledReason}
         extraContent={
           <PlanUsageDonut
             resourceKey={PLAN_LIMIT_RESOURCE.PRODUCTS}
@@ -473,10 +480,10 @@ const getPaginationValue = (pagination, keys, fallback = 0) => {
         }
       />
 
-      {sViewMode === "table" ? (
+      {sViewMode === VIEW_MODE.TABLE ? (
         <div className="table-container-floating flex-1 min-h-0">
           <div
-            className="table-wrapper-floating scrollbar-hide overflow-y-auto !overflow-x-hidden"
+            className="table-wrapper-floating overflow-y-auto !overflow-x-hidden"
             onScroll={handleTableScroll}
           >
             <table className="table-base w-full table-fixed">
