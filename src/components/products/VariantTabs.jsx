@@ -419,6 +419,9 @@ export default function VariantTabs({
                                         package: e.target.value,
                                       });
                                     }}
+                                    onInputChange={(searchText) => {
+                                      dispatch(fetchResource({ key: "packagingBoxes", params: { searchText } }));
+                                    }}
                                     options={[
                                       { value: "add-new", label: "Add New", isSpecial: true, icon: PlusCircle },
                                       ...packagingBoxes.map((box) => ({

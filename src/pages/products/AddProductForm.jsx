@@ -2098,7 +2098,6 @@ const AddProductForm = () => {
                     value={groupingAttributeTypeID}
                     onChange={(e) => setGroupingAttributeTypeID(e.target.value)}
                     options={[
-                      { value: "", label: "Don't group variants" },
                       ...aAttributes
                         .filter((attr) => attr.AttributeTypeID)
                         .map((attr) => {
@@ -2310,6 +2309,9 @@ const AddProductForm = () => {
                                   ...(variant.shippingData || {}),
                                   package: e.target.value,
                                 });
+                              }}
+                              onInputChange={(searchText) => {
+                                dispatch(fetchResource({ key: "packagingBoxes", params: { searchText } }));
                               }}
                               options={[
                                 { value: "add-new", label: "Add New", isSpecial: true, icon: ({ className }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg> },
