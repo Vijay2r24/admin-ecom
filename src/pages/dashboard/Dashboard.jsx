@@ -600,7 +600,7 @@ const Dashboard = () => {
 
   // Date range state with DateTimeRangePickerComponent format
   const [dateRange, setDateRange] = useState({
-    start: dayjs().subtract(3, 'hour'),
+    start: dayjs().subtract(24, 'hour'),
     end: dayjs()
   });
 

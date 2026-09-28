@@ -1,7 +1,5 @@
 import { toast } from "react-toastify";
-import { addNotification } from '../store/slices/notificationSlice';
 import { DATA_TYPES, NOTIFICATION_TYPES } from '../contants/constants';
-import { store } from '../store/index';
 
 export const showEmsg = (
   message,
@@ -36,7 +34,7 @@ export const showEmsg = (
     onClose: onCloseCallback || undefined,
   };
 
-  // Show toast first
+  // Show toast notification
   let toastResult;
   switch (notificationType) {
     case NOTIFICATION_TYPES.SUCCESS:
@@ -55,8 +53,8 @@ export const showEmsg = (
       toastResult = toast(message, options);
   }
 
-  // Add to Redux store using store.dispatch directly
-  store.dispatch(addNotification({ message, type: notificationType }));
+  // Note: Redux notification dispatch removed to prevent duplicate error messages
+  // Toast notification is sufficient for immediate error feedback
 
   return toastResult;
 };

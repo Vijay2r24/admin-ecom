@@ -660,7 +660,7 @@ const OrderView = () => {
               </div>
               <div className="overflow-x-auto print:overflow-visible">
                 <table className="min-w-full divide-y divide-gray-200 print:text-sm print:divide-gray-300">
-                  <thead className="bg-gray-100 print:bg-white">
+                  <thead className="bg-gray-100 dark:bg-gray-900 print:bg-white">
                     <tr>
                       <th
                         scope="col"
@@ -716,7 +716,7 @@ const OrderView = () => {
                       >
                         <td className="px-4 py-3 whitespace-nowrap print:px-3 print:py-2">
                           <div className="flex items-center print:block">
-                            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 print:hidden">
+                            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 print:hidden">
                               {item.image ? (
                                 <img
                                   src={item.image}
@@ -795,7 +795,7 @@ const OrderView = () => {
                                   handleOpenHistory(item.OrderItemID);
                                 }}
                                 disabled={!hasViewHistoryPermission}
-                                className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <FaHistory className="text-gray-600 text-sm" />
                               </button>
@@ -805,7 +805,7 @@ const OrderView = () => {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-gray-100 print:bg-white">
+                  <tfoot className="bg-gray-100 dark:bg-gray-900 print:bg-white">
                     <tr>
                       <td
                         colSpan="4"
@@ -936,7 +936,7 @@ const OrderView = () => {
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   {t("COMMON.CURRENT_STATUS")}
                 </label>
-                <div className="p-2 bg-gray-100 rounded-md">
+                <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-md">
                   <StatusBadge status={oEditingItem.status} />
                 </div>
               </div>

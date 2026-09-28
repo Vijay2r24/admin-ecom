@@ -101,7 +101,7 @@ const SectionFooter = ({ isEditable, onEditToggle, onUpdate, sectionKey, id, t }
       <button
         type="button"
         onClick={() => onEditToggle(sectionKey)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 transition-colors"
       >
         <Edit3 size={14} />
         {t("COMMON.CANCEL")}
@@ -1609,7 +1609,7 @@ const AddUser = () => {
           <label
             htmlFor="profile-image-upload"
             className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors ${!isPersonalInfoEditable && id
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300"
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500"
               : "text-white bg-blue-600 hover:bg-blue-700 border border-blue-600"
               }`}
           >

@@ -84,10 +84,6 @@ const CreateAttribute = () => {
   };
 
   const validateUnit = (unit) => {
-    // If attribute type is Color, unit is required
-    if (isColorType && (!unit || unit.trim() === "")) {
-      return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.UNIT_REQUIRED_FOR_COLOR") ;
-    }
     if (unit && unit.trim().length > 50) {
       return t("PRODUCT_SETUP.CREATE_ATTRIBUTES.UNIT_MAX_LENGTH");
     }
@@ -429,7 +425,6 @@ const CreateAttribute = () => {
               label={
                 <span>
                   {t("COMMON.UNIT")}
-                  {isColorType && <span className="text-red-500 ml-1">*</span>}
                 </span>
               }
               id="Unit"
@@ -441,7 +436,6 @@ const CreateAttribute = () => {
               error={oErrors.Unit}
               isValid={oFieldValid.Unit}
               Icon={Info}
-              required={isColorType}
               showCharCount={true}
               maxChars={50}
               currentChars={oFormData.Unit?.length || 0}
