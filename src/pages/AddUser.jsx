@@ -1334,17 +1334,24 @@ const AddUser = () => {
         documentMetadata: documentMetadata,
       };
 
-      // Add UserID for update and handle password for edit mode
+      // Add audit fields to user data
+      const tenantID = localStorage.getItem("tenantID");
+
       if (id) {
         userData.UserID = id;
+        // Add update audit fields
         userData.UpdatedBy = userId;
+        userData.UpdatedOn = new Date().toISOString();
 
         // In update mode, if password is not touched, remove it from payload
         if (!oFormData.password || oFormData.password.trim() === "") {
           delete userData.Password;
         }
       } else {
+        // Add create audit fields
         userData.CreatedBy = userId;
+        userData.CreatedOn = new Date().toISOString();
+        userData.TenantID = tenantID;
       }
 
       formData.append("data", JSON.stringify(userData));
@@ -2266,9 +2273,6 @@ const AddUser = () => {
           isSubmitting={bSubmitting}
           isEditMode={!!id}
           actionType="USER"
-          onValidationError={(error) => {
-            console.error('User creation validation error:', error);
-          }}
         />
       )}
       </>

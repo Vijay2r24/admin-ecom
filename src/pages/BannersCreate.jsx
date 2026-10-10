@@ -13,7 +13,7 @@ import DateTimeRangePickerComponent from "../components/CustomDatePicker";
 import { useTitle } from "../context/TitleContext";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchResource } from "../store/slices/allDataSlice";
-import { apiPost, apiGet, apiPut } from "../utils/ApiUtils";
+import { apiGet, apiPost, apiPut } from "../utils/ApiUtils";
 import dayjs from "dayjs";
 import {
   CREATE_BANNER,
@@ -573,11 +573,21 @@ const BannerForm = () => {
     try {
       let response;
 
+      const userId = localStorage.getItem("userId");
+      
       if (bannerId) {
         // Use PUT for update with updateBanner endpoint
+        data.BannerID = bannerId;
+        data.UpdatedBy = userId;
+        data.UpdatedOn = new Date().toISOString();
+ 
         response = await apiPut(UPDATE_BANNER, data, token, true);
       } else {
         // Use POST for create with createBanner endpoint
+        data.CreatedBy = userId;
+        data.CreatedOn = new Date().toISOString();
+        data.TenantID = localStorage.getItem("tenantID");
+       
         response = await apiPost(CREATE_BANNER, data, token, true);
       }
 

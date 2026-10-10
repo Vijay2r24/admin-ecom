@@ -8,7 +8,7 @@ import Loader from "../../../components/Loader";
 import SelectWithIcon from "../../../components/SelectWithIcon";
 import ImageCropperModal from "../../../components/ImageCropperModal";
 import { ToastContainer } from "react-toastify";
-import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
+import { apiGet, apiPost, apiPut } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
 import {
@@ -518,9 +518,20 @@ const CreateBrand = () => {
     try {
       let response;
 
+      // Add audit fields
+      const userId = localStorage.getItem("userId");
+      
       if (isEditing) {
+        dataToSend.BrandID = brandId;
+        dataToSend.UpdatedBy = userId;
+        dataToSend.UpdatedOn = new Date().toISOString();
+        
         response = await apiPut(UPDATE_BRAND, dataToSend, token, true);
       } else {
+        dataToSend.CreatedBy = userId;
+        dataToSend.CreatedOn = new Date().toISOString();
+        dataToSend.TenantID = localStorage.getItem("tenantID");
+  
         response = await apiPost(CREATE_BRAND, dataToSend, token, true);
       }
 

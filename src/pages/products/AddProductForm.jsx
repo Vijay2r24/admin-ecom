@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { STATUS, FILETYPE, TYPE_GLOBAL } from "../../contants/constants.jsx";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchResource } from "../../store/slices/allDataSlice.jsx";
-import { apiPost, apiGet, apiPut } from "../../utils/ApiUtils.jsx";
+import { apiGet, apiPost, apiPut } from "../../utils/ApiUtils.jsx";
 import {
   CREATE_OR_UPDATE_PRODUCT,
   CREATE_PRODUCT,
@@ -1537,22 +1537,21 @@ const AddProductForm = () => {
       const token = localStorage.getItem("token");
       let response;
 
+      const userId = localStorage.getItem("userId");
+      
       if (productId) {
         // ✅ UPDATE PRODUCT
-        response = await apiPut(
-          UPDATE_PRODUCT,
-          formData,
-          token,
-          true // multipart/form-data
-        );
+        formData.set('UpdatedBy', userId);
+        formData.set('UpdatedOn', new Date().toISOString());
+       
+        response = await apiPut(UPDATE_PRODUCT, formData, token, true);
       } else {
-        // ✅ CREATE PRODUCT
-        response = await apiPost(
-          CREATE_PRODUCT,
-          formData,
-          token,
-          true // multipart/form-data
-        );
+        // ✅ CREATE PRODUCT  
+        formData.set('CreatedBy', userId);
+        formData.set('CreatedOn', new Date().toISOString());
+        formData.set('TenantID', localStorage.getItem("tenantID"));
+       
+        response = await apiPost(CREATE_PRODUCT, formData, token, true);
       }
 
       const resData = response?.data;

@@ -367,6 +367,9 @@ const OrderView = () => {
     const token = localStorage.getItem("token");
 
     try {
+      const userId = localStorage.getItem("userId");
+      payload.UpdatedBy = userId;
+      payload.UpdatedOn = new Date().toISOString();
       const oResponse = await apiPatch(
         `${UPDATE_ORDER_ITEM_HISTORY}/${oEditingItem?.id}`,
         payload,

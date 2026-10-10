@@ -12,7 +12,7 @@ import {
   CREATE_CATEGORY,
   UPDATE_CATEGORY,
 } from "../../../contants/apiRoutes";
-import { apiPost, apiGet, apiPut } from "../../../utils/ApiUtils";
+import { apiGet, apiPost, apiPut } from "../../../utils/ApiUtils";
 import { showEmsg } from "../../../utils/ShowEmsg";
 import { FILETYPE, STATUS, TOOLTIPSTATUS } from "../../../contants/constants";
 import { hideLoaderWithDelay } from "../../../utils/loaderUtils";
@@ -531,22 +531,22 @@ const CreateCategory = () => {
       const token = localStorage.getItem("token");
       let oResponse;
 
+      const userId = localStorage.getItem("userId");
+      
       if (isEditing) {
         // Use PUT for update with updateCategory endpoint
-        oResponse = await apiPut(
-          UPDATE_CATEGORY,
-          dataToSend,
-          token,
-          true // multipart/form-data
-        );
+        dataToSend.CategoryID = categoryId;
+        dataToSend.UpdatedBy = userId;
+        dataToSend.UpdatedOn = new Date().toISOString();
+      
+        oResponse = await apiPut(UPDATE_CATEGORY, dataToSend, token, true);
       } else {
         // Use POST for create with createCategory endpoint
-        oResponse = await apiPost(
-          CREATE_CATEGORY,
-          dataToSend,
-          token,
-          true // multipart/form-data
-        );
+        dataToSend.CreatedBy = userId;
+        dataToSend.CreatedOn = new Date().toISOString();
+        dataToSend.TenantID = localStorage.getItem("tenantID");
+    
+        oResponse = await apiPost(CREATE_CATEGORY, dataToSend, token, true);
       }
 
       if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {

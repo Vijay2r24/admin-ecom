@@ -514,11 +514,21 @@ const AddUserRole = () => {
         const token = localStorage.getItem("token");
         let res;
 
+        const userId = localStorage.getItem("userId");
+        
         if (roleId) {
           // Use PUT for update with updateRolePermission endpoint
+          roleData.RoleID = roleId;
+          roleData.UpdatedBy = userId;
+          roleData.UpdatedOn = new Date().toISOString();
+      
           res = await apiPut(UPDATE_ROLE_PERMISSION, roleData, token);
         } else {
           // Use POST for create with createRolePermission endpoint
+          roleData.CreatedBy = userId;
+          roleData.CreatedOn = new Date().toISOString();
+          roleData.TenantID = localStorage.getItem("tenantID");
+         
           res = await apiPost(CREATE_ROLE_PERMISSION, roleData, token);
         }
 

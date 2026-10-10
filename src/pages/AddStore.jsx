@@ -759,7 +759,7 @@ const AddStore = () => {
       // Ensure phoneNumber contains only digits
       phoneNumber = phoneNumber.replace(/\D/g, "");
 
-      const payload = {
+      let payload = {
         StoreID: id || "",
         StoreName: oFormData.name,
         Email: oFormData.email,
@@ -779,9 +779,24 @@ const AddStore = () => {
       try {
         let oResponse;
 
+        // Add audit fields to payload
+        const userId = localStorage.getItem("userId");
+        
         if (id) {
+          payload.StoreID = id;
+          payload.UpdatedBy = userId;
+          payload.UpdatedOn = new Date().toISOString();
+          
+       
+          
           oResponse = await apiPut(UPDATE_STORE, payload, token);
         } else {
+          payload.CreatedBy = userId;
+          payload.CreatedOn = new Date().toISOString();
+          payload.TenantID = localStorage.getItem("tenantID");
+          
+         
+          
           oResponse = await apiPost(CREATE_STORE, payload, token);
         }
 
