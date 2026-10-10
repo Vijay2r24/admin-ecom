@@ -730,13 +730,15 @@ const OrderView = () => {
                               )}
                             </div>
                             <div className="ml-3 print:ml-0">
-                              <div className="text-xs font-medium text-gray-900 print:text-xs">
-                                {(item.name?.split(" ").slice(0, 2).join(" ") ||
-                                  t('COMMON.N_A')) +
-                                  (item.name?.split(" ").length > 2
-                                    ? "..."
-                                    : "")}
-                              </div>
+                              <Tooltip text={item.name || t('COMMON.N_A')} position="top" align="left">
+                                <div className="text-xs font-medium text-gray-900 print:text-xs cursor-default">
+                                  {(item.name?.split(" ").slice(0, 2).join(" ") ||
+                                    t('COMMON.N_A')) +
+                                    (item.name?.split(" ").length > 2
+                                      ? "..."
+                                      : "")}
+                                </div>
+                              </Tooltip>
                               <div className="text-[10px] text-gray-500 print:text-[10px] truncate max-w-[100px]">
                                 {t("COMMON.QUANTITY")}: {item.quantity}
                               </div>
