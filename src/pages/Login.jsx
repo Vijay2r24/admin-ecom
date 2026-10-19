@@ -11,7 +11,7 @@ import {
     Shield,
     CheckCircle,
     XCircle,
-    Pencil,
+    Edit,
     Eye,
     EyeOff,
 } from "lucide-react";
@@ -471,7 +471,6 @@ const Login = () => {
                 showToastMessage(message || t("OTP.VERIFY_SUCCESS"), STATUS.SUCCESS);
                 setbShowOtpDialog(false);
                 setCurrentView(LOGIN_VIEWS.RESET_PASSWORD);
-                setOtp("");
                 setError({ ...sError, otp: "" });
             } else {
                 showToastMessage(message || t("OTP.VERIFY_ERROR"), STATUS.ERROR);
@@ -491,12 +490,18 @@ const Login = () => {
         const passwordError = validateNewPassword(sNewPassword, t);
         const confirmPasswordError = validateConfirmPassword(sConfirmPassword, sNewPassword, t);
 
-        if (emailError || otpError || passwordError || confirmPasswordError) {
+        if (emailError || otpError) {
+            showToastMessage(otpError || emailError || t("OTP.VERIFY_ERROR"), STATUS.ERROR);
+            setCurrentView(LOGIN_VIEWS.FORGOT_PASSWORD);
+            return;
+        }
+
+        if (passwordError || confirmPasswordError) {
             setError({
-                email: emailError || "",
+                email: "",
                 password: passwordError || confirmPasswordError || "",
                 submit: "",
-                otp: otpError || "",
+                otp: "",
                 newPassword: passwordError || "",
                 confirmPassword: confirmPasswordError || "",
             });
@@ -837,7 +842,21 @@ const Login = () => {
                         </button>
                         <button
                             type="button"
-                            onClick={() => setCurrentView("login")}
+                            onClick={() => {
+                                setCurrentView(LOGIN_VIEWS.LOGIN);
+                                setOtp("");
+                                setSNewPassword("");
+                                setConfirmPassword("");
+                                setForgotPasswordEmail("");
+                                setError({
+                                    email: "",
+                                    password: "",
+                                    submit: "",
+                                    otp: "",
+                                    newPassword: "",
+                                    confirmPassword: "",
+                                });
+                            }}
                             className="w-1/2 text-custom-bg border border-custom-bg py-2 px-4 rounded-md hover:bg-custom-bg/10 transition-colors duration-200"
                         >
                             {t("COMMON.CANCEL")}
@@ -929,10 +948,10 @@ const Login = () => {
                                         title={t("COMMON.EDIT")}
                                         onClick={() => {
                                             setbShowOtpDialog(false);
-                                            setCurrentView("forgotPassword");
+                                            setCurrentView(LOGIN_VIEWS.FORGOT_PASSWORD);
                                         }}
                                     >
-                                        <Pencil className="w-4 h-4 text-gray-500" />
+                                        <Edit className="w-4 h-4 text-gray-500" />
                                     </button>
                                 </div>
                             </div>

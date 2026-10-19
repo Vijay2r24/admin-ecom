@@ -20,7 +20,6 @@ import {
   Eye,
   DollarSign,
   Percent,
-  Edit2,
   IndianRupee,
 } from "lucide-react";
 import { SingleStoreInventoryTable } from "../products/SingleStoreInventoryTable";

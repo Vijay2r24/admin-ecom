@@ -655,14 +655,14 @@ const OrderView = () => {
               </div>
             </div>
 
-            <div className="rounded-lg shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
-              <div className="px-4 py-3 border-b border-gray-200 print:px-3 print:py-2 print:border-b print:border-gray-300">
-                <h4 className="text-sm font-semibold text-gray-900 print:text-base">
+            <div className="rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 bg-white dark:bg-black overflow-hidden print:rounded-none print:shadow-none print:border print:p-4">
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800 print:px-3 print:py-2 print:border-b print:border-gray-300">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white print:text-base">
                   {t("VIEW_ORDER.ORDER_ITEMS")}
                 </h4>
               </div>
               <div className="overflow-x-auto print:overflow-visible">
-                <table className="min-w-full divide-y divide-gray-200 print:text-sm print:divide-gray-300">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800 print:text-sm print:divide-gray-300">
                   <thead className="bg-gray-100 dark:bg-gray-900 print:bg-white">
                     <tr>
                       <th
@@ -697,14 +697,14 @@ const OrderView = () => {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200 print:divide-gray-300">
+                  <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-800 print:divide-gray-300">
                     {nOrder.orderItems.map((item) => (
                       <tr
                         key={item?.id || item?.sku || item?.name}
                         className={
                           highlightedItemId === item.id
-                            ? "bg-blue-50 transition-colors duration-200 relative"
-                            : "hover:bg-gray-50 transition-colors duration-200"
+                            ? "bg-blue-50 dark:bg-blue-950/40 transition-colors duration-200 relative"
+                            : "hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors duration-200"
                         }
                         ref={(el) => {
                           if (highlightedItemId === item.id && el) {
@@ -717,8 +717,8 @@ const OrderView = () => {
                           }
                         }}
                       >
-                        <td className="px-4 py-3 whitespace-nowrap print:px-3 print:py-2">
-                          <div className="flex items-center print:block">
+                        <td className="px-4 py-3 max-w-[210px] sm:max-w-[230px] print:px-3 print:py-2">
+                          <div className="flex items-center min-w-0 print:block">
                             <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 print:hidden">
                               {item.image ? (
                                 <img
@@ -727,22 +727,18 @@ const OrderView = () => {
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
-                                <div className="h-full w-full flex items-center justify-center text-gray-500 text-xs">
+                                <div className="h-full w-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs">
                                   {t("VIEW_ORDER.NO_IMAGE")}
                                 </div>
                               )}
                             </div>
-                            <div className="ml-3 print:ml-0">
-                              <Tooltip text={item.name || t('COMMON.N_A')} position="top" align="left">
-                                <div className="text-xs font-medium text-gray-900 print:text-xs cursor-default">
-                                  {(item.name?.split(" ").slice(0, 2).join(" ") ||
-                                    t('COMMON.N_A')) +
-                                    (item.name?.split(" ").length > 2
-                                      ? "..."
-                                      : "")}
+                            <div className="ml-3 min-w-0 flex-1 max-w-[150px] sm:max-w-[170px] md:max-w-[190px] overflow-hidden print:ml-0 print:max-w-none">
+                              <Tooltip text={item.name || t('COMMON.N_A')} position="top" align="left" fullWidth>
+                                <div className="text-xs font-medium text-gray-900 dark:text-white print:text-xs cursor-default truncate">
+                                  {item.name || t('COMMON.N_A')}
                                 </div>
                               </Tooltip>
-                              <div className="text-[10px] text-gray-500 print:text-[10px] truncate max-w-[100px]">
+                              <div className="text-[10px] text-gray-500 dark:text-gray-400 print:text-[10px] truncate max-w-[100px]">
                                 {t("COMMON.QUANTITY")}: {item.quantity}
                               </div>
 
@@ -757,7 +753,7 @@ const OrderView = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-800 print:px-3 print:py-2 print:text-xs">
+                        <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-800 dark:text-gray-200 print:px-3 print:py-2 print:text-xs">
                           ₹{item.price?.toFixed(2)}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-center print:px-3 print:py-2">
@@ -814,13 +810,13 @@ const OrderView = () => {
                     <tr>
                       <td
                         colSpan="4"
-                        className="px-4 py-2 text-left text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-left text-sm font-semibold text-gray-900 dark:text-white print:px-3 print:py-2 print:text-sm"
                       >
                         {t("VIEW_ORDER.SUBTOTAL")}
                       </td>
                       <td
                         colSpan="2"
-                        className="px-4 py-2 text-right text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-right text-sm font-semibold text-gray-900 dark:text-white print:px-3 print:py-2 print:text-sm"
                       >
                         ₹{nOrder.total?.toFixed(2) || ""}
                       </td>
@@ -828,13 +824,13 @@ const OrderView = () => {
                     <tr>
                       <td
                         colSpan="3"
-                        className="px-4 py-2 text-left text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-left text-sm font-semibold text-gray-900 dark:text-white print:px-3 print:py-2 print:text-sm"
                       >
                         {t("VIEW_ORDER.SHIPPING")}
                       </td>
                       <td
                         colSpan="2"
-                        className="px-4 py-2 text-right text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-right text-sm font-semibold text-gray-900 dark:text-white print:px-3 print:py-2 print:text-sm"
                       >
                         ₹0.00
                       </td>
@@ -842,13 +838,13 @@ const OrderView = () => {
                     <tr>
                       <td
                         colSpan="3"
-                        className="px-4 py-2 text-left text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-left text-sm font-semibold text-gray-900 dark:text-white print:px-3 print:py-2 print:text-sm"
                       >
                         {t("VIEW_ORDER.TAX")}
                       </td>
                       <td
                         colSpan="2"
-                        className="px-4 py-2 text-right text-sm font-semibold text-gray-900 print:px-3 print:py-2 print:text-sm"
+                        className="px-4 py-2 text-right text-sm font-semibold text-gray-900 dark:text-white print:px-3 print:py-2 print:text-sm"
                       >
                         ₹0.00
                       </td>
@@ -856,7 +852,7 @@ const OrderView = () => {
                     <tr>
                       <td
                         colSpan="3"
-                        className="px-4 py-2 text-left text-base font-bold text-gray-900 print:px-3 print:py-2 print:text-base"
+                        className="px-4 py-2 text-left text-base font-bold text-gray-900 dark:text-white print:px-3 print:py-2 print:text-base"
                       >
                         {t("VIEW_ORDER.TOTAL_AMOUNT")}
                       </td>
@@ -871,13 +867,13 @@ const OrderView = () => {
                 </table>
               </div>
             </div>
-            <div className="lg:hidden rounded-lg p-4 shadow-sm border border-gray-100 print:rounded-none print:shadow-none print:border print:p-4">
+            <div className="lg:hidden rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800 bg-white dark:bg-black print:rounded-none print:shadow-none print:border print:p-4">
               <div>
                 <div className="flex items-center space-x-3 mb-3 print:mb-3">
                   <div className="p-1.5 bg-[#5B45E0]/10 rounded-lg print:hidden">
                     <Package className="h-4 w-4 text-[#5B45E0]" />
                   </div>
-                  <h4 className="text-sm font-semibold text-gray-900 print:text-base">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white print:text-base">
                     {t("VIEW_ORDER.ORDER_SUMMARY")}
                   </h4>
                 </div>

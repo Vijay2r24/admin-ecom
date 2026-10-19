@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense, startTransition } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense, startTransition } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import Toolbar from "../../components/Toolbar";
@@ -283,6 +283,7 @@ const ProductInventory = () => {
   const handleClearFilters = () => {
     setFilters(defaultFilters);
     setCurrentPage(1);
+    dispatch(fetchResource({ key: "stores", params: {} }));
   };
 
   const handleEdit = (productId) => {

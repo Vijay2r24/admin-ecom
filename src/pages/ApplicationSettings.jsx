@@ -11,7 +11,7 @@ import banner1 from "../../assets/images/banner1.jpg";
 import mobile from "../../assets/images/mobile.jpg";
 import { useTitle } from "../context/TitleContext";
 import { useTranslation } from "react-i18next";
-import { CUSTOM_COLORS,STATUS } from "../contants/constants";
+import { STATUS } from "../contants/constants";
 import { apiPatch, apiGet, apiPost } from "../utils/ApiUtils";
 import { UPDATE_TENANT_THEME, UPDATE_TENANT_LOGO, GET_TENANT_SETTINGS } from "../contants/apiRoutes";
 import { showEmsg } from "../utils/ShowEmsg";
@@ -23,8 +23,10 @@ import { isWhiteColor } from "../utils/colorValidation";
 
 const ThemeSettings = () => {
   const { t } = useTranslation()
-  const defaultColor = t(CUSTOM_COLORS.primary);
-  const [primaryColor, setPrimaryColor] = useState(defaultColor);
+  const [apiThemeColor, setApiThemeColor] = useState("");
+  const [apiLogo, setApiLogo] = useState(null);
+  const [apiLogoDocumentId, setApiLogoDocumentId] = useState(null);
+  const [primaryColor, setPrimaryColor] = useState("");
   const [logo, setLogo] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
   const [currentLogoDocumentId, setCurrentLogoDocumentId] = useState(null);
@@ -74,9 +76,8 @@ const ThemeSettings = () => {
       
       const payload = {
         TenantID: tenantId,
-        ThemeColour: CUSTOM_COLORS.primary, // Default theme color
+        ThemeColour: primaryColor || "",
       };
-      
       
       // Try to create tenant settings using POST without tenantId in URL
       const response = await apiPost(UPDATE_TENANT_THEME, payload);
@@ -86,13 +87,12 @@ const ThemeSettings = () => {
       }
       return null;
     } catch (error) {
-      
       // Try alternative approach - POST to the URL with tenantId
       try {
         const tenantId = getTenantId();
         const altPayload = {
           TenantID: tenantId,
-          ThemeColour: primaryColor || CUSTOM_COLORS.primary,
+          ThemeColour: primaryColor || "",
         };
         
         const altResponse = await apiPost(`${UPDATE_TENANT_THEME}/${tenantId}`, altPayload);
@@ -102,11 +102,6 @@ const ThemeSettings = () => {
       
       return null;
     }
-  };
-
-  const isWhiteColor = (color) => {
-    const normalizedColor = color.toLowerCase().trim();
-    return normalizedColor === '#ffffff' || normalizedColor === '#fff' || normalizedColor === 'white';
   };
 
   const updateThemeColor = async () => {
@@ -236,12 +231,15 @@ const ThemeSettings = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleReset = () => {
-    setPrimaryColor(defaultColor);
-    setLogo(null);
+  const handleReset = async () => {
     setLogoFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
-    getTenantSettings(); // Fetch tenant settings from API
+    if (apiThemeColor) {
+      setPrimaryColor(apiThemeColor);
+    }
+    setLogo(apiLogo);
+    setCurrentLogoDocumentId(apiLogoDocumentId);
+    await getTenantSettings();
   };
 
   const getTenantSettings = async () => {
@@ -264,25 +262,23 @@ const ThemeSettings = () => {
         }
       }
       
-      
       if (settings) {
         // Store TenantSettingID for theme updates
         if (settings.TenantSettingID) {
           setTenantSettingId(settings.TenantSettingID);
         }
 
-        // Set theme color if available
-        if (settings.ThemeColour) {
-          setPrimaryColor(settings.ThemeColour);
-        }
-        
-        // Logo is an object (not array)
-        if (settings.Logo && settings.Logo.documentUrl) {
-          setLogo(settings.Logo.documentUrl);
-          if (settings.Logo.documentId) {
-            setCurrentLogoDocumentId(settings.Logo.documentId);
-          }
-        }
+        const themeColour = settings.ThemeColour || "";
+        const logoUrl = (settings.Logo && settings.Logo.documentUrl) ? settings.Logo.documentUrl : null;
+        const logoDocId = (settings.Logo && settings.Logo.documentId) ? settings.Logo.documentId : null;
+
+        setApiThemeColor(themeColour);
+        setApiLogo(logoUrl);
+        setApiLogoDocumentId(logoDocId);
+
+        setPrimaryColor(themeColour);
+        setLogo(logoUrl);
+        setCurrentLogoDocumentId(logoDocId);
       } else {
         // Try to create initial tenant settings
         await createTenantSettings();
@@ -310,7 +306,7 @@ const ThemeSettings = () => {
     <React.Fragment>
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Loader height={48} width={48} color="#FF5A5F" />
+          <Loader height={48} width={48} />
         </div>
       )}
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 min-h-screen bg-gray-50 py-6">
@@ -328,20 +324,26 @@ const ThemeSettings = () => {
               handleColorChange(newColor);
             }}
             Icon={PaintBucket}
-            placeholder={defaultColor}
+            placeholder={apiThemeColor || t("THEMESETTINGS.PRIMARY_COLOR")}
             inputSlot={
               <div className="relative">
                 <input
                   type="color"
-                  value={primaryColor}
-                  onChange={(e) => {
-                  const newColor = e.target.value;
-                  if (isWhiteColor(newColor)) {
-                    showEmsg(t("THEMESETTINGS.WHITE_COLOR_NOT_ALLOWED") , STATUS.WARNING);
-                    return;
+                  value={
+                    /^#[0-9A-Fa-f]{6}$/.test(primaryColor)
+                      ? primaryColor
+                      : /^#[0-9A-Fa-f]{6}$/.test(apiThemeColor)
+                      ? apiThemeColor
+                      : "#000000"
                   }
-                  handleColorChange(newColor);
-                }}
+                  onChange={(e) => {
+                    const newColor = e.target.value;
+                    if (isWhiteColor(newColor)) {
+                      showEmsg(t("THEMESETTINGS.WHITE_COLOR_NOT_ALLOWED"), STATUS.WARNING);
+                      return;
+                    }
+                    handleColorChange(newColor);
+                  }}
                   className="w-7 h-7 border rounded-full cursor-pointer"
                 />
                 {isWhiteColor(primaryColor) && (

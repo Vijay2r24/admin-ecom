@@ -10,13 +10,14 @@ import {
   X,
   Check,
   ChevronDown,
+  RotateCcw,
 } from "lucide-react";
 import { Combobox } from "@headlessui/react";
 import { useTranslation } from "react-i18next";
 import Tooltip from "./Tooltip";
 import { createPortal } from "react-dom";
 import DateTimeRangePickerComponent from "./CustomDatePicker";
-import { VIEW_MODES, TOOLTIPSTATUS, NOTIFICATION_TYPES, TOAST_DURATION } from "../contants/constants";
+import { VIEW_MODES, TOOLTIPSTATUS, NOTIFICATION_TYPES, TOAST_DURATION, FILTER_VALUES } from "../contants/constants";
 import { useSubscriptionReadOnly } from "../hooks/useSubscriptionReadOnly";
 import CreateButton from "./CreateButton";
 
@@ -392,14 +393,20 @@ const OrderToolbar = ({
       </div>
 
       {showFilterDropdown && otherFilters.length > 0 && (
-        <div className="mt-2 p-2.5 bg-white rounded-md border border-gray-200 shadow-sm relative overflow-visible z-0">
-          <div className="flex justify-end mb-2">
+        <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm relative overflow-visible z-0">
+          <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-gray-100 dark:border-gray-700">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
+              <Filter className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+              <span>{t("COMMON.FILTERS")}</span>
+            </div>
             {onClearFilters && (
               <button
+                type="button"
                 onClick={onClearFilters}
-                className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800 transition-colors shadow-sm"
               >
-                {t("COMMON.CLEAR")}
+                <RotateCcw className="h-3 w-3" />
+                {t("COMMON.RESET_FILTERS")}
               </button>
             )}
           </div>
@@ -437,6 +444,20 @@ const FilterCombobox = ({ filter, handleComboboxChange, t }) => {
       });
     }
   }, [isOptionsOpen]);
+
+  // Reset search query when filter value resets to default/empty
+  useEffect(() => {
+    if (
+      filter.value === FILTER_VALUES.ALL ||
+      filter.value === FILTER_VALUES.ALL_UPPER ||
+      filter.value === FILTER_VALUES.NONE ||
+      filter.value === FILTER_VALUES.NONE_UPPER ||
+      !filter.value ||
+      (Array.isArray(filter.value) && filter.value.length === 0)
+    ) {
+      setQuery("");
+    }
+  }, [filter.value]);
 
   const selectedOptions = filter.multiple
     ? filter.options?.filter((opt) => filter.value?.includes(opt.value)) || []
@@ -506,16 +527,43 @@ const FilterCombobox = ({ filter, handleComboboxChange, t }) => {
                   />
                 </div>
                 <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2 gap-1.5 bg-gradient-to-l from-white via-white/90 to-transparent pl-4">
-                  {filter.multiple && filter.value?.length > 0 && (
+                  {((filter.multiple && filter.value?.length > 0) ||
+                    (!filter.multiple &&
+                      filter.value &&
+                      filter.value !== FILTER_VALUES.ALL &&
+                      filter.value !== FILTER_VALUES.ALL_UPPER &&
+                      filter.value !== FILTER_VALUES.NONE &&
+                      filter.value !== FILTER_VALUES.NONE_UPPER &&
+                      filter.value !== "")) && (
                     <button
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleComboboxChange([], filter.name);
+                        const isAllOpt = (o) =>
+                          o.value === FILTER_VALUES.ALL || o.value === FILTER_VALUES.ALL_UPPER;
+                        const isNoneOpt = (o) =>
+                          o.value === FILTER_VALUES.NONE || o.value === FILTER_VALUES.NONE_UPPER;
+                        const defaultValue = filter.multiple
+                          ? []
+                          : filter.options?.some(isAllOpt)
+                          ? filter.options.find(isAllOpt).value
+                          : filter.options?.some(isNoneOpt)
+                          ? filter.options.find(isNoneOpt).value
+                          : "";
+                        handleComboboxChange(
+                          filter.multiple
+                            ? []
+                            : filter.options?.find((o) => o.value === defaultValue) || {
+                                value: defaultValue,
+                                label: defaultValue,
+                              },
+                          filter.name
+                        );
+                        setQuery("");
                       }}
-                      className="group flex items-center justify-center p-0.5 rounded-full hover:bg-red-50 transition-colors"
-                      title="Clear all"
+                      className="group flex items-center justify-center p-0.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                      title={t("COMMON.CLEAR")}
                     >
                       <X className="h-3 w-3 text-gray-400 group-hover:text-red-500" />
                     </button>

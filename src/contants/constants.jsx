@@ -607,6 +607,9 @@ export const VIEW_MODES = {
 export const FILE_CONSTANTS = {
   BRAND_LOGO_PREFIX: "brand-logo",
   CATEGORY_IMAGE_PREFIX: "category-image",
+  PROFILE_IMAGE_PREFIX: "profile-image",
+  MAX_PROFILE_IMAGE_SIZE: 5 * 1024 * 1024,
+  MAX_PROFILE_IMAGE_FILES: 1,
   FILE_TYPE: "image/jpeg",
   IMAGE_SIZE_TEXT: " PNG, JPG, JPEG up to 10MB",
   IMAGE_TITLE_TEXT: "Remove image",
@@ -1133,6 +1136,8 @@ export const STATUS_BADGE_CLASSES = {
 export const FILTER_VALUES = {
   ALL: "all",
   NONE: "none",
+  ALL_UPPER: "ALL",
+  NONE_UPPER: "NONE",
   TRUE: "true",
   FALSE: "false",
 };
@@ -1393,6 +1398,7 @@ export const SKELETON_TYPES = {
   PAGINATION: 'pagination',
   PROFILE: 'profile',
   PRODUCT_FORM: 'product-form',
+  USER_FORM: 'user-form',
   DEFAULT: 'default',
   NEW_SKELETON_TYPE: 'new-skeleton-type',
 };

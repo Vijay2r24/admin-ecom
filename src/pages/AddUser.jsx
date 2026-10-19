@@ -11,14 +11,18 @@ import {
   XCircle,
   Store,
   Users,
-  Edit3,
+  Edit,
+  X,
   Save,
   Globe,
   Navigation,
   Hash,
   Eye,
-  EyeOff
+  EyeOff,
+  Upload,
+  Loader2,
 } from "lucide-react";
+import { useDropzone } from "react-dropzone";
 import TextInputWithIcon from "../components/TextInputWithIcon";
 import SelectWithIcon from "../components/SelectWithIcon";
 import PhoneInputWithIcon from "../components/PhoneInputWithIcon";
@@ -40,6 +44,7 @@ import {
   PERMISSIONS,
   STATUS,
   SKELETON_TYPES,
+  FILE_CONSTANTS,
 } from "../contants/constants";
 import { getPermissionCode, hasPermissionId } from "../utils/permissionUtils";
 import md5 from "md5";
@@ -86,7 +91,7 @@ const SectionHeader = ({ title, isEditable, onEditToggle, sectionKey, id, t }) =
         onClick={() => onEditToggle(sectionKey)}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#FF5A5F] text-white hover:bg-[#e04a4f] transition-colors"
       >
-        <Edit3 size={14} />
+        <Edit size={14} />
         {t("COMMON.EDIT")}
       </button>
     )}
@@ -103,7 +108,7 @@ const SectionFooter = ({ isEditable, onEditToggle, onUpdate, sectionKey, id, t }
         onClick={() => onEditToggle(sectionKey)}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 transition-colors"
       >
-        <Edit3 size={14} />
+        <X size={14} />
         {t("COMMON.CANCEL")}
       </button>
       <button
@@ -206,6 +211,7 @@ const AddUser = () => {
   const [nProfileImagePreview, setProfileImagePreview] = useState(null);
   const [existingDocuments, setExistingDocuments] = useState([]);
   const [removedDocumentIds, setRemovedDocumentIds] = useState([]);
+  const [bUpdatingImage, setUpdatingImage] = useState(false);
   const { t } = useTranslation();
   const { id } = useParams();
   const [bImgLoading, setImgLoading] = useState(true);
@@ -1162,19 +1168,6 @@ const AddUser = () => {
     [validateField, markFieldTouched, oFieldTouched]
   );
 
-  const handleImageChange = useCallback((e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setProfileImage(file);
-      setRemovedDocumentIds([]);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImagePreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  }, []);
-
   const handleClose = useCallback(() => {
     navigate("/users");
   }, [navigate]);
@@ -1256,6 +1249,109 @@ const AddUser = () => {
 
     // If no errors, submit the form
     await handleSubmit();
+  };
+
+  // Dedicated handler to update profile image
+  const handleProfileImageUpdate = async () => {
+    if (!id) return;
+    if (!nProfileImage) {
+      showEmsg(
+        t("ADD_USER.SELECT_IMAGE_FIRST"),
+        STATUS.WARNING
+      );
+      return;
+    }
+
+    setUpdatingImage(true);
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+    const formData = new FormData();
+
+    let documentMetadata = [];
+    if (existingDocuments.length > 0 && existingDocuments[0]?.documentId) {
+      documentMetadata.push({
+        image: FILE_CONSTANTS.PROFILE_IMAGE_PREFIX,
+        sortOrder: 1,
+        DocumentID: existingDocuments[0].documentId,
+      });
+    } else {
+      documentMetadata.push({
+        image: FILE_CONSTANTS.PROFILE_IMAGE_PREFIX,
+        sortOrder: 1,
+      });
+    }
+
+    const selectedCountry = getArray(countries).find(
+      (c) => String(c.CountryID) === String(oFormData.country)
+    );
+    const selectedState = getArray(states).find(
+      (s) => String(s.StateID) === String(oFormData.state)
+    );
+    const selectedCity = getArray(cities).find(
+      (c) => String(c.CityID) === String(oFormData.city)
+    );
+
+    const userData = {
+      UserID: id,
+      FirstName: oFormData.firstName || "",
+      LastName: oFormData.lastName || "",
+      Email: oFormData.email || "",
+      CountryCallingCode: oFormData.CountryCallingCode || "",
+      PhoneNumber: oFormData.PhoneNumber || "",
+      Gender: oFormData.gender || "",
+      IsActive: oFormData.IsActive !== undefined ? oFormData.IsActive : true,
+      RoleID: oFormData.role || "",
+      StoreIDs: oFormData.stores || [],
+      AddressLine: oFormData.streetAddress || "",
+      CityName: selectedCity ? selectedCity.CityName : (oFormData.cityName || ""),
+      StateCode: selectedState ? selectedState.StateCode : (oFormData.StateCode || ""),
+      CountryCode: selectedCountry ? selectedCountry.CountryCode : (oFormData.CountryCode || ""),
+      Zipcode: oFormData.pincode || "",
+      documentMetadata: documentMetadata,
+      UpdatedBy: userId,
+      UpdatedOn: new Date().toISOString(),
+    };
+
+    formData.append("data", JSON.stringify(userData));
+    formData.append(FILE_CONSTANTS.PROFILE_IMAGE_PREFIX, nProfileImage);
+
+    try {
+      const oResponse = await apiPut(UPDATE_USER, formData, token, true);
+      const resData = oResponse?.data;
+
+      if (resData?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
+        showEmsg(
+          resData?.message || t("ADD_USER.PROFILE_IMAGE_UPDATED"),
+          STATUS.SUCCESS
+        );
+        setProfileImage(null);
+        setRemovedDocumentIds([]);
+
+        // Refresh user data to get the newly generated document URL and ID
+        try {
+          const userRes = await apiGet(`${GET_USER_BY_ID}/${id}`, {}, token);
+          const updatedUser = userRes?.data?.data;
+          if (updatedUser?.ProfileImageUrl && updatedUser.ProfileImageUrl.length > 0) {
+            setExistingDocuments(updatedUser.ProfileImageUrl);
+            setProfileImagePreview(updatedUser.ProfileImageUrl[0].documentUrl);
+          }
+        } catch (fetchErr) {
+        }
+      } else {
+        showEmsg(
+          resData?.message || t("COMMON.FAILED_OPERATION"),
+          STATUS.WARNING
+        );
+      }
+    } catch (error) {
+      const backendMessage = error?.response?.data?.message;
+      showEmsg(
+        backendMessage || t("COMMON.ERROR_MESSAGE"),
+        STATUS.ERROR
+      );
+    } finally {
+      setUpdatingImage(false);
+    }
   };
 
   const handleSubmit = useCallback(
@@ -1553,9 +1649,50 @@ const AddUser = () => {
     }
   };
 
+  const onProfileDrop = useCallback(
+    (acceptedFiles) => {
+      const file = acceptedFiles?.[0];
+      if (file) {
+        if (id && !isPersonalInfoEditable) {
+          toggleSectionEdit("personal");
+        }
+        setProfileImage(file);
+        setRemovedDocumentIds([]);
+        setImgError(false);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setProfileImagePreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    [id, isPersonalInfoEditable, toggleSectionEdit]
+  );
 
-
-
+  const {
+    getRootProps: getProfileRootProps,
+    getInputProps: getProfileInputProps,
+    isDragActive: isProfileDragActive,
+    open: openProfilePicker,
+  } = useDropzone({
+    onDrop: onProfileDrop,
+    accept: {
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
+      "image/webp": [".webp"],
+      "image/svg+xml": [".svg"],
+    },
+    maxFiles: FILE_CONSTANTS.MAX_PROFILE_IMAGE_FILES,
+    maxSize: FILE_CONSTANTS.MAX_PROFILE_IMAGE_SIZE,
+    onDropRejected: (fileRejections) => {
+      const error = fileRejections?.[0]?.errors?.[0];
+      if (error?.code === "file-too-large") {
+        showEmsg(t("ADD_USER.FILE_SIZE_LIMIT"), STATUS.ERROR);
+      } else {
+        showEmsg(t("ADD_USER.INVALID_IMAGE_FORMAT"), STATUS.ERROR);
+      }
+    },
+  });
 
   return (
     <div className="max-w-8xl mx-auto pb-20">
@@ -1574,59 +1711,121 @@ const AddUser = () => {
             </div>
           </div>
 
-      <div className="flex items-center gap-6 mb-8 relative">
-        <div className="relative" style={{ minWidth: 80, minHeight: 80 }}>
-          {bImgLoading && !bImgError && (
-            <div className="h-20 w-20 rounded-full bg-gray-200 animate-pulse flex items-center justify-center">
-              <User className="h-10 w-10 text-gray-400" />
-            </div>
-          )}
-          <img
-            src={
-              !bImgError &&
-                (nProfileImagePreview ||
-                  (existingDocuments.length > 0 &&
-                    existingDocuments[0].documentUrl))
-                ? nProfileImagePreview || existingDocuments[0].documentUrl
-                : userProfile
-            }
-            alt={t("ADD_USER.PROFILE_PREVIEW")}
-            className={`h-20 w-20 rounded-full object-cover border-2 border-gray-200 shadow-sm ${bImgLoading ? "hidden" : ""
-              }`}
-            style={{ display: bImgLoading ? "none" : "block" }}
-            onLoad={() => setImgLoading(false)}
-            onError={() => {
-              setImgError(true);
-              setImgLoading(false);
-            }}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t("ADD_USER.PROFILE_IMAGE")}
-          </label>
-          <input
-            id="profile-image-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-            disabled={!isPersonalInfoEditable && id}
-          />
-          <label
-            htmlFor="profile-image-upload"
-            className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors ${!isPersonalInfoEditable && id
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500"
-              : "text-white bg-blue-600 hover:bg-blue-700 border border-blue-600"
-              }`}
-          >
-            <FaCamera className="text-sm" />
-            {t("COMMON.UPLOAD")}
-          </label>
+      {/* Profile Image Drag & Drop Area */}
+      <div className="mb-8">
+        <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+          {t("ADD_USER.PROFILE_IMAGE")}
+        </label>
 
-          <p className="text-xs text-gray-500 mt-2">
-            {t("ADD_USER.IMAGE_UPLOAD_NOTE")}
-          </p>
+        <div
+          {...getProfileRootProps()}
+          className={`relative border-2 border-dashed rounded-xl p-4 sm:p-5 transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-center gap-5 ${
+            isProfileDragActive
+              ? "border-custom-bg bg-custom-bg/10 scale-[1.01]"
+              : "border-gray-300 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 hover:border-custom-bg hover:bg-gray-50 dark:hover:bg-gray-800/60"
+          }`}
+        >
+          <input {...getProfileInputProps()} />
+
+          {/* Avatar Preview */}
+          <div className="relative flex-shrink-0">
+            <div className="h-20 w-20 rounded-full overflow-hidden border-2 border-white dark:border-gray-800 shadow-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center relative">
+              {bImgLoading && !bImgError && (
+                <div className="h-full w-full rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
+                  <User className="h-8 w-8 text-gray-400" />
+                </div>
+              )}
+              <img
+                src={
+                  !bImgError &&
+                  (nProfileImagePreview ||
+                    (existingDocuments.length > 0 &&
+                      existingDocuments[0].documentUrl))
+                    ? nProfileImagePreview || existingDocuments[0].documentUrl
+                    : userProfile
+                }
+                alt={t("ADD_USER.PROFILE_PREVIEW")}
+                className={`h-full w-full object-cover ${bImgLoading ? "hidden" : "block"}`}
+                onLoad={() => setImgLoading(false)}
+                onError={() => {
+                  setImgError(true);
+                  setImgLoading(false);
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Dropzone Instructions & Actions */}
+          <div className="flex-1 min-w-0 text-center sm:text-left">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                {isProfileDragActive
+                  ? t("COMMON.DROP_IMAGE_HERE")
+                  : t("ADD_USER.DRAG_DROP_PROMPT")}
+              </span>
+              {!isProfileDragActive && (
+                <div className="inline-flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-custom-bg text-white hover:bg-bg-hover transition-colors shadow-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openProfilePicker();
+                    }}
+                  >
+                    <Upload size={13} />
+                    {t("COMMON.UPLOAD")}
+                  </button>
+
+                  {id && (
+                    <button
+                      type="button"
+                      disabled={!nProfileImage || bUpdatingImage}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleProfileImageUpdate();
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-custom-bg text-white hover:bg-bg-hover transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {bUpdatingImage ? (
+                        <Loader2 size={13} className="animate-spin" />
+                      ) : (
+                        <Save size={13} />
+                      )}
+                      {t("COMMON.UPDATE")}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t("ADD_USER.IMAGE_UPLOAD_NOTE")}
+            </p>
+
+            {nProfileImage && (
+              <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                  <CheckCircle size={13} />
+                  {nProfileImage.name}
+                </span>
+                <button
+                  type="button"
+                  disabled={bUpdatingImage}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProfileImage(null);
+                    setProfileImagePreview(
+                      existingDocuments.length > 0 ? existingDocuments[0].documentUrl : null
+                    );
+                  }}
+                  className="text-xs text-red-500 hover:text-red-700 underline disabled:opacity-50"
+                >
+                  {t("COMMON.REMOVE")}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
