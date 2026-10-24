@@ -27,7 +27,6 @@ import {
     VALIDATE_OTP,
     GET_ALL_PERMISSIONS,
     GET_USER_BY_ID,
-    RESET_USER_PASSWORD,
     GET_ALL_SUBSCRIPTION_PLAN_FEATURES,
 } from "../contants/apiRoutes";
 
@@ -513,18 +512,18 @@ const Login = () => {
             const oPayload = {
                 email: sForgotPasswordEmail,
                 OTP: Number(sOtp),
-                NewPassword: sNewPassword,
-                ConfirmPassword: sConfirmPassword,
+                NewPassword: md5(sNewPassword),
+                ConfirmPassword: md5(sConfirmPassword),
             };
 
             const oResponse = await apiPost(
-                `${RESET_USER_PASSWORD}`,
+                VALIDATE_UPDATE_PASSWORD,
                 oPayload,
                 null,
                 false
             );
             const message = oResponse?.data?.message;
-            if (oResponse.data.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
+            if (oResponse?.data?.status?.toUpperCase() === STATUS.SUCCESS.toUpperCase()) {
                 showToastMessage(message || t("LOGIN.SUCCESS"), STATUS.SUCCESS);
                 setbShowOtpDialog(false);
                 setCurrentView(LOGIN_VIEWS.LOGIN);
@@ -537,7 +536,7 @@ const Login = () => {
                     confirmPassword: "",
                 });
                 setForgotPasswordEmail("");
-                setSNewPassword("");
+                setNewPassword("");
                 setConfirmPassword("");
                 setOtp("");
             } else {
@@ -845,7 +844,7 @@ const Login = () => {
                             onClick={() => {
                                 setCurrentView(LOGIN_VIEWS.LOGIN);
                                 setOtp("");
-                                setSNewPassword("");
+                                setNewPassword("");
                                 setConfirmPassword("");
                                 setForgotPasswordEmail("");
                                 setError({
