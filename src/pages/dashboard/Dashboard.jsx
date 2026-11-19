@@ -1842,27 +1842,6 @@ const generateComparisonText = (startDate, endDate) => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 justify-end">
-            {/* Quick Date Presets */}
-            <div className="inline-flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-200">
-              {DASHBOARD_PRESETS.map((preset) => {
-                const isActive = activePreset === preset.id;
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleSelectPreset(preset.id)}
-                    className={`px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                      isActive
-                        ? "bg-white text-indigo-700 font-semibold shadow-xs"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                );
-              })}
-            </div>
-
             {/* Global Store Selector (All stores combined by default) */}
             <div className="w-64">
               <SelectWithIcon
