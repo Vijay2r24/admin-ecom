@@ -25,7 +25,7 @@ Edit `server/.env`:
 ```env
 PORT=5005
 ECOMMERCE_API_BASE_URL=https://ecommerce-qa-be.admin.b2yinfy.com/api/admin
-DEFAULT_TENANT_DOMAIN=ecommerce-qa.admin.b2yinfy.com
+DEFAULT_TENANT_DOMAIN=https://ecommerce-qa.admin.b2yinfy.com
 
 # Groq (Ultra-fast Llama 3.3 / 3.1): https://console.groq.com/keys
 GROQ_API_KEY=gsk_...

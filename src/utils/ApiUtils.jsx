@@ -136,6 +136,43 @@ const showLogoutNotification = (message, fallbackText = INACTIVE_USER_MESSAGE) =
 const abortControllers = new Map();
 
 /* ------------------------------------------------------------------
+   TENANT DOMAIN RESOLVER & SANITIZER
+------------------------------------------------------------------ */
+
+/**
+ * Normalizes tenant domain by stripping protocol (http://, https://), port and paths.
+ * Backend strictly accepts the clean domain name (e.g. "ecommerce-qa.admin.b2yinfy.com").
+ */
+export const cleanTenantDomain = (domain) => {
+  if (!domain || typeof domain !== "string") {
+    return "ecommerce-qa.admin.b2yinfy.com";
+  }
+  return (
+    domain
+      .trim()
+      .replace(/^https?:\/\//i, "")
+      .split("/")[0]
+      .split(":")[0] || "ecommerce-qa.admin.b2yinfy.com"
+  );
+};
+
+export const getResolvedTenantDomain = () => {
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1");
+
+  const configuredDomain = import.meta.env.VITE_TENANT_DOMAIN;
+
+  if (isLocalhost) {
+    return cleanTenantDomain(configuredDomain || "https://ecommerce-qa.admin.b2yinfy.com");
+  }
+
+  // In production, prioritize configured env domain if set, otherwise use current hostname
+  return cleanTenantDomain(configuredDomain || window.location.hostname);
+};
+
+/* ------------------------------------------------------------------
    SINGLE FACTORY — NOW THIS REPLACES **api**
 ------------------------------------------------------------------ */
 
@@ -149,23 +186,8 @@ const oCreateApiInstance = (token = null, isFormData = false, key = "") => {
 
     abortControllers.set(key, controller);
   }
-const createApiInstance = (token, isFormData) => {
-  return axios.create({
-    baseURL: BASE_URL,
-    headers: {
-      'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
-      Accept: 'application/json',
-      'tenant-domain': TENANT_DOMAIN,
-      ...(token && {Authorization: `Bearer ${token}`}),
-    },
-  });
-};
- 
-  // For local development, use the tenant domain from env, for production use the actual hostname
-  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  const tenantDomain = isLocalhost
-    ? (import.meta.env.VITE_TENANT_DOMAIN || "ecommerce-qa.admin.b2yinfy.com")
-    : window.location.hostname;
+
+  const tenantDomain = getResolvedTenantDomain();
 
   const instance = axios.create({
     baseURL: BASE_URL,
@@ -185,12 +207,7 @@ const createApiInstance = (token, isFormData) => {
     }
 
     // Ensure tenant-domain is consistently set for both localhost and production
-    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    const currentTenantDomain = isLocalhost
-      ? (import.meta.env.VITE_TENANT_DOMAIN || "ecommerce-qa.admin.b2yinfy.com")
-      : window.location.hostname;
-    
-    config.headers["tenant-domain"] = currentTenantDomain;
+    config.headers["tenant-domain"] = getResolvedTenantDomain();
 
     // Debug logging for login issues
     if (config.url?.includes('/adminlogin')) {

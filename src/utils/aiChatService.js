@@ -1,5 +1,5 @@
 import axios from "axios";
-import { apiGet } from "./ApiUtils";
+import { apiGet, cleanTenantDomain } from "./ApiUtils";
 import {
   GET_TOTAL_REVENUE,
   GET_TOTAL_ORDERS,
@@ -438,8 +438,9 @@ export const sendChatMessage = async (
   const token = localStorage.getItem("token") || "";
   const nodeAiUrl =
     import.meta.env.VITE_NODE_AI_URL || "http://localhost:5005/api/chat";
-  const tenantDomain =
-    import.meta.env.VITE_TENANT_DOMAIN || "ecommerce-qa.admin.b2yinfy.com";
+  const tenantDomain = cleanTenantDomain(
+    import.meta.env.VITE_TENANT_DOMAIN || "https://ecommerce-qa.admin.b2yinfy.com"
+  );
 
   // 1. Primary: Send request to Node.js AI LLM Server (Groq / Gemini)
   try {

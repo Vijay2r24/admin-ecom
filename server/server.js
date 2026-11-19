@@ -26,8 +26,22 @@ const ECOMMERCE_API_BASE_URL =
   process.env.ECOMMERCE_API_BASE_URL ||
   "https://ecommerce-qa-be.admin.b2yinfy.com/api/admin";
 
-const DEFAULT_TENANT_DOMAIN =
-  process.env.DEFAULT_TENANT_DOMAIN || "ecommerce-qa.admin.b2yinfy.com";
+const cleanTenantDomain = (domain) => {
+  if (!domain || typeof domain !== "string") {
+    return "ecommerce-qa.admin.b2yinfy.com";
+  }
+  return (
+    domain
+      .trim()
+      .replace(/^https?:\/\//i, "")
+      .split("/")[0]
+      .split(":")[0] || "ecommerce-qa.admin.b2yinfy.com"
+  );
+};
+
+const DEFAULT_TENANT_DOMAIN = cleanTenantDomain(
+  process.env.DEFAULT_TENANT_DOMAIN || "https://ecommerce-qa.admin.b2yinfy.com"
+);
 
 // LLM Configuration (Mutable for dynamic /api/config updates)
 let GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
@@ -104,9 +118,10 @@ const extractSearchTerm = (text = "") => {
  * Fetch live store snapshot from backend using the incoming user session token
  */
 async function fetchStoreContext(token, tenantDomain) {
+  const cleanDomain = cleanTenantDomain(tenantDomain || DEFAULT_TENANT_DOMAIN);
   const headers = {
     Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
-    "tenant-domain": tenantDomain || DEFAULT_TENANT_DOMAIN,
+    "tenant-domain": cleanDomain,
     Accept: "application/json",
   };
 
@@ -800,7 +815,9 @@ app.post("/api/chat", async (req, res) => {
       });
     }
 
-    const tenantDomain = req.headers["tenant-domain"] || DEFAULT_TENANT_DOMAIN;
+    const tenantDomain = cleanTenantDomain(
+      req.headers["tenant-domain"] || DEFAULT_TENANT_DOMAIN
+    );
 
     // 1. Fetch live store database snapshot using the user's session token
     const storeSnapshot = await fetchStoreContext(authHeader, tenantDomain);
